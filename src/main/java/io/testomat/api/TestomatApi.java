@@ -1,6 +1,6 @@
 package io.testomat.api;
 
-import io.testomat.TTestRun;
+import io.testomat.model.TTestRun;
 
 /**
  * Created by Lolik on 18.11.2024
@@ -10,24 +10,21 @@ public class TestomatApi {
   private final RestClient client = new RestClient();
 
   public TestRunResponse createTestRun(TTestRun run) {
-    TestRunModel testRun = TestRunModel.parse(run);
-    return client.createTestRun(testRun);
+    return client.createTestRun(TestRun.parse(run));
   }
 
   public TestRunResponse updateTestRun(TTestRun run) {
-    TestRunModel testRunModel = TestRunModel.parse(run);
-    return client.updateTestRun(testRunModel);
+    return client.updateTestRun(TestRun.parse(run));
   }
 
-  public TestRunResponse finishTestRun(TTestRun run) {
-    TestRunModel testRunModel = TestRunModel.parse(run);
-    testRunModel.statusEvent = TestRunModel.StatusEvent.FINISH;
-    return client.updateTestRun(testRunModel);
+  public TestRunResponse finishTestRun(String id) {
+    TestRun testRun = new TestRun.Builder().id(id).
+        statusEvent(TestRun.StatusEvent.FINISH).build();
+    return client.updateTestRun(testRun);
   }
 
   public void addTestResultsToTestRun(TTestRun run) {
-    TestRunModel testRunModel = TestRunModel.parse(run);
-    client.addTestResultsToTestRun(testRunModel);
+    client.addTestResultsToTestRun(TestRun.parse(run));
   }
 
 }

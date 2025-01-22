@@ -2,6 +2,8 @@ package io.testomat;
 
 
 import io.testomat.api.TestomatApi;
+import io.testomat.model.TTestResult;
+import io.testomat.model.TTestRun;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -13,12 +15,12 @@ import org.slf4j.LoggerFactory;
 public class TestomatReporter {
 
   private static final Logger logger = LoggerFactory.getLogger(TestomatReporter.class);
-  protected static final List<TTestResult> unpublishedResults = new ArrayList<>();
+  private static final List<TTestResult> unpublishedResults = new ArrayList<>();
   private static final List<TTestResult> resultsBatch = new ArrayList<>();
   private static final TestomatApi api = new TestomatApi();
 
 
-  protected static void addResultToReporter(TTestResult result) {
+  public static void addResultToReporter(TTestResult result) {
     synchronized (unpublishedResults) {
       unpublishedResults.add(result);
     }
@@ -33,19 +35,15 @@ public class TestomatReporter {
     return copy;
   }
 
-  public static void sendTestResults() {
+  public static synchronized void sendTestResults() {
     resultsBatch.addAll(pollAllUnpublishedResults());
     if (resultsBatch.isEmpty()) {
       return;
     }
-    //TODO: Implement API on Java HTTP Client
-   /* client.reporter.updateTestResult(
-        Testomat.getTestRun().getId(),
-        TestomatTestRun.builder()
-            .tests(resultsBatch.stream().map(TestomatTestResult::parse)
-                .collect(Collectors.toList()))
-            .build()
-    ).execute();*/
+    TTestRun testRun = new TTestRun();
+    testRun.setId(Testomat.getTestRun().getId());
+    testRun.setTestResults(resultsBatch);
+    api.addTestResultsToTestRun(testRun);
     resultsBatch.clear();
   }
 

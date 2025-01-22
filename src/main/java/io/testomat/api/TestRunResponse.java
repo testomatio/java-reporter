@@ -7,15 +7,31 @@ public class TestRunResponse {
 
   public String uid;
   public String url;
-  public String public_url;
+  public String publicUrl;
   public String status;
+
+  public String getUid() {
+    return uid;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public String getPublicUrl() {
+    return publicUrl;
+  }
+
+  public String getStatus() {
+    return status;
+  }
 
   @Override
   public String toString() {
     return "TestRunResponse{" +
         "uid='" + uid + '\'' +
         ", url='" + url + '\'' +
-        ", public_url='" + public_url + '\'' +
+        ", publicUrl='" + publicUrl + '\'' +
         ", status='" + status + '\'' +
         '}';
   }

@@ -1,5 +1,6 @@
-package io.testomat;
+package io.testomat.model;
 
+import io.testomat.TestomatConfig;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +12,12 @@ import java.util.List;
 public class TTestRun {
 
   private String id;
-  private String statusEvent;
   private String name;
   private String env;
   private LocalDateTime startedAt;
   private LocalDateTime finishedAt;
   private List<TTestResult> testResults = new ArrayList<>();
+  private List<String> tags = new ArrayList<>();
 
   public void setId(String id) {
     this.id = id;
@@ -67,7 +68,7 @@ public class TTestRun {
   }
 
   public String getRunUrl() {
-    return TestomatConfig.TESTOMAT_HOST + "projects/" + TestomatConfig.TESTOMAT_PROJECT + "/runs/" + id;
+    return String.format("%s/projects/%s/runs/%s", TestomatConfig.TESTOMAT_HOST, TestomatConfig.TESTOMAT_PROJECT, id);
   }
 
   public String getReportUrl() {
@@ -77,4 +78,52 @@ public class TTestRun {
   public List<TTestResult> getTestResults() {
     return testResults;
   }
+
+  public static class Builder {
+    private TTestRun instance;
+
+    public Builder() {
+      instance = new TTestRun();
+    }
+
+    public Builder setId(String id) {
+      instance.id = id;
+      return this;
+    }
+
+    public Builder setName(String name) {
+      instance.name = name;
+      return this;
+    }
+
+    public Builder setEnv(String env) {
+      instance.env = env;
+      return this;
+    }
+
+    public Builder setStartedAt(LocalDateTime startedAt) {
+      instance.startedAt = startedAt;
+      return this;
+    }
+
+    public Builder setFinishedAt(LocalDateTime finishedAt) {
+      instance.finishedAt = finishedAt;
+      return this;
+    }
+
+    public Builder setTestResults(List<TTestResult> testResults) {
+      instance.testResults = testResults;
+      return this;
+    }
+
+    public Builder setTags(List<String> tags) {
+      instance.tags = tags;
+      return this;
+    }
+
+    public TTestRun build() {
+      return instance;
+    }
+  }
+
 }

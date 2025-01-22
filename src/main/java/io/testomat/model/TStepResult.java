@@ -1,7 +1,5 @@
-package io.testomat;
+package io.testomat.model;
 
-import io.testomat.utils.ANSIFormatterUtils;
-import io.testomat.utils.StringFormatterUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -16,6 +14,7 @@ public class TStepResult {
   private TStepResult parent;
   private List<TStepResult> steps;
   private String status;
+  private String error;
   private String title;
   private LocalDateTime startedAt;
   private LocalDateTime finishedAt;
@@ -59,31 +58,6 @@ public class TStepResult {
       attributes = new LinkedHashMap<>();
     }
     attributes.put(key, value);
-  }
-
-  public String getStatusSymbol() {
-    if (status == null) {
-      return "❓";
-    }
-    return switch (status) {
-      case "passed" -> "✅";
-      case "failed" -> "❌";
-      case "skipped" -> "⚠️";
-      default -> "❓";
-    };
-  }
-
-  public String getLog() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("  ".repeat(Math.max(0, depth)));
-    sb.append(getStatusSymbol()).append(" ").append(StringFormatterUtils.capitalizeAndSplit(title));
-    sb.append(" (").append(getDuration()).append(" ms) ").append("\n");
-    StringBuilder sbParams = new StringBuilder();
-    parameters.forEach(
-        (key, value) -> sbParams.append("  ".repeat(Math.max(0, depth))).append("   - ").append(key).append(": ")
-            .append(StringFormatterUtils.shorten(String.valueOf(value), 50)).append("\n"));
-    sb.append(ANSIFormatterUtils.italic(sbParams.toString()));
-    return sb.toString();
   }
 
   public void setParameters(Map<String, Object> parameters) {

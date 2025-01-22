@@ -11,14 +11,14 @@ public class CreateTestRunTest {
 
   @Test
   public void createTestRunWithTitle(){
-    TestRunModel testRun = new TestRunModel();
+    TestRun testRun = new TestRun();
     testRun.title = "Test Run: Only Title";
     client.createTestRun(testRun);
   }
 
   @Test
   public void createTestRunWithEnv(){
-    TestRunModel testRun = new TestRunModel();
+    TestRun testRun = new TestRun();
     testRun.title = "Test Run: Env";
     testRun.env = "beta";
     client.createTestRun(testRun);
@@ -26,7 +26,7 @@ public class CreateTestRunTest {
 
   @Test
   public void createTestRunWithGroup(){
-    TestRunModel testRun = new TestRunModel();
+    TestRun testRun = new TestRun();
     testRun.title = "Test Run: Group";
     testRun.groupTitle = "Test Group";
     client.createTestRun(testRun);

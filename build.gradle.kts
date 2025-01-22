@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.solidgate"
-version = "0.1.1"
+version = "0.1.5"
 description = "Testomat Java Reporter"
 
 java {
@@ -23,7 +23,7 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.16")
     implementation("org.aspectj:aspectjweaver:1.9.22")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
-    testImplementation("org.testng:testng:7.10.2")
+    implementation("org.testng:testng:7.10.2")
 }
 
 
@@ -55,5 +55,6 @@ publishing {
             }
         }
     }
+
 
 }

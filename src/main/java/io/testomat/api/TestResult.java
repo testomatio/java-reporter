@@ -1,14 +1,14 @@
 package io.testomat.api;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.testomat.TTestResult;
+import io.testomat.model.TTestResult;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Created by Lolik on 09.11.2023
  */
-class TestResultModel {
+class TestResult {
 
   public String title;
   public Status status;
@@ -20,7 +20,7 @@ class TestResultModel {
   public Long runTime;
   public Map<String, Object> example;
   public List<String> artifacts;
-  public List<TestStepModel> steps;
+  public List<TestStep> steps;
   public Map<String, Object> meta;
   public String code;
   public Boolean create;
@@ -35,17 +35,18 @@ class TestResultModel {
     }
   }
 
-  public static TestResultModel parse(TTestResult result){
-    TestResultModel model = new TestResultModel();
+  public static TestResult parse(TTestResult result){
+    TestResult model = new TestResult();
     model.title = result.getName();
     model.status = Status.valueOf(result.getStatus().toUpperCase());
     model.runTime = result.getDuration();
     model.testId = result.getTestId();
     model.message = result.getMessage();
-    model.stack = result.getLog();
+    model.stack = result.getStackTrace();
     model.example = result.getParameters();
     model.code = result.getCode();
     model.artifacts = result.getArtifacts();
+    model.steps = result.getSteps().stream().map(TestStep::parse).toList();
     return model;
   }
 
@@ -54,13 +55,13 @@ class TestResultModel {
   }
 
   public static class Builder {
-    private final TestResultModel instance;
+    private final TestResult instance;
 
     public Builder() {
-      instance = new TestResultModel();
+      instance = new TestResult();
     }
 
-    public Builder(TestResultModel model) {
+    public Builder(TestResult model) {
       instance = model;
     }
 
@@ -114,7 +115,7 @@ class TestResultModel {
       return this;
     }
 
-    public Builder steps(List<TestStepModel> steps) {
+    public Builder steps(List<TestStep> steps) {
       instance.steps = steps;
       return this;
     }
@@ -134,7 +135,7 @@ class TestResultModel {
       return this;
     }
 
-    public TestResultModel build() {
+    public TestResult build() {
       return instance;
     }
   }

@@ -1,13 +1,13 @@
 package io.testomat.api;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.testomat.TTestRun;
+import io.testomat.model.TTestRun;
 import java.util.List;
 
 /**
  * Created by Lolik on 09.11.2023
  */
-class TestRunModel {
+class TestRun {
 
   public String id;
   public String title;
@@ -16,16 +16,18 @@ class TestRunModel {
   public String groupTitle;
   public Boolean parallel;
   public StatusEvent statusEvent;
-  public List<TestResultModel> tests;
+  public List<TestResult> tests;
   public Boolean createTests;
   public Integer testsCount;
 
-  public static TestRunModel parse(TTestRun run) {
-    TestRunModel model = new TestRunModel();
-    model.title = run.getName();
-    model.env = run.getEnv();
-    model.tests = run.getTestResults().stream().map(TestResultModel::parse).toList();
-    return model;
+  public static TestRun parse(TTestRun run) {
+    TestRun testRun = new TestRun();
+    testRun.id = run.getId();
+    testRun.title = run.getName();
+    testRun.env = run.getEnv();
+    testRun.tests = run.getTestResults().stream().map(TestResult::parse).toList();
+
+    return testRun;
   }
 
 
@@ -40,10 +42,10 @@ class TestRunModel {
   }
 
   public static class Builder {
-    private final TestRunModel instance;
+    private final TestRun instance;
 
     public Builder() {
-      instance = new TestRunModel();
+      instance = new TestRun();
     }
 
     public Builder id(String id) {
@@ -81,7 +83,7 @@ class TestRunModel {
       return this;
     }
 
-    public Builder tests(List<TestResultModel> tests) {
+    public Builder tests(List<TestResult> tests) {
       instance.tests = tests;
       return this;
     }
@@ -96,7 +98,7 @@ class TestRunModel {
       return this;
     }
 
-    public TestRunModel build() {
+    public TestRun build() {
       return instance;
     }
   }

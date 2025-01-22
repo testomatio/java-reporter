@@ -1,13 +1,11 @@
-package io.testomat;
+package io.testomat.model;
 
-import io.testomat.utils.ANSIFormatterUtils;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by Lolik on 17.06.2024
@@ -25,9 +23,17 @@ public class TTestResult {
   private String message;
   private String stackTrace;
   private Map<String, Object> parameters;
-  private Map<String, Object> attributes;
   private List<String> artifacts;
   private String code;
+  private TStepResult currentStep;
+
+  public TStepResult getCurrentStep() {
+    return currentStep;
+  }
+
+  public void setCurrentStep(TStepResult currentStep) {
+    this.currentStep = currentStep;
+  }
 
   public String getTestId() {
     return testId;
@@ -113,14 +119,6 @@ public class TTestResult {
     this.parameters = parameters;
   }
 
-  public Map<String, Object> getAttributes() {
-    return attributes;
-  }
-
-  public void setAttributes(Map<String, Object> attributes) {
-    this.attributes = attributes;
-  }
-
   public List<String> getArtifacts() {
     return artifacts;
   }
@@ -150,14 +148,6 @@ public class TTestResult {
     parameters.put(key, value);
   }
 
-
-  public void addAttribute(String name, Object value) {
-    if (attributes == null) {
-      attributes = new LinkedHashMap<>();
-    }
-    attributes.put(name, value);
-  }
-
   public void addArtifact(String artifact) {
     if (artifacts == null) {
       artifacts = new ArrayList<>();
@@ -165,31 +155,84 @@ public class TTestResult {
     artifacts.add(artifact);
   }
 
-  public String getLog() {
-    StringBuilder log = new StringBuilder();
-    if (stackTrace != null) {
-      log.append(stackTrace).append("\n\n");
+
+
+  public static class Builder {
+    private TTestResult instance;
+
+    public Builder() {
+      instance = new TTestResult();
     }
-    if (attributes != null) {
-      log.append(ANSIFormatterUtils.bold("---Test Attributes---")).append("\n");
-      log.append(attributes.entrySet().stream()
-          .map(e -> e.getKey() + ": " + e.getValue())
-          .collect(Collectors.joining("\n")));
-      log.append("\n\n");
+
+    public Builder setTestId(String testId) {
+      instance.testId = testId;
+      return this;
     }
-    if (!steps.isEmpty()) {
-      log.append(ANSIFormatterUtils.bold("---Steps---")).append("\n");
-      log.append(getStepsLog(steps, 0));
+
+    public Builder setName(String name) {
+      instance.name = name;
+      return this;
     }
-    return log.toString();
+
+    public Builder setTestFullName(String testFullName) {
+      instance.testFullName = testFullName;
+      return this;
+    }
+
+    public Builder setStartedAt(LocalDateTime startedAt) {
+      instance.startedAt = startedAt;
+      return this;
+    }
+
+    public Builder setFinishedAt(LocalDateTime finishedAt) {
+      instance.finishedAt = finishedAt;
+      return this;
+    }
+
+    public Builder setDuration(Long duration) {
+      instance.duration = duration;
+      return this;
+    }
+
+    public Builder setStatus(String status) {
+      instance.status = status;
+      return this;
+    }
+
+    public Builder setSteps(List<TStepResult> steps) {
+      instance.steps = steps;
+      return this;
+    }
+
+    public Builder setMessage(String message) {
+      instance.message = message;
+      return this;
+    }
+
+    public Builder setStackTrace(String stackTrace) {
+      instance.stackTrace = stackTrace;
+      return this;
+    }
+
+    public Builder setParameters(Map<String, Object> parameters) {
+      instance.parameters = parameters;
+      return this;
+    }
+
+    public Builder setArtifacts(List<String> artifacts) {
+      instance.artifacts = artifacts;
+      return this;
+    }
+
+    public Builder setCode(String code) {
+      instance.code = code;
+      return this;
+    }
+
+    public TTestResult build() {
+      return instance;
+    }
   }
 
-  private String getStepsLog(List<TStepResult> steps, int level) {
-    StringBuilder sb = new StringBuilder();
-    for (TStepResult step : steps) {
-      sb.append(step.getLog());
-      sb.append(getStepsLog(step.getSteps(), level + 1));
-    }
-    return sb.toString();
-  }
+
 }

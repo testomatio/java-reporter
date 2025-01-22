@@ -13,7 +13,7 @@ public class RestClientTest {
 
   @Test
   public void createTestRun(){
-    var testRun = new TestRunModel.Builder()
+    var testRun = new TestRun.Builder()
         .title("Reporter API: Create Test Run")
         .build();
     TestRunResponse response = client.createTestRun(testRun);
@@ -22,16 +22,16 @@ public class RestClientTest {
 
   @Test
   public void updateTestRun(){
-    var testRun = new TestRunModel.Builder()
+    var testRun = new TestRun.Builder()
         .title("Reporter API: Update Test Run")
         .parallel(true)
         .build();
     TestRunResponse response = client.createTestRun(testRun);
 
-    var testRunUpdate = new TestRunModel.Builder()
+    var testRunUpdate = new TestRun.Builder()
         .id(response.uid)
         .title("Reporter API: Update Test Run - Updated")
-        .statusEvent(TestRunModel.StatusEvent.PASS_PARALLEL)
+        .statusEvent(TestRun.StatusEvent.PASS_PARALLEL)
         .build();
     TestRunResponse resp = client.updateTestRun(testRunUpdate);
     System.out.println(resp);
@@ -39,15 +39,15 @@ public class RestClientTest {
 
   @Test
   public void addTestResultsToTestRun(){
-    var testRun = new TestRunModel.Builder()
+    var testRun = new TestRun.Builder()
         .title("Reporter API: Add Test Results to Test Run")
         .parallel(true)
         .build();
     TestRunResponse response = client.createTestRun(testRun);
 
-    var testResult = new TestResultModel.Builder()
+    var testResult = new TestResult.Builder()
         .title("Test Result 1")
-        .status(TestResultModel.Status.PASSED)
+        .status(TestResult.Status.PASSED)
         .build();
 
     testRun.id = response.uid;
@@ -56,9 +56,9 @@ public class RestClientTest {
     String response1 = client.addTestResultsToTestRun(testRun);
     System.out.println(response1);
 
-    var finishRun = new TestRunModel.Builder()
+    var finishRun = new TestRun.Builder()
         .id(response.uid)
-        .statusEvent(TestRunModel.StatusEvent.FINISH)
+        .statusEvent(TestRun.StatusEvent.FINISH)
         .build();
     TestRunResponse response2 = client.updateTestRun(finishRun);
   }

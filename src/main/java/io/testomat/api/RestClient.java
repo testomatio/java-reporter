@@ -29,7 +29,7 @@ class RestClient {
     objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
   }
 
-  TestRunResponse createTestRun(TestRunModel testRun) {
+  TestRunResponse createTestRun(TestRun testRun) {
     HttpRequest request = createRequest("reporter")
         .POST(HttpRequest.BodyPublishers.ofString(writeValueAsString(testRun)))
         .build();
@@ -37,7 +37,7 @@ class RestClient {
     return readJsonAsObject(response.body(), TestRunResponse.class);
   }
 
-  TestRunResponse updateTestRun(TestRunModel testRun) {
+  TestRunResponse updateTestRun(TestRun testRun) {
     HttpRequest request = createRequest("reporter/" + testRun.id)
         .PUT(HttpRequest.BodyPublishers.ofString(writeValueAsString(testRun)))
         .build();
@@ -45,7 +45,7 @@ class RestClient {
     return readJsonAsObject(response.body(), TestRunResponse.class);
   }
 
-  String addTestResultsToTestRun(TestRunModel testRun) {
+  String addTestResultsToTestRun(TestRun testRun) {
     HttpRequest request = createRequest("reporter/" + testRun.id + "/testrun")
         .POST(HttpRequest.BodyPublishers.ofString(writeValueAsString(testRun)))
         .build();

@@ -24,12 +24,16 @@ public class TestomatConfig {
     return properties.getProperty("TESTOMAT_API_KEY");
   }
 
+  public static long getReporterInterval(){
+    String property = properties.getProperty("testomat.reporter.inverval", "5000");
+    return Long.parseLong(property);
+  }
+
   static Properties loadProperties() {
     try(InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("testomat.properties")) {
       Properties properties = new Properties();
       properties.load(is);
       System.out.println("Loaded properties: "+properties);
-      System.out.println(System.getenv());
       properties.putAll(System.getenv());
       return properties;
     } catch (IOException e) {

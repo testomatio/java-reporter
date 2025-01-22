@@ -1,5 +1,6 @@
 package io.testomat;
 
+import io.testomat.model.TStepResult;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,21 +26,24 @@ public class TestomatStepsAspect {
 
   @Before("testMethod()")
   public void beforeTestMethod(JoinPoint joinPoint) {
-    TestomatStorage.currentStep.remove();
+    //TestomatStorage.currentTestResult.remove();
   }
 
 
   @Before("stepMethod()")
   public void beforeStep(JoinPoint joinPoint) {
-    TStepResult parentStep = TestomatStorage.currentStep.get();
+    System.out.println("Step started: " + joinPoint.getSignature().getName());
+    TStepResult parentStep = Testomat.getCurrentTestResult().getCurrentStep();
     TStepResult step = new TStepResult(joinPoint.getSignature().getName(), parentStep);
     step.setParameters(parseParameters(joinPoint));
     step.setArguments(Arrays.asList(joinPoint.getArgs()));
     step.startTime();
-    if (parentStep != null) {
+    if (parentStep == null) {
+      Testomat.getCurrentTestResult().getSteps().add(step);
+    } else {
       parentStep.addInnerStep(step);
     }
-    TestomatStorage.currentStep.set(step);
+    Testomat.getCurrentTestResult().setCurrentStep(step);
   }
 
   @AfterReturning("stepMethod()")
@@ -53,11 +57,11 @@ public class TestomatStepsAspect {
   }
 
   private void finishCurrentStep(String status) {
-    var tStepResult = TestomatStorage.currentStep.get();
+    var tStepResult = Testomat.getCurrentTestResult().getCurrentStep();
     if (tStepResult != null) {
       tStepResult.setStatus(status);
       tStepResult.stopTime();
-      TestomatStorage.currentStep.set(tStepResult.getParent());
+      Testomat.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
     }
   }
 
