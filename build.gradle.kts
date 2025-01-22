@@ -15,7 +15,6 @@ java {
 }
 
 repositories {
-    maven("https://nexus.solidgate.com/repository/maven-public")
     mavenCentral()
 }
 
@@ -53,15 +52,6 @@ publishing {
                         email.set("lolikla8@gmail.com")
                     }
                 }
-            }
-        }
-    }
-    repositories {
-        maven {
-            url = uri("https://nexus.solidgate.com/repository/maven-releases")
-            credentials {
-                username = findProperty("nexusUsername") as String? ?: System.getenv("NEXUS_USERNAME")
-                password = findProperty("nexusPassword") as String? ?: System.getenv("NEXUS_PASSWORD")
             }
         }
     }
