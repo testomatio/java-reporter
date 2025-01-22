@@ -1,8 +1,7 @@
-package io.testomat.models;
+package io.testomat;
 
 import io.testomat.utils.ANSIFormatterUtils;
 import io.testomat.utils.StringFormatterUtils;
-import java.security.cert.PolicyNode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -95,17 +94,11 @@ public class TStepResult {
     this.arguments = arguments;
   }
 
-  public void setDepth(int depth) {
-    this.depth = depth;
-  }
 
   public TStepResult getParent() {
     return parent;
   }
 
-  public int getDepth() {
-    return depth;
-  }
 
   public void setStatus(String status) {
     this.status = status;

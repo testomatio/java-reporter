@@ -1,11 +1,9 @@
 package io.testomat;
 
 
-import io.testomat.api.TestomatApiClient;
-import io.testomat.models.TTestResult;
+import io.testomat.api.TestomatApi;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +15,7 @@ public class TestomatReporter {
   private static final Logger logger = LoggerFactory.getLogger(TestomatReporter.class);
   protected static final List<TTestResult> unpublishedResults = new ArrayList<>();
   private static final List<TTestResult> resultsBatch = new ArrayList<>();
-  private static final TestomatApiClient client = new TestomatApiClient();
+  private static final TestomatApi api = new TestomatApi();
 
 
   protected static void addResultToReporter(TTestResult result) {

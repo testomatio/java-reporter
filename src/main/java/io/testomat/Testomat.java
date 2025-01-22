@@ -1,8 +1,5 @@
 package io.testomat;
 
-import io.testomat.models.TTestResult;
-import io.testomat.models.TTestRun;
-
 /**
  * Created by Lolik on 18.06.2024
  */

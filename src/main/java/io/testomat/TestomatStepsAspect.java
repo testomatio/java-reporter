@@ -1,6 +1,5 @@
 package io.testomat;
 
-import io.testomat.models.TStepResult;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -20,14 +19,13 @@ public class TestomatStepsAspect {
   public void testMethod() {
   }
 
-  @Pointcut("(execution(* *(..)) && @annotation(io.testomat.annotation.Step))")
+  @Pointcut("@annotation(io.testomat.annotation.Step)")
   public void stepMethod() {
   }
 
   @Before("testMethod()")
   public void beforeTestMethod(JoinPoint joinPoint) {
     TestomatStorage.currentStep.remove();
-    TestomatStorage.testSteps.get().clear();
   }
 
 
@@ -38,11 +36,7 @@ public class TestomatStepsAspect {
     step.setParameters(parseParameters(joinPoint));
     step.setArguments(Arrays.asList(joinPoint.getArgs()));
     step.startTime();
-    if (parentStep == null) {
-      TestomatStorage.testSteps.get().add(step);
-      step.setDepth(0);
-    } else {
-      step.setDepth(step.getParent().getDepth() + 1);
+    if (parentStep != null) {
       parentStep.addInnerStep(step);
     }
     TestomatStorage.currentStep.set(step);
