@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.solidgate"
-version = "0.1.5"
+version = "0.1.6"
 description = "Testomat Java Reporter"
 
 java {
@@ -15,6 +15,7 @@ java {
 }
 
 repositories {
+    maven("https://nexus.solidgate.com/repository/maven-public")
     mavenCentral()
 }
 
@@ -55,6 +56,14 @@ publishing {
             }
         }
     }
-
+    repositories {
+        maven {
+            url = uri("https://nexus.solidgate.com/repository/maven-releases")
+            credentials {
+                username = findProperty("nexusUsername") as String? ?: System.getenv("NEXUS_USERNAME")
+                password = findProperty("nexusPassword") as String? ?: System.getenv("NEXUS_PASSWORD")
+            }
+        }
+    }
 
 }

@@ -1,6 +1,7 @@
 package io.testomat;
 
 import io.testomat.model.TStepResult;
+import io.testomat.utils.StringFormatterUtils;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,58 +12,55 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Aspect
 public class TestomatStepsAspect {
 
-  @Pointcut("@annotation(org.testng.annotations.Test) || @annotation(org.junit.Test)")
-  public void testMethod() {
-  }
+  private static final Logger logger = LoggerFactory.getLogger(TestomatStepsAspect.class);
 
   @Pointcut("@annotation(io.testomat.annotation.Step)")
   public void stepMethod() {
   }
 
-  @Before("testMethod()")
-  public void beforeTestMethod(JoinPoint joinPoint) {
-    //TestomatStorage.currentTestResult.remove();
+  @Pointcut("execution(* *(..))")
+  public void anyMethod() {
   }
 
-
-  @Before("stepMethod()")
+  @Before("anyMethod() && stepMethod()")
   public void beforeStep(JoinPoint joinPoint) {
-    System.out.println("Step started: " + joinPoint.getSignature().getName());
+    logger.info("Step started: " + joinPoint.getSignature().getName());
     TStepResult parentStep = Testomat.getCurrentTestResult().getCurrentStep();
-    TStepResult step = new TStepResult(joinPoint.getSignature().getName(), parentStep);
+    TStepResult step = new TStepResult(StringFormatterUtils.capitalizeAndSplit(joinPoint.getSignature().getName()),
+        parentStep);
     step.setParameters(parseParameters(joinPoint));
     step.setArguments(Arrays.asList(joinPoint.getArgs()));
     step.startTime();
+    Testomat.getCurrentTestResult().setCurrentStep(step);
     if (parentStep == null) {
       Testomat.getCurrentTestResult().getSteps().add(step);
     } else {
       parentStep.addInnerStep(step);
     }
-    Testomat.getCurrentTestResult().setCurrentStep(step);
   }
 
-  @AfterReturning("stepMethod()")
+  @AfterReturning("anyMethod() && stepMethod()")
   public void afterStep(JoinPoint joinPoint) {
-    finishCurrentStep("passed");
-  }
-
-  @AfterThrowing(pointcut = "stepMethod()", throwing = "ex")
-  public void afterStepFailure(JoinPoint joinPoint, Throwable ex) {
-    finishCurrentStep("failed");
-  }
-
-  private void finishCurrentStep(String status) {
     var tStepResult = Testomat.getCurrentTestResult().getCurrentStep();
-    if (tStepResult != null) {
-      tStepResult.setStatus(status);
-      tStepResult.stopTime();
-      Testomat.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
-    }
+    tStepResult.setStatus("passed");
+    tStepResult.stopTime();
+    Testomat.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
+  }
+
+  @AfterThrowing(pointcut = "anyMethod() && stepMethod()", throwing = "ex")
+  public void afterStepFailure(JoinPoint joinPoint, Throwable ex) {
+    var tStepResult = Testomat.getCurrentTestResult().getCurrentStep();
+    tStepResult.setStatus("failed");
+    tStepResult.stopTime();
+    tStepResult.setError(ex.getMessage());
+    Testomat.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
   }
 
   private Map<String, Object> parseParameters(JoinPoint joinPoint) {

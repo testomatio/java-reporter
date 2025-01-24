@@ -13,21 +13,28 @@ public class TStepResult {
 
   private TStepResult parent;
   private List<TStepResult> steps;
+  private String title;
   private String status;
   private String error;
-  private String title;
   private LocalDateTime startedAt;
   private LocalDateTime finishedAt;
   private Map<String, Object> attributes;
   private Map<String, Object> parameters;
   private List<Object> arguments;
-  private int depth;
 
 
   public TStepResult(String methodName, TStepResult parentStep) {
     this.title = methodName;
     this.parent = parentStep;
     this.steps = new ArrayList<>();
+  }
+
+  public String getError() {
+    return error;
+  }
+
+  public void setError(String error) {
+    this.error = error;
   }
 
   public List<TStepResult> getSteps() {
@@ -40,6 +47,10 @@ public class TStepResult {
 
   public void stopTime() {
     this.finishedAt = LocalDateTime.now();
+  }
+
+  public String getTitle() {
+    return title;
   }
 
   public Long getDuration() {
@@ -76,5 +87,14 @@ public class TStepResult {
 
   public void setStatus(String status) {
     this.status = status;
+  }
+
+  public Map<String, Object> getParameters(){
+    return parameters;
+  }
+
+  @Override
+  public String toString() {
+    return "Step " + title;
   }
 }

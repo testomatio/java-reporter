@@ -1,8 +1,8 @@
 package io.testomat.testng;
 
-import io.testomat.Testomat;
 import io.testomat.annotation.Step;
 import io.testomat.annotation.TID;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
@@ -33,6 +33,41 @@ public class LocalTestRunTest {
     step2();
   }
 
+  @Test
+  public void failedTestWithSteps(){
+    step1();
+    step2();
+    step3WithFail();
+  }
+
+  @Test
+  public void innerSteps(){
+    step1();
+    step2();
+    step4WithInnerSteps();
+  }
+
+  @Test
+  public void stepWithDuration(){
+    step5WithSleep();
+  }
+
+  @Test
+  public void stepWithParameters(){
+    step6WithParameters("value1", 2);
+  }
+
+
+  @Test(dataProvider = "dataProvider")
+  public void testWithDataProvider(String param1, int param2){
+    System.out.println("Test with data provider: "+param1+" "+param2);
+  }
+
+  @DataProvider
+  public Object[][] dataProvider() {
+    return new Object[][] {{"value1", 1}, {"value2", 2}};
+  }
+
   @Step
   public void step1() {
     System.out.println("Step 1");
@@ -43,4 +78,29 @@ public class LocalTestRunTest {
     System.out.println("Step 2");
   }
 
+  @Step
+  public void step3WithFail(){
+    throw new RuntimeException("Test failed");
+  }
+
+  @Step
+  public void step4WithInnerSteps(){
+    step1();
+    step2();
+  }
+
+
+  @Step
+  public void step5WithSleep(){
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Step
+  public void step6WithParameters(String param1, int param2){
+    System.out.println("Step 6 with parameters: "+param1+" "+param2);
+  }
 }

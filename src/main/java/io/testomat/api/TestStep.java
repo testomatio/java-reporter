@@ -1,6 +1,7 @@
 package io.testomat.api;
 
 import io.testomat.model.TStepResult;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,21 +13,19 @@ class TestStep {
   public String category;
   public String title;
   public Long duration;
-  public String error;
+  public Map<String, Object>  error;
   public List<TestStep> steps;
   public Map<String, Object> options;
 
   public static TestStep parse(TStepResult step) {
-    return null;
-   /* return new TestStep.Builder()
-        .category(step.getCategory())
-        .title(step.get())
+    return new TestStep.Builder()
+       // .category(step.getCategory())
+        .title(step.getTitle() + (step.getParameters().isEmpty() ? "" : " " + step.getParameters()))
         .duration(step.getDuration())
-        .status(ste)
-        .error(step.getError())
+      //  .error(error)
         .steps(step.getSteps().stream().map(TestStep::parse).toList())
-        .options(step.getOptions())
-        .build();*/
+      //  .options(step.getAttributes())
+        .build();
   }
   public Builder toBuilder() {
     return new Builder(this);
@@ -58,7 +57,7 @@ class TestStep {
       return this;
     }
 
-    public Builder error(String error) {
+    public Builder error(Map<String, Object> error) {
       instance.error = error;
       return this;
     }

@@ -6,8 +6,14 @@ import io.testomat.TestomatStorage;
 import io.testomat.annotation.TID;
 import io.testomat.model.TTestResult;
 import io.testomat.utils.ANSIFormatterUtils;
+import io.testomat.utils.ExceptionSourceCodePointer;
+import io.testomat.utils.StringFormatterUtils;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.IInvokedMethod;
@@ -39,16 +45,27 @@ public class TestomatTestNGListener implements IInvokedMethodListener {
   }
 
   public TTestResult updateCurrentTestResult(IInvokedMethod method, ITestResult testResult) {
-    TTestResult ttr = TestomatStorage.getCurrentTestResult();
-    ttr.setName(method.getTestMethod().getMethodName());
+    TTestResult ttr = Testomat.getCurrentTestResult();
+    ttr.setName(StringFormatterUtils.capitalizeAndSplit(method.getTestMethod().getMethodName()));
     ttr.setStatus(parseTestNGStatus(testResult.getStatus()));
     ttr.setFinishedAt(LocalDateTime.now());
-    ttr.setMessage(ANSIFormatterUtils.code(testResult.getThrowable() != null ? testResult.getThrowable().getMessage() : null));
+    if (testResult.getThrowable() != null) {
+      ttr.setMessage(testResult.getThrowable().getMessage());
+      ttr.setStackTrace(
+          ExceptionSourceCodePointer.parseExceptionSourceCodeFragment(testResult.getThrowable().getStackTrace(), true) +
+              "\n\n" +
+              Arrays.stream(testResult.getThrowable().getStackTrace()).map(StackTraceElement::toString)
+                  .collect(Collectors.joining(System.lineSeparator())));
+    }
     ttr.setTestId(parseTID(testResult));
+    for (int i = 0; i < testResult.getParameters().length; i++) {
+      String name = method.getTestMethod().getConstructorOrMethod().getMethod().getParameters()[i].getName();
+      ttr.addParameter(name, testResult.getParameters()[i]);
+    }
     return ttr;
   }
 
-  private static String parseTID(ITestResult testResult){
+  private static String parseTID(ITestResult testResult) {
     var testMethod = testResult.getMethod().getConstructorOrMethod().getMethod();
     if (testMethod.isAnnotationPresent(TID.class)) {
       return testMethod.getAnnotation(TID.class).value();

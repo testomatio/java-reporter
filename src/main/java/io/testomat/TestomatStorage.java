@@ -11,7 +11,6 @@ public class TestomatStorage {
 
   static final TTestRun testRun = new TTestRun();
   static final ThreadLocal<TTestResult> currentTestResult = ThreadLocal.withInitial(TTestResult::new);
- // static final ThreadLocal<TStepResult> currentStep = ThreadLocal.withInitial(() -> null);
 
   static TTestRun getTestRun(){
     return testRun;
