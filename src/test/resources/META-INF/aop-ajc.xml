@@ -1,0 +1,7 @@
+<aspectj>
+    <weaver options="-warn:none -Xlint:ignore"/>
+    <aspects>
+        <aspect name="com.testomat.TestStepsAspect"/>
+        <aspect name="com.solidgate.core.asserters.LamcrestAssert"/>
+    </aspects>
+</aspectj>

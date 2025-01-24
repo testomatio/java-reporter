@@ -13,6 +13,7 @@ public class TTestRun {
 
   private String id;
   private String name;
+  private String groupTitle;
   private String env;
   private LocalDateTime startedAt;
   private LocalDateTime finishedAt;
@@ -47,20 +48,36 @@ public class TTestRun {
     return id;
   }
 
-  public String getName(){
+  public String getName() {
     return name;
   }
 
-  public void setName(String name){
+  public void setName(String name) {
     this.name = name;
   }
 
-  public String getEnv(){
+  public String getEnv() {
     return env;
   }
 
-  public void setEnv(String env){
+  public void setEnv(String env) {
     this.env = env;
+  }
+
+  public String getGroupTitle() {
+    return groupTitle;
+  }
+
+  public void setGroupTitle(String groupTitle) {
+    this.groupTitle = groupTitle;
+  }
+
+  public List<String> getTags() {
+    return tags;
+  }
+
+  public void setTags(List<String> tags) {
+    this.tags = tags;
   }
 
   public boolean isFinished() {

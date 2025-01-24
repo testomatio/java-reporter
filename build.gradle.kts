@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.solidgate"
-version = "0.1.6"
+version = "0.2.0"
 description = "Testomat Java Reporter"
 
 java {
@@ -24,6 +24,7 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.16")
     implementation("org.aspectj:aspectjweaver:1.9.22")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
+    api("io.qameta.allure:allure-testng:2.29.1")
     implementation("org.testng:testng:7.10.2")
 }
 

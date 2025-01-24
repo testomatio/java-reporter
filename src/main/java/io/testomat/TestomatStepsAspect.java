@@ -21,7 +21,7 @@ public class TestomatStepsAspect {
 
   private static final Logger logger = LoggerFactory.getLogger(TestomatStepsAspect.class);
 
-  @Pointcut("@annotation(io.testomat.annotation.Step)")
+  @Pointcut("@annotation(io.testomat.annotation.Step) || @annotation(io.qameta.allure.Step)")
   public void stepMethod() {
   }
 

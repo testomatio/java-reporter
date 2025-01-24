@@ -4,6 +4,7 @@ package io.testomat;
 import io.testomat.api.TestomatApi;
 import io.testomat.model.TTestResult;
 import io.testomat.model.TTestRun;
+import io.testomat.utils.SafetyUtils;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -36,15 +37,18 @@ public class TestomatReporter {
   }
 
   public static synchronized void sendTestResults() {
-    resultsBatch.addAll(pollAllUnpublishedResults());
-    if (resultsBatch.isEmpty()) {
-      return;
-    }
-    TTestRun testRun = new TTestRun();
-    testRun.setId(Testomat.getTestRun().getId());
-    testRun.setTestResults(resultsBatch);
-    api.addTestResultsToTestRun(testRun);
-    resultsBatch.clear();
+    SafetyUtils.invokeSafety("TestomatReporter:sendTestResults", () -> {
+      resultsBatch.addAll(pollAllUnpublishedResults());
+      if (resultsBatch.isEmpty()) {
+        return;
+      }
+      TTestRun testRun = new TTestRun();
+      testRun.setId(Testomat.getTestRun().getId());
+      testRun.setTestResults(resultsBatch);
+      api.addTestResultsToTestRun(testRun);
+      resultsBatch.clear();
+    });
+
   }
 
 }

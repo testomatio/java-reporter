@@ -25,6 +25,7 @@ class TestRun {
     testRun.id = run.getId();
     testRun.title = run.getName();
     testRun.env = run.getEnv();
+    testRun.groupTitle = run.getGroupTitle();
     testRun.tests = run.getTestResults().stream().map(TestResult::parse).toList();
 
     return testRun;
