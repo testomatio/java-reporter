@@ -14,7 +14,6 @@ public class TestomatConfig {
   public static final String TESTOMAT_HOST = properties.getProperty("testomat.host");
   public static final String TESTOMAT_PROJECT = properties.getProperty("testomat.project");
   public static final String TESTOMAT_API_URL = properties.getProperty("testomat.api.url");
-  public static final String TESTOMAT_DUMMY = properties.getProperty("testomat.dummy");
 
   public static String getProperty(String propertyName){
     return properties.getProperty(propertyName);
@@ -29,7 +28,7 @@ public class TestomatConfig {
     return Long.parseLong(property);
   }
 
-  static Properties loadProperties() {
+  private static Properties loadProperties() {
     try(InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("testomat.properties")) {
       Properties properties = new Properties();
       properties.load(is);

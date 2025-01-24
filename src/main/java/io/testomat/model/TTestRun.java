@@ -19,6 +19,7 @@ public class TTestRun {
   private LocalDateTime finishedAt;
   private List<TTestResult> testResults = new ArrayList<>();
   private List<String> tags = new ArrayList<>();
+  private Integer testsCount;
 
   public void setId(String id) {
     this.id = id;
@@ -78,6 +79,14 @@ public class TTestRun {
 
   public void setTags(List<String> tags) {
     this.tags = tags;
+  }
+
+  public void setTestsCount(Integer testsCount) {
+    this.testsCount = testsCount;
+  }
+
+  public Integer getTestsCount() {
+    return testsCount;
   }
 
   public boolean isFinished() {

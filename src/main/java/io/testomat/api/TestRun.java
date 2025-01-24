@@ -27,7 +27,7 @@ class TestRun {
     testRun.env = run.getEnv();
     testRun.groupTitle = run.getGroupTitle();
     testRun.tests = run.getTestResults().stream().map(TestResult::parse).toList();
-
+    testRun.testsCount = run.getTestsCount();
     return testRun;
   }
 
