@@ -32,8 +32,8 @@ public class TestomatTestNGListener implements IInvokedMethodListener {
       return;
     }
     TestomatStorage.setCurrentTestResult(new TTestResult());
+    Testomat.getCurrentTestResult().setName(StringFormatterUtils.capitalizeAndSplit(method.getTestMethod().getMethodName()));
     Testomat.getCurrentTestResult().setStartedAt(LocalDateTime.now());
-    Testomat.getCurrentTestResult().setName(method.getTestMethod().getMethodName());
   }
 
   public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
