@@ -23,6 +23,7 @@ public class TTestResult {
   private String message;
   private String stackTrace;
   private Map<String, Object> parameters;
+  private Map<String, Object> meta;
   private List<String> artifacts;
   private String code;
   private TStepResult currentStep;
@@ -146,6 +147,17 @@ public class TTestResult {
       parameters = new LinkedHashMap<>();
     }
     parameters.put(key, value);
+  }
+
+  public Map<String, Object> getMeta() {
+    return meta;
+  }
+
+  public void addMeta(String key, Object value) {
+    if (meta == null) {
+      meta = new LinkedHashMap<>();
+    }
+    meta.put(key, value);
   }
 
   public void addArtifact(String artifact) {

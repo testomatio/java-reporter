@@ -44,6 +44,7 @@ class TestResult {
     model.message = result.getMessage();
     model.stack = result.getStackTrace();
     model.example = result.getParameters();
+    model.meta = result.getMeta();
     model.code = result.getCode();
     model.artifacts = result.getArtifacts();
     model.steps = result.getSteps().stream().map(TestStep::parse).toList();
