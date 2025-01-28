@@ -11,6 +11,7 @@ import java.util.Map;
 class TestResult {
 
   public String title;
+  public String rid;
   public Status status;
   public String suiteTitle;
   public String suiteId;
@@ -47,6 +48,7 @@ class TestResult {
     model.meta = result.getMeta();
     model.code = result.getCode();
     model.artifacts = result.getArtifacts();
+   // model.rid = result.getRid();
     model.steps = result.getSteps().stream().map(TestStep::parse).toList();
     return model;
   }

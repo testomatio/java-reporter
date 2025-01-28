@@ -11,7 +11,7 @@ public class CustomTestRunListener implements ITestRunListener {
   public void beforeCreate(TTestRun testRun) {
     System.out.println("beforeCreate");
     testRun.setEnv("beta");
-    testRun.setGroupTitle("Group 1");
+  //  testRun.setGroupTitle("Group 1");
   }
 
   @Override

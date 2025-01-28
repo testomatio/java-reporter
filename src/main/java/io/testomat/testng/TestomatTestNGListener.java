@@ -1,10 +1,8 @@
 package io.testomat.testng;
 
-import io.qameta.allure.TmsLink;
 import io.testomat.Testomat;
 import io.testomat.TestomatReporter;
 import io.testomat.TestomatStorage;
-import io.testomat.annotation.TID;
 import io.testomat.model.TTestResult;
 import io.testomat.utils.ExceptionSourceCodePointer;
 import io.testomat.utils.SafetyUtils;
@@ -32,7 +30,8 @@ public class TestomatTestNGListener implements IInvokedMethodListener {
           .setName(StringFormatterUtils.capitalizeAndSplit(method.getTestMethod().getMethodName()));
       Testomat.getCurrentTestResult().setStartedAt(LocalDateTime.now());
       Testomat.getCurrentTestResult().setTestId(TestResultParser.parseTID(testResult));
-
+      Testomat.getCurrentTestResult().setTestFullName(
+          testResult.getMethod().getRealClass().getName() + "." + testResult.getMethod().getMethodName());
     });
 
   }

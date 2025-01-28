@@ -21,22 +21,12 @@ public class TestomatSuiteTestNGListener implements ISuiteListener {
   private static final Logger logger = LoggerFactory.getLogger(TestomatSuiteTestNGListener.class);
   private final ServiceLoader<ITestRunListener> loader = ServiceLoader.load(ITestRunListener.class);
   private final TestomatApi api = new TestomatApi();
-  private static final Thread realtimeReporter = new Thread(() -> {
-    while (!Testomat.getTestRun().isFinished()) {
-      try {
-        Thread.sleep(TestomatConfig.getReporterInterval());
-      } catch (InterruptedException e) {
-        logger.info("Realtime Reporter interrupted");
-      }
-      TestomatReporter.sendTestResults();
-    }
-  });
 
   public void onStart(ISuite suite) {
     SafetyUtils.invokeSafety("TestomatSuiteTestNGListener:onStart", () -> {
       loader.forEach(listener -> listener.beforeCreate(Testomat.getTestRun()));
+      TestomatReporter.startReporter();
       createTestRun(suite);
-      realtimeReporter.start();
       loader.forEach(listener -> listener.afterCreate(Testomat.getTestRun()));
     });
   }
@@ -44,7 +34,7 @@ public class TestomatSuiteTestNGListener implements ISuiteListener {
   public void onFinish(ISuite suite) {
     SafetyUtils.invokeSafety("TestomatSuiteTestNGListener:onFinish", () -> {
       loader.forEach(listener -> listener.beforeFinish(Testomat.getTestRun()));
-      realtimeReporter.interrupt();
+      TestomatReporter.stopReporter();
       api.finishTestRun(Testomat.getTestRun().getId());
       logger.info("Finished TestRun: {}", Testomat.getTestRun().getReportUrl());
       loader.forEach(listener -> listener.afterFinish(Testomat.getTestRun()));

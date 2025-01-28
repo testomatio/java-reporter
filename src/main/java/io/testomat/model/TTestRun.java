@@ -18,7 +18,7 @@ public class TTestRun {
   private LocalDateTime startedAt;
   private LocalDateTime finishedAt;
   private List<TTestResult> testResults = new ArrayList<>();
-  private List<String> tags = new ArrayList<>();
+  private List<String> tags;
   private Integer testsCount;
 
   public void setId(String id) {

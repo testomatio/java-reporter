@@ -28,39 +28,51 @@ public class LocalTestRunTest {
 
   @TID("68a968dc")
   @Test
-  public void successTestWithSteps(){
+  public void successTestWithSteps() {
     step1();
     step2();
   }
 
   @Test
-  public void failedTestWithSteps(){
+  public void failedTestWithSteps() {
     step1();
     step2();
     step3WithFail();
   }
 
   @Test
-  public void innerSteps(){
+  public void innerSteps() {
     step1();
     step2();
     step4WithInnerSteps();
   }
 
   @Test
-  public void stepWithDuration(){
+  public void stepWithDuration() {
     step5WithSleep();
   }
 
   @Test
-  public void stepWithParameters(){
+  public void stepWithParameters() {
     step6WithParameters("value1", 2);
   }
 
 
   @Test(dataProvider = "dataProvider")
-  public void testWithDataProvider(String param1, int param2){
-    System.out.println("Test with data provider: "+param1+" "+param2);
+  public void testWithDataProvider(String param1, int param2) {
+    System.out.println("Test with data provider: " + param1 + " " + param2);
+  }
+
+  int count = 0;
+
+  @TID("70b4ca32")
+  @Test(retryAnalyzer = MyRetryAnalyzer.class)
+  public void testWithRetry() throws InterruptedException {
+    Thread.sleep(2000);
+    if (count < 1) {
+      count++;
+      throw new RuntimeException("Test failed");
+    }
   }
 
   @DataProvider
@@ -79,19 +91,19 @@ public class LocalTestRunTest {
   }
 
   @Step
-  public void step3WithFail(){
+  public void step3WithFail() {
     throw new RuntimeException("Test failed");
   }
 
   @Step
-  public void step4WithInnerSteps(){
+  public void step4WithInnerSteps() {
     step1();
     step2();
   }
 
 
   @Step
-  public void step5WithSleep(){
+  public void step5WithSleep() {
     try {
       Thread.sleep(1000);
     } catch (InterruptedException e) {
@@ -100,7 +112,7 @@ public class LocalTestRunTest {
   }
 
   @Step
-  public void step6WithParameters(String param1, int param2){
-    System.out.println("Step 6 with parameters: "+param1+" "+param2);
+  public void step6WithParameters(String param1, int param2) {
+    System.out.println("Step 6 with parameters: " + param1 + " " + param2);
   }
 }

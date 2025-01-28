@@ -1,8 +1,12 @@
 package io.testomat.model;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +17,7 @@ import java.util.Map;
 public class TTestResult {
 
   private String testId;
+  public String rid;
   private String name;
   private String testFullName;
   private LocalDateTime startedAt;
@@ -42,6 +47,13 @@ public class TTestResult {
 
   public void setTestId(String testId) {
     this.testId = testId;
+  }
+
+  public String getRid(){
+    if(rid == null){
+      rid = generateRid();
+    }
+    return rid;
   }
 
   public String getName() {
@@ -165,6 +177,18 @@ public class TTestResult {
       artifacts = new ArrayList<>();
     }
     artifacts.add(artifact);
+  }
+
+
+  private String generateRid() {
+   // return testFullName;
+    StringBuilder sb = new StringBuilder();
+    sb.append(testFullName);
+    if (parameters != null) {
+      parameters.forEach((key, value) -> sb.append(key).append(value));
+    }
+    byte[] encodedBytes = Base64.getEncoder().encode(sb.toString().getBytes(StandardCharsets.UTF_8));
+    return new String(encodedBytes, StandardCharsets.UTF_8);
   }
 
 

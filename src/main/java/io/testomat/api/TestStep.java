@@ -19,12 +19,10 @@ class TestStep {
 
   public static TestStep parse(TStepResult step) {
     return new TestStep.Builder()
-       // .category(step.getCategory())
         .title(step.getTitle() + (step.getParameters().isEmpty() ? "" : " " + step.getParameters()))
         .duration(step.getDuration())
-      //  .error(error)
+        //.error(error)
         .steps(step.getSteps().stream().map(TestStep::parse).toList())
-      //  .options(step.getAttributes())
         .build();
   }
   public Builder toBuilder() {
