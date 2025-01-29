@@ -23,11 +23,11 @@ public class TestomatSuiteTestNGListener implements ISuiteListener {
   private final TestomatApi api = new TestomatApi();
 
   public void onStart(ISuite suite) {
-    if (!Testomat.isEnabled()) {
-      return;
-    }
     SafetyUtils.invokeSafety("TestomatSuiteTestNGListener:onStart", () -> {
       loader.forEach(listener -> listener.beforeCreate(Testomat.getTestRun()));
+      if (!Testomat.isEnabled()) {
+        return;
+      }
       TestomatReporter.startReporter();
       createTestRun(suite);
       loader.forEach(listener -> listener.afterCreate(Testomat.getTestRun()));
