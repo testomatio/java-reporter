@@ -21,6 +21,9 @@ public class TestomatTestNGListener implements IInvokedMethodListener {
 
 
   public void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
+    if (!Testomat.isEnabled()) {
+      return;
+    }
     SafetyUtils.invokeSafety("TestomatTestNGListener:beforeInvocation", () -> {
       if (method.isConfigurationMethod()) {
         return;
@@ -37,6 +40,9 @@ public class TestomatTestNGListener implements IInvokedMethodListener {
   }
 
   public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
+    if (!Testomat.isEnabled()) {
+      return;
+    }
     SafetyUtils.invokeSafety("TestomatTestNGListener:afterInvocation", () -> {
       if (method.isConfigurationMethod()) {
         return;

@@ -23,6 +23,9 @@ public class TestomatSuiteTestNGListener implements ISuiteListener {
   private final TestomatApi api = new TestomatApi();
 
   public void onStart(ISuite suite) {
+    if (!Testomat.isEnabled()) {
+      return;
+    }
     SafetyUtils.invokeSafety("TestomatSuiteTestNGListener:onStart", () -> {
       loader.forEach(listener -> listener.beforeCreate(Testomat.getTestRun()));
       TestomatReporter.startReporter();
@@ -32,6 +35,9 @@ public class TestomatSuiteTestNGListener implements ISuiteListener {
   }
 
   public void onFinish(ISuite suite) {
+    if (!Testomat.isEnabled()) {
+      return;
+    }
     SafetyUtils.invokeSafety("TestomatSuiteTestNGListener:onFinish", () -> {
       loader.forEach(listener -> listener.beforeFinish(Testomat.getTestRun()));
       TestomatReporter.stopReporter();
@@ -41,8 +47,8 @@ public class TestomatSuiteTestNGListener implements ISuiteListener {
     });
   }
 
-  public void createTestRun(ISuite suite){
-    if(Testomat.getTestRun().getName() == null){
+  public void createTestRun(ISuite suite) {
+    if (Testomat.getTestRun().getName() == null) {
       Testomat.getTestRun().setName(suite.getName());
     }
     Testomat.getTestRun().setTestsCount(suite.getAllMethods().size());

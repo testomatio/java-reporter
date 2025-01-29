@@ -8,6 +8,8 @@ import io.testomat.model.TTestRun;
  */
 public class Testomat {
 
+  private static boolean isEnabled = true;
+
   public static TTestResult getCurrentTestResult(){
     return TestomatStorage.getCurrentTestResult();
   }
@@ -21,7 +23,11 @@ public class Testomat {
   }
 
   public static boolean isEnabled(){
-    return getTestRun().getId() != null;
+    return isEnabled;
+  }
+
+  public static void disableReporter(){
+    isEnabled = false;
   }
 
 
