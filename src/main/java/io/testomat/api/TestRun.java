@@ -19,6 +19,8 @@ class TestRun {
   public List<TestResult> tests;
   public Boolean createTests;
   public Integer testsCount;
+  public String ciBuildUrl;
+  public List<Object> labels;
 
   public static TestRun parse(TTestRun run) {
     TestRun testRun = new TestRun();
@@ -29,6 +31,7 @@ class TestRun {
     testRun.tests = run.getTestResults().stream().map(TestResult::parse).toList();
     testRun.tags = run.getTags();
     testRun.testsCount = run.getTestsCount();
+    testRun.ciBuildUrl = run.getCiBuildUrl();
     return testRun;
   }
 

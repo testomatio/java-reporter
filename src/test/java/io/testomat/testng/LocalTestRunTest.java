@@ -9,7 +9,6 @@ import org.testng.annotations.Test;
 /**
  * Created by Lolik on 22.01.2025
  */
-@Listeners({TestomatSuiteTestNGListener.class, TestomatTestNGListener.class})
 public class LocalTestRunTest {
 
 

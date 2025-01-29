@@ -20,6 +20,7 @@ public class TTestRun {
   private List<TTestResult> testResults = new ArrayList<>();
   private List<String> tags;
   private Integer testsCount;
+  private String ciBuildUrl;
 
   public void setId(String id) {
     this.id = id;
@@ -43,6 +44,14 @@ public class TTestRun {
 
   public void setTestResults(List<TTestResult> testResults) {
     this.testResults = testResults;
+  }
+
+  public String getCiBuildUrl() {
+    return ciBuildUrl;
+  }
+
+  public void setCiBuildUrl(String ciBuildUrl) {
+    this.ciBuildUrl = ciBuildUrl;
   }
 
   public String getId() {

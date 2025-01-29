@@ -11,6 +11,7 @@ public class CustomTestRunListener implements ITestRunListener {
   public void beforeCreate(TTestRun testRun) {
     System.out.println("beforeCreate");
     testRun.setEnv("beta");
+    testRun.setCiBuildUrl("http://ci.com/build/123");
   //  testRun.setGroupTitle("Group 1");
   }
 

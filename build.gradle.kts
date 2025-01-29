@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.solidgate"
-version = "0.2.7"
+version = "0.2.8"
 description = "Testomat Java Reporter"
 
 java {
