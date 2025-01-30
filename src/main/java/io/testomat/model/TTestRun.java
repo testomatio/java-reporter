@@ -103,7 +103,7 @@ public class TTestRun {
   }
 
   public String getRunUrl() {
-    return String.format("%s/projects/%s/runs/%s", TestomatConfig.TESTOMAT_HOST, TestomatConfig.TESTOMAT_PROJECT, id);
+    return String.format("%s/projects/%s/runs/%s", TestomatConfig.getHost(), TestomatConfig.getProject(), id);
   }
 
   public String getReportUrl() {

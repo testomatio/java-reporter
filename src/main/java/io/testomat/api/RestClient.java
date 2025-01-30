@@ -33,7 +33,9 @@ class RestClient {
     HttpRequest request = createRequest("reporter")
         .POST(HttpRequest.BodyPublishers.ofString(writeValueAsString(testRun)))
         .build();
+    System.out.println(request.uri());
     HttpResponse<String> response = sendRequest(request);
+    System.out.println(response.body());
     return readJsonAsObject(response.body(), TestRunResponse.class);
   }
 
@@ -57,7 +59,7 @@ class RestClient {
   private HttpRequest.Builder createRequest(String path) {
     return HttpRequest.newBuilder()
         .header("Content-Type", "application/json")
-        .uri(URI.create(TestomatConfig.TESTOMAT_API_URL + path + "?api_key=" + apiKey));
+        .uri(URI.create(TestomatConfig.getApiUrl() + path + "?api_key=" + apiKey));
   }
 
   private HttpResponse<String> sendRequest(HttpRequest request) {

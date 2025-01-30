@@ -1,43 +1,43 @@
 package io.testomat;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
 /**
  * Created by Lolik on 21.06.2024
  */
 public class TestomatConfig {
 
-  public static Properties properties = loadProperties();
+  private static String apiKey = "please-add-your-testomatio-api-key";
+  private static long reporterInterval = 5000;
+  private static String host = "https://beta.testomat.io/";
+  private static String project = "empty";
+  private static String apiUrl = "https://beta.testomat.io/api";
+  private static String env;
 
-  public static final String TESTOMAT_HOST = properties.getProperty("testomat.host");
-  public static final String TESTOMAT_PROJECT = properties.getProperty("testomat.project");
-  public static final String TESTOMAT_API_URL = properties.getProperty("testomat.api.url");
-
-  public static String getProperty(String propertyName){
-    return properties.getProperty(propertyName);
+  static {
+    ConfigLoader.loadFromProperties(TestomatConfig.class, ConfigLoader.loadProperties());
   }
 
-  public static String getApiKey(){
-    return properties.getProperty("TESTOMAT_API_KEY");
+  public static String getApiKey() {
+    return apiKey;
   }
 
-  public static long getReporterInterval(){
-    String property = properties.getProperty("testomat.reporter.inverval", "5000");
-    return Long.parseLong(property);
+  public static long getReporterInterval() {
+    return reporterInterval;
   }
 
-  private static Properties loadProperties() {
-    try(InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("testomat.properties")) {
-      Properties properties = new Properties();
-      properties.load(is);
-      System.out.println("Loaded properties: "+properties);
-      properties.putAll(System.getenv());
-      return properties;
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to load testomat.properties", e);
-    }
+  public static String getHost() {
+    return host;
+  }
+
+  public static String getProject() {
+    return project;
+  }
+
+  public static String getApiUrl() {
+    return apiUrl;
+  }
+
+  public static String getEnv() {
+    return env;
   }
 
 }

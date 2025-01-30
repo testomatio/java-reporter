@@ -2,7 +2,6 @@ package io.testomat.testng;
 
 import io.testomat.ITestRunListener;
 import io.testomat.Testomat;
-import io.testomat.TestomatConfig;
 import io.testomat.TestomatReporter;
 import io.testomat.api.TestRunResponse;
 import io.testomat.api.TestomatApi;
