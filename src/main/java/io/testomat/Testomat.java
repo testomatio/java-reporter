@@ -30,5 +30,10 @@ public class Testomat {
     isEnabled = false;
   }
 
+  public static void step(String title){
+    Stepper.startStep(title, "passed");
+    Stepper.stopStep();
+  }
+
 
 }

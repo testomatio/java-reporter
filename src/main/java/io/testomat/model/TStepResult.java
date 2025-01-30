@@ -19,7 +19,7 @@ public class TStepResult {
   private LocalDateTime startedAt;
   private LocalDateTime finishedAt;
   private Map<String, Object> attributes;
-  private Map<String, Object> parameters;
+  private Map<String, Object> parameters = new LinkedHashMap<>();
   private List<Object> arguments;
 
 
