@@ -60,7 +60,7 @@ public class TestomatTestNGListener implements IInvokedMethodListener {
     if (testResult.getThrowable() != null) {
       ttr.setMessage(testResult.getThrowable().getMessage());
       ttr.setStackTrace(
-          ExceptionSourceCodePointer.parseExceptionSourceCodeFragment(testResult.getThrowable().getStackTrace(), true) +
+          ExceptionSourceCodePointer.parseExceptionSourceCodeFragment(testResult.getMethod().getMethodName(), testResult.getThrowable().getStackTrace(), true) +
               "\n\n" +
               Arrays.stream(testResult.getThrowable().getStackTrace()).map(StackTraceElement::toString)
                   .collect(Collectors.joining(System.lineSeparator())));
