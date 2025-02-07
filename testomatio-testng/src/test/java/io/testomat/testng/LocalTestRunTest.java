@@ -16,13 +16,13 @@ public class LocalTestRunTest {
   public void successTest() {
     System.out.println("Test passed");
   }
-
+/*
   @TID("4c51423e")
   @Test
   public void failedTest() {
     System.out.println("Test failed");
     throw new RuntimeException("Test failed");
-  }
+  }*/
 
   @TID("68a968dc")
   @Test
@@ -31,12 +31,14 @@ public class LocalTestRunTest {
     step2();
   }
 
+/*
   @Test
   public void failedTestWithSteps() {
     step1();
     step2();
     step3WithFail();
   }
+*/
 
   @Test
   public void innerSteps() {

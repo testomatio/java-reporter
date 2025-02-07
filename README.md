@@ -1,4 +1,4 @@
-# Testomat Java Reporter
+# Testomatio Java Reporter
 
 Alpha Testing
 
