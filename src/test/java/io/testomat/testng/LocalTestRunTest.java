@@ -3,7 +3,6 @@ package io.testomat.testng;
 import io.testomat.annotation.Step;
 import io.testomat.annotation.TID;
 import org.testng.annotations.DataProvider;
-import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 /**
