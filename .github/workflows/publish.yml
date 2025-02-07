@@ -25,13 +25,16 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Unit Tests
+        run: ./gradlew test --tests "io.testomat.unit.*"
 
-      - name: Publish to Maven Central
-        run: ./gradlew publish
-        env:
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+#      - name: Build with Gradle
+#        run: ./gradlew build
+
+#      - name: Publish to Maven Central
+#        run: ./gradlew publish
+#        env:
+#          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+#          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+#          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+#          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}

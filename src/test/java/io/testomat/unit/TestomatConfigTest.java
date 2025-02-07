@@ -1,5 +1,6 @@
-package io.testomat;
+package io.testomat.unit;
 
+import io.testomat.TestomatConfig;
 import org.testng.annotations.Test;
 
 /**
@@ -13,6 +14,5 @@ public class TestomatConfigTest {
     System.out.println("SONE INFO");
     System.out.println(TestomatConfig.getProject());
     System.out.println(TestomatConfig.getReporterInterval());
- //   System.out.println(TestomatConfig.getEnv());
   }
 }
