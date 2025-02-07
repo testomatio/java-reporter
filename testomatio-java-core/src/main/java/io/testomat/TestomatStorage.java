@@ -1,6 +1,5 @@
 package io.testomat;
 
-import io.testomat.model.TStepResult;
 import io.testomat.model.TTestResult;
 import io.testomat.model.TTestRun;
 

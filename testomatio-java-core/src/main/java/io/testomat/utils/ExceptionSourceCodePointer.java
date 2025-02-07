@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
-import org.testng.Reporter;
 
 /**
  * Created by Lolik on 17.11.2023
@@ -51,14 +50,13 @@ public class ExceptionSourceCodePointer {
       return sb.toString();
   }
 
-  public static String parseExceptionSourceCodeFragment(StackTraceElement[] stackTrace, boolean isColorsEnabled){
+  public static String parseExceptionSourceCodeFragment(String testMethodName, StackTraceElement[] stackTrace, boolean isColorsEnabled){
     try {
-      String methodName = Reporter.getCurrentTestResult().getMethod().getMethodName();
       StackTraceElement stackTraceElement =
-          Arrays.stream(stackTrace).filter(e -> e.getMethodName().equals(methodName)).findFirst().orElseThrow();
+          Arrays.stream(stackTrace).filter(e -> e.getMethodName().equals(testMethodName)).findFirst().orElseThrow();
       String filePath = stackTraceElement.getClassName().replace(".", "/") + ".java";
       int pointerLine = stackTraceElement.getLineNumber();
-      return "Class: "+filePath + " Method: "+ methodName + getSourceCodeFragment(filePath, pointerLine - 5, pointerLine + 1, pointerLine, isColorsEnabled);
+      return "Class: "+filePath + " Method: "+ testMethodName + getSourceCodeFragment(filePath, pointerLine - 5, pointerLine + 1, pointerLine, isColorsEnabled);
     } catch (Exception e) {
       return "ExceptionSourcePointer: Error occurred while parsing exception source code fragment";
     }

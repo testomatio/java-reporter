@@ -26,7 +26,11 @@ class ConfigLoader {
 
   private static void loadFromPropertiesFile() {
     try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("testomatio.properties")) {
-      properties.load(is);
+      if (is != null) {
+        properties.load(is);
+      } else {
+        logger.warn("Warning: Properties file 'testomatio.properties' not found.");
+      }
     } catch (IOException e) {
       logger.error("Warning: Could not load properties file: {}", e.getMessage());
     }
