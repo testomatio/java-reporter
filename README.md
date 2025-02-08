@@ -1,6 +1,4 @@
 # Testomatio Java Reporter
-
--------------
 [![Maven Central](https://img.shields.io/maven-central/v/io.testomat/testomatio-java-core.svg?label=Maven%20Central)](https://central.sonatype.com/namespace/io.testomat)
 #### Almost Beta Testing! 🚀
 
