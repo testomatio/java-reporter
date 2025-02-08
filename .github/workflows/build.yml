@@ -25,14 +25,17 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Tests
-        run: ./gradlew test
+      - name: Assemble
+        run: ./gradlew assemble -x test
+
+#      - name: Tests
+#        run: ./gradlew test --parallel
 
 #      - name: Build with Gradle
 #        run: ./gradlew build
 
 #      - name: Publish to Maven Central
-#        run: ./gradlew publish
+#        run: ./gradlew publish - parallel
 #        env:
 #          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
 #          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}

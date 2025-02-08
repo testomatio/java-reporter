@@ -5,7 +5,7 @@ import io.testomat.model.TTestRun;
 /**
  * Created by Lolik on 18.11.2024
  */
-public class TestomatApi {
+public class TestomatioApi {
 
   private final RestClient client = new RestClient();
 

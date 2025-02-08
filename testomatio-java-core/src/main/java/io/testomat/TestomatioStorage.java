@@ -6,7 +6,7 @@ import io.testomat.model.TTestRun;
 /**
  * Created by Lolik on 18.06.2024
  */
-public class TestomatStorage {
+public class TestomatioStorage {
 
   static final TTestRun testRun = new TTestRun();
   static final ThreadLocal<TTestResult> currentTestResult = ThreadLocal.withInitial(TTestResult::new);

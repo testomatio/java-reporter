@@ -8,23 +8,23 @@ import io.testomat.model.TStepResult;
 class Stepper {
 
   static void startStep(String title, String status){
-    TStepResult parentStep = Testomat.getCurrentTestResult().getCurrentStep();
+    TStepResult parentStep = Testomatio.getCurrentTestResult().getCurrentStep();
     TStepResult step = new TStepResult(title, parentStep);
     step.setStatus(status);
     step.startTime();
-    Testomat.getCurrentTestResult().setCurrentStep(step);
+    Testomatio.getCurrentTestResult().setCurrentStep(step);
     if (parentStep == null) {
-      Testomat.getCurrentTestResult().getSteps().add(step);
+      Testomatio.getCurrentTestResult().getSteps().add(step);
     } else {
       parentStep.addInnerStep(step);
     }
   }
 
   static void stopStep(){
-    var tStepResult = Testomat.getCurrentTestResult().getCurrentStep();
+    var tStepResult = Testomatio.getCurrentTestResult().getCurrentStep();
     tStepResult.setStatus("passed");
     tStepResult.stopTime();
-    Testomat.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
+    Testomatio.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
   }
 
 }

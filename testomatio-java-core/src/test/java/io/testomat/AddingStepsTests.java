@@ -9,7 +9,7 @@ public class AddingStepsTests {
 
   @Test
   public void customStepsTest(){
-    Testomat.step("My Custom Step Title");
+    Testomatio.step("My Custom Step Title");
   }
 
   @Test
@@ -24,12 +24,12 @@ public class AddingStepsTests {
           Lorem ipsum dolor sit amet, consectetur adipiscing elit.
         Nullam nec purus nec nunc
         """;
-    Testomat.step(longMultilineText);
+    Testomatio.step(longMultilineText);
   }
 
   @Test
   public void stepWithLink(){
-    Testomat.step("My Custom Step Title with link to https://www.google.com");
+    Testomatio.step("My Custom Step Title with link to https://www.google.com");
   }
 
 
