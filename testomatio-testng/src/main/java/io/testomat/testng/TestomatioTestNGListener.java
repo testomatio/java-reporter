@@ -1,8 +1,8 @@
 package io.testomat.testng;
 
-import io.testomat.Testomat;
-import io.testomat.TestomatReporter;
-import io.testomat.TestomatStorage;
+import io.testomat.Testomatio;
+import io.testomat.TestomatioReporter;
+import io.testomat.TestomatioStorage;
 import io.testomat.model.TTestResult;
 import io.testomat.utils.ExceptionSourceCodePointer;
 import io.testomat.utils.SafetyUtils;
@@ -17,30 +17,30 @@ import org.testng.ITestResult;
 /**
  * Created by Lolik on 22.01.2025
  */
-public class TestomatTestNGListener implements IInvokedMethodListener {
+public class TestomatioTestNGListener implements IInvokedMethodListener {
 
 
   public void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
-    if (!Testomat.isEnabled()) {
+    if (!Testomatio.isEnabled()) {
       return;
     }
     SafetyUtils.invokeSafety("TestomatTestNGListener:beforeInvocation", () -> {
       if (method.isConfigurationMethod()) {
         return;
       }
-      TestomatStorage.setCurrentTestResult(new TTestResult());
-      Testomat.getCurrentTestResult()
+      TestomatioStorage.setCurrentTestResult(new TTestResult());
+      Testomatio.getCurrentTestResult()
           .setName(StringFormatterUtils.capitalizeAndSplit(method.getTestMethod().getMethodName()));
-      Testomat.getCurrentTestResult().setStartedAt(LocalDateTime.now());
-      Testomat.getCurrentTestResult().setTestId(TestResultParser.parseTID(testResult));
-      Testomat.getCurrentTestResult().setTestFullName(
+      Testomatio.getCurrentTestResult().setStartedAt(LocalDateTime.now());
+      Testomatio.getCurrentTestResult().setTestId(TestResultParser.parseTID(testResult));
+      Testomatio.getCurrentTestResult().setTestFullName(
           testResult.getMethod().getRealClass().getName() + "." + testResult.getMethod().getMethodName());
     });
 
   }
 
   public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
-    if (!Testomat.isEnabled()) {
+    if (!Testomatio.isEnabled()) {
       return;
     }
     SafetyUtils.invokeSafety("TestomatTestNGListener:afterInvocation", () -> {
@@ -48,12 +48,12 @@ public class TestomatTestNGListener implements IInvokedMethodListener {
         return;
       }
       updateCurrentTestResult(method, testResult);
-      TestomatReporter.addResultToReporter(Testomat.getCurrentTestResult());
+      TestomatioReporter.addResultToReporter(Testomatio.getCurrentTestResult());
     });
   }
 
   public TTestResult updateCurrentTestResult(IInvokedMethod method, ITestResult testResult) {
-    TTestResult ttr = Testomat.getCurrentTestResult();
+    TTestResult ttr = Testomatio.getCurrentTestResult();
     ttr.setName(StringFormatterUtils.capitalizeAndSplit(method.getTestMethod().getMethodName()));
     ttr.setStatus(TestResultParser.parseTestNGStatus(testResult.getStatus()));
     ttr.setFinishedAt(LocalDateTime.now());

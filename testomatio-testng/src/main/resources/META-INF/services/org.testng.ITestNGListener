@@ -1,2 +1,2 @@
-io.testomat.testng.TestomatSuiteTestNGListener
-io.testomat.testng.TestomatTestNGListener
+io.testomat.testng.TestomatioSuiteTestNGListener
+io.testomat.testng.TestomatioTestNGListener

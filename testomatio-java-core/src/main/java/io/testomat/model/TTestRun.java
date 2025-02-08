@@ -1,6 +1,6 @@
 package io.testomat.model;
 
-import io.testomat.TestomatConfig;
+import io.testomat.TestomatioConfig;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +103,7 @@ public class TTestRun {
   }
 
   public String getRunUrl() {
-    return String.format("%s/projects/%s/runs/%s", TestomatConfig.getHost(), TestomatConfig.getProject(), id);
+    return String.format("%s/projects/%s/runs/%s", TestomatioConfig.getHost(), TestomatioConfig.getProject(), id);
   }
 
   public String getReportUrl() {

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import io.testomat.TestomatConfig;
+import io.testomat.TestomatioConfig;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -18,7 +18,7 @@ import java.net.http.HttpResponse;
 class RestClient {
 
   private final HttpClient httpClient = HttpClient.newHttpClient();
-  private final String apiKey = TestomatConfig.getApiKey();
+  private final String apiKey = TestomatioConfig.getApiKey();
 
   private final ObjectMapper objectMapper;
 
@@ -59,7 +59,7 @@ class RestClient {
   private HttpRequest.Builder createRequest(String path) {
     return HttpRequest.newBuilder()
         .header("Content-Type", "application/json")
-        .uri(URI.create(TestomatConfig.getApiUrl() + path + "?api_key=" + apiKey));
+        .uri(URI.create(TestomatioConfig.getApiUrl() + path + "?api_key=" + apiKey));
   }
 
   private HttpResponse<String> sendRequest(HttpRequest request) {
