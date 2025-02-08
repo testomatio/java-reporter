@@ -6,16 +6,16 @@ import io.testomat.model.TTestRun;
 /**
  * Created by Lolik on 18.06.2024
  */
-public class Testomat {
+public class Testomatio {
 
   private static boolean isEnabled = true;
 
   public static TTestResult getCurrentTestResult(){
-    return TestomatStorage.getCurrentTestResult();
+    return TestomatioStorage.getCurrentTestResult();
   }
 
   public static TTestRun getTestRun(){
-    return TestomatStorage.getTestRun();
+    return TestomatioStorage.getTestRun();
   }
 
   public static void addArtifact(String url){

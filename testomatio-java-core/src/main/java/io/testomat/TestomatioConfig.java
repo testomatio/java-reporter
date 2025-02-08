@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by Lolik on 21.06.2024
  */
-public class TestomatConfig {
+public class TestomatioConfig {
 
-  private static final Logger log = LoggerFactory.getLogger(TestomatConfig.class);
+  private static final Logger log = LoggerFactory.getLogger(TestomatioConfig.class);
   private static String apiKey = "please-add-your-testomatio-api-key";
   private static long reporterInterval = 5000;
   private static String host = "https://beta.testomat.io/";
@@ -19,7 +19,7 @@ public class TestomatConfig {
   private static String env;
 
   static {
-    ConfigLoader.loadFromProperties(TestomatConfig.class, ConfigLoader.loadProperties());
+    ConfigLoader.loadFromProperties(TestomatioConfig.class, ConfigLoader.loadProperties());
     verifyRequiredProperties();
   }
 
@@ -64,7 +64,7 @@ public class TestomatConfig {
       missingProperties.forEach(property ->
           log.error("{} is not set. Please add it to your testomatio.properties file or set it as an environment variable.", property)
       );
-      Testomat.disableReporter();
+      Testomatio.disableReporter();
     }
   }
 

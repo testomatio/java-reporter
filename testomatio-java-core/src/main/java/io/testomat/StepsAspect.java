@@ -17,9 +17,9 @@ import org.slf4j.LoggerFactory;
 
 
 @Aspect
-public class TestomatStepsAspect {
+public class StepsAspect {
 
-  private static final Logger logger = LoggerFactory.getLogger(TestomatStepsAspect.class);
+  private static final Logger logger = LoggerFactory.getLogger(StepsAspect.class);
 
   @Pointcut("@annotation(io.testomat.annotation.Step) || @annotation(io.qameta.allure.Step)")
   public void stepMethod() {
@@ -32,15 +32,15 @@ public class TestomatStepsAspect {
   @Before("anyMethod() && stepMethod()")
   public void beforeStep(JoinPoint joinPoint) {
     logger.info("Step started: " + joinPoint.getSignature().getName());
-    TStepResult parentStep = Testomat.getCurrentTestResult().getCurrentStep();
+    TStepResult parentStep = Testomatio.getCurrentTestResult().getCurrentStep();
     TStepResult step = new TStepResult(StringFormatterUtils.capitalizeAndSplit(joinPoint.getSignature().getName()),
         parentStep);
     step.setParameters(parseParameters(joinPoint));
     step.setArguments(Arrays.asList(joinPoint.getArgs()));
     step.startTime();
-    Testomat.getCurrentTestResult().setCurrentStep(step);
+    Testomatio.getCurrentTestResult().setCurrentStep(step);
     if (parentStep == null) {
-      Testomat.getCurrentTestResult().getSteps().add(step);
+      Testomatio.getCurrentTestResult().getSteps().add(step);
     } else {
       parentStep.addInnerStep(step);
     }
@@ -48,19 +48,19 @@ public class TestomatStepsAspect {
 
   @AfterReturning("anyMethod() && stepMethod()")
   public void afterStep(JoinPoint joinPoint) {
-    var tStepResult = Testomat.getCurrentTestResult().getCurrentStep();
+    var tStepResult = Testomatio.getCurrentTestResult().getCurrentStep();
     tStepResult.setStatus("passed");
     tStepResult.stopTime();
-    Testomat.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
+    Testomatio.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
   }
 
   @AfterThrowing(pointcut = "anyMethod() && stepMethod()", throwing = "ex")
   public void afterStepFailure(JoinPoint joinPoint, Throwable ex) {
-    var tStepResult = Testomat.getCurrentTestResult().getCurrentStep();
+    var tStepResult = Testomatio.getCurrentTestResult().getCurrentStep();
     tStepResult.setStatus("failed");
     tStepResult.stopTime();
     tStepResult.setError(ex.getMessage());
-    Testomat.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
+    Testomatio.getCurrentTestResult().setCurrentStep(tStepResult.getParent());
   }
 
   private Map<String, Object> parseParameters(JoinPoint joinPoint) {

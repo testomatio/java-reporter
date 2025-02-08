@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
  */
 public class TestomatApiTest {
 
-  private TestomatApi api = new TestomatApi();
+  private TestomatioApi api = new TestomatioApi();
   private String testRunId;
 
   @Test
