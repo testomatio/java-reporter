@@ -1,7 +1,7 @@
 package io.testomat;
 
 
-import io.testomat.api.TestomatApi;
+import io.testomat.api.TestomatioApi;
 import io.testomat.model.TTestResult;
 import io.testomat.model.TTestRun;
 import io.testomat.utils.SafetyUtils;
@@ -16,17 +16,17 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by Lolik on 18.06.2024
  */
-public class TestomatReporter {
+public class TestomatioReporter {
 
-  private static final Logger logger = LoggerFactory.getLogger(TestomatReporter.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestomatioReporter.class);
   private static final List<TTestResult> unpublishedResults = new ArrayList<>();
-  private static final TestomatApi api = new TestomatApi();
+  private static final TestomatioApi api = new TestomatioApi();
   private static final List<TTestResult> resultsBatch = new ArrayList<>();
   private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
   public static void startReporter() {
-    long interval = TestomatConfig.getReporterInterval();
-    scheduler.scheduleAtFixedRate(TestomatReporter::sendTestResults, 1000, interval, TimeUnit.MILLISECONDS);
+    long interval = TestomatioConfig.getReporterInterval();
+    scheduler.scheduleAtFixedRate(TestomatioReporter::sendTestResults, 1000, interval, TimeUnit.MILLISECONDS);
   }
 
   public static void stopReporter() {
@@ -71,7 +71,7 @@ public class TestomatReporter {
         return;
       }
       TTestRun testRun = new TTestRun();
-      testRun.setId(Testomat.getTestRun().getId());
+      testRun.setId(Testomatio.getTestRun().getId());
       testRun.setTestResults(resultsBatch);
       api.addTestResultsToTestRun(testRun);
       resultsBatch.clear();

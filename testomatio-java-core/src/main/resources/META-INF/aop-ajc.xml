@@ -1,6 +1,6 @@
 <aspectj>
     <weaver options="-warn:none -Xlint:ignore"/>
     <aspects>
-        <aspect name="io.testomat.TestomatStepsAspect"/>
+        <aspect name="io.testomat.StepsAspect"/>
     </aspects>
 </aspectj>

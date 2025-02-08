@@ -1,5 +1,5 @@
 echo "Test"
-./gradlew clean test --parallel
+./gradlew clean test --parallel -X
 
 echo "Publish locally"
 ./gradlew publish

@@ -7,7 +7,7 @@ plugins {
 
 allprojects {
     group = 'io.testomat'
-    version = '0.3.2'
+    version = '0.4.0'
 
     repositories {
         mavenCentral()
@@ -17,7 +17,20 @@ allprojects {
         dependsOn subprojects.findAll { it.plugins.hasPlugin("org.jreleaser") }
                 .collect { it.tasks.matching { it.name == "jreleaserFullRelease" } }
     }
+
 }
+
+tasks.register("updateReadmeVersion") {
+    doLast {
+        def readmeFile = file("README.md")
+        def content = readmeFile.text
+        content = content.replaceAll("<!--VERSION_PLACEHOLDER-->", project.version)
+        readmeFile.text = content
+        println "✅ Updated README.md with version: $version"
+    }
+}
+
+tasks.named("publish").configure { dependsOn "updateReadmeVersion" }
 
 subprojects {
 
@@ -95,6 +108,11 @@ subprojects {
     jreleaser {
         setBuildDir(layout.buildDirectory.get().asFile)
         gitRootSearch = true
+     /*   release {
+            github {
+                enabled = false;
+            }
+        }*/
         signing {
             active = 'ALWAYS'
             armored = true
@@ -108,7 +126,6 @@ subprojects {
                         stagingRepository('build/staging-deploy')
                         retryDelay = 30
                     }
-
                 }
             }
         }
