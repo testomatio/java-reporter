@@ -11,11 +11,10 @@ import org.slf4j.LoggerFactory;
 public class TestomatioConfig {
 
   private static final Logger log = LoggerFactory.getLogger(TestomatioConfig.class);
+  private static String host = "https://beta.testomat.io";
   private static String apiKey = "please-add-your-testomatio-api-key";
+  private static String project = "please-add-your-testomatio-project";
   private static long reporterInterval = 5000;
-  private static String host = "https://beta.testomat.io/";
-  private static String project = "empty";
-  private static String apiUrl = "https://beta.testomat.io/api";
   private static String env;
 
   static {
@@ -40,7 +39,7 @@ public class TestomatioConfig {
   }
 
   public static String getApiUrl() {
-    return apiUrl;
+    return host + "api/";
   }
 
   public static String getEnv() {
@@ -53,16 +52,16 @@ public class TestomatioConfig {
     List<String> missingProperties = new ArrayList<>();
 
     if (apiKey.equals("please-add-your-testomatio-api-key")) {
-      missingProperties.add("Testomatio API key");
+      missingProperties.add("TESTOMATIO_API_KEY");
     }
 
-    if (project.equals("empty")) {
-      missingProperties.add("Testomatio project");
+    if (project.equals("please-add-your-testomatio-project")) {
+      missingProperties.add("TESTOMATIO_PROJECT");
     }
 
     if (!missingProperties.isEmpty()) {
       missingProperties.forEach(property ->
-          log.error("{} is not set. Please add it to your testomatio.properties file or set it as an environment variable.", property)
+          log.error("{} is not set. Please set it as an environment variable or add it to testomatio.properties file in resources", property)
       );
       Testomatio.disableReporter();
     }

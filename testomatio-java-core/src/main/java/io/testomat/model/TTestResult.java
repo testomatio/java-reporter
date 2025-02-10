@@ -49,6 +49,12 @@ public class TTestResult {
     this.testId = testId;
   }
 
+  public void setTestIdIfNull(String testId) {
+    if(this.testId == null){
+      this.testId = testId;
+    }
+  }
+
   public String getRid(){
     if(rid == null){
       rid = generateRid();
@@ -62,6 +68,12 @@ public class TTestResult {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public void setNameIfNull(String name) {
+    if(this.name == null){
+      this.name = name;
+    }
   }
 
   public String getTestFullName() {

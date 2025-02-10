@@ -32,7 +32,7 @@ public class TestomatioTestNGListener implements IInvokedMethodListener {
       Testomatio.getCurrentTestResult()
           .setName(StringFormatterUtils.capitalizeAndSplit(method.getTestMethod().getMethodName()));
       Testomatio.getCurrentTestResult().setStartedAt(LocalDateTime.now());
-      Testomatio.getCurrentTestResult().setTestId(TestResultParser.parseTID(testResult));
+      Testomatio.getCurrentTestResult().setTestIdIfNull(TestResultParser.parseTID(testResult));
       Testomatio.getCurrentTestResult().setTestFullName(
           testResult.getMethod().getRealClass().getName() + "." + testResult.getMethod().getMethodName());
     });
