@@ -3,6 +3,8 @@ package io.testomat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,8 @@ class ConfigLoader {
   static Properties loadProperties() {
     loadFromPropertiesFile();
     loadFromEnvironment();
+    normalizeHostProperty();
+    findAlternativesOfApiKeyProperty();
     logger.info("Properties loaded");
     return properties;
   }
@@ -47,7 +51,9 @@ class ConfigLoader {
 
   static void loadFromProperties(Class<?> clazz, Properties properties) {
     for (Field field : clazz.getDeclaredFields()) {
-      if (!java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+      if (!java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+        continue;
+      }
       field.setAccessible(true);
       String key = PREFIX + camelToDot(field.getName());
       String value = properties.getProperty(key);
@@ -60,6 +66,20 @@ class ConfigLoader {
         }
       }
     }
+  }
+
+  private static void findAlternativesOfApiKeyProperty() {
+    List<String> alternativeKeys = Arrays.asList("testomatio", "testomatio.token");
+    alternativeKeys.forEach(key -> {
+      if (properties.containsKey(key)) {
+        properties.computeIfAbsent("testomatio.api.key", k -> properties.get(key));
+      }
+    });
+  }
+
+  private static void normalizeHostProperty() {
+    properties.computeIfPresent("testomatio.host", (key, host)
+        -> ((String) host).endsWith("/") ? host : host + "/");
   }
 
   private static String camelToDot(String camelCase) {

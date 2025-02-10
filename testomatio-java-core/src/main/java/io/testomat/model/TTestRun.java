@@ -66,6 +66,12 @@ public class TTestRun {
     this.name = name;
   }
 
+  public void setNameIfNull(String name) {
+    if(this.name == null){
+      this.name = name;
+    }
+  }
+
   public String getEnv() {
     return env;
   }
