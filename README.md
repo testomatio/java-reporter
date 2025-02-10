@@ -3,7 +3,16 @@
 #### Almost Beta Testing! 🚀
 
 ### How to use
-- TODO
+1. Add `testomatio-testng` module to your project
+2. Set ENV variable TESTOMATIO_API_KEY with your Testomatio API Key
+3. Add testomatio.properties file to your project with the following **required** properties:
+    ```properties
+    #Host of your Testomatio Instance
+    testomatio.host=https://testomat.io
+    #Project name
+    testomatio.project=java-reporter
+    ```
+4. Run your Tests
 
 ### Properties
 - TODO
@@ -18,13 +27,13 @@
 <dependency>
    <groupId>io.testomat</groupId>
    <artifactId>testomatio-testng</artifactId>
-   <version>0.4.0</version>
+   <version>0.4.1</version>
 </dependency>
 ```
 #### Gradle
 ```groovy
 dependencies {
-    implementation('io.testomat:testomatio-testng:0.4.0')
+    implementation('io.testomat:testomatio-testng:0.4.1')
 }
 ```
 
