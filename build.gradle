@@ -7,7 +7,7 @@ plugins {
 
 allprojects {
     group = 'io.testomat'
-    version = '0.4.0'
+    version = '0.4.1'
 
     repositories {
         mavenCentral()
@@ -20,17 +20,17 @@ allprojects {
 
 }
 
-tasks.register("updateReadmeVersion") {
-    doLast {
-        def readmeFile = file("README.md")
-        def content = readmeFile.text
-        content = content.replaceAll("<!--VERSION_PLACEHOLDER-->", project.version)
-        readmeFile.text = content
-        println "✅ Updated README.md with version: $version"
-    }
-}
-
-tasks.named("publish").configure { dependsOn "updateReadmeVersion" }
+//tasks.register("updateReadmeVersion") {
+//    doLast {
+//        def readmeFile = file("README.md")
+//        def content = readmeFile.text
+//        content = content.replaceAll("<!--VERSION_PLACEHOLDER-->", project.version)
+//        readmeFile.text = content
+//        println "✅ Updated README.md with version: $version"
+//    }
+//}
+//
+//tasks.named("publish").configure { dependsOn "updateReadmeVersion" }
 
 subprojects {
 

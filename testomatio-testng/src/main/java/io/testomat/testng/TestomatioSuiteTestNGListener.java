@@ -47,9 +47,7 @@ public class TestomatioSuiteTestNGListener implements ISuiteListener {
   }
 
   public void createTestRun(ISuite suite) {
-    if (Testomatio.getTestRun().getName() == null) {
-      Testomatio.getTestRun().setName(suite.getName());
-    }
+    Testomatio.getTestRun().setNameIfNull(suite.getName());
     Testomatio.getTestRun().setTestsCount(suite.getAllMethods().size());
     TestRunResponse response = api.createTestRun(Testomatio.getTestRun());
     Testomatio.getTestRun().setId(response.getUid());
