@@ -1,7 +1,5 @@
-package com.client.impl;
+package com.client;
 
-import com.client.interf.ApiInterface;
-import com.client.interf.ClientFactory;
 import com.exception.ApiKeyNotFoundException;
 import com.property_config.impl.PropertyProviderFactoryImpl;
 import com.property_config.interf.PropertyProvider;
@@ -12,13 +10,12 @@ import org.slf4j.LoggerFactory;
 import static com.constants.CommonConstants.API_KEY_PROPERTY_NAME;
 
 public class TestomatClientFactory implements ClientFactory {
-    private static ClientFactory instance;
     private static final PropertyProviderFactory propertyProviderFactory =
             PropertyProviderFactoryImpl.getPropertyProviderFactory();
     private static final Logger LOGGER = LoggerFactory.getLogger(TestomatClientFactory.class);
+    private static ClientFactory instance;
 
     private TestomatClientFactory() {
-
     }
 
     public static ClientFactory getClientFactory() {

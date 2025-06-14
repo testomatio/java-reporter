@@ -1,9 +1,9 @@
-package com.core.junit;
+package com.core.framework_integration;
 
 import com.annotation.TestId;
 import com.annotation.Title;
 import com.core.GlobalTestRunManager;
-import com.core.TestMetadata;
+import com.model.TestMetadata;
 import com.model.TestResult;
 import java.io.PrintWriter;
 import java.io.StringWriter;

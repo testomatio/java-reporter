@@ -1,4 +1,4 @@
-package com.client.interf;
+package com.client;
 
 public interface ClientFactory {
     ApiInterface createClient();

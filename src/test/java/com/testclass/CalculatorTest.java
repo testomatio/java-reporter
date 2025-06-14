@@ -20,28 +20,28 @@ public class CalculatorTest {
     @TestId("NG1")
     public void testAddition() {
         int result = calculator.add(2, 3);
-        assertEquals(result, 5);
+        assertEquals(5, result);
     }
 
     @Test
     @TestId("NG2")
     public void testSubtraction() {
         int result = calculator.subtract(10, 4);
-        assertEquals(result, 6);
+        assertEquals(6, result);
     }
 
     @Test
     @TestId("NG3")
     public void testMultiplication() {
         int result = calculator.multiply(3, 4);
-        assertEquals(result, 12);
+        assertEquals(12, result);
     }
 
     @Test
     @TestId("NG4")
     public void testDivision() {
         int result = calculator.divide(12, 4);
-        assertEquals(result, 3);
+        assertEquals(3, result);
     }
 
     @Test(expectedExceptions = ArithmeticException.class)
@@ -62,6 +62,6 @@ public class CalculatorTest {
     @Test(dataProvider = "addData")
     @TestId("NG6")
     public void testAdditionWithDataProvider(int a, int b, int expected) {
-        assertEquals(calculator.add(a, b), expected);
+        assertEquals(expected, calculator.add(a, b));
     }
 }

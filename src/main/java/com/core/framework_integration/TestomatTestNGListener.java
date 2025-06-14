@@ -1,9 +1,9 @@
-package com.core.testng;
+package com.core.framework_integration;
 
 import com.annotation.TestId;
 import com.annotation.Title;
 import com.core.GlobalTestRunManager;
-import com.core.TestMetadata;
+import com.model.TestMetadata;
 import com.model.TestResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,18 +31,18 @@ public class TestomatTestNGListener implements ISuiteListener, ITestListener {
         runManager.decrementSuiteCounter();
         LOGGER.debug("Finished suite: {}", suite.getName());
     }
-    
+
     // Test lifecycle
     @Override
     public void onTestSuccess(ITestResult result) {
         reportTestResult(result, "passed");
     }
-    
+
     @Override
     public void onTestFailure(ITestResult result) {
         reportTestResult(result, "failed");
     }
-    
+
     @Override
     public void onTestSkipped(ITestResult result) {
         reportTestResult(result, "skipped");

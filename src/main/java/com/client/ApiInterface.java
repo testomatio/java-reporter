@@ -1,4 +1,4 @@
-package com.client.interf;
+package com.client;
 
 
 import com.model.TestResult;

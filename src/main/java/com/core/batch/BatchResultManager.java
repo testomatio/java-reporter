@@ -1,6 +1,6 @@
 package com.core.batch;
 
-import com.client.interf.ApiInterface;
+import com.client.ApiInterface;
 import com.model.TestResult;
 import com.property_config.impl.PropertyProviderFactoryImpl;
 import java.io.IOException;
