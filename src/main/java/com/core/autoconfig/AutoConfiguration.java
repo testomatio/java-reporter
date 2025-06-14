@@ -1,6 +1,7 @@
 package com.core.autoconfig;
 
 import com.core.util.TestFrameworkDetector;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AutoConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoConfiguration.class);
+    @Getter
     private static volatile boolean initialized = false;
     
     static {
@@ -43,9 +45,5 @@ public class AutoConfiguration {
             
             initialized = true;
         }
-    }
-    
-    public static boolean isInitialized() {
-        return initialized;
     }
 }

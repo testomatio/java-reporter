@@ -3,7 +3,6 @@ package com.client.impl;
 import com.client.interf.ApiInterface;
 import com.constants.ApiRequestFields;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.model.TestResult;
 import com.property_config.impl.PropertyProviderFactoryImpl;
 import com.property_config.interf.PropertyProviderFactory;
@@ -25,17 +24,16 @@ import static com.constants.CommonConstants.HOST_URL_PROPERTY_NAME;
 import static com.constants.CommonConstants.MEDIA_TYPE_JSON;
 
 /**
- * Enhanced client for interacting with the Testomat.io API with batch support.
+ * Enhanced client for interacting with the Testomat.io API with correct batch support.
  */
 public class TestomatApiClient implements ApiInterface {
     private static final PropertyProviderFactory propertyProviderFactory =
             PropertyProviderFactoryImpl.getPropertyProviderFactory();
     private static final String API_KEY_PATH_PARAM = "api_key";
     private static final String TEST_RUN_PATH = "testrun";
-    private static final String BATCH_TEST_RUN_PATH = "testrun/batch";
     private static final String RESPONSE_UID_KEY = "uid";
     private static final Logger LOGGER = LoggerFactory.getLogger(TestomatApiClient.class);
-    
+
     private final String hostUrl;
     private final String apiKey;
     private final OkHttpClient client;
@@ -43,8 +41,6 @@ public class TestomatApiClient implements ApiInterface {
 
     /**
      * Constructs a new TestomatApiClient with the provided API key.
-     *
-     * @param apiKey the API key for authenticating requests to Testomat.io
      */
     public TestomatApiClient(String apiKey) {
         this.apiKey = apiKey;
@@ -63,8 +59,11 @@ public class TestomatApiClient implements ApiInterface {
     @Override
     public String createTestRun(String title) throws IOException {
         HttpUrl url = HttpUrl.parse(hostUrl).newBuilder()
+                .addPathSegment("api")
+                .addPathSegment("reporter")
                 .addQueryParameter(API_KEY_PATH_PARAM, apiKey)
                 .build();
+
         Map<String, String> body = Map.of(ApiRequestFields.TITLE, title);
         Request request = new Request.Builder()
                 .url(url)
@@ -83,11 +82,16 @@ public class TestomatApiClient implements ApiInterface {
     @Override
     public void reportTest(String uid, TestResult result) throws IOException {
         HttpUrl url = HttpUrl.parse(hostUrl).newBuilder()
+                .addPathSegment("api")
+                .addPathSegment("reporter")
                 .addPathSegment(uid)
                 .addPathSegment(TEST_RUN_PATH)
                 .addQueryParameter(API_KEY_PATH_PARAM, apiKey)
                 .build();
+
         Map<String, Object> body = getStringObjectMap(result);
+        // Додаємо create: true для автоматичного створення тестів
+        body.put("create", true);
 
         Request request = new Request.Builder()
                 .url(url)
@@ -100,7 +104,7 @@ public class TestomatApiClient implements ApiInterface {
 
     /**
      * Reports multiple test results in a single batch request to Testomat.io.
-     * This is more efficient than sending individual requests for each test.
+     * УВАГА: Використовує ТОЙ САМИЙ endpoint що й individual, але з іншою структурою body.
      */
     @Override
     public void reportTests(String uid, List<TestResult> results) throws IOException {
@@ -109,25 +113,35 @@ public class TestomatApiClient implements ApiInterface {
             return;
         }
 
+        // ТОЙ САМИЙ URL що й для individual тестів!
         HttpUrl url = HttpUrl.parse(hostUrl).newBuilder()
+                .addPathSegment("api")
+                .addPathSegment("reporter")
                 .addPathSegment(uid)
-                .addPathSegment(BATCH_TEST_RUN_PATH)
+                .addPathSegment(TEST_RUN_PATH)
                 .addQueryParameter(API_KEY_PATH_PARAM, apiKey)
                 .build();
 
-        List<Map<String, Object>> batchBody = new ArrayList<>();
+        // Готуємо batch body
+        List<Map<String, Object>> testsArray = new ArrayList<>();
         for (TestResult result : results) {
-            batchBody.add(getStringObjectMap(result));
+            testsArray.add(getStringObjectMap(result));
         }
 
-        Map<String, Object> requestBody = Map.of(ApiRequestFields.TESTS, batchBody);
+        // Структура для batch згідно API документації
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put(ApiRequestFields.API_KEY, apiKey); // Додаємо api_key в body
+        requestBody.put(ApiRequestFields.TESTS, testsArray);
+        requestBody.put("create", true); // Автоматичне створення тестів
+        // Можна додати batch_index якщо потрібно
+        // requestBody.put("batch_index", 1);
 
         Request request = new Request.Builder()
                 .url(url)
                 .post(RequestBody.create(MEDIA_TYPE_JSON, objectMapper.writeValueAsString(requestBody)))
                 .build();
 
-        LOGGER.debug("Reporting batch of {} test results", results.size());
+        LOGGER.debug("Reporting batch of {} test results to {}", results.size(), url);
         executeRequest(request, null);
     }
 
@@ -137,9 +151,12 @@ public class TestomatApiClient implements ApiInterface {
     @Override
     public void finishTestRun(String uid, float duration) throws IOException {
         HttpUrl url = HttpUrl.parse(hostUrl).newBuilder()
+                .addPathSegment("api")
+                .addPathSegment("reporter")
                 .addPathSegment(uid)
                 .addQueryParameter(API_KEY_PATH_PARAM, apiKey)
                 .build();
+
         Map<String, Object> body = Map.of(
                 ApiRequestFields.STATUS_EVENT, "finish",
                 ApiRequestFields.DURATION, duration
@@ -157,19 +174,22 @@ public class TestomatApiClient implements ApiInterface {
      * Executes an HTTP request and processes the response.
      */
     private <T> T executeRequest(Request request, Class<T> responseType) throws IOException {
+        LOGGER.debug("Making request to: {}", request.url());
+
         try (Response response = client.newCall(request).execute()) {
+            String responseBodyString = response.body() != null ? response.body().string() : "No response body";
+
             if (!response.isSuccessful()) {
-                String responseBody = response.body() != null ? response.body().string() : "No response body";
-                LOGGER.error("API request failed: HTTP {} - {} | Response: {}", 
-                    response.code(), response.message(), responseBody);
+                LOGGER.error("API request failed: HTTP {} - {} | URL: {} | Response: {}",
+                        response.code(), response.message(), request.url(), responseBodyString);
                 throw new IOException("API request failed: " + response.code() + " " + response.message());
             }
+
             if (responseType == null) {
                 return null;
             }
-            assert response.body() != null;
-            String responseBody = response.body().string();
-            return objectMapper.readValue(responseBody, responseType);
+
+            return objectMapper.readValue(responseBodyString, responseType);
         }
     }
 
@@ -177,7 +197,9 @@ public class TestomatApiClient implements ApiInterface {
     private static Map<String, Object> getStringObjectMap(TestResult result) {
         Map<String, Object> body = new HashMap<>();
         body.put(ApiRequestFields.TITLE, result.getTitle());
-        body.put(ApiRequestFields.TEST_ID, result.getTestId());
+        if (result.getTestId() != null) {
+            body.put(ApiRequestFields.TEST_ID, result.getTestId());
+        }
         body.put(ApiRequestFields.SUITE_TITLE, result.getSuiteTitle());
         body.put(ApiRequestFields.FILE, result.getFile());
         body.put(ApiRequestFields.STATUS, result.getStatus());

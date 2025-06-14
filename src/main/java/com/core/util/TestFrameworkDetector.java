@@ -11,22 +11,18 @@ public class TestFrameworkDetector {
     }
     
     public static Framework detectFramework() {
-        // Перевіряємо TestNG
         try {
             Class.forName("org.testng.TestNG");
             LOGGER.debug("TestNG detected");
             return Framework.TESTNG;
         } catch (ClassNotFoundException e) {
-            // TestNG не знайдено
         }
         
-        // Перевіряємо JUnit 5
         try {
             Class.forName("org.junit.jupiter.api.Test");
             LOGGER.debug("JUnit 5 detected");
             return Framework.JUNIT5;
         } catch (ClassNotFoundException e) {
-            // JUnit 5 не знайдено
         }
         
         LOGGER.warn("No supported test framework detected");
