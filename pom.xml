@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com</groupId>
-    <artifactId>testomat-java-reporter</artifactId>
+    <artifactId>java-reporter</artifactId>
     <version>0.1.0</version>
 
     <properties>
@@ -64,7 +64,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback-classic.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>

@@ -3,6 +3,7 @@ package com.core.batch;
 import com.client.ApiInterface;
 import com.model.TestResult;
 import com.property_config.impl.PropertyProviderFactoryImpl;
+import com.property_config.interf.PropertyProvider;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.constants.CommonConstants.BATCH_FLUSH_INTERVAL_PROPERTY_NAME;
-import static com.constants.CommonConstants.BATCH_SIZE_PROPERTY_NAME;
+import static com.constants.PropertyNameConstants.BATCH_FLUSH_INTERVAL_PROPERTY_NAME;
+import static com.constants.PropertyNameConstants.BATCH_SIZE_PROPERTY_NAME;
 
 public class BatchResultManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchResultManager.class);
@@ -35,7 +36,8 @@ public class BatchResultManager {
         this.apiClient = apiClient;
         this.runUid = runUid;
 
-        var propertyProvider = PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+        PropertyProvider propertyProvider =
+                PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
         this.batchSize = Integer.parseInt(
                 propertyProvider.getProperty(BATCH_SIZE_PROPERTY_NAME) != null
                         ? propertyProvider.getProperty(BATCH_SIZE_PROPERTY_NAME)

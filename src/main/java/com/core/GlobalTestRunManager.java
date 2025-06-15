@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.constants.CommonConstants.RUN_TITLE_PROPERTY_NAME;
+import static com.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 
 public class GlobalTestRunManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalTestRunManager.class);
@@ -47,12 +47,13 @@ public class GlobalTestRunManager {
 
             apiClient.set(client);
             runUid.set(uid);
+
             batchManager.set(new BatchResultManager(client, uid));
             startTime = System.currentTimeMillis();
 
             LOGGER.info("Global test run initialized with UID: {}", uid);
         } catch (Exception e) {
-            LOGGER.error("Failed to initialize test run", e);
+            LOGGER.error("Failed to initialize test run <-", e);
         }
     }
 

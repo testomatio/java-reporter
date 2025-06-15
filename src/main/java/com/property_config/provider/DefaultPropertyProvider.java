@@ -11,7 +11,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.constants.CommonConstants.PROPERTIES_FILE_NAME;
+import static com.constants.PropertyNameConstants.PROPERTIES_FILE_NAME;
 
 public class DefaultPropertyProvider extends AbstractPropertyProvider {
     private final Logger LOGGER = LoggerFactory.getLogger(DefaultPropertyProvider.class);

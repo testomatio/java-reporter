@@ -3,17 +3,16 @@ package com.client;
 import com.client.http.HttpClient;
 import com.client.http.OkHttpClientImpl;
 import com.client.request.TestomatRequestBodyBuilder;
-import com.client.url.TestomatUrlBuilder;
+import com.client.util.RequestUrlBuilderUtil;
+import com.exception.FinishReportFailedException;
+import com.exception.ReportingFailedException;
+import com.exception.TestRunCreationFailedException;
 import com.model.TestResult;
-import com.property_config.impl.PropertyProviderFactoryImpl;
-import com.property_config.interf.PropertyProviderFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.constants.CommonConstants.HOST_URL_PROPERTY_NAME;
 
 /**
  * Enhanced client for interacting with the Testomat.io API.
@@ -24,14 +23,11 @@ import static com.constants.CommonConstants.HOST_URL_PROPERTY_NAME;
  */
 public class TestomatApiClient implements ApiInterface {
 
-    private static final PropertyProviderFactory propertyProviderFactory =
-            PropertyProviderFactoryImpl.getPropertyProviderFactory();
-    private static final String RESPONSE_UID_KEY = "uid";
     private static final Logger LOGGER = LoggerFactory.getLogger(TestomatApiClient.class);
+    private static final String RESPONSE_UID_KEY = "uid";
 
     private final String apiKey;
     private final HttpClient httpClient;
-    private final TestomatUrlBuilder urlBuilder;
     private final TestomatRequestBodyBuilder requestBodyBuilder;
 
     /**
@@ -40,7 +36,7 @@ public class TestomatApiClient implements ApiInterface {
      * @param apiKey the API key for authentication with Testomat.io
      */
     public TestomatApiClient(String apiKey) {
-        this(apiKey, new OkHttpClientImpl(), createUrlBuilder(apiKey), new TestomatRequestBodyBuilder());
+        this(apiKey, new OkHttpClientImpl(), new TestomatRequestBodyBuilder());
     }
 
     /**
@@ -48,14 +44,11 @@ public class TestomatApiClient implements ApiInterface {
      *
      * @param apiKey             the API key for authentication
      * @param httpClient         the HTTP client implementation
-     * @param urlBuilder         the URL builder for constructing API endpoints
      * @param requestBodyBuilder the request body builder for creating JSON payloads
      */
-    public TestomatApiClient(String apiKey, HttpClient httpClient,
-                             TestomatUrlBuilder urlBuilder, TestomatRequestBodyBuilder requestBodyBuilder) {
+    public TestomatApiClient(String apiKey, HttpClient httpClient, TestomatRequestBodyBuilder requestBodyBuilder) {
         this.apiKey = apiKey;
         this.httpClient = httpClient;
-        this.urlBuilder = urlBuilder;
         this.requestBodyBuilder = requestBodyBuilder;
     }
 
@@ -68,16 +61,18 @@ public class TestomatApiClient implements ApiInterface {
      */
     @Override
     public String createTestRun(String title) throws IOException {
-        LOGGER.debug("Creating test run with title: {}", title);
+        LOGGER.debug("Creating test run with title -> {}", title);
 
-        String url = urlBuilder.buildCreateTestRunUrl();
+        String url = RequestUrlBuilderUtil.buildCreateTestRunUrl();
+        LOGGER.debug("Creating test run with url: {}", url);
         String requestBody = requestBodyBuilder.buildCreateTestRunBody(title);
 
         Map<String, String> responseBody = httpClient.post(url, requestBody, Map.class);
 
         if (responseBody == null || !responseBody.containsKey(RESPONSE_UID_KEY)) {
-            throw new IOException("Invalid response: missing UID in create test run response");
+            throw new TestRunCreationFailedException("Invalid response: missing UID in create test run response");
         }
+        LOGGER.debug("Created test run with UID: {}", responseBody.get(RESPONSE_UID_KEY));
 
         return responseBody.get(RESPONSE_UID_KEY);
     }
@@ -87,16 +82,19 @@ public class TestomatApiClient implements ApiInterface {
      *
      * @param uid    the unique identifier of the test run
      * @param result the test result to report
-     * @throws IOException if the API request fails
      */
     @Override
-    public void reportTest(String uid, TestResult result) throws IOException {
-        LOGGER.debug("Reporting test result for testId: {}", result.getTestId());
+    public void reportTest(String uid, TestResult result) {
+        try {
+            LOGGER.debug("Reporting test result for testId: {}", result.getTestId());
 
-        String url = urlBuilder.buildReportTestUrl(uid);
-        String requestBody = requestBodyBuilder.buildSingleTestReportBody(result);
+            String url = RequestUrlBuilderUtil.buildReportTestUrl(uid);
+            String requestBody = requestBodyBuilder.buildSingleTestReportBody(result);
+            httpClient.post(url, requestBody, null);
 
-        httpClient.post(url, requestBody, null);
+        } catch (Exception e) {
+            throw new ReportingFailedException("Failed to report test /n" + e.getMessage());
+        }
     }
 
     /**
@@ -105,21 +103,24 @@ public class TestomatApiClient implements ApiInterface {
      *
      * @param uid     the unique identifier of the test run
      * @param results the list of test results to report
-     * @throws IOException if the API request fails
      */
     @Override
-    public void reportTests(String uid, List<TestResult> results) throws IOException {
-        if (results == null || results.isEmpty()) {
-            LOGGER.debug("No test results to report");
-            return;
+    public void reportTests(String uid, List<TestResult> results) {
+        try {
+            if (results == null || results.isEmpty()) {
+                LOGGER.debug("No test results to report");
+                return;
+            }
+
+            LOGGER.debug("Reporting batch of {} test results", results.size());
+
+            String url = RequestUrlBuilderUtil.buildReportTestUrl(uid);
+            String requestBody = requestBodyBuilder.buildBatchTestReportBody(results, apiKey);
+
+            httpClient.post(url, requestBody, null);
+        } catch (Exception e) {
+            throw new ReportingFailedException("Failed to report batch /n" + e.getMessage());
         }
-
-        LOGGER.debug("Reporting batch of {} test results", results.size());
-
-        String url = urlBuilder.buildReportTestUrl(uid);
-        String requestBody = requestBodyBuilder.buildBatchTestReportBody(results, apiKey);
-
-        httpClient.post(url, requestBody, null);
     }
 
     /**
@@ -127,26 +128,18 @@ public class TestomatApiClient implements ApiInterface {
      *
      * @param uid      the unique identifier of the test run
      * @param duration the duration of the test run in seconds
-     * @throws IOException if the API request fails
      */
     @Override
-    public void finishTestRun(String uid, float duration) throws IOException {
-        LOGGER.debug("Finishing test run with uid: {}", uid);
+    public void finishTestRun(String uid, float duration) {
+        try {
+            LOGGER.debug("Finishing test run with uid: {}", uid);
 
-        String url = urlBuilder.buildFinishTestRunUrl(uid);
-        String requestBody = requestBodyBuilder.buildFinishTestRunBody(duration);
+            String url = RequestUrlBuilderUtil.buildFinishTestRunUrl(uid);
+            String requestBody = requestBodyBuilder.buildFinishTestRunBody(duration);
 
-        httpClient.put(url, requestBody, null);
-    }
-
-    /**
-     * Creates a URL builder instance with the host URL from properties.
-     *
-     * @param apiKey the API key for URL construction
-     * @return configured TestomatUrlBuilder instance
-     */
-    private static TestomatUrlBuilder createUrlBuilder(String apiKey) {
-        String hostUrl = propertyProviderFactory.getPropertyProvider().getProperty(HOST_URL_PROPERTY_NAME);
-        return new TestomatUrlBuilder(hostUrl, apiKey);
+            httpClient.put(url, requestBody, null);
+        } catch (Exception e) {
+            throw new FinishReportFailedException("Failed to finish test run /n" + e.getMessage());
+        }
     }
 }

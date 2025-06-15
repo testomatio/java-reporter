@@ -17,8 +17,12 @@ import org.opentest4j.TestAbortedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TestomatJUnitExtension implements BeforeAllCallback, AfterEachCallback, AfterAllCallback {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestomatJUnitExtension.class);
+import static com.constants.CommonConstants.FAILED;
+import static com.constants.CommonConstants.PASSED;
+import static com.constants.CommonConstants.SKIPPED;
+
+public class JUnitExtension implements BeforeAllCallback, AfterEachCallback, AfterAllCallback {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JUnitExtension.class);
     private final GlobalTestRunManager runManager = GlobalTestRunManager.getInstance();
 
     @Override
@@ -62,9 +66,9 @@ public class TestomatJUnitExtension implements BeforeAllCallback, AfterEachCallb
         Optional<Throwable> exception = context.getExecutionException();
         if (exception.isPresent()) {
             Throwable t = exception.get();
-            return t instanceof TestAbortedException ? "skipped" : "failed";
+            return t instanceof TestAbortedException ? SKIPPED : FAILED;
         }
-        return "passed";
+        return PASSED;
     }
 
     private TestResult createTestResult(TestMetadata metadata, String status, ExtensionContext context) {
@@ -76,8 +80,8 @@ public class TestomatJUnitExtension implements BeforeAllCallback, AfterEachCallb
             message = t.getMessage();
             stack = getStackTrace(t);
         }
-        return new TestResult(metadata.getTitle(), metadata.getTestId(),
-                metadata.getSuiteTitle(), metadata.getFile(), status, message, stack);
+        return new TestResult(metadata.getTitle(), metadata.getTestId(), metadata.getSuiteTitle(),
+                metadata.getFile(), status, message, stack);
     }
 
     private String getTestTitle(Method testMethod, ExtensionContext context) {

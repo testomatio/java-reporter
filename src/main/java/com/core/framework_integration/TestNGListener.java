@@ -15,10 +15,14 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 
-public class TestomatTestNGListener implements ISuiteListener, ITestListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestomatTestNGListener.class);
+import static com.constants.CommonConstants.FAILED;
+import static com.constants.CommonConstants.PASSED;
+import static com.constants.CommonConstants.SKIPPED;
+
+public class TestNGListener implements ISuiteListener, ITestListener {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestNGListener.class);
     private final GlobalTestRunManager runManager = GlobalTestRunManager.getInstance();
-    
+
     // Suite lifecycle
     @Override
     public void onStart(ISuite suite) {
@@ -35,17 +39,17 @@ public class TestomatTestNGListener implements ISuiteListener, ITestListener {
     // Test lifecycle
     @Override
     public void onTestSuccess(ITestResult result) {
-        reportTestResult(result, "passed");
+        reportTestResult(result, PASSED);
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        reportTestResult(result, "failed");
+        reportTestResult(result, FAILED);
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        reportTestResult(result, "skipped");
+        reportTestResult(result, SKIPPED);
     }
     
     private void reportTestResult(ITestResult result, String status) {
