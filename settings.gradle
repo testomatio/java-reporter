@@ -1,0 +1,4 @@
+rootProject.name = "testomatio-java-reporter"
+
+include 'testomatio-testng'
+include 'testomatio-java-core'
