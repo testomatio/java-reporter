@@ -1,8 +1,8 @@
 package com.testomatio.reporter.core.framework_integration;
 
-import com.testomatio.reporter.annotation.TestId;
-import com.testomatio.reporter.annotation.Title;
 import com.testomatio.reporter.core.GlobalTestRunManager;
+import com.testomatio.reporter.core.util.TestResultConstructorUtil;
+import com.testomatio.reporter.core.util.TestMetaDataExtractorUtil;
 import com.testomatio.reporter.model.TestMetadata;
 import com.testomatio.reporter.model.TestResult;
 import java.lang.reflect.Method;
@@ -34,83 +34,79 @@ public class JUnitExtension implements BeforeAllCallback, AfterEachCallback, Aft
     private final GlobalTestRunManager runManager = GlobalTestRunManager.getInstance();
 
     /**
-     * All public methods here are related to the tests lifecycle by their names
+     * Called before all tests in a test class are executed.
+     * Increments the active suite counter in the global test run manager to track
+     * how many test classes are currently running.
+     *
+     * @param context the current extension context containing test class information
      */
     @Override
     public void beforeAll(ExtensionContext context) {
-        runManager.onSuiteStart();
-        LOGGER.debug("JUnit test class started: {}", context.getDisplayName());
+        String className = context.getTestClass().map(Class::getSimpleName).orElse("Unknown");
+        LOGGER.debug("Starting test class: {}", className);
+        runManager.incrementSuiteCounter();
+        LOGGER.debug("Active suite count incremented for class: {}", className);
     }
 
+    /**
+     * Called after each individual test method execution.
+     * Extracts test metadata, determines test status, and reports the result
+     * to the global test run manager for batch processing.
+     *
+     * @param context the current extension context containing test method execution details
+     */
     @Override
     public void afterEach(ExtensionContext context) {
         if (!runManager.isActive()) {
+            LOGGER.debug("Test run manager is not active, skipping test result reporting");
             return;
         }
 
         Optional<Method> testMethodOptional = context.getTestMethod();
         if (testMethodOptional.isEmpty()) {
+            LOGGER.warn("No test method found in context, cannot report test result");
             return;
         }
 
-        Method testMethod = testMethodOptional.get();
-        TestMetadata metadata = getTestMetadata(testMethod, context);
-        String status = determineTestStatus(context);
-        TestResult result = createTestResult(metadata, status, context);
+        try {
+            Method testMethod = testMethodOptional.get();
+            TestMetadata metadata = TestMetaDataExtractorUtil.extractTestMetadata(testMethod, context);
+            String status = determineTestStatus(context);
+            TestResult result = TestResultConstructorUtil.createJUnitTestResult(metadata, status, context);
 
-        runManager.reportTest(result);
-        LOGGER.debug("Reported JUnit test: {} [{}]", result.getTitle(), status);
+            LOGGER.debug("Reporting test result: {} - {} ({})",
+                    metadata.getTitle(), status, metadata.getTestId());
+            runManager.reportTest(result);
+            LOGGER.debug("Test result reported successfully: {}", metadata.getTitle());
+        } catch (Exception e) {
+            LOGGER.error("Failed to report test result for context: {}", context.getDisplayName(), e);
+        }
     }
 
+    /**
+     * Called after all tests in a test class have been executed.
+     * Decrements the active suite counter in the global test run manager.
+     * When all test classes are finished, this triggers the test run finalization.
+     *
+     * @param context the current extension context containing test class information
+     */
     @Override
-    public void afterAll(ExtensionContext extensionContext) throws Exception {
-
-    }
-
-    private TestMetadata getTestMetadata(Method testMethod, ExtensionContext context) {
-        String title = getTestTitle(testMethod, context);
-        String suiteTitle = context.getTestClass().map(Class::getSimpleName).orElse("Unknown");
-        String file = suiteTitle + ".java";
-        String testId = getTestId(testMethod);
-        return new TestMetadata(title, testId, suiteTitle, file);
+    public void afterAll(ExtensionContext context) {
+        String className = context.getTestClass().map(Class::getSimpleName).orElse("Unknown");
+        LOGGER.debug("Finishing test class: {}", className);
+        runManager.decrementSuiteCounter();
+        LOGGER.debug("Active suite count decremented for class: {}", className);
     }
 
     private String determineTestStatus(ExtensionContext context) {
         Optional<Throwable> exception = context.getExecutionException();
         if (exception.isPresent()) {
             Throwable t = exception.get();
-            return t instanceof TestAbortedException ? SKIPPED : FAILED;
+            String status = t instanceof TestAbortedException ? SKIPPED : FAILED;
+            LOGGER.debug("Test failed with status: {} - Exception: {}", status, t.getClass().getSimpleName());
+            return status;
         }
+        LOGGER.debug("Test passed successfully");
         return PASSED;
-    }
-
-    private TestResult createTestResult(TestMetadata metadata, String status, ExtensionContext context) {
-        String message = null;
-        String stack = null;
-        Optional<Throwable> exception = context.getExecutionException();
-        if (exception.isPresent() && !(exception.get() instanceof TestAbortedException)) {
-            Throwable t = exception.get();
-            message = t.getMessage();
-            stack = getStackTrace(t);
-        }
-        return new TestResult(metadata.getTitle(), metadata.getTestId(),
-                metadata.getSuiteTitle(), metadata.getFile(), status, message, stack);
-    }
-
-    private String getTestTitle(Method testMethod, ExtensionContext context) {
-        Title titleAnnotation = testMethod.getAnnotation(Title.class);
-        return titleAnnotation != null ? titleAnnotation.value() : context.getDisplayName();
-    }
-
-    private String getTestId(Method testMethod) {
-        TestId testIdAnnotation = testMethod.getAnnotation(TestId.class);
-        return testIdAnnotation != null ? testIdAnnotation.value() : null;
-    }
-
-    private String getStackTrace(Throwable t) {
-        java.io.StringWriter sw = new java.io.StringWriter();
-        java.io.PrintWriter pw = new java.io.PrintWriter(sw);
-        t.printStackTrace(pw);
-        return sw.toString();
     }
 }
