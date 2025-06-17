@@ -6,8 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -15,46 +14,34 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_CONSOLE;
-import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_FILE;
-import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_LEVEL;
+import static com.testomatio.reporter.constants.PropertyNameConstants.*;
 
 public class LoggerConfig {
     private static final String ROOT_LOGGER_NAME = "com.testomatio.reporter";
+    private static final String LOG_PREFIX = "[TESTOMATIO] ";
 
-    private static volatile PropertyProvider propertyProvider;
-    private static final List<Handler> handlers = new ArrayList<>();
-
-    private static volatile boolean initializationAttempted = false;
-    private static volatile boolean initializationSuccessful = false;
+    private static volatile boolean initialized = false;
     private static final Object initLock = new Object();
+    private static final ConcurrentLinkedQueue<Handler> handlers = new ConcurrentLinkedQueue<>();
+    private static volatile PropertyProvider propertyProvider;
 
     public static void ensureInitialized() {
-        if (initializationAttempted) {
-            return;
-        }
+        if (initialized) return;
 
         synchronized (initLock) {
-            if (initializationAttempted) {
-                return;
-            }
-
-            initializationAttempted = true;
+            if (initialized) return;
 
             try {
-                if (propertyProvider == null) {
-                    propertyProvider = PropertyProviderFactoryImpl
-                            .getPropertyProviderFactory()
-                            .getPropertyProvider();
-                }
+                propertyProvider = PropertyProviderFactoryImpl
+                        .getPropertyProviderFactory()
+                        .getPropertyProvider();
 
-                performInitialization();
-                initializationSuccessful = true;
-
+                initialize();
+                initialized = true;
             } catch (Exception e) {
-                System.err.println("[TESTOMATIO] Logger initialization failed: " + e.getMessage());
-                // Fallback до базової консольної ініціалізації
+                logError("Logger initialization failed: " + e.getMessage());
                 setupFallbackLogging();
+                initialized = true;
             }
         }
     }
@@ -68,196 +55,145 @@ public class LoggerConfig {
         return getLogger(clazz.getSimpleName());
     }
 
-    private static void performInitialization() {
-        configureLogLevel();
-        configureHandlers();
+    private static void initialize() {
+        Logger rootLogger = Logger.getLogger(ROOT_LOGGER_NAME);
+        clearExistingHandlers(rootLogger);
+
+        configureLogLevel(rootLogger);
+        configureHandlers(rootLogger);
         addShutdownHook();
     }
 
-    private static void configureLogLevel() {
-        Logger rootLogger = Logger.getLogger(ROOT_LOGGER_NAME);
+    private static void configureLogLevel(Logger logger) {
+        Level level = parseLogLevel(getProperty(TESTOMATIO_LOG_LEVEL));
+        logger.setLevel(level);
+        logInfo("Log level set to: " + level);
+    }
+
+    private static Level parseLogLevel(String logLevel) {
+        if (logLevel == null || logLevel.trim().isEmpty()) {
+            return Level.INFO;
+        }
 
         try {
-            String logLevel = propertyProvider != null ?
-                    propertyProvider.getProperty(TESTOMATIO_LOG_LEVEL) : null;
-
-            if (logLevel != null && !logLevel.trim().isEmpty()) {
-                Level level = Level.parse(logLevel.toUpperCase().trim());
-                rootLogger.setLevel(level);
-                System.out.println("[TESTOMATIO] Log level set to: " + level);
-            } else {
-                rootLogger.setLevel(Level.INFO);
-                System.out.println("[TESTOMATIO] Using default log level: INFO");
-            }
+            return Level.parse(logLevel.toUpperCase().trim());
         } catch (IllegalArgumentException e) {
-            System.err.println("[TESTOMATIO] Invalid log level. Using INFO level. " +
-                    "Valid levels: OFF, SEVERE, WARNING, INFO, FINE, FINER, FINEST, ALL");
-            rootLogger.setLevel(Level.INFO);
-        } catch (Exception e) {
-            System.err.println("[TESTOMATIO] Error configuring log level: " + e.getMessage());
-            rootLogger.setLevel(Level.INFO);
+            logError("Invalid log level. Using INFO. Valid levels: OFF, SEVERE, WARNING, INFO, FINE, FINER, FINEST, ALL");
+            return Level.INFO;
         }
     }
 
-    private static void configureHandlers() {
-        Logger rootLogger = Logger.getLogger(ROOT_LOGGER_NAME);
-
-        Handler[] existingHandlers = rootLogger.getHandlers();
-        for (Handler handler : existingHandlers) {
-            rootLogger.removeHandler(handler);
-        }
+    private static void configureHandlers(Logger logger) {
         boolean hasHandlers = false;
 
-        try {
-            String logFile = propertyProvider != null ?
-                    propertyProvider.getProperty(TESTOMATIO_LOG_FILE) : null;
-
-            if (logFile != null && !logFile.trim().isEmpty()) {
-                if (setupFileHandler(rootLogger, logFile.trim())) {
-                    hasHandlers = true;
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("[TESTOMATIO] Error setting up file handler: " + e.getMessage());
+        String logFile = getProperty(TESTOMATIO_LOG_FILE);
+        if (logFile != null && !logFile.trim().isEmpty()) {
+            hasHandlers |= createFileHandler(logger, logFile.trim());
         }
 
-        try {
-            String consoleEnabled = propertyProvider != null ?
-                    propertyProvider.getProperty(TESTOMATIO_LOG_CONSOLE) : null;
-
-            if (!"false".equalsIgnoreCase(consoleEnabled)) {
-                if (setupConsoleHandler(rootLogger)) {
-                    hasHandlers = true;
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("[TESTOMATIO] Error setting up console handler: " + e.getMessage());
+        if (!"false".equalsIgnoreCase(getProperty(TESTOMATIO_LOG_CONSOLE))) {
+            hasHandlers |= createConsoleHandler(logger);
         }
 
         if (!hasHandlers) {
-            setupConsoleHandler(rootLogger);
+            createConsoleHandler(logger);
         }
     }
 
-    private static boolean setupFileHandler(Logger logger, String fileName) {
-        try {
-            validateFilePath(fileName);
-            FileHandler fileHandler = new FileHandler(fileName, true);
-            fileHandler.setFormatter(new SimpleFormatter());
-            logger.addHandler(fileHandler);
-
-            synchronized (handlers) {
-                handlers.add(fileHandler);
-            }
-
-            System.out.println("[TESTOMATIO] File logging enabled: " + fileName);
+    private static boolean createFileHandler(Logger logger, String fileName) {
+        return executeWithErrorHandling(() -> {
+            validateAndCreatePath(fileName);
+            FileHandler handler = new FileHandler(fileName, true);
+            handler.setFormatter(new SimpleFormatter());
+            addHandler(logger, handler);
+            logInfo("File logging enabled: " + fileName);
             return true;
-
-        } catch (IOException e) {
-            System.err.println("[TESTOMATIO] Failed to setup file logging: " + e.getMessage());
-        } catch (SecurityException e) {
-            System.err.println("[TESTOMATIO] Security error setting up file logging: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            System.err.println("[TESTOMATIO] Invalid file path: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("[TESTOMATIO] Unexpected error setting up file logging: " + e.getMessage());
-        }
-        return false;
+        }, "Failed to setup file logging");
     }
 
-    private static boolean setupConsoleHandler(Logger logger) {
-        try {
-            ConsoleHandler consoleHandler = new ConsoleHandler();
-            consoleHandler.setFormatter(new SimpleFormatter());
-            logger.addHandler(consoleHandler);
-
-            synchronized (handlers) {
-                handlers.add(consoleHandler);
-            }
-
+    private static boolean createConsoleHandler(Logger logger) {
+        return executeWithErrorHandling(() -> {
+            ConsoleHandler handler = new ConsoleHandler();
+            handler.setFormatter(new SimpleFormatter());
+            addHandler(logger, handler);
             return true;
-
-        } catch (SecurityException e) {
-            System.err.println("[TESTOMATIO] Security error setting up console logging: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("[TESTOMATIO] Unexpected error setting up console logging: " + e.getMessage());
-        }
-        return false;
+        }, "Failed to setup console logging");
     }
 
-    private static void validateFilePath(String fileName) {
-        try {
-            Path path = Paths.get(fileName);
-            Path parentDir = path.getParent();
-
-            if (parentDir != null && !Files.exists(parentDir)) {
-                Files.createDirectories(parentDir);
-            }
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid file path: " + fileName, e);
+    private static void validateAndCreatePath(String fileName) throws IOException {
+        Path path = Paths.get(fileName);
+        Path parentDir = path.getParent();
+        if (parentDir != null && !Files.exists(parentDir)) {
+            Files.createDirectories(parentDir);
         }
+    }
+
+    private static void addHandler(Logger logger, Handler handler) {
+        logger.addHandler(handler);
+        handlers.add(handler);
     }
 
     private static void setupFallbackLogging() {
-        try {
+        executeWithErrorHandling(() -> {
             Logger rootLogger = Logger.getLogger(ROOT_LOGGER_NAME);
-
             if (rootLogger.getHandlers().length == 0) {
-                ConsoleHandler consoleHandler = new ConsoleHandler();
-                consoleHandler.setFormatter(new SimpleFormatter());
-                consoleHandler.setLevel(Level.INFO);
-                rootLogger.addHandler(consoleHandler);
+                ConsoleHandler handler = new ConsoleHandler();
+                handler.setFormatter(new SimpleFormatter());
+                handler.setLevel(Level.INFO);
+                rootLogger.addHandler(handler);
                 rootLogger.setLevel(Level.INFO);
-
-                synchronized (handlers) {
-                    handlers.add(consoleHandler);
-                }
-
-                System.out.println("[TESTOMATIO] Fallback console logging enabled");
+                handlers.add(handler);
+                logInfo("Fallback console logging enabled");
             }
-        } catch (Exception e) {
-            System.err.println("[TESTOMATIO] Complete logging setup failure: " + e.getMessage());
-        }
+            return true;
+        }, "Complete logging setup failure");
     }
 
     private static void addShutdownHook() {
-        try {
+        executeWithErrorHandling(() -> {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                synchronized (handlers) {
-                    for (Handler handler : handlers) {
-                        try {
-                            handler.close();
-                        } catch (Exception e) {
-                            System.err.println("[TESTOMATIO] Error closing handler: " + e.getMessage());
-                        }
+                handlers.forEach(handler -> {
+                    try {
+                        handler.close();
+                    } catch (Exception e) {
+                        logError("Error closing handler: " + e.getMessage());
                     }
-                    handlers.clear();
-                }
+                });
+                handlers.clear();
             }));
-        } catch (Exception e) {
-            System.err.println("[TESTOMATIO] Failed to add shutdown hook: " + e.getMessage());
+            return true;
+        }, "Failed to add shutdown hook");
+    }
+
+    private static void clearExistingHandlers(Logger logger) {
+        for (Handler handler : logger.getHandlers()) {
+            logger.removeHandler(handler);
         }
     }
 
-    public static synchronized void reset() {
-        initializationAttempted = false;
-        initializationSuccessful = false;
-        propertyProvider = null;
+    private static String getProperty(String key) {
+        return propertyProvider != null ? propertyProvider.getProperty(key) : null;
+    }
 
-        synchronized (handlers) {
-            for (Handler handler : handlers) {
-                try {
-                    handler.close();
-                } catch (Exception e) {
-                }
-            }
-            handlers.clear();
+    private static boolean executeWithErrorHandling(ThrowingSupplier<Boolean> action, String errorMsg) {
+        try {
+            return action.get();
+        } catch (Exception e) {
+            logError(errorMsg + ": " + e.getMessage());
+            return false;
         }
+    }
 
-        Logger rootLogger = Logger.getLogger(ROOT_LOGGER_NAME);
-        Handler[] existingHandlers = rootLogger.getHandlers();
-        for (Handler handler : existingHandlers) {
-            rootLogger.removeHandler(handler);
-        }
+    private static void logInfo(String message) {
+        System.out.println(LOG_PREFIX + message);
+    }
+
+    private static void logError(String message) {
+        System.err.println(LOG_PREFIX + message);
+    }
+
+    @FunctionalInterface
+    private interface ThrowingSupplier<T> {
+        T get() throws Exception;
     }
 }
