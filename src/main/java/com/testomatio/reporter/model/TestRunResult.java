@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class TestResult {
+public class TestRunResult {
     private String title;
     private String testId;
     private String suiteTitle;

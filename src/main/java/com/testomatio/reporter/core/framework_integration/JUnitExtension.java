@@ -1,10 +1,10 @@
 package com.testomatio.reporter.core.framework_integration;
 
-import com.testomatio.reporter.core.GlobalTestRunManager;
-import com.testomatio.reporter.core.util.TestResultConstructorUtil;
-import com.testomatio.reporter.core.util.TestMetaDataExtractorUtil;
+import com.testomatio.reporter.core.GlobalRunManager;
+import com.testomatio.reporter.core.util.TestRunResultConstructorUtil;
+import com.testomatio.reporter.core.util.TestRunMetaDataExtractorUtil;
 import com.testomatio.reporter.model.TestMetadata;
-import com.testomatio.reporter.model.TestResult;
+import com.testomatio.reporter.model.TestRunResult;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -31,7 +31,7 @@ import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
  */
 public class JUnitExtension implements BeforeAllCallback, AfterEachCallback, AfterAllCallback {
     private static final Logger LOGGER = LoggerFactory.getLogger(JUnitExtension.class);
-    private final GlobalTestRunManager runManager = GlobalTestRunManager.getInstance();
+    private final GlobalRunManager runManager = GlobalRunManager.getInstance();
 
     /**
      * Called before all tests in a test class are executed.
@@ -70,9 +70,9 @@ public class JUnitExtension implements BeforeAllCallback, AfterEachCallback, Aft
 
         try {
             Method testMethod = testMethodOptional.get();
-            TestMetadata metadata = TestMetaDataExtractorUtil.extractTestMetadata(testMethod, context);
+            TestMetadata metadata = TestRunMetaDataExtractorUtil.extractTestMetadata(testMethod, context);
             String status = determineTestStatus(context);
-            TestResult result = TestResultConstructorUtil.createJUnitTestResult(metadata, status, context);
+            TestRunResult result = TestRunResultConstructorUtil.createJUnitTestResult(metadata, status, context);
 
             LOGGER.debug("Reporting test result: {} - {} ({})",
                     metadata.getTitle(), status, metadata.getTestId());

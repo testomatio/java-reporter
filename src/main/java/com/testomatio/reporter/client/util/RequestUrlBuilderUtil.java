@@ -31,7 +31,7 @@ public class RequestUrlBuilderUtil {
      * @return the complete URL string for test run creation
      * @throws IllegalStateException if required properties are not configured
      */
-    public static String buildCreateTestRunUrl() {
+    public static String buildCreateRunUrl() {
         String baseUrl = getBaseUrl();
         String apiKey = getApiKey();
 

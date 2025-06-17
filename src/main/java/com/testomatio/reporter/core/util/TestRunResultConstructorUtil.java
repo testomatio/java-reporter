@@ -1,7 +1,7 @@
 package com.testomatio.reporter.core.util;
 
 import com.testomatio.reporter.model.TestMetadata;
-import com.testomatio.reporter.model.TestResult;
+import com.testomatio.reporter.model.TestRunResult;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestResult;
 
-public class TestResultConstructorUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestResultConstructorUtil.class);
+public class TestRunResultConstructorUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestRunResultConstructorUtil.class);
 
     /**
      * Creates a TestResult object from test metadata and execution details.
@@ -24,7 +24,7 @@ public class TestResultConstructorUtil {
      * @param context  the JUnit extension context containing execution details
      * @return TestResult object ready for API reporting
      */
-    public static TestResult createJUnitTestResult(TestMetadata metadata, String status, ExtensionContext context) {
+    public static TestRunResult createJUnitTestResult(TestMetadata metadata, String status, ExtensionContext context) {
         String message = null;
         String stack = null;
 
@@ -36,11 +36,11 @@ public class TestResultConstructorUtil {
             LOGGER.debug("Including error details for failed test: {}", metadata.getTitle());
         }
 
-        return new TestResult(metadata.getTitle(), metadata.getTestId(), metadata.getSuiteTitle(),
+        return new TestRunResult(metadata.getTitle(), metadata.getTestId(), metadata.getSuiteTitle(),
                 metadata.getFile(), status, message, stack);
     }
 
-    public static TestResult createTestNGTestResult(TestMetadata metadata, String status, ITestResult result) {
+    public static TestRunResult createTestNGTestResult(TestMetadata metadata, String status, ITestResult result) {
         String message = null;
         String stack = null;
 
@@ -50,7 +50,7 @@ public class TestResultConstructorUtil {
             stack = getStackTrace(throwable);
         }
 
-        return new TestResult(
+        return new TestRunResult(
                 metadata.getTitle(),
                 metadata.getTestId(),
                 metadata.getSuiteTitle(),
