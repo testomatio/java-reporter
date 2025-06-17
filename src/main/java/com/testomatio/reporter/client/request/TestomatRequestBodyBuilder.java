@@ -1,10 +1,10 @@
 package com.testomatio.reporter.client.request;
 
 import com.testomatio.reporter.constants.ApiRequestFields;
-import com.testomatio.reporter.exception.FailedToCreateTestRunBodyException;
+import com.testomatio.reporter.exception.FailedToCreateRunBodyException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.testomatio.reporter.model.TestResult;
+import com.testomatio.reporter.model.TestRunResult;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,13 +45,13 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      * @throws JsonProcessingException if JSON serialization fails
      */
     @Override
-    public String buildCreateTestRunBody(String title) {
+    public String buildCreateRunBody(String title) {
         try {
             Map<String, String> body = Map.of(ApiRequestFields.TITLE, title);
             return objectMapper.writeValueAsString(body);
 
         } catch (JsonProcessingException e) {
-            throw new FailedToCreateTestRunBodyException("Failed to create test run body", e);
+            throw new FailedToCreateRunBodyException("Failed to create test run body", e);
         }
     }
 
@@ -63,7 +63,7 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      * @throws JsonProcessingException if JSON serialization fails
      */
     @Override
-    public String buildSingleTestReportBody(TestResult result) throws JsonProcessingException {
+    public String buildSingleTestReportBody(TestRunResult result) throws JsonProcessingException {
         Map<String, Object> body = buildTestResultMap(result);
         body.put("create", true);
         return objectMapper.writeValueAsString(body);
@@ -78,9 +78,9 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      * @throws JsonProcessingException if JSON serialization fails
      */
     @Override
-    public String buildBatchTestReportBody(List<TestResult> results, String apiKey) throws JsonProcessingException {
+    public String buildBatchTestReportBody(List<TestRunResult> results, String apiKey) throws JsonProcessingException {
         List<Map<String, Object>> testsArray = new ArrayList<>();
-        for (TestResult result : results) {
+        for (TestRunResult result : results) {
             testsArray.add(buildTestResultMap(result));
         }
 
@@ -100,7 +100,7 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      * @throws JsonProcessingException if JSON serialization fails
      */
     @Override
-    public String buildFinishTestRunBody(float duration) throws JsonProcessingException {
+    public String buildFinishRunBody(float duration) throws JsonProcessingException {
         Map<String, Object> body = Map.of(
                 ApiRequestFields.STATUS_EVENT, "finish",
                 ApiRequestFields.DURATION, duration
@@ -114,7 +114,7 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      * @param result the test result to convert
      * @return map containing test result data
      */
-    private Map<String, Object> buildTestResultMap(TestResult result) {
+    private Map<String, Object> buildTestResultMap(TestRunResult result) {
         Map<String, Object> body = new HashMap<>();
         body.put(ApiRequestFields.TITLE, result.getTitle());
 

@@ -4,7 +4,7 @@ import com.testomatio.reporter.client.ApiInterface;
 import com.testomatio.reporter.client.ClientFactory;
 import com.testomatio.reporter.client.TestomatClientFactory;
 import com.testomatio.reporter.core.batch.BatchResultManager;
-import com.testomatio.reporter.model.TestResult;
+import com.testomatio.reporter.model.TestRunResult;
 import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import static com.testomatio.reporter.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 
-public class GlobalTestRunManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalTestRunManager.class);
-    private static final GlobalTestRunManager INSTANCE = new GlobalTestRunManager();
+public class GlobalRunManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalRunManager.class);
+    private static final GlobalRunManager INSTANCE = new GlobalRunManager();
 
     private final AtomicInteger activeSuites = new AtomicInteger(0);
     private final AtomicReference<String> runUid = new AtomicReference<>();
@@ -30,10 +30,10 @@ public class GlobalTestRunManager {
             .getPropertyProvider()
             .getProperty(RUN_TITLE_PROPERTY_NAME);
 
-    private GlobalTestRunManager() {
+    private GlobalRunManager() {
     }
 
-    public static GlobalTestRunManager getInstance() {
+    public static GlobalRunManager getInstance() {
         return INSTANCE;
     }
 
@@ -45,7 +45,7 @@ public class GlobalTestRunManager {
         try {
             ClientFactory clientFactory = TestomatClientFactory.getClientFactory();
             ApiInterface client = clientFactory.createClient();
-            String uid = client.createTestRun(runTitle);
+            String uid = client.createRun(runTitle);
 
             apiClient.set(client);
             runUid.set(uid);
@@ -81,7 +81,7 @@ public class GlobalTestRunManager {
         LOGGER.debug("Active suites remaining: {}", remaining);
     }
 
-    public void reportTest(TestResult result) {
+    public void reportTest(TestRunResult result) {
         BatchResultManager manager = batchManager.get();
         if (manager != null) {
             manager.addResult(result);

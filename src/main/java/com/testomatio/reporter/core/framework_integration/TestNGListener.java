@@ -1,10 +1,10 @@
 package com.testomatio.reporter.core.framework_integration;
 
-import com.testomatio.reporter.core.GlobalTestRunManager;
-import com.testomatio.reporter.core.util.TestMetaDataExtractorUtil;
-import com.testomatio.reporter.core.util.TestResultConstructorUtil;
+import com.testomatio.reporter.core.GlobalRunManager;
+import com.testomatio.reporter.core.util.TestRunMetaDataExtractorUtil;
+import com.testomatio.reporter.core.util.TestRunResultConstructorUtil;
 import com.testomatio.reporter.model.TestMetadata;
-import com.testomatio.reporter.model.TestResult;
+import com.testomatio.reporter.model.TestRunResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ISuite;
@@ -23,7 +23,7 @@ import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
  */
 public class TestNGListener implements ISuiteListener, ITestListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestNGListener.class);
-    private final GlobalTestRunManager runManager = GlobalTestRunManager.getInstance();
+    private final GlobalRunManager runManager = GlobalRunManager.getInstance();
 
     @Override
     public void onStart(ISuite suite) {
@@ -58,9 +58,9 @@ public class TestNGListener implements ISuiteListener, ITestListener {
         }
 
         try {
-            TestMetadata metadata = TestMetaDataExtractorUtil.extractTestNGTestMetadata(result);
-            TestResult testResult = TestResultConstructorUtil.createTestNGTestResult(metadata, status, result);
-            runManager.reportTest(testResult);
+            TestMetadata metadata = TestRunMetaDataExtractorUtil.extractTestNGTestMetadata(result);
+            TestRunResult testRunResult = TestRunResultConstructorUtil.createTestNGTestResult(metadata, status, result);
+            runManager.reportTest(testRunResult);
         } catch (Exception e) {
             LOGGER.error("Failed to report test result", e);
         }

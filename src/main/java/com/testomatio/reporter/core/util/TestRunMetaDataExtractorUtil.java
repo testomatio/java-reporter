@@ -9,8 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestResult;
 
-public class TestMetaDataExtractorUtil{
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestMetaDataExtractorUtil.class);
+public class TestRunMetaDataExtractorUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestRunMetaDataExtractorUtil.class);
 
     public static TestMetadata extractTestMetadata(Method testMethod, ExtensionContext context) {
         String title = getJUnitTestTitle(testMethod, context);

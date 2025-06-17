@@ -6,8 +6,8 @@ import com.testomatio.reporter.client.request.TestomatRequestBodyBuilder;
 import com.testomatio.reporter.client.util.RequestUrlBuilderUtil;
 import com.testomatio.reporter.exception.FinishReportFailedException;
 import com.testomatio.reporter.exception.ReportingFailedException;
-import com.testomatio.reporter.exception.TestRunCreationFailedException;
-import com.testomatio.reporter.model.TestResult;
+import com.testomatio.reporter.exception.RunCreationFailedException;
+import com.testomatio.reporter.model.TestRunResult;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -60,17 +60,17 @@ public class TestomatApiClient implements ApiInterface {
      * @throws IOException if the API request fails or response cannot be processed
      */
     @Override
-    public String createTestRun(String title) throws IOException {
-        LOGGER.debug("Creating test run with title  {}", title);
+    public String createRun(String title) throws IOException {
+        LOGGER.debug("Creating run with title  {}", title);
 
-        String url = RequestUrlBuilderUtil.buildCreateTestRunUrl();
-        LOGGER.debug("Creating test run with url: {}", url);
-        String requestBody = requestBodyBuilder.buildCreateTestRunBody(title);
+        String url = RequestUrlBuilderUtil.buildCreateRunUrl();
+        LOGGER.debug("Creating run with url: {}", url);
+        String requestBody = requestBodyBuilder.buildCreateRunBody(title);
 
         Map<String, String> responseBody = httpClient.post(url, requestBody, Map.class);
 
         if (responseBody == null || !responseBody.containsKey(RESPONSE_UID_KEY)) {
-            throw new TestRunCreationFailedException("Invalid response: missing UID in create test run response");
+            throw new RunCreationFailedException("Invalid response: missing UID in create test run response");
         }
         LOGGER.debug("Created test run with UID: {}", responseBody.get(RESPONSE_UID_KEY));
 
@@ -84,7 +84,7 @@ public class TestomatApiClient implements ApiInterface {
      * @param result the test result to report
      */
     @Override
-    public void reportTest(String uid, TestResult result) {
+    public void reportTest(String uid, TestRunResult result) {
         try {
             LOGGER.debug("Reporting test result for testId: {}", result.getTestId());
 
@@ -105,7 +105,7 @@ public class TestomatApiClient implements ApiInterface {
      * @param results the list of test results to report
      */
     @Override
-    public void reportTests(String uid, List<TestResult> results) {
+    public void reportTests(String uid, List<TestRunResult> results) {
         try {
             if (results == null || results.isEmpty()) {
                 LOGGER.debug("No test results to report");
@@ -135,7 +135,7 @@ public class TestomatApiClient implements ApiInterface {
             LOGGER.debug("Finishing test run with uid: {}", uid);
 
             String url = RequestUrlBuilderUtil.buildFinishTestRunUrl(uid);
-            String requestBody = requestBodyBuilder.buildFinishTestRunBody(duration);
+            String requestBody = requestBodyBuilder.buildFinishRunBody(duration);
 
             httpClient.put(url, requestBody, null);
         } catch (Exception e) {

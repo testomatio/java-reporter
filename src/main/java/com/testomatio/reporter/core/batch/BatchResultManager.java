@@ -1,7 +1,7 @@
 package com.testomatio.reporter.core.batch;
 
 import com.testomatio.reporter.client.ApiInterface;
-import com.testomatio.reporter.model.TestResult;
+import com.testomatio.reporter.model.TestRunResult;
 import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
 import com.testomatio.reporter.property_config.interf.PropertyProvider;
 import java.io.IOException;
@@ -34,8 +34,8 @@ public class BatchResultManager {
     private static final int DEFAULT_FLUSH_INTERVAL_SECONDS = 5;
     private static final int MAX_RETRY_ATTEMPTS = 3;
 
-    private final List<TestResult> pendingResults = new ArrayList<>();
-    private final List<TestResult> failedResults = new ArrayList<>();
+    private final List<TestRunResult> pendingResults = new ArrayList<>();
+    private final List<TestRunResult> failedResults = new ArrayList<>();
     private final int batchSize;
     private final int flushInterval;
     private final ApiInterface apiClient;
@@ -90,7 +90,7 @@ public class BatchResultManager {
      * @param result the test result to add to the batch
      * @throws IllegalStateException if the manager is not active (shutdown has been called)
      */
-    public synchronized void addResult(TestResult result) {
+    public synchronized void addResult(TestRunResult result) {
         if (!isActive.get()) {
             LOGGER.warn("BatchResultManager is not active, skipping result: {}", result.getTitle());
             return;
@@ -116,7 +116,7 @@ public class BatchResultManager {
         if (pendingResults.isEmpty()) {
             return;
         }
-        List<TestResult> toSend = new ArrayList<>(pendingResults);
+        List<TestRunResult> toSend = new ArrayList<>(pendingResults);
         pendingResults.clear();
         sendBatch(toSend, 1);
     }
@@ -131,7 +131,7 @@ public class BatchResultManager {
      * @param results the list of test results to send
      * @param attempt the current attempt number (1-based)
      */
-    private void sendBatch(List<TestResult> results, int attempt) {
+    private void sendBatch(List<TestRunResult> results, int attempt) {
         try {
             if (results.size() == 1) {
                 apiClient.reportTest(runUid, results.get(0));
@@ -190,26 +190,5 @@ public class BatchResultManager {
         }
 
         LOGGER.info("BatchResultManager shutdown completed");
-    }
-
-    /**
-     * Returns the current number of pending test results waiting to be sent.
-     * This method is primarily used for monitoring and testing purposes.
-     *
-     * @return the number of test results in the pending queue
-     */
-    public synchronized int getPendingCount() {
-        return pendingResults.size();
-    }
-
-    /**
-     * Returns the total number of test results that failed to be reported
-     * after all retry attempts were exhausted.
-     * This method is primarily used for monitoring and debugging purposes.
-     *
-     * @return the number of test results that failed to be reported
-     */
-    public synchronized int getFailedCount() {
-        return failedResults.size();
     }
 }
