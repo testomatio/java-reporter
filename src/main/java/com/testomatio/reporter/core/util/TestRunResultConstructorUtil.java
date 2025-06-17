@@ -16,8 +16,6 @@ public class TestRunResultConstructorUtil {
 
     /**
      * Creates a TestResult object from test metadata and execution details.
-     * Includes error information (message and stack trace) for failed tests.
-     * Excludes error details for skipped tests (TestAbortedException).
      *
      * @param metadata the extracted test metadata
      * @param status   the determined test execution status
@@ -40,6 +38,36 @@ public class TestRunResultConstructorUtil {
                 metadata.getFile(), status, message, stack);
     }
 
+    /**
+     * Creates a TestResult object for JUnit tests with custom message (e.g., disabled tests).
+     *
+     * @param metadata the extracted test metadata
+     * @param status   the test execution status
+     * @param message  the custom message (e.g., disabled reason, abort reason)
+     * @return TestResult object ready for API reporting
+     */
+    public static TestRunResult createJUnitTestResultWithMessage(TestMetadata metadata, String status, String message) {
+        LOGGER.debug("Creating JUnit test result with custom message: {} - {}", metadata.getTitle(), message);
+
+        return new TestRunResult(
+                metadata.getTitle(),
+                metadata.getTestId(),
+                metadata.getSuiteTitle(),
+                metadata.getFile(),
+                status,
+                message,
+                null
+        );
+    }
+
+    /**
+     * Creates a TestResult object from TestNG test result.
+     *
+     * @param metadata the extracted test metadata
+     * @param status   the test execution status
+     * @param result   the TestNG test result containing execution details
+     * @return TestResult object ready for API reporting
+     */
     public static TestRunResult createTestNGTestResult(TestMetadata metadata, String status, ITestResult result) {
         String message = null;
         String stack = null;
@@ -56,6 +84,52 @@ public class TestRunResultConstructorUtil {
                 metadata.getSuiteTitle(),
                 metadata.getFile(),
                 status, message, stack
+        );
+    }
+
+    /**
+     * Creates a TestResult object for TestNG disabled tests.
+     *
+     * @param metadata the extracted test metadata
+     * @param status   the test execution status (should be SKIPPED)
+     * @param reason   the reason why the test was disabled
+     * @return TestResult object ready for API reporting
+     */
+    public static TestRunResult createTestNGDisabledTestResult(TestMetadata metadata, String status, String reason) {
+        LOGGER.debug("Creating TestNG disabled test result: {} - {}", metadata.getTitle(), reason);
+
+        return new TestRunResult(
+                metadata.getTitle(),
+                metadata.getTestId(),
+                metadata.getSuiteTitle(),
+                metadata.getFile(),
+                status,
+                reason,
+                null
+        );
+    }
+
+    /**
+     * Creates a TestResult object with custom message and optional stack trace.
+     * Universal method that can be used by both JUnit and TestNG for special cases.
+     *
+     * @param metadata the extracted test metadata
+     * @param status   the test execution status
+     * @param message  the custom message
+     * @param stack    the optional stack trace (can be null)
+     * @return TestResult object ready for API reporting
+     */
+    public static TestRunResult createCustomTestResult(TestMetadata metadata, String status, String message, String stack) {
+        LOGGER.debug("Creating custom test result: {} - {} - {}", metadata.getTitle(), status, message);
+
+        return new TestRunResult(
+                metadata.getTitle(),
+                metadata.getTestId(),
+                metadata.getSuiteTitle(),
+                metadata.getFile(),
+                status,
+                message,
+                stack
         );
     }
 

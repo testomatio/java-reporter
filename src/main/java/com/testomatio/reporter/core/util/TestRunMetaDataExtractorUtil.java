@@ -18,8 +18,7 @@ public class TestRunMetaDataExtractorUtil {
         String file = suiteTitle + ".java";
         String testId = getTestId(testMethod);
 
-        LOGGER.debug("Extracted test metadata - Title: {}, ID: {}, Suite: {}, File: {}",
-                title, testId, suiteTitle, file);
+        LOGGER.debug("Extracted test metadata - Title: {}, ID: {}, Suite: {}, File: {}", title, testId, suiteTitle, file);
 
         return new TestMetadata(title, testId, suiteTitle, file);
     }
@@ -34,9 +33,47 @@ public class TestRunMetaDataExtractorUtil {
         return new TestMetadata(title, testId, suiteTitle, file);
     }
 
-    private static String getTestId(Method method) {
+    /**
+     * Extracts test metadata for disabled TestNG tests.
+     * Used when ITestResult is not available for disabled tests.
+     *
+     * @param method    the test method
+     * @param testClass the class containing the test method
+     * @return TestMetadata object with extracted information
+     */
+    public static TestMetadata extractTestMetadataForDisabledTest(Method method, Class<?> testClass) {
+        String title = getTestTitle(method);
+        String testId = getTestId(method);
+        String suiteTitle = testClass.getSimpleName();
+        String file = suiteTitle + ".java";
+
+        LOGGER.debug("Extracted disabled test metadata - Title: {}, ID: {}, Suite: {}, File: {}", title, testId, suiteTitle, file);
+
+        return new TestMetadata(title, testId, suiteTitle, file);
+    }
+
+    /**
+     * Extracts test ID from method annotation.
+     * Used by both JUnit and TestNG extractors.
+     *
+     * @param method the test method to extract ID from
+     * @return test ID from @TestId annotation, or null if not present
+     */
+    public static String getTestId(Method method) {
         TestId testIdAnnotation = method.getAnnotation(TestId.class);
         return testIdAnnotation != null ? testIdAnnotation.value() : null;
+    }
+
+    /**
+     * Extracts test title from method annotation or method name.
+     * Used for disabled TestNG tests where ITestResult is not available.
+     *
+     * @param method the test method to extract title from
+     * @return test title from @Title annotation, or method name if not present
+     */
+    public static String getTestTitle(Method method) {
+        Title titleAnnotation = method.getAnnotation(Title.class);
+        return titleAnnotation != null ? titleAnnotation.value() : method.getName();
     }
 
     private static String getTestNGTestTitle(Method method, ITestResult result) {
@@ -47,8 +84,7 @@ public class TestRunMetaDataExtractorUtil {
     private static String getJUnitTestTitle(Method testMethod, ExtensionContext context) {
         Title titleAnnotation = testMethod.getAnnotation(Title.class);
         String title = titleAnnotation != null ? titleAnnotation.value() : context.getDisplayName();
-        LOGGER.debug("Using test title: {} (from {})", title,
-                titleAnnotation != null ? "@Title annotation" : "JUnit display name");
+        LOGGER.debug("Using test title: {} (from {})", title, titleAnnotation != null ? "@Title annotation" : "JUnit display name");
         return title;
     }
 }
