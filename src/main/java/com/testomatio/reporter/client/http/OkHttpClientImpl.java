@@ -3,12 +3,11 @@ package com.testomatio.reporter.client.http;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.testomatio.reporter.constants.CommonConstants.HTTP_TIMEOUT_SECONDS;
 import static com.testomatio.reporter.constants.CommonConstants.MEDIA_TYPE_JSON;
@@ -19,7 +18,6 @@ import static com.testomatio.reporter.constants.CommonConstants.MEDIA_TYPE_JSON;
  */
 public class OkHttpClientImpl implements HttpClient {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OkHttpClientImpl.class);
     private final OkHttpClient client;
     private final ObjectMapper objectMapper;
 
@@ -65,14 +63,14 @@ public class OkHttpClientImpl implements HttpClient {
      * @throws IOException if the request fails or response cannot be processed
      */
     private <T> T executeRequest(Request request, Class<T> responseType) throws IOException {
-        LOGGER.debug("Making request to: {}", request.url());
+        getLogger(HttpClient.class).finer("Making request to: " + request.url());
 
         try (Response response = client.newCall(request).execute()) {
             String responseBodyString = response.body() != null ? response.body().string() : "No response body";
 
             if (!response.isSuccessful()) {
-                LOGGER.error("API request failed: HTTP {} - {} | URL: {} | Response: {}",
-                        response.code(), response.message(), request.url(), responseBodyString);
+                getLogger(HttpClient.class).severe(String.format("API request failed: HTTP %s - %s | URL: %s | Response: %s",
+                        response.code(), response.message(), request.url(), responseBodyString));
                 throw new IOException("API request failed: " + response.code() + " " + response.message());
             }
 

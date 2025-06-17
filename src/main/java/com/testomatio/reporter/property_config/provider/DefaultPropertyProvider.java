@@ -8,13 +8,12 @@ import com.testomatio.reporter.property_config.util.StringUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 import static com.testomatio.reporter.constants.PropertyNameConstants.PROPERTIES_FILE_NAME;
 
 public class DefaultPropertyProvider extends AbstractPropertyProvider {
-    private final Logger LOGGER = LoggerFactory.getLogger(DefaultPropertyProvider.class);
+    private final Logger LOGGER = Logger.getLogger(DefaultPropertyProvider.class.getName());
 
     @Override
     public String getProperty(String key) {
@@ -37,7 +36,7 @@ public class DefaultPropertyProvider extends AbstractPropertyProvider {
                 properties.load(input);
             }
         } catch (IOException e) {
-            LOGGER.error("Error loading properties file: {}", e.getMessage());
+            LOGGER.severe("Error loading properties file: " + e.getMessage());
             throw new NoPropertyFileException("Error loading properties file: " + e.getMessage());
         }
         return properties;

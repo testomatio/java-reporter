@@ -11,8 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_FLUSH_INTERVAL_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_SIZE_PROPERTY_NAME;
@@ -21,7 +20,7 @@ import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_SIZE
  * Manages batch processing and reporting of test results to the Testomat.io API.
  * This class collects test results in batches and periodically flushes them to improve
  * performance and reduce API calls during test execution.
-
+ * <p>
  * The manager automatically starts a background thread for periodic flushing
  * and handles both single test and batch reporting scenarios.
  */
@@ -29,7 +28,7 @@ public class BatchResultManager {
 
     //TODO: Refactor class for SRP
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BatchResultManager.class);
+    private static final Logger LOGGER = Logger.getLogger(BatchResultManager.class.getName());
     private static final int DEFAULT_BATCH_SIZE = 10;
     private static final int DEFAULT_FLUSH_INTERVAL_SECONDS = 5;
     private static final int MAX_RETRY_ATTEMPTS = 3;
@@ -37,7 +36,6 @@ public class BatchResultManager {
     private final List<TestRunResult> pendingResults = new ArrayList<>();
     private final List<TestRunResult> failedResults = new ArrayList<>();
     private final int batchSize;
-    private final int flushInterval;
     private final ApiInterface apiClient;
     private final String runUid;
     private final ScheduledExecutorService scheduler;
@@ -49,7 +47,7 @@ public class BatchResultManager {
      * Starts a background scheduler for automatic periodic flushing.
      *
      * @param apiClient the API client interface for reporting test results
-     * @param runUid the unique identifier of the test run to report results to
+     * @param runUid    the unique identifier of the test run to report results to
      * @throws NumberFormatException if batch size or flush interval properties are not valid integers
      */
     public BatchResultManager(ApiInterface apiClient, String runUid) {
@@ -63,7 +61,7 @@ public class BatchResultManager {
                         ? propertyProvider.getProperty(BATCH_SIZE_PROPERTY_NAME)
                         : String.valueOf(DEFAULT_BATCH_SIZE)
         );
-        this.flushInterval = Integer.parseInt(
+        int flushInterval = Integer.parseInt(
                 propertyProvider.getProperty(BATCH_FLUSH_INTERVAL_PROPERTY_NAME) != null
                         ? propertyProvider.getProperty(BATCH_FLUSH_INTERVAL_PROPERTY_NAME)
                         : String.valueOf(DEFAULT_FLUSH_INTERVAL_SECONDS)
@@ -78,8 +76,8 @@ public class BatchResultManager {
         scheduler.scheduleAtFixedRate(this::flushPendingResults,
                 flushInterval, flushInterval, TimeUnit.SECONDS);
 
-        LOGGER.info("BatchResultManager initialized: batchSize={}, flushInterval={}s",
-                batchSize, flushInterval);
+        LOGGER.finer(String.format("BatchResultManager initialized: batchSize= %d, flushInterval= %d sec",
+                batchSize, flushInterval));
     }
 
     /**
@@ -92,12 +90,13 @@ public class BatchResultManager {
      */
     public synchronized void addResult(TestRunResult result) {
         if (!isActive.get()) {
-            LOGGER.warn("BatchResultManager is not active, skipping result: {}", result.getTitle());
+            LOGGER.warning("BatchResultManager is not active, skipping result: " + result.getTitle());
             return;
         }
 
         pendingResults.add(result);
-        LOGGER.debug("Added test result: {} (pending: {})", result.getTitle(), pendingResults.size());
+        LOGGER.finer(String.format("Added test result: %s (pending: %d)",
+                result.getTitle(), pendingResults.size()));
 
         if (pendingResults.size() >= batchSize) {
             flushPendingResults();
@@ -109,7 +108,7 @@ public class BatchResultManager {
      * Creates a copy of pending results, clears the pending list, and sends the batch
      * for processing. This method is called automatically when batch size is reached
      * or during scheduled flushes.
-     *
+     * <p>
      * Thread-safe operation that handles concurrent access to pending results.
      */
     public synchronized void flushPendingResults() {
@@ -125,7 +124,7 @@ public class BatchResultManager {
      * Sends a batch of test results to the API with retry mechanism.
      * Attempts to report the results, and if it fails, schedules a retry with exponential backoff.
      * After maximum retry attempts, moves failed results to the failed results list.
-     *
+     * <p>
      * Uses different API methods for single results vs. batch results for optimization.
      *
      * @param results the list of test results to send
@@ -135,14 +134,14 @@ public class BatchResultManager {
         try {
             if (results.size() == 1) {
                 apiClient.reportTest(runUid, results.get(0));
-                LOGGER.debug("Reported single test: {}", results.get(0).getTitle());
+                LOGGER.finer("Reported single test: " + results.get(0).getTitle());
             } else {
                 apiClient.reportTests(runUid, results);
-                LOGGER.debug("Reported batch of {} tests", results.size());
+                LOGGER.finer("Reported batch of %d tests" + results.size());
             }
         } catch (IOException e) {
-            LOGGER.error("Failed to report batch (attempt {}/{}): {}",
-                    attempt, MAX_RETRY_ATTEMPTS, e.getMessage());
+            LOGGER.severe(String.format("Failed to report batch (attempt %d/%d): %s",
+                    attempt, MAX_RETRY_ATTEMPTS, e.getMessage()));
 
             if (attempt < MAX_RETRY_ATTEMPTS) {
                 scheduler.schedule(() -> sendBatch(results, attempt + 1),
@@ -151,8 +150,8 @@ public class BatchResultManager {
                 synchronized (this) {
                     failedResults.addAll(results);
                 }
-                LOGGER.error("Failed to report {} tests after {} attempts",
-                        results.size(), MAX_RETRY_ATTEMPTS);
+                LOGGER.severe(String.format("Failed to report %d tests after %d attempts",
+                        results.size(), MAX_RETRY_ATTEMPTS));
             }
         }
     }
@@ -161,10 +160,10 @@ public class BatchResultManager {
      * Gracefully shuts down the batch result manager.
      * Stops accepting new results, flushes any remaining pending results,
      * and shuts down the background scheduler thread.
-     *
+     * <p>
      * This method should be called when test execution is complete to ensure
      * all pending results are reported before the application terminates.
-     *
+     * <p>
      * The shutdown process:
      * 1. Sets the manager as inactive to reject new results
      * 2. Flushes any remaining pending results
@@ -186,9 +185,9 @@ public class BatchResultManager {
         }
 
         if (!failedResults.isEmpty()) {
-            LOGGER.warn("BatchResultManager shutdown with {} failed results", failedResults.size());
+            LOGGER.warning(String.format("BatchResultManager shutdown with %d failed results", failedResults.size()));
         }
 
-        LOGGER.info("BatchResultManager shutdown completed");
+        LOGGER.fine("BatchResultManager shutdown completed");
     }
 }

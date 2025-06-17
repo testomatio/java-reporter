@@ -8,4 +8,7 @@ public class PropertyNameConstants {
     public static final String RUN_TITLE_PROPERTY_NAME = "testomatio.run.title";
     public static final String BATCH_SIZE_PROPERTY_NAME = "testomatio.batch.size";
     public static final String BATCH_FLUSH_INTERVAL_PROPERTY_NAME = "testomatio.batch.flush.interval";
+    public static final String TESTOMATIO_LOG_LEVEL = "testomatio.log.level";
+    public static final String TESTOMATIO_LOG_FILE = "testomatio.log.file";
+    public static final String TESTOMATIO_LOG_CONSOLE = "testomatio.log.console";
 }
