@@ -1,14 +1,15 @@
 package com.testomatio.reporter.client.request;
 
-import com.testomatio.reporter.constants.ApiRequestFields;
-import com.testomatio.reporter.exception.FailedToCreateRunBodyException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.testomatio.reporter.constants.ApiRequestFields;
+import com.testomatio.reporter.exception.FailedToCreateRunBodyException;
 import com.testomatio.reporter.model.TestRunResult;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.EqualsAndHashCode;
 
 import static com.testomatio.reporter.constants.CommonConstants.API_KEY_STRING;
 import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
@@ -17,6 +18,7 @@ import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
  * Builder class for constructing request bodies for Testomat.io API calls.
  * Handles JSON serialization and request body structure creation.
  */
+@EqualsAndHashCode
 public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
 
     private final ObjectMapper objectMapper;
@@ -42,7 +44,6 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      *
      * @param title the title of the test run
      * @return JSON string representation of the request body
-     * @throws JsonProcessingException if JSON serialization fails
      */
     @Override
     public String buildCreateRunBody(String title) {

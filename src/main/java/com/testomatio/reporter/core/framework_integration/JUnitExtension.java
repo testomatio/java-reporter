@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestWatcher;
 import org.slf4j.Logger;
@@ -25,7 +26,7 @@ import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
  * Implements JUnit 5 extension callbacks to handle test class lifecycle and individual test results.
  * To use this extension, add @ExtendWith(JUnitExtension.class) to your test classes.
  */
-public class JUnitExtension implements BeforeAllCallback, AfterAllCallback, TestWatcher {
+public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, AfterAllCallback, TestWatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(JUnitExtension.class);
     private final GlobalRunManager runManager = GlobalRunManager.getInstance();
 
@@ -159,5 +160,10 @@ public class JUnitExtension implements BeforeAllCallback, AfterAllCallback, Test
 
         runManager.reportTest(result);
         LOGGER.debug("Test result reported successfully: {}", result.getTitle());
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) {
+        LOGGER.debug("Starting test run: {}", extensionContext.getDisplayName());
     }
 }
