@@ -7,13 +7,11 @@ import java.io.StringWriter;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.opentest4j.TestAbortedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.ITestResult;
 
-public class TestRunResultConstructorUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestRunResultConstructorUtil.class);
+import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
+public class TestRunResultConstructorUtil {
     /**
      * Creates a TestResult object from test metadata and execution details.
      *
@@ -31,7 +29,7 @@ public class TestRunResultConstructorUtil {
             Throwable t = exception.get();
             message = t.getMessage();
             stack = getStackTrace(t);
-            LOGGER.debug("Including error details for failed test: {}", metadata.getTitle());
+            getLogger(TestRunResultConstructorUtil.class).finer("Including error details for failed test: " + metadata.getTitle());
         }
 
         return new TestRunResult(metadata.getTitle(), metadata.getTestId(), metadata.getSuiteTitle(),
@@ -47,7 +45,8 @@ public class TestRunResultConstructorUtil {
      * @return TestResult object ready for API reporting
      */
     public static TestRunResult createJUnitTestResultWithMessage(TestMetadata metadata, String status, String message) {
-        LOGGER.debug("Creating JUnit test result with custom message: {} - {}", metadata.getTitle(), message);
+        getLogger(TestRunResultConstructorUtil.class).finer(String.format("Creating JUnit test result with custom message: %s - %s",
+                metadata.getTitle(), message));
 
         return new TestRunResult(
                 metadata.getTitle(),
@@ -96,7 +95,7 @@ public class TestRunResultConstructorUtil {
      * @return TestResult object ready for API reporting
      */
     public static TestRunResult createTestNGDisabledTestResult(TestMetadata metadata, String status, String reason) {
-        LOGGER.debug("Creating TestNG disabled test result: {} - {}", metadata.getTitle(), reason);
+        getLogger(TestRunResultConstructorUtil.class).finer(String.format("Creating TestNG disabled test result: %s - %s", metadata.getTitle(), reason));
 
         return new TestRunResult(
                 metadata.getTitle(),
@@ -120,7 +119,7 @@ public class TestRunResultConstructorUtil {
      * @return TestResult object ready for API reporting
      */
     public static TestRunResult createCustomTestResult(TestMetadata metadata, String status, String message, String stack) {
-        LOGGER.debug("Creating custom test result: {} - {} - {}", metadata.getTitle(), status, message);
+        getLogger(TestRunResultConstructorUtil.class).finer(String.format("Creating custom test result: %s - %s - %s", metadata.getTitle(), status, message));
 
         return new TestRunResult(
                 metadata.getTitle(),

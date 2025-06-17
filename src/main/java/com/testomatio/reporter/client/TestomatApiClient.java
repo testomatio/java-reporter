@@ -11,8 +11,7 @@ import com.testomatio.reporter.model.TestRunResult;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 /**
  * Enhanced client for interacting with the Testomat.io API.
@@ -22,8 +21,6 @@ import org.slf4j.LoggerFactory;
  * - Request body creation is managed by TestomatRequestBodyBuilder
  */
 public class TestomatApiClient implements ApiInterface {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestomatApiClient.class);
     private static final String RESPONSE_UID_KEY = "uid";
 
     private final String apiKey;
@@ -61,10 +58,10 @@ public class TestomatApiClient implements ApiInterface {
      */
     @Override
     public String createRun(String title) throws IOException {
-        LOGGER.debug("Creating run with title  {}", title);
+        getLogger(TestomatApiClient.class).fine("Creating run with title: " + title);
 
         String url = RequestUrlBuilderUtil.buildCreateRunUrl();
-        LOGGER.debug("Creating run with url: {}", url);
+        getLogger(TestomatApiClient.class).finer("Creating run with url: " + url);
         String requestBody = requestBodyBuilder.buildCreateRunBody(title);
 
         Map<String, String> responseBody = httpClient.post(url, requestBody, Map.class);
@@ -72,7 +69,7 @@ public class TestomatApiClient implements ApiInterface {
         if (responseBody == null || !responseBody.containsKey(RESPONSE_UID_KEY)) {
             throw new RunCreationFailedException("Invalid response: missing UID in create test run response");
         }
-        LOGGER.debug("Created test run with UID: {}", responseBody.get(RESPONSE_UID_KEY));
+        getLogger(TestomatApiClient.class).fine("Created test run with UID: " + responseBody.get(RESPONSE_UID_KEY));
 
         return responseBody.get(RESPONSE_UID_KEY);
     }
@@ -86,7 +83,7 @@ public class TestomatApiClient implements ApiInterface {
     @Override
     public void reportTest(String uid, TestRunResult result) {
         try {
-            LOGGER.debug("Reporting test result for testId: {}", result.getTestId());
+            getLogger(TestomatApiClient.class).fine("Reporting test result for testId: " + result.getTestId());
 
             String url = RequestUrlBuilderUtil.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildSingleTestReportBody(result);
@@ -108,11 +105,11 @@ public class TestomatApiClient implements ApiInterface {
     public void reportTests(String uid, List<TestRunResult> results) {
         try {
             if (results == null || results.isEmpty()) {
-                LOGGER.debug("No test results to report");
+                getLogger(TestomatApiClient.class).fine("No test results to report");
                 return;
             }
 
-            LOGGER.debug("Reporting batch of {} test results", results.size());
+            getLogger(TestomatApiClient.class).finer("Reporting batch of %d test results" + results.size());
 
             String url = RequestUrlBuilderUtil.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildBatchTestReportBody(results, apiKey);
@@ -132,14 +129,15 @@ public class TestomatApiClient implements ApiInterface {
     @Override
     public void finishTestRun(String uid, float duration) {
         try {
-            LOGGER.debug("Finishing test run with uid: {}", uid);
+            getLogger(TestomatApiClient.class).fine("Finishing test run with uid: " + uid);
 
             String url = RequestUrlBuilderUtil.buildFinishTestRunUrl(uid);
             String requestBody = requestBodyBuilder.buildFinishRunBody(duration);
 
             httpClient.put(url, requestBody, null);
         } catch (Exception e) {
-            throw new FinishReportFailedException("Failed to finish test run /n" + e.getMessage());
+            getLogger(TestomatApiClient.class).severe("Failed to finish test run with uid: " + uid);
+            throw new FinishReportFailedException("Failed to finish test run " + e.getMessage());
         }
     }
 }
