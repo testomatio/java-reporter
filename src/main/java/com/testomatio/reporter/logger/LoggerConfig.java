@@ -14,7 +14,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import static com.testomatio.reporter.constants.PropertyNameConstants.*;
+import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_CONSOLE;
+import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_FILE;
+import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_LEVEL;
 
 public class LoggerConfig {
     private static final String ROOT_LOGGER_NAME = "com.testomatio.reporter";

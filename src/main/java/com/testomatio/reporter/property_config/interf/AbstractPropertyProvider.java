@@ -1,7 +1,7 @@
 package com.testomatio.reporter.property_config.interf;
 
-
 import com.testomatio.reporter.property_config.provider.DefaultPropertyProvider;
+import com.testomatio.reporter.property_config.provider.FilePropertyProvider;
 import com.testomatio.reporter.property_config.provider.JvmSystemPropertyProvider;
 import com.testomatio.reporter.property_config.provider.SystemEnvPropertyProvider;
 
@@ -12,6 +12,7 @@ public abstract class AbstractPropertyProvider implements PropertyProvider {
         return new PropertyProvider[]{
                 new JvmSystemPropertyProvider(),
                 new SystemEnvPropertyProvider(),
+                new FilePropertyProvider(),
                 new DefaultPropertyProvider()
         };
     }
