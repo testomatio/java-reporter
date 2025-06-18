@@ -2,6 +2,8 @@ package com.testomatio.reporter.core.util;
 
 import com.testomatio.reporter.model.TestMetadata;
 import com.testomatio.reporter.model.TestRunResult;
+import io.cucumber.plugin.event.Result;
+import io.cucumber.plugin.event.TestCaseFinished;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
@@ -109,17 +111,30 @@ public class TestRunResultConstructorUtil {
     }
 
     /**
-     * Creates a TestResult object with custom message and optional stack trace.
-     * Universal method that can be used by both JUnit and TestNG for special cases.
+     * Creates a TestResult object from Cucumber test case finished event.
      *
      * @param metadata the extracted test metadata
-     * @param status   the test execution status
-     * @param message  the custom message
-     * @param stack    the optional stack trace (can be null)
+     * @param status   the determined test execution status
+     * @param event    the Cucumber TestCaseFinished event containing execution details
      * @return TestResult object ready for API reporting
      */
-    public static TestRunResult createCustomTestResult(TestMetadata metadata, String status, String message, String stack) {
-        getLogger(TestRunResultConstructorUtil.class).finer(String.format("Creating custom test result: %s - %s - %s", metadata.getTitle(), status, message));
+    public static TestRunResult createCucumberTestResult(TestMetadata metadata, String status, TestCaseFinished event) {
+        String message = null;
+        String stack = null;
+
+        Result result = event.getResult();
+        Throwable error = result.getError();
+
+        if (error != null) {
+            message = error.getMessage();
+            stack = getStackTrace(error);
+            getLogger(TestRunResultConstructorUtil.class).finer(
+                    "Including error details for failed Cucumber test: " + metadata.getTitle());
+        }
+
+        getLogger(TestRunResultConstructorUtil.class).finer(String.format(
+                "Creating Cucumber test result: %s - %s (duration: %s)",
+                metadata.getTitle(), status, result.getDuration()));
 
         return new TestRunResult(
                 metadata.getTitle(),
