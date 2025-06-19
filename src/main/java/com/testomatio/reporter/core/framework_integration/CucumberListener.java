@@ -7,10 +7,12 @@ import com.testomatio.reporter.model.TestRunResult;
 import io.cucumber.plugin.EventListener;
 import io.cucumber.plugin.Plugin;
 import io.cucumber.plugin.event.EventPublisher;
+import io.cucumber.plugin.event.TestCase;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestCaseStarted;
 import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
@@ -26,7 +28,7 @@ public class CucumberListener implements Plugin, EventListener {
     private static final String UNKNOWN_SUITE = "Unknown Suite";
     private static final String UNKNOWN_FILE = "unknown.feature";
     private static final String UNKNOWN_TEST = "Unknown Test";
-    private static final String TESTID_PREFIX = "@testid:";
+    private static final String TESTID_REGEX = "@T[a-z0-9]{8}";
     private static final String TITLE_PREFIX = "@title:";
 
     private final GlobalRunManager runManager = GlobalRunManager.getInstance();
@@ -71,9 +73,7 @@ public class CucumberListener implements Plugin, EventListener {
             String status = determineTestStatus(event);
             TestMetadata metadata = extractTestMetadata(event.getTestCase());
             TestRunResult result = createTestResult(metadata, status, event);
-
             reportTestResult(result, status);
-
         } catch (Exception e) {
             getLogger(CucumberListener.class).severe("Failed to report test result for: " + testCaseName);
             throw new ReportTestResultException("Failed to report test result for: " + testCaseName, e);
@@ -88,8 +88,6 @@ public class CucumberListener implements Plugin, EventListener {
         switch (event.getResult().getStatus()) {
             case PASSED:
                 return PASSED;
-            case FAILED:
-                return FAILED;
             case SKIPPED:
             case PENDING:
             case UNDEFINED:
@@ -106,7 +104,9 @@ public class CucumberListener implements Plugin, EventListener {
         String suiteTitle = extractSuiteTitle(testCase);
         String file = extractFileName(testCase);
 
-        return new TestMetadata(title, testId, suiteTitle, file);
+        TestMetadata metadata = new TestMetadata(title, testId, suiteTitle, file);
+        logMetadataCreation(title, testId, suiteTitle, file);
+        return metadata;
     }
 
     private TestRunResult createTestResult(TestMetadata metadata, String status, TestCaseFinished event) {
@@ -131,8 +131,9 @@ public class CucumberListener implements Plugin, EventListener {
     }
 
     private void reportTestResult(TestRunResult result, String status) {
-        getLogger(CucumberListener.class).fine("Reporting test result: " + result.getTitle() + " - " + status);
+        logTestReporting(result, status);
         runManager.reportTest(result);
+        logTestReported(result);
     }
 
     private String extractTitle(io.cucumber.plugin.event.TestCase testCase) {
@@ -140,7 +141,7 @@ public class CucumberListener implements Plugin, EventListener {
             return UNKNOWN_TEST;
         }
 
-        Optional<String> titleFromTag = extractFromTags(testCase, TITLE_PREFIX)
+        Optional<String> titleFromTag = extractFromTags(testCase)
                 .map(tag -> tag.replace("_", " "));
 
         return titleFromTag.orElse(
@@ -149,18 +150,14 @@ public class CucumberListener implements Plugin, EventListener {
     }
 
     private String extractTestId(io.cucumber.plugin.event.TestCase testCase) {
-        return extractFromTags(testCase, TESTID_PREFIX).orElse(null);
-    }
-
-    private Optional<String> extractFromTags(io.cucumber.plugin.event.TestCase testCase, String prefix) {
         if (testCase == null || testCase.getTags() == null) {
-            return Optional.empty();
+            return null;
         }
 
         return testCase.getTags().stream()
-                .filter(tag -> tag != null && tag.toLowerCase().startsWith(prefix))
-                .map(tag -> tag.substring(prefix.length()))
-                .findFirst();
+                .filter(tag -> tag != null && tag.matches(TESTID_REGEX))
+                .findFirst()
+                .orElse(null);
     }
 
     private String extractSuiteTitle(io.cucumber.plugin.event.TestCase testCase) {
@@ -171,6 +168,17 @@ public class CucumberListener implements Plugin, EventListener {
 
     private String extractFileName(io.cucumber.plugin.event.TestCase testCase) {
         return extractFileNameFromUri(testCase).orElse(UNKNOWN_FILE);
+    }
+
+    private Optional<String> extractFromTags(TestCase testCase) {
+        if (testCase == null || testCase.getTags() == null) {
+            return Optional.empty();
+        }
+
+        return testCase.getTags().stream()
+                .filter(tag -> tag != null && tag.toLowerCase().startsWith(CucumberListener.TITLE_PREFIX))
+                .map(tag -> tag.substring(CucumberListener.TITLE_PREFIX.length()))
+                .findFirst();
     }
 
     private Optional<String> extractFileNameFromUri(io.cucumber.plugin.event.TestCase testCase) {
@@ -185,29 +193,21 @@ public class CucumberListener implements Plugin, EventListener {
 
     private Optional<String> extractUriPath(java.net.URI uri) {
         String path = safeGet(uri::getPath);
-        if (path != null && !path.isEmpty()) {
+        if (isValidPath(path)) {
             return Optional.of(cleanUriPath(path));
         }
 
         path = safeGet(uri::toString);
-        if (path != null && !path.isEmpty()) {
+        if (isValidPath(path)) {
             return Optional.of(cleanUriPath(path));
         }
 
         path = safeGet(uri::getSchemeSpecificPart);
-        if (path != null && !path.isEmpty()) {
+        if (isValidPath(path)) {
             return Optional.of(cleanUriPath(path));
         }
 
         return Optional.empty();
-    }
-
-    private String safeGet(Supplier<String> supplier) {
-        try {
-            return supplier.get();
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private String cleanUriPath(String path) {
@@ -230,6 +230,18 @@ public class CucumberListener implements Plugin, EventListener {
         return lastDot != -1 ? fileName.substring(0, lastDot) : fileName;
     }
 
+    private String safeGet(Supplier<String> supplier) {
+        try {
+            return supplier.get();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private boolean isValidPath(String path) {
+        return path != null && !path.isEmpty();
+    }
+
     private String getStackTrace(Throwable throwable) {
         if (throwable == null) {
             return null;
@@ -242,6 +254,31 @@ public class CucumberListener implements Plugin, EventListener {
             return sw.toString();
         } catch (Exception e) {
             return "Could not get stack trace: " + throwable.getClass().getName();
+        }
+    }
+
+    private void logMetadataCreation(String title, String testId, String suiteTitle, String file) {
+        getLogger(CucumberListener.class).finer("Created TestMetadata: Title=" + title +
+                ", TestId=" + testId + ", Suite=" + suiteTitle + ", File=" + file);
+
+        if (testId != null) {
+            getLogger(CucumberListener.class).fine("TestMetadata contains TestId: " +
+                    testId + " which will be sent as test_id field");
+        }
+    }
+
+    private void logTestReporting(TestRunResult result, String status) {
+        if (result.getTestId() != null) {
+            getLogger(CucumberListener.class).info("Reporting test with TestId: " + result.getTestId() +
+                    " | Test: " + result.getTitle() + " | Status: " + status);
+        } else {
+            getLogger(CucumberListener.class).fine("Reporting test without TestId: " + result.getTitle() + " - " + status);
+        }
+    }
+
+    private void logTestReported(TestRunResult result) {
+        if (result.getTestId() != null) {
+            getLogger(CucumberListener.class).info("✓ TestId " + result.getTestId() + " successfully sent to Testomat.io as test_id field");
         }
     }
 }
