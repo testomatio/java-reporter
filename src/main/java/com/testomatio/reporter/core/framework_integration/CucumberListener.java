@@ -12,7 +12,6 @@ import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestCaseStarted;
 import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
