@@ -10,45 +10,17 @@ import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 /**
  * Singleton factory for creating Testomat.io API client instances.
- * This factory handles the creation and configuration of API clients with proper
- * API key validation and error handling.
- * <p>
- * The factory follows the Singleton pattern to ensure consistent client creation
- * throughout the application lifecycle. It automatically loads the API key from
- * the configured property provider and validates its presence before creating clients.
- * <p>
- * Key features:
- * - Singleton pattern implementation for consistent factory access
- * - Automatic API key loading and validation
- * - Proper error handling for missing configuration
- * - Logging for configuration issues and client creation
- * <p>
- * Usage:
- * <pre>
- * ClientFactory factory = TestomatClientFactory.getClientFactory();
- * ApiInterface client = factory.createClient();
- * </pre>
  */
 public class TestomatClientFactory implements ClientFactory {
     private static final PropertyProvider propertyProvider =
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
-    private static final Logger LOGGER = Logger.getLogger(TestomatClientFactory.class.getName());
+    private static final Logger LOGGER = getLogger(TestomatClientFactory.class);
     private static ClientFactory instance;
 
-    /**
-     * Private constructor to prevent external instantiation.
-     * This constructor is part of the Singleton pattern implementation,
-     * ensuring that only one instance of the factory can exist.
-     */
     private TestomatClientFactory() {
     }
 
     /**
-     * Returns the singleton instance of the TestomatClientFactory.
-     * Creates a new instance if one doesn't exist, otherwise returns the existing instance.
-     * This method is thread-safe for the initial creation, though subsequent calls
-     * may not be perfectly synchronized (acceptable for this use case).
-     *
      * @return the singleton ClientFactory instance
      */
     public static ClientFactory getClientFactory() {
@@ -61,12 +33,7 @@ public class TestomatClientFactory implements ClientFactory {
     /**
      * Creates and returns a new Testomat.io API client instance.
      * Loads the API key from the configured property provider and validates its presence.
-     * If the API key is missing or null, logs a warning and throws an exception.
-     * <p>
-     * The created client is fully configured and ready for use with the Testomat.io API.
-     * Each call to this method creates a new client instance with the same configuration.
      *
-     * @return a configured ApiInterface implementation ready for API communication
      * @throws ApiKeyNotFoundException if the API key is not configured or is null/empty
      * @see TestomatApiClient
      * @see ApiInterface
@@ -75,7 +42,7 @@ public class TestomatClientFactory implements ClientFactory {
     public ApiInterface createClient() {
         String apiKey = propertyProvider.getProperty(API_KEY_PROPERTY_NAME);
         if (apiKey == null) {
-            getLogger(TestomatClientFactory.class).severe("Api key environment variable not set.");
+            LOGGER.severe("Api key environment variable not set.");
             throw new ApiKeyNotFoundException("Api key should be set in properties file or in JVM params.");
         }
 

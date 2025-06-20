@@ -108,7 +108,6 @@ public class LoggerConfig {
             FileHandler handler = new FileHandler(fileName, true);
             handler.setFormatter(new SimpleFormatter());
             addHandler(logger, handler);
-            logInfo("File logging enabled: " + fileName);
             return true;
         }, "Failed to setup file logging");
     }

@@ -9,6 +9,7 @@ import com.testomatio.reporter.model.TestRunResult;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 import org.testng.IInvokedMethodListener;
 import org.testng.ISuite;
 import org.testng.ISuiteListener;
@@ -19,7 +20,7 @@ import org.testng.annotations.Test;
 import static com.testomatio.reporter.constants.CommonConstants.FAILED;
 import static com.testomatio.reporter.constants.CommonConstants.PASSED;
 import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
-import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
+import static com.testomatio.reporter.logger.LoggerConfig.getLogger;
 
 /**
  * TestNG listener implementation that integrates test execution with Testomat.io reporting system.
@@ -28,6 +29,7 @@ import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
  * Supports custom annotations (@Title, @TestId) for enhanced test metadata.
  */
 public class TestNGListener implements ISuiteListener, ITestListener, IInvokedMethodListener {
+    private final Logger LOGGER = getLogger(this.getClass());
     private final GlobalRunManager runManager = GlobalRunManager.getInstance();
 
     private final Set<String> processedTests = new HashSet<>();
@@ -35,7 +37,7 @@ public class TestNGListener implements ISuiteListener, ITestListener, IInvokedMe
     @Override
     public void onStart(ISuite suite) {
         runManager.incrementSuiteCounter();
-        getLogger(TestNGListener.class).fine("Started suite: " + suite.getName());
+        LOGGER.fine("Started suite: " + suite.getName());
 
         checkAndReportDisabledTests(suite);
     }
@@ -43,7 +45,7 @@ public class TestNGListener implements ISuiteListener, ITestListener, IInvokedMe
     @Override
     public void onFinish(ISuite suite) {
         runManager.decrementSuiteCounter();
-        getLogger(TestNGListener.class).fine("Finished suite: " + suite.getName());
+        LOGGER.fine("Finished suite: " + suite.getName());
     }
 
     @Override
@@ -87,12 +89,12 @@ public class TestNGListener implements ISuiteListener, ITestListener, IInvokedMe
                             if (!processedTests.contains(methodKey)) {
                                 processedTests.add(methodKey);
                                 reportDisabledTest(method, testClass);
-                                getLogger(TestNGListener.class).finer("Reported disabled test: " + methodKey);
+                                LOGGER.finer("Reported disabled test: " + methodKey);
                             }
                         }
                     }
                 } catch (ClassNotFoundException e) {
-                    getLogger(TestNGListener.class).severe(String.format(
+                    LOGGER.severe(String.format(
                             "Could not load test class for: %s \n %s \n %s",
                             xmlClass.getName(), e.getCause(), e.getMessage()));
                 }
@@ -116,11 +118,11 @@ public class TestNGListener implements ISuiteListener, ITestListener, IInvokedMe
                     "Test disabled via @Test(enabled = false)");
 
             runManager.reportTest(testRunResult);
-            getLogger(TestNGListener.class).fine(String.format("Disabled test reported: %s - %s",
+            LOGGER.fine(String.format("Disabled test reported: %s - %s",
                     metadata.getTitle(),
                     "Test disabled via @Test(enabled = false)"));
         } catch (Exception e) {
-            getLogger(TestNGListener.class).severe("Failed to report disabled test: " + method.getName());
+            LOGGER.severe("Failed to report disabled test: " + method.getName());
             throw new ReportTestResultException("Failed to report disabled test: " + method.getName(), e);
         }
     }
@@ -146,10 +148,10 @@ public class TestNGListener implements ISuiteListener, ITestListener, IInvokedMe
                 TestRunResult testRunResult = TestRunResultConstructorUtil.createTestNGTestResult(metadata, status, result);
                 runManager.reportTest(testRunResult);
 
-                getLogger(TestNGListener.class).finer(String.format("Test result reported: %s - %s", metadata.getTitle(), status));
+                LOGGER.finer(String.format("Test result reported: %s - %s", metadata.getTitle(), status));
             }
         } catch (Exception e) {
-            getLogger(TestNGListener.class).severe("Failed to report test result" + e.getCause());
+            LOGGER.severe("Failed to report test result" + e.getCause());
         }
     }
 }

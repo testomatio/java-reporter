@@ -4,10 +4,12 @@ import com.testomatio.reporter.core.GlobalRunManager;
 import com.testomatio.reporter.core.util.TestRunMetaDataExtractorUtil;
 import com.testomatio.reporter.core.util.TestRunResultConstructorUtil;
 import com.testomatio.reporter.exception.ReportTestResultException;
+import com.testomatio.reporter.logger.LoggerConfig;
 import com.testomatio.reporter.model.TestMetadata;
 import com.testomatio.reporter.model.TestRunResult;
 import java.lang.reflect.Method;
 import java.util.Optional;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -27,6 +29,8 @@ import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
  * To use this extension, add @ExtendWith(JUnitExtension.class) to your test classes.
  */
 public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, AfterAllCallback, TestWatcher {
+    private final Logger LOGGER = getLogger(this.getClass());
+
     private final GlobalRunManager runManager = GlobalRunManager.getInstance();
 
     /**
@@ -39,9 +43,9 @@ public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, Af
     @Override
     public void beforeAll(ExtensionContext context) {
         String className = context.getTestClass().map(Class::getSimpleName).orElse("Unknown");
-        getLogger(JUnitExtension.class).fine("Starting test class: " + className);
+        LOGGER.fine("Starting test class: " + className);
         runManager.incrementSuiteCounter();
-        getLogger(JUnitExtension.class).finer("Active suite count incremented for class: " + className);
+        LOGGER.finer("Active suite count incremented for class: " + className);
     }
 
     /**
@@ -52,9 +56,9 @@ public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, Af
     @Override
     public void afterAll(ExtensionContext context) {
         String className = context.getTestClass().map(Class::getSimpleName).orElse("Unknown");
-        getLogger(JUnitExtension.class).fine("Finishing test class: " + className);
+        LOGGER.fine("Finishing test class: " + className);
         runManager.decrementSuiteCounter();
-        getLogger(JUnitExtension.class).finer("Active suite count decremented for class: " + className);
+        LOGGER.finer("Active suite count decremented for class: " + className);
     }
 
     /**
@@ -64,7 +68,7 @@ public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, Af
     @Override
     public void testDisabled(ExtensionContext context, Optional<String> reason) {
         String reasonText = reason.orElse("Test disabled");
-        getLogger(JUnitExtension.class).fine(String.format("Test disabled: %s - Reason: %s",
+        LOGGER.fine(String.format("Test disabled: %s - Reason: %s",
                 context.getDisplayName(), reasonText));
         reportTestResult(context, SKIPPED, reasonText);
     }
@@ -74,7 +78,7 @@ public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, Af
      */
     @Override
     public void testSuccessful(ExtensionContext context) {
-        getLogger(JUnitExtension.class).fine("Test passed successfully: " + context.getDisplayName());
+        LOGGER.fine("Test passed successfully: " + context.getDisplayName());
         reportTestResult(context, PASSED, null);
     }
 
@@ -84,7 +88,7 @@ public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, Af
      */
     @Override
     public void testAborted(ExtensionContext context, Throwable cause) {
-        getLogger(JUnitExtension.class).fine(String.format("Test aborted: %s - Cause: %s", context.getDisplayName(), cause.getMessage()));
+        LOGGER.fine(String.format("Test aborted: %s - Cause: %s", context.getDisplayName(), cause.getMessage()));
         reportTestResult(context, SKIPPED, cause.getMessage());
     }
 
@@ -94,7 +98,7 @@ public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, Af
      */
     @Override
     public void testFailed(ExtensionContext context, Throwable cause) {
-        getLogger(JUnitExtension.class).fine(String.format("Test failed: %s - Cause: %s", context.getDisplayName(), cause.getMessage()));
+        LOGGER.fine(String.format("Test failed: %s - Cause: %s", context.getDisplayName(), cause.getMessage()));
         reportTestResult(context, FAILED, null);
     }
 
@@ -108,13 +112,13 @@ public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, Af
      */
     private void reportTestResult(ExtensionContext context, String status, String message) {
         if (!runManager.isActive()) {
-            getLogger(JUnitExtension.class).fine("Test run manager is not active, skipping test result reporting");
+            LOGGER.fine("Test run manager is not active, skipping test result reporting");
             return;
         }
 
         Optional<Method> testMethodOptional = context.getTestMethod();
         if (testMethodOptional.isEmpty()) {
-            getLogger(JUnitExtension.class).warning("No test method found in context, cannot report test result");
+            LOGGER.warning("No test method found in context, cannot report test result");
             return;
         }
 
@@ -124,7 +128,7 @@ public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, Af
             TestRunResult result = createTestResult(metadata, status, message, context);
             logAndReportResult(result, status, message);
         } catch (Exception e) {
-            getLogger(JUnitExtension.class).severe(String.format(
+            LOGGER.severe(String.format(
                     "Failed to report test result for context: %s", context.getDisplayName()));
             throw new ReportTestResultException(
                     "Failed to report test result for context: " + context.getDisplayName(), e);
@@ -154,14 +158,14 @@ public class JUnitExtension implements BeforeEachCallback, BeforeAllCallback, Af
      * @param message optional custom message (for logging)
      */
     private void logAndReportResult(TestRunResult result, String status, String message) {
-        getLogger(JUnitExtension.class).fine("Report test result: " + result);
+        LOGGER.fine("Report test result: " + result);
 
         runManager.reportTest(result);
-        getLogger(JUnitExtension.class).finer("Test result reported successfully: " + result.getTitle());
+        LOGGER.finer("Test result reported successfully: " + result.getTitle());
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-        getLogger(JUnitExtension.class).finer("Starting test run: " + extensionContext.getDisplayName());
+        LOGGER.finer("Starting test run: " + extensionContext.getDisplayName());
     }
 }

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 
 import static com.testomatio.reporter.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
@@ -22,11 +23,9 @@ public class GlobalRunManager {
     private final AtomicReference<BatchResultManager> batchManager = new AtomicReference<>();
     private final AtomicReference<ApiInterface> apiClient = new AtomicReference<>();
     private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
+    private final Logger LOGGER = getLogger(GlobalRunManager.class);
     private volatile long startTime;
 
-    private final String runTitle = PropertyProviderFactoryImpl.getPropertyProviderFactory()
-            .getPropertyProvider()
-            .getProperty(RUN_TITLE_PROPERTY_NAME);
 
     private GlobalRunManager() {
     }
@@ -43,7 +42,7 @@ public class GlobalRunManager {
         try {
             ClientFactory clientFactory = TestomatClientFactory.getClientFactory();
             ApiInterface client = clientFactory.createClient();
-            String uid = client.createRun(runTitle);
+            String uid = client.createRun(getRunTitle());
 
             apiClient.set(client);
             runUid.set(uid);
@@ -53,19 +52,19 @@ public class GlobalRunManager {
 
             registerShutdownHook();
 
-            getLogger(GlobalRunManager.class).fine("Global test run initialized with UID: " + uid);
+            LOGGER.fine("Global test run initialized with UID: " + uid);
         } catch (Exception e) {
-            getLogger(GlobalRunManager.class).severe("Failed to initialize test run: " + e);
+            LOGGER.severe("Failed to initialize test run: " + e);
         }
     }
 
     private void registerShutdownHook() {
         if (shutdownHookRegistered.compareAndSet(false, true)) {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                getLogger(GlobalRunManager.class).info("JVM is shutting down, finalizing test run...");
+                LOGGER.info("JVM is shutting down, finalizing test run...");
                 finalizeRun();
             }, "TestRunFinalizer"));
-            getLogger(GlobalRunManager.class).finer("Shutdown hook registered for test run finalization");
+            LOGGER.finer("Shutdown hook registered for test run finalization");
         }
     }
 
@@ -76,7 +75,7 @@ public class GlobalRunManager {
 
     public void decrementSuiteCounter() {
         int remaining = activeSuites.decrementAndGet();
-        getLogger(GlobalRunManager.class).finer("Active suites remaining: " + remaining);
+        LOGGER.finer("Active suites remaining: " + remaining);
     }
 
     public void reportTest(TestRunResult result) {
@@ -103,10 +102,15 @@ public class GlobalRunManager {
             try {
                 float duration = (System.currentTimeMillis() - startTime) / 1000.0f;
                 client.finishTestRun(uid, duration);
-                getLogger(GlobalRunManager.class).info("Test run finished: " + uid);
+                LOGGER.info("Test run finished: " + uid);
             } catch (IOException e) {
-                getLogger(GlobalRunManager.class).severe("Failed to finish test run" + e.getCause());
+                LOGGER.severe("Failed to finish test run" + e.getCause());
             }
         }
+    }
+
+    private String getRunTitle() {
+        return PropertyProviderFactoryImpl.getPropertyProviderFactory()
+                .getPropertyProvider().getProperty(RUN_TITLE_PROPERTY_NAME);
     }
 }

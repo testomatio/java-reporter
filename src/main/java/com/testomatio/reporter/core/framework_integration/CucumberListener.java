@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 import static com.testomatio.reporter.constants.CommonConstants.FAILED;
 import static com.testomatio.reporter.constants.CommonConstants.PASSED;
@@ -24,6 +25,7 @@ import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 public class CucumberListener implements Plugin, EventListener {
+    private final Logger LOGGER = getLogger(CucumberListener.class);
 
     private static final String UNKNOWN_SUITE = "Unknown Suite";
     private static final String UNKNOWN_FILE = "unknown.feature";
@@ -34,11 +36,11 @@ public class CucumberListener implements Plugin, EventListener {
     private final GlobalRunManager runManager = GlobalRunManager.getInstance();
 
     public CucumberListener() {
-        getLogger(CucumberListener.class).fine("CucumberListener initialized");
+        LOGGER.fine("CucumberListener initialized");
     }
 
     public CucumberListener(String out) {
-        getLogger(CucumberListener.class).fine("CucumberListener initialized with output: " + out);
+        LOGGER.fine("CucumberListener initialized with output: " + out);
     }
 
     @Override
@@ -50,17 +52,17 @@ public class CucumberListener implements Plugin, EventListener {
     }
 
     private void handleTestRunStarted(TestRunStarted event) {
-        getLogger(CucumberListener.class).fine("Cucumber test run started");
+        LOGGER.fine("Cucumber test run started");
         runManager.incrementSuiteCounter();
     }
 
     private void handleTestRunFinished(TestRunFinished event) {
-        getLogger(CucumberListener.class).fine("Cucumber test run finished");
+        LOGGER.fine("Cucumber test run finished");
         runManager.decrementSuiteCounter();
     }
 
     private void handleTestCaseStarted(TestCaseStarted event) {
-        getLogger(CucumberListener.class).finer("Starting test case: " + event.getTestCase().getName());
+        LOGGER.finer("Starting test case: " + event.getTestCase().getName());
     }
 
     private void handleTestCaseFinished(TestCaseFinished event) {
@@ -75,7 +77,7 @@ public class CucumberListener implements Plugin, EventListener {
             TestRunResult result = createTestResult(metadata, status, event);
             reportTestResult(result, status);
         } catch (Exception e) {
-            getLogger(CucumberListener.class).severe("Failed to report test result for: " + testCaseName);
+            LOGGER.severe("Failed to report test result for: " + testCaseName);
             throw new ReportTestResultException("Failed to report test result for: " + testCaseName, e);
         }
     }
@@ -258,27 +260,27 @@ public class CucumberListener implements Plugin, EventListener {
     }
 
     private void logMetadataCreation(String title, String testId, String suiteTitle, String file) {
-        getLogger(CucumberListener.class).finer("Created TestMetadata: Title=" + title +
+        LOGGER.finer("Created TestMetadata: Title=" + title +
                 ", TestId=" + testId + ", Suite=" + suiteTitle + ", File=" + file);
 
         if (testId != null) {
-            getLogger(CucumberListener.class).fine("TestMetadata contains TestId: " +
+            LOGGER.fine("TestMetadata contains TestId: " +
                     testId + " which will be sent as test_id field");
         }
     }
 
     private void logTestReporting(TestRunResult result, String status) {
         if (result.getTestId() != null) {
-            getLogger(CucumberListener.class).info("Reporting test with TestId: " + result.getTestId() +
+            LOGGER.info("Reporting test with TestId: " + result.getTestId() +
                     " | Test: " + result.getTitle() + " | Status: " + status);
         } else {
-            getLogger(CucumberListener.class).fine("Reporting test without TestId: " + result.getTitle() + " - " + status);
+            LOGGER.fine("Reporting test without TestId: " + result.getTitle() + " - " + status);
         }
     }
 
     private void logTestReported(TestRunResult result) {
         if (result.getTestId() != null) {
-            getLogger(CucumberListener.class).info("✓ TestId " + result.getTestId() + " successfully sent to Testomat.io as test_id field");
+            LOGGER.info("✓ TestId " + result.getTestId() + " successfully sent to Testomat.io as test_id field");
         }
     }
 }
