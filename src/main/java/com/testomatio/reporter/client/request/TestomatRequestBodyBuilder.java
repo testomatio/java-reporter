@@ -31,8 +31,6 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
     }
 
     /**
-     * Constructs a new TestomatRequestBodyBuilder with custom ObjectMapper.
-     *
      * @param objectMapper the ObjectMapper instance for JSON serialization
      */
     public TestomatRequestBodyBuilder(ObjectMapper objectMapper) {

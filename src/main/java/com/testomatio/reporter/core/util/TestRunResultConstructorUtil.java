@@ -2,11 +2,10 @@ package com.testomatio.reporter.core.util;
 
 import com.testomatio.reporter.model.TestMetadata;
 import com.testomatio.reporter.model.TestRunResult;
-import io.cucumber.plugin.event.Result;
-import io.cucumber.plugin.event.TestCaseFinished;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.opentest4j.TestAbortedException;
 import org.testng.ITestResult;
@@ -14,6 +13,8 @@ import org.testng.ITestResult;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 public class TestRunResultConstructorUtil {
+    private static final Logger LOGGER = getLogger(TestRunResultConstructorUtil.class);
+
     /**
      * Creates a TestResult object from test metadata and execution details.
      *
@@ -31,7 +32,7 @@ public class TestRunResultConstructorUtil {
             Throwable t = exception.get();
             message = t.getMessage();
             stack = getStackTrace(t);
-            getLogger(TestRunResultConstructorUtil.class).finer("Including error details for failed test: " + metadata.getTitle());
+            LOGGER.finer("Including error details for failed test: " + metadata.getTitle());
         }
 
         return new TestRunResult(metadata.getTitle(), metadata.getTestId(), metadata.getSuiteTitle(),
@@ -47,7 +48,7 @@ public class TestRunResultConstructorUtil {
      * @return TestResult object ready for API reporting
      */
     public static TestRunResult createJUnitTestResultWithMessage(TestMetadata metadata, String status, String message) {
-        getLogger(TestRunResultConstructorUtil.class).finer(String.format("Creating JUnit test result with custom message: %s - %s",
+        LOGGER.finer(String.format("Creating JUnit test result with custom message: %s - %s",
                 metadata.getTitle(), message));
 
         return new TestRunResult(
@@ -97,7 +98,7 @@ public class TestRunResultConstructorUtil {
      * @return TestResult object ready for API reporting
      */
     public static TestRunResult createTestNGDisabledTestResult(TestMetadata metadata, String status, String reason) {
-        getLogger(TestRunResultConstructorUtil.class).finer(String.format("Creating TestNG disabled test result: %s - %s", metadata.getTitle(), reason));
+        LOGGER.finer(String.format("Creating TestNG disabled test result: %s - %s", metadata.getTitle(), reason));
 
         return new TestRunResult(
                 metadata.getTitle(),
@@ -107,43 +108,6 @@ public class TestRunResultConstructorUtil {
                 status,
                 reason,
                 null
-        );
-    }
-
-    /**
-     * Creates a TestResult object from Cucumber test case finished event.
-     *
-     * @param metadata the extracted test metadata
-     * @param status   the determined test execution status
-     * @param event    the Cucumber TestCaseFinished event containing execution details
-     * @return TestResult object ready for API reporting
-     */
-    public static TestRunResult createCucumberTestResult(TestMetadata metadata, String status, TestCaseFinished event) {
-        String message = null;
-        String stack = null;
-
-        Result result = event.getResult();
-        Throwable error = result.getError();
-
-        if (error != null) {
-            message = error.getMessage();
-            stack = getStackTrace(error);
-            getLogger(TestRunResultConstructorUtil.class).finer(
-                    "Including error details for failed Cucumber test: " + metadata.getTitle());
-        }
-
-        getLogger(TestRunResultConstructorUtil.class).finer(String.format(
-                "Creating Cucumber test result: %s - %s (duration: %s)",
-                metadata.getTitle(), status, result.getDuration()));
-
-        return new TestRunResult(
-                metadata.getTitle(),
-                metadata.getTestId(),
-                metadata.getSuiteTitle(),
-                metadata.getFile(),
-                status,
-                message,
-                stack
         );
     }
 

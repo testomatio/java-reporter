@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 
 import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_FLUSH_INTERVAL_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_SIZE_PROPERTY_NAME;
+import static com.testomatio.reporter.logger.LoggerConfig.getLogger;
 
 /**
  * Manages batch processing and reporting of test results to the Testomat.io API.
@@ -28,7 +29,7 @@ public class BatchResultManager {
 
     //TODO: Refactor class for SRP
 
-    private static final Logger LOGGER = Logger.getLogger(BatchResultManager.class.getName());
+    private static final Logger LOGGER = getLogger(BatchResultManager.class);
     private static final int DEFAULT_BATCH_SIZE = 10;
     private static final int DEFAULT_FLUSH_INTERVAL_SECONDS = 5;
     private static final int MAX_RETRY_ATTEMPTS = 3;

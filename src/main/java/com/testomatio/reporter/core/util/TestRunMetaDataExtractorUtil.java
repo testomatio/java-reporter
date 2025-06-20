@@ -7,12 +7,14 @@ import io.cucumber.plugin.event.TestCase;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testng.ITestResult;
 
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 public class TestRunMetaDataExtractorUtil {
+    private static final Logger LOGGER = getLogger(TestRunMetaDataExtractorUtil.class);
 
     public static TestMetadata extractTestMetadata(Method testMethod, ExtensionContext context) {
         String title = getJUnitTestTitle(testMethod, context);
@@ -20,7 +22,7 @@ public class TestRunMetaDataExtractorUtil {
         String file = suiteTitle + ".java";
         String testId = getTestId(testMethod);
 
-        getLogger(TestRunMetaDataExtractorUtil.class).finer(String.format("Extracted test metadata - Title: %s, ID: %s, Suite: %s, File: %s",
+        LOGGER.finer(String.format("Extracted test metadata - Title: %s, ID: %s, Suite: %s, File: %s",
                 title, testId, suiteTitle, file));
 
         return new TestMetadata(title, testId, suiteTitle, file);
@@ -50,7 +52,7 @@ public class TestRunMetaDataExtractorUtil {
         String suiteTitle = testClass.getSimpleName();
         String file = suiteTitle + ".java";
 
-        getLogger(TestRunMetaDataExtractorUtil.class).finer(String.format("Extracted disabled test metadata - Title: %s, ID: %s, Suite: %s, File: %s", title, testId, suiteTitle, file));
+        LOGGER.finer(String.format("Extracted disabled test metadata - Title: %s, ID: %s, Suite: %s, File: %s", title, testId, suiteTitle, file));
 
         return new TestMetadata(title, testId, suiteTitle, file);
     }
@@ -87,7 +89,7 @@ public class TestRunMetaDataExtractorUtil {
     private static String getJUnitTestTitle(Method testMethod, ExtensionContext context) {
         Title titleAnnotation = testMethod.getAnnotation(Title.class);
         String title = titleAnnotation != null ? titleAnnotation.value() : context.getDisplayName();
-        getLogger(TestRunMetaDataExtractorUtil.class).finer(String.format("Using test title: %s (from %s)", title,
+        LOGGER.finer(String.format("Using test title: %s (from %s)", title,
                 titleAnnotation != null ? "@Title annotation" : "JUnit display name"));
         return title;
     }
@@ -126,7 +128,7 @@ public class TestRunMetaDataExtractorUtil {
 
         String title = titleFromTag.orElse(testCase.getName());
 
-        getLogger(TestRunMetaDataExtractorUtil.class).finer(String.format(
+        LOGGER.finer(String.format(
                 "Using Cucumber test title: %s (from %s)",
                 title, titleFromTag.isPresent() ? "@Title tag" : "scenario name"));
 
