@@ -22,13 +22,13 @@ allprojects {
 
 dependencies {
 
+    // Cucumber dependencies for compilation only (not included in final JAR)
+    compileOnly 'io.cucumber:cucumber-java:7.15.0'
+    compileOnly 'io.cucumber:cucumber-plugin:7.15.0'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
-
-    // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.7'
-    implementation 'ch.qos.logback:logback-classic:1.5.13'
 
     // Testing frameworks
     implementation 'org.testng:testng:7.8.0'
@@ -42,6 +42,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
     implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
+
+
 }
 
 //tasks.register("updateReadmeVersion") {
