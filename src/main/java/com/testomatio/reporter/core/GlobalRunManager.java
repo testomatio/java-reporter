@@ -18,13 +18,13 @@ import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 public class GlobalRunManager {
     private static final GlobalRunManager INSTANCE = new GlobalRunManager();
 
-    private final AtomicInteger activeSuites = new AtomicInteger(0);
-    private final AtomicReference<String> runUid = new AtomicReference<>();
-    private final AtomicReference<BatchResultManager> batchManager = new AtomicReference<>();
-    private final AtomicReference<ApiInterface> apiClient = new AtomicReference<>();
+    final AtomicInteger activeSuites = new AtomicInteger(0);
+    final AtomicReference<String> runUid = new AtomicReference<>();
+    final AtomicReference<BatchResultManager> batchManager = new AtomicReference<>();
+    final AtomicReference<ApiInterface> apiClient = new AtomicReference<>();
     private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
     private final Logger LOGGER = getLogger(GlobalRunManager.class);
-    private volatile long startTime;
+    volatile long startTime;
 
 
     private GlobalRunManager() {
@@ -89,7 +89,7 @@ public class GlobalRunManager {
         return runUid.get() != null;
     }
 
-    private void finalizeRun() {
+    void finalizeRun() {
         BatchResultManager manager = batchManager.getAndSet(null);
         if (manager != null) {
             manager.shutdown();
@@ -109,7 +109,7 @@ public class GlobalRunManager {
         }
     }
 
-    private String getRunTitle() {
+    String getRunTitle() {
         return PropertyProviderFactoryImpl.getPropertyProviderFactory()
                 .getPropertyProvider().getProperty(RUN_TITLE_PROPERTY_NAME);
     }

@@ -50,7 +50,7 @@ public class TestNGListener extends BaseTestReporter implements ISuiteListener, 
         processTestResult(result, SKIPPED);
     }
 
-    private void checkAndReportDisabledTests(ISuite suite) {
+    void checkAndReportDisabledTests(ISuite suite) {
         if (!runManager.isActive()) {
             return;
         }
@@ -90,7 +90,7 @@ public class TestNGListener extends BaseTestReporter implements ISuiteListener, 
         LOGGER.fine(String.format("Disabled test reported: %s - %s", metadata.getTitle(), reason));
     }
 
-    private void processTestResult(ITestResult result, String status) {
+    void processTestResult(ITestResult result, String status) {
         if (!runManager.isActive()) {
             return;
         }
