@@ -62,22 +62,20 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Cucumber Core (обов'язково - містить EventListener API) -->
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-core</artifactId>
             <version>7.15.0</version>
+            <scope>provided</scope>
         </dependency>
 
-        <!-- Cucumber Java (обов'язково - для Java step definitions) -->
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-java</artifactId>
             <version>7.15.0</version>
+            <scope>provided</scope>
         </dependency>
 
-        <!-- Один з runners (вибрати залежно від вашого setup) -->
-        <!-- Якщо використовуєте JUnit 5 runner: -->
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit-platform-engine</artifactId>
@@ -85,25 +83,13 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- АБО якщо використовуєте JUnit 4 runner: -->
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit</artifactId>
             <version>7.15.0</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-java</artifactId>
-            <version>7.23.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-core</artifactId>
-            <version>7.23.0</version>
-        </dependency>
 
-        <!-- АБО якщо використовуєте TestNG runner: -->
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-testng</artifactId>
