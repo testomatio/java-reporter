@@ -1,15 +1,9 @@
 package com.testomatio.reporter.core.framework_integration;
 
-import com.testomatio.reporter.core.GlobalRunManager;
-import com.testomatio.reporter.core.util.TestRunMetaDataExtractorUtil;
-import com.testomatio.reporter.core.util.TestRunResultConstructorUtil;
-import com.testomatio.reporter.exception.ReportTestResultException;
 import com.testomatio.reporter.model.TestMetadata;
-import com.testomatio.reporter.model.TestRunResult;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 import org.testng.IInvokedMethodListener;
 import org.testng.ISuite;
 import org.testng.ISuiteListener;
@@ -20,7 +14,6 @@ import org.testng.annotations.Test;
 import static com.testomatio.reporter.constants.CommonConstants.FAILED;
 import static com.testomatio.reporter.constants.CommonConstants.PASSED;
 import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
-import static com.testomatio.reporter.logger.LoggerConfig.getLogger;
 
 /**
  * TestNG listener implementation that integrates test execution with Testomat.io reporting system.
@@ -28,48 +21,35 @@ import static com.testomatio.reporter.logger.LoggerConfig.getLogger;
  * test-level events, and disabled tests.
  * Supports custom annotations (@Title, @TestId) for enhanced test metadata.
  */
-public class TestNGListener implements ISuiteListener, ITestListener, IInvokedMethodListener {
-    private final Logger LOGGER = getLogger(this.getClass());
-    private final GlobalRunManager runManager = GlobalRunManager.getInstance();
-
+public class TestNGListener extends BaseTestReporter implements ISuiteListener, ITestListener, IInvokedMethodListener {
     private final Set<String> processedTests = new HashSet<>();
 
     @Override
     public void onStart(ISuite suite) {
-        runManager.incrementSuiteCounter();
-        LOGGER.fine("Started suite: " + suite.getName());
-
+        handleSuiteStart(suite.getName());
         checkAndReportDisabledTests(suite);
     }
 
     @Override
     public void onFinish(ISuite suite) {
-        runManager.decrementSuiteCounter();
-        LOGGER.fine("Finished suite: " + suite.getName());
+        handleSuiteFinish(suite.getName());
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        reportTestResult(result, PASSED);
+        processTestResult(result, PASSED);
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        reportTestResult(result, FAILED);
+        processTestResult(result, FAILED);
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        reportTestResult(result, SKIPPED);
+        processTestResult(result, SKIPPED);
     }
 
-    /**
-     * Checks for disabled tests in the suite and reports them with SKIPPED status.
-     * This method iterates through all test methods in the suite and identifies
-     * those marked with @Test(enabled = false).
-     *
-     * @param suite the TestNG suite to check for disabled tests
-     */
     private void checkAndReportDisabledTests(ISuite suite) {
         if (!runManager.isActive()) {
             return;
@@ -102,56 +82,27 @@ public class TestNGListener implements ISuiteListener, ITestListener, IInvokedMe
         });
     }
 
-    /**
-     * Reports a disabled test method with SKIPPED status.
-     * Uses TestRunResultConstructorUtil to create the test result object.
-     *
-     * @param method    the disabled test method
-     * @param testClass the class containing the test method
-     */
     private void reportDisabledTest(Method method, Class<?> testClass) {
-        try {
-            TestMetadata metadata = TestRunMetaDataExtractorUtil.extractTestMetadataForDisabledTest(method, testClass);
-            TestRunResult testRunResult = TestRunResultConstructorUtil.createTestNGDisabledTestResult(
-                    metadata,
-                    SKIPPED,
-                    "Test disabled via @Test(enabled = false)");
-
-            runManager.reportTest(testRunResult);
-            LOGGER.fine(String.format("Disabled test reported: %s - %s",
-                    metadata.getTitle(),
-                    "Test disabled via @Test(enabled = false)"));
-        } catch (Exception e) {
-            LOGGER.severe("Failed to report disabled test: " + method.getName());
-            throw new ReportTestResultException("Failed to report disabled test: " + method.getName(), e);
-        }
+        TestMetadata metadata = metadataExtractor.extractFromTestNGDisabled(method, testClass);
+        String reason = "Test disabled via @Test(enabled = false)";
+        reportTest(method.getName(), metadata, SKIPPED, reason);
+        
+        LOGGER.fine(String.format("Disabled test reported: %s - %s", metadata.getTitle(), reason));
     }
 
-    /**
-     * Reports a test result to the global test run manager.
-     * Uses TestRunResultConstructorUtil to create the test result object.
-     *
-     * @param result the TestNG test result
-     * @param status the test execution status
-     */
-    private void reportTestResult(ITestResult result, String status) {
+    private void processTestResult(ITestResult result, String status) {
         if (!runManager.isActive()) {
             return;
         }
 
-        try {
-            String methodKey = result.getTestClass().getName() + "." + result.getMethod().getMethodName();
-            if (!processedTests.contains(methodKey)) {
-                processedTests.add(methodKey);
+        String methodKey = result.getTestClass().getName() + "." + result.getMethod().getMethodName();
+        if (!processedTests.contains(methodKey)) {
+            processedTests.add(methodKey);
 
-                TestMetadata metadata = TestRunMetaDataExtractorUtil.extractTestNGTestMetadata(result);
-                TestRunResult testRunResult = TestRunResultConstructorUtil.createTestNGTestResult(metadata, status, result);
-                runManager.reportTest(testRunResult);
+            TestMetadata metadata = metadataExtractor.extractFromTestNG(result);
+            reportTest(methodKey, metadata, status, result.getThrowable());
 
-                LOGGER.finer(String.format("Test result reported: %s - %s", metadata.getTitle(), status));
-            }
-        } catch (Exception e) {
-            LOGGER.severe("Failed to report test result" + e.getCause());
+            LOGGER.finer(String.format("Test result reported: %s - %s", metadata.getTitle(), status));
         }
     }
 }
