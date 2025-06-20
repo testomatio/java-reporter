@@ -15,4 +15,8 @@ public class TestRunResult {
     private String status;
     private String message;
     private String stack;
+
+    public TestRunResult() {
+
+    }
 }
