@@ -1,0 +1,138 @@
+package com.testomatio.reporter.client.request;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.testomatio.reporter.constants.ApiRequestFields;
+import com.testomatio.reporter.exception.FailedToCreateRunBodyException;
+import com.testomatio.reporter.model.TestCaseResult;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import lombok.EqualsAndHashCode;
+
+import static com.testomatio.reporter.constants.CommonConstants.API_KEY_STRING;
+import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
+
+/**
+ * Builder class for constructing request bodies for Testomat.io API calls.
+ * Handles JSON serialization and request body structure creation.
+ */
+@EqualsAndHashCode
+public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
+
+    private final ObjectMapper objectMapper;
+
+    /**
+     * Constructs a new TestomatRequestBodyBuilder with default ObjectMapper.
+     */
+    public TestomatRequestBodyBuilder() {
+        this.objectMapper = new ObjectMapper();
+    }
+
+    /**
+     * @param objectMapper the ObjectMapper instance for JSON serialization
+     */
+    public TestomatRequestBodyBuilder(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Builds JSON request body for creating a new test run.
+     *
+     * @param title the title of the test run
+     * @return JSON string representation of the request body
+     */
+    @Override
+    public String buildCreateRunBody(String title) {
+        try {
+            Map<String, String> body = Map.of(ApiRequestFields.TITLE, title);
+            return objectMapper.writeValueAsString(body);
+
+        } catch (JsonProcessingException e) {
+            throw new FailedToCreateRunBodyException("Failed to create test run body", e);
+        }
+    }
+
+    /**
+     * Builds JSON request body for reporting a single test result.
+     *
+     * @param result the test result to report
+     * @return JSON string representation of the request body
+     * @throws JsonProcessingException if JSON serialization fails
+     */
+    @Override
+    public String buildSingleTestReportBody(TestCaseResult result) throws JsonProcessingException {
+        Map<String, Object> body = buildTestResultMap(result);
+        body.put("create", true);
+        return objectMapper.writeValueAsString(body);
+    }
+
+    /**
+     * Builds JSON request body for reporting multiple test results in batch.
+     *
+     * @param results the list of test results to report
+     * @param apiKey  the API key for authentication
+     * @return JSON string representation of the request body
+     * @throws JsonProcessingException if JSON serialization fails
+     */
+    @Override
+    public String buildBatchTestReportBody(List<TestCaseResult> results, String apiKey) throws JsonProcessingException {
+        List<Map<String, Object>> testsArray = new ArrayList<>();
+        for (TestCaseResult result : results) {
+            testsArray.add(buildTestResultMap(result));
+        }
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put(API_KEY_STRING, apiKey);
+        requestBody.put(TESTS_STRING, testsArray);
+        requestBody.put("create", true);
+
+        return objectMapper.writeValueAsString(requestBody);
+    }
+
+    /**
+     * Builds JSON request body for finishing a test run.
+     *
+     * @param duration the duration of the test run in seconds
+     * @return JSON string representation of the request body
+     * @throws JsonProcessingException if JSON serialization fails
+     */
+    @Override
+    public String buildFinishRunBody(float duration) throws JsonProcessingException {
+        Map<String, Object> body = Map.of(
+                ApiRequestFields.STATUS_EVENT, "finish",
+                ApiRequestFields.DURATION, duration
+        );
+        return objectMapper.writeValueAsString(body);
+    }
+
+    /**
+     * Builds a map representation of a test result for API requests.
+     *
+     * @param result the test result to convert
+     * @return map containing test result data
+     */
+    private Map<String, Object> buildTestResultMap(TestCaseResult result) {
+        Map<String, Object> body = new HashMap<>();
+        body.put(ApiRequestFields.TITLE, result.getTitle());
+
+        if (result.getTestId() != null) {
+            body.put(ApiRequestFields.TEST_ID, result.getTestId());
+        }
+
+        body.put(ApiRequestFields.SUITE_TITLE, result.getSuiteTitle());
+        body.put(ApiRequestFields.FILE, result.getFile());
+        body.put(ApiRequestFields.STATUS, result.getStatus());
+
+        if (result.getMessage() != null) {
+            body.put(ApiRequestFields.MESSAGE, result.getMessage());
+        }
+
+        if (result.getStack() != null) {
+            body.put(ApiRequestFields.STACK, result.getStack());
+        }
+
+        return body;
+    }
+}
