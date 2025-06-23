@@ -361,7 +361,6 @@ class TestomatRequestBodyBuilderTest {
         // When & Then
         assertNotNull(builder1);
         assertNotNull(builder2);
-        // Note: Can't easily test inequality due to mocking complexity, just ensure no exceptions
     }
 
     @Test

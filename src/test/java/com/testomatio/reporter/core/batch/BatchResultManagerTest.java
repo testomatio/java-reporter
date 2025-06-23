@@ -73,12 +73,10 @@ class BatchResultManagerTest {
     void tearDown() throws Exception {
         resetAllMocks();
 
-        // Закриваємо manager якщо він був створений
         if (batchResultManager != null) {
             try {
                 batchResultManager.shutdown();
             } catch (Exception e) {
-                // Ігноруємо помилки при закритті
             }
         }
 
@@ -242,7 +240,6 @@ class BatchResultManagerTest {
         // When
         invokeSendBatch(batchResultManager, List.of(testRunResult1), 1);
 
-        // Wait a bit for potential retry scheduling
         Thread.sleep(100);
 
         // Then
@@ -286,7 +283,6 @@ class BatchResultManagerTest {
         setupManagerWithDefaults();
         when(testRunResult1.getTitle()).thenReturn("Test 1");
 
-        // Add to failed results
         getFailedResults(batchResultManager).add(testRunResult1);
 
         // When

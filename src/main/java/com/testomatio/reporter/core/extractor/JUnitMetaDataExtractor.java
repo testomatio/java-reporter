@@ -35,7 +35,7 @@ public class JUnitMetaDataExtractor implements MetaDataExtractor<JUnitTestWrappe
         return title;
     }
 
-    private static String getTestId(Method method) {
+    static String getTestId(Method method) {
         TestId testIdAnnotation = method.getAnnotation(TestId.class);
         return testIdAnnotation != null ? testIdAnnotation.value() : null;
     }

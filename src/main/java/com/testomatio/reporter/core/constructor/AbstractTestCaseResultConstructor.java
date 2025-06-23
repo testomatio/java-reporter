@@ -21,7 +21,7 @@ public abstract class AbstractTestCaseResultConstructor implements ResultConstru
 
     protected final void validateHolder(TestCaseResultWrapper holder) {
         if (holder == null) {
-            throw new IllegalArgumentException("TestRunResultHolder cannot be null");
+            throw new IllegalArgumentException("TestRunResultWrapper cannot be null");
         }
         if (holder.getTestMetadata() == null) {
             throw new IllegalArgumentException("TestMetadata cannot be null");
