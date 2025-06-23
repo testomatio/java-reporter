@@ -1,26 +1,47 @@
 package com.testomatio.reporter.core.framework_integration;
 
+import com.testomatio.reporter.core.constructor.CucumberTestCaseResultConstructor;
+import com.testomatio.reporter.core.constructor.ResultConstructor;
+import com.testomatio.reporter.core.constructor.TestCaseResultWrapper;
+import com.testomatio.reporter.core.extractor.CucumberMetaDataExtractor;
+import com.testomatio.reporter.core.extractor.MetaDataExtractor;
 import com.testomatio.reporter.model.TestMetadata;
 import io.cucumber.plugin.EventListener;
 import io.cucumber.plugin.Plugin;
 import io.cucumber.plugin.event.EventPublisher;
+import io.cucumber.plugin.event.TestCase;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestCaseStarted;
 import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
 
-import static com.testomatio.reporter.constants.CommonConstants.FAILED;
-import static com.testomatio.reporter.constants.CommonConstants.PASSED;
-import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
+/**
+ * Cucumber plugin that integrates test execution with Testomat.io reporting system.
+ * Extends AbstractTestFrameworkListener to leverage common reporting functionality.
+ */
+public class CucumberListener extends AbstractTestFrameworkListener implements Plugin, EventListener {
+    private final MetaDataExtractor<TestCase> metaDataExtractor = new CucumberMetaDataExtractor();
 
-public class CucumberListener extends BaseTestReporter implements Plugin, EventListener {
 
     public CucumberListener() {
-        LOGGER.fine("CucumberListener initialized");
+        super();
     }
 
     public CucumberListener(String out) {
+        super();
         LOGGER.fine("CucumberListener initialized with output: " + out);
+    }
+
+    @Override
+    protected ResultConstructor createResultConstructor() {
+        return new CucumberTestCaseResultConstructor();
+    }
+
+    @Override
+    protected void addFrameworkSpecificData(TestCaseResultWrapper.Builder builder, Object frameworkSpecificData) {
+        if (frameworkSpecificData instanceof TestCaseFinished) {
+            builder.withCucumberTestCaseFinished((TestCaseFinished) frameworkSpecificData);
+        }
     }
 
     @Override
@@ -32,11 +53,11 @@ public class CucumberListener extends BaseTestReporter implements Plugin, EventL
     }
 
     private void handleTestRunStarted(TestRunStarted event) {
-        handleSuiteStart("Cucumber test run");
+        handleSuiteStarted("Cucumber Test Run");
     }
 
     private void handleTestRunFinished(TestRunFinished event) {
-        handleSuiteFinish("Cucumber test run");
+        handleSuiteFinished("Cucumber Test Run");
     }
 
     private void handleTestCaseStarted(TestCaseStarted event) {
@@ -44,29 +65,17 @@ public class CucumberListener extends BaseTestReporter implements Plugin, EventL
     }
 
     private void handleTestCaseFinished(TestCaseFinished event) {
-        String testCaseName = event.getTestCase().getName();
         String status = determineTestStatus(event);
-        TestMetadata metadata = metadataExtractor.extractFromCucumber(event.getTestCase());
-        
-        Throwable error = event.getResult().getError();
-        reportTest(testCaseName, metadata, status, error);
+        TestMetadata metadata = metaDataExtractor.extractTestMetadata(event.getTestCase());
+
+        logMetadataCreation(metadata);
+        reportTestResult(metadata, status, event);
     }
 
     private String determineTestStatus(TestCaseFinished event) {
         if (event == null || event.getResult() == null || event.getResult().getStatus() == null) {
-            return FAILED;
+            return normalizeStatus(null);
         }
-
-        switch (event.getResult().getStatus()) {
-            case PASSED:
-                return PASSED;
-            case SKIPPED:
-            case PENDING:
-            case UNDEFINED:
-            case AMBIGUOUS:
-                return SKIPPED;
-            default:
-                return FAILED;
-        }
+        return normalizeStatus(event.getResult().getStatus());
     }
 }

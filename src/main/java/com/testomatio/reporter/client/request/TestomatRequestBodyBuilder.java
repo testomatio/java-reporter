@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.testomatio.reporter.constants.ApiRequestFields;
 import com.testomatio.reporter.exception.FailedToCreateRunBodyException;
-import com.testomatio.reporter.model.TestRunResult;
+import com.testomatio.reporter.model.TestCaseResult;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +62,7 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      * @throws JsonProcessingException if JSON serialization fails
      */
     @Override
-    public String buildSingleTestReportBody(TestRunResult result) throws JsonProcessingException {
+    public String buildSingleTestReportBody(TestCaseResult result) throws JsonProcessingException {
         Map<String, Object> body = buildTestResultMap(result);
         body.put("create", true);
         return objectMapper.writeValueAsString(body);
@@ -77,9 +77,9 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      * @throws JsonProcessingException if JSON serialization fails
      */
     @Override
-    public String buildBatchTestReportBody(List<TestRunResult> results, String apiKey) throws JsonProcessingException {
+    public String buildBatchTestReportBody(List<TestCaseResult> results, String apiKey) throws JsonProcessingException {
         List<Map<String, Object>> testsArray = new ArrayList<>();
-        for (TestRunResult result : results) {
+        for (TestCaseResult result : results) {
             testsArray.add(buildTestResultMap(result));
         }
 
@@ -113,7 +113,7 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      * @param result the test result to convert
      * @return map containing test result data
      */
-    private Map<String, Object> buildTestResultMap(TestRunResult result) {
+    private Map<String, Object> buildTestResultMap(TestCaseResult result) {
         Map<String, Object> body = new HashMap<>();
         body.put(ApiRequestFields.TITLE, result.getTitle());
 

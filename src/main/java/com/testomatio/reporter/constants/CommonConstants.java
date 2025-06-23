@@ -3,6 +3,7 @@ package com.testomatio.reporter.constants;
 import okhttp3.MediaType;
 
 public class CommonConstants {
+    public static final String REPORTER_VERSION = "0.1.0";
     public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
 
     public static final String TESTS_STRING = "tests";

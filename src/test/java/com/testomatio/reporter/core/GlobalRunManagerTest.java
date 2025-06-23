@@ -4,7 +4,7 @@ import com.testomatio.reporter.client.ApiInterface;
 import com.testomatio.reporter.client.ClientFactory;
 import com.testomatio.reporter.client.TestomatClientFactory;
 import com.testomatio.reporter.core.batch.BatchResultManager;
-import com.testomatio.reporter.model.TestRunResult;
+import com.testomatio.reporter.model.TestCaseResult;
 import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
 import com.testomatio.reporter.property_config.interf.PropertyProvider;
 import com.testomatio.reporter.property_config.interf.PropertyProviderFactory;
@@ -57,7 +57,7 @@ class GlobalRunManagerTest {
     private PropertyProvider propertyProvider;
 
     @Mock
-    private TestRunResult testRunResult;
+    private TestCaseResult testRunResult;
 
     private GlobalRunManager globalRunManager;
 

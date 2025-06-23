@@ -1,7 +1,7 @@
 package com.testomatio.reporter.core.batch;
 
 import com.testomatio.reporter.client.ApiInterface;
-import com.testomatio.reporter.model.TestRunResult;
+import com.testomatio.reporter.model.TestCaseResult;
 import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
 import com.testomatio.reporter.property_config.interf.PropertyProvider;
 import java.io.IOException;
@@ -27,15 +27,13 @@ import static com.testomatio.reporter.logger.LoggerConfig.getLogger;
  */
 public class BatchResultManager {
 
-    //TODO: Refactor class for SRP
-
     private static final Logger LOGGER = getLogger(BatchResultManager.class);
     private static final int DEFAULT_BATCH_SIZE = 10;
     private static final int DEFAULT_FLUSH_INTERVAL_SECONDS = 5;
     private static final int MAX_RETRY_ATTEMPTS = 3;
 
-    private final List<TestRunResult> pendingResults = new ArrayList<>();
-    private final List<TestRunResult> failedResults = new ArrayList<>();
+    private final List<TestCaseResult> pendingResults = new ArrayList<>();
+    private final List<TestCaseResult> failedResults = new ArrayList<>();
     private final int batchSize;
     private final ApiInterface apiClient;
     private final String runUid;
@@ -89,7 +87,7 @@ public class BatchResultManager {
      * @param result the test result to add to the batch
      * @throws IllegalStateException if the manager is not active (shutdown has been called)
      */
-    public synchronized void addResult(TestRunResult result) {
+    public synchronized void addResult(TestCaseResult result) {
         if (!isActive.get()) {
             LOGGER.warning("BatchResultManager is not active, skipping result: " + result.getTitle());
             return;
@@ -116,7 +114,7 @@ public class BatchResultManager {
         if (pendingResults.isEmpty()) {
             return;
         }
-        List<TestRunResult> toSend = new ArrayList<>(pendingResults);
+        List<TestCaseResult> toSend = new ArrayList<>(pendingResults);
         pendingResults.clear();
         sendBatch(toSend, 1);
     }
@@ -131,7 +129,7 @@ public class BatchResultManager {
      * @param results the list of test results to send
      * @param attempt the current attempt number (1-based)
      */
-    private void sendBatch(List<TestRunResult> results, int attempt) {
+    private void sendBatch(List<TestCaseResult> results, int attempt) {
         try {
             if (results.size() == 1) {
                 apiClient.reportTest(runUid, results.get(0));

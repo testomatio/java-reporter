@@ -8,12 +8,13 @@ import com.testomatio.reporter.client.util.RequestUrlBuilderUtil;
 import com.testomatio.reporter.exception.FinishReportFailedException;
 import com.testomatio.reporter.exception.ReportingFailedException;
 import com.testomatio.reporter.exception.RunCreationFailedException;
-import com.testomatio.reporter.model.TestRunResult;
+import com.testomatio.reporter.model.TestCaseResult;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import static com.testomatio.reporter.constants.CommonConstants.REPORTER_VERSION;
 import static com.testomatio.reporter.constants.CommonConstants.RESPONSE_UID_KEY;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
@@ -61,7 +62,7 @@ public class TestomatApiClient implements ApiInterface {
         LOGGER.fine("Creating run with title: " + title);
 
         String url = RequestUrlBuilderUtil.buildCreateRunUrl();
-        LOGGER.finer("Creating run with url: " + url);
+        LOGGER.finer("Creating run with request url: " + url);
         String requestBody = requestBodyBuilder.buildCreateRunBody(title);
 
         Map<String, String> responseBody = httpClient.post(url, requestBody, Map.class);
@@ -70,6 +71,8 @@ public class TestomatApiClient implements ApiInterface {
             throw new RunCreationFailedException("Invalid response: missing UID in create test run response");
         }
         LOGGER.fine("Created test run with UID: " + responseBody.get(RESPONSE_UID_KEY));
+        LOGGER.info("Testomat.io java reporter version: " + REPORTER_VERSION);
+        LOGGER.info("See run aggregation at: " + responseBody.get("url"));
 
         return responseBody.get(RESPONSE_UID_KEY);
     }
@@ -81,7 +84,7 @@ public class TestomatApiClient implements ApiInterface {
      * @param result the test result to report
      */
     @Override
-    public void reportTest(String uid, TestRunResult result) {
+    public void reportTest(String uid, TestCaseResult result) {
         try {
             LOGGER.fine("Reporting test result for testId: " + result.getTestId());
 
@@ -102,7 +105,7 @@ public class TestomatApiClient implements ApiInterface {
      * @param results the list of test results to report
      */
     @Override
-    public void reportTests(String uid, List<TestRunResult> results) {
+    public void reportTests(String uid, List<TestCaseResult> results) {
         try {
             if (results == null || results.isEmpty()) {
                 LOGGER.fine("No test results to report");
