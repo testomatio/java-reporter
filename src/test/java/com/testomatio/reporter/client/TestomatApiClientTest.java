@@ -6,7 +6,7 @@ import com.testomatio.reporter.client.util.RequestUrlBuilderUtil;
 import com.testomatio.reporter.exception.FinishReportFailedException;
 import com.testomatio.reporter.exception.ReportingFailedException;
 import com.testomatio.reporter.exception.RunCreationFailedException;
-import com.testomatio.reporter.model.TestRunResult;
+import com.testomatio.reporter.model.TestCaseResult;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,10 +47,10 @@ class TestomatApiClientTest {
     private TestomatRequestBodyBuilder requestBodyBuilder;
 
     @Mock
-    private TestRunResult testRunResult1;
+    private TestCaseResult testRunResult1;
 
     @Mock
-    private TestRunResult testRunResult2;
+    private TestCaseResult testRunResult2;
 
     private static final String API_KEY = "test-api-key";
     private static final String TEST_RUN_UID = "test-run-uid-123";
@@ -213,7 +213,7 @@ class TestomatApiClientTest {
         // Given
         testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
 
-        List<TestRunResult> results = Arrays.asList(testRunResult1, testRunResult2);
+        List<TestCaseResult> results = Arrays.asList(testRunResult1, testRunResult2);
 
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(() -> RequestUrlBuilderUtil.buildReportTestUrl(TEST_RUN_UID))
@@ -258,7 +258,7 @@ class TestomatApiClientTest {
         // Given
         testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
 
-        List<TestRunResult> results = Arrays.asList(testRunResult1);
+        List<TestCaseResult> results = Arrays.asList(testRunResult1);
 
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(() -> RequestUrlBuilderUtil.buildReportTestUrl(TEST_RUN_UID))

@@ -4,7 +4,7 @@ import com.testomatio.reporter.client.ApiInterface;
 import com.testomatio.reporter.client.ClientFactory;
 import com.testomatio.reporter.client.TestomatClientFactory;
 import com.testomatio.reporter.core.batch.BatchResultManager;
-import com.testomatio.reporter.model.TestRunResult;
+import com.testomatio.reporter.model.TestCaseResult;
 import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -18,13 +18,13 @@ import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 public class GlobalRunManager {
     private static final GlobalRunManager INSTANCE = new GlobalRunManager();
 
-    final AtomicInteger activeSuites = new AtomicInteger(0);
-    final AtomicReference<String> runUid = new AtomicReference<>();
-    final AtomicReference<BatchResultManager> batchManager = new AtomicReference<>();
-    final AtomicReference<ApiInterface> apiClient = new AtomicReference<>();
+    private final AtomicInteger activeSuites = new AtomicInteger(0);
+    private final AtomicReference<String> runUid = new AtomicReference<>();
+    private final AtomicReference<BatchResultManager> batchManager = new AtomicReference<>();
+    private final AtomicReference<ApiInterface> apiClient = new AtomicReference<>();
     private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
     private final Logger LOGGER = getLogger(GlobalRunManager.class);
-    volatile long startTime;
+    private volatile long startTime;
 
 
     private GlobalRunManager() {
@@ -78,7 +78,7 @@ public class GlobalRunManager {
         LOGGER.finer("Active suites remaining: " + remaining);
     }
 
-    public void reportTest(TestRunResult result) {
+    public void reportTest(TestCaseResult result) {
         BatchResultManager manager = batchManager.get();
         if (manager != null) {
             manager.addResult(result);
@@ -89,7 +89,7 @@ public class GlobalRunManager {
         return runUid.get() != null;
     }
 
-    void finalizeRun() {
+    private void finalizeRun() {
         BatchResultManager manager = batchManager.getAndSet(null);
         if (manager != null) {
             manager.shutdown();
@@ -109,7 +109,7 @@ public class GlobalRunManager {
         }
     }
 
-    String getRunTitle() {
+    private String getRunTitle() {
         return PropertyProviderFactoryImpl.getPropertyProviderFactory()
                 .getPropertyProvider().getProperty(RUN_TITLE_PROPERTY_NAME);
     }
