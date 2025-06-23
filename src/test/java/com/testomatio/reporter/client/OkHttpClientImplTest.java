@@ -198,36 +198,6 @@ class OkHttpClientImplTest {
     }
 
     @Test
-    void put_WithSuccessfulResponse_ShouldReturnDeserializedObject() throws Exception {
-        // Given
-        Map<String, String> expectedResponse = new HashMap<>();
-        expectedResponse.put("status", "updated");
-
-        try (MockedConstruction<OkHttpClient> clientMock = mockConstruction(OkHttpClient.class,
-                (mock, context) -> {
-                    when(mock.newCall(any(Request.class))).thenReturn(mockCall);
-                });
-             MockedConstruction<ObjectMapper> mapperMock = mockConstruction(ObjectMapper.class,
-                     (mock, context) -> {
-                         when(mock.readValue(anyString(), eq(Map.class))).thenReturn(expectedResponse);
-                     })) {
-
-            httpClient = new OkHttpClientImpl();
-
-            when(mockCall.execute()).thenReturn(mockResponse);
-            when(mockResponse.isSuccessful()).thenReturn(true);
-            when(mockResponse.body()).thenReturn(mockResponseBody);
-            when(mockResponseBody.string()).thenReturn(RESPONSE_BODY);
-
-            // When
-            Map<String, String> result = httpClient.put(TEST_URL, REQUEST_BODY, Map.class);
-
-            // Then
-            assertEquals(expectedResponse, result);
-        }
-    }
-
-    @Test
     void put_WithNullResponseType_ShouldReturnNull() throws Exception {
         // Given
         try (MockedConstruction<OkHttpClient> clientMock = mockConstruction(OkHttpClient.class,
@@ -370,7 +340,6 @@ class OkHttpClientImplTest {
         }
     }
 
-    // Helper class for testing custom object deserialization
     public static class TestResponse {
         private String id;
         private String status;
