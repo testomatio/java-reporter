@@ -7,22 +7,39 @@
     <groupId>com.testomatio.reporter</groupId>
     <artifactId>java-reporter</artifactId>
     <version>0.1.0</version>
+    <packaging>jar</packaging>
+
+    <name>Testomat.io Java Reporter</name>
+    <description>Java reporter library for Testomat.io integration with JUnit 5, TestNG, and Cucumber</description>
+    <url>https://github.com/testomatio/java-reporter</url>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Core dependencies versions -->
         <okhttp.version>4.12.0</okhttp.version>
         <jackson.version>2.15.2</jackson.version>
+        <lombok.version>1.18.38</lombok.version>
+
+        <!-- Test framework versions (provided by users) -->
         <junit.version>5.10.0</junit.version>
         <testng.version>7.8.0</testng.version>
-        <lombok.version>1.18.38</lombok.version>
-        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <cucumber.version>7.15.0</cucumber.version>
+
+        <!-- Test-only dependencies -->
+        <mockito.version>5.5.0</mockito.version>
+
+        <!-- Plugin versions -->
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
-        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
     </properties>
 
     <dependencies>
+        <!-- CORE DEPENDENCIES (будуть включені у jar) -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
@@ -35,12 +52,52 @@
             <version>${jackson.version}</version>
         </dependency>
 
+        <!-- BUILD-TIME DEPENDENCIES (не будуть включені у jar) -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- TEST FRAMEWORK DEPENDENCIES (provided by user projects) -->
+        <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>${junit.version}</version>
             <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
+
+        <!-- TestNG -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Cucumber Core -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-core</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- TEST SCOPE DEPENDENCIES (тільки для внутрішнього тестування бібліотеки) -->
+        <!-- JUnit 5 для тестування -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
@@ -49,83 +106,42 @@
         </dependency>
 
         <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${testng.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-core</artifactId>
-            <version>7.15.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-java</artifactId>
-            <version>7.15.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-junit-platform-engine</artifactId>
-            <version>7.15.0</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
 
+        <!-- Cucumber для тестування -->
         <dependency>
             <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-junit</artifactId>
-            <version>7.15.0</version>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
+            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-testng</artifactId>
-            <version>7.15.0</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- JUnit 5 -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.10.0</version>
+            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
 
-        <!-- JUnit 5 Params (для параметризованих тестів) -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <version>5.10.0</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Mockito -->
+        <!-- Mockito для тестування -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.5.0</version>
+            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
 
-        <!-- Mockito JUnit Jupiter -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.5.0</version>
+            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-inline</artifactId>
@@ -136,6 +152,7 @@
 
     <build>
         <plugins>
+            <!-- Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -153,6 +170,7 @@
                 </configuration>
             </plugin>
 
+            <!-- JAR Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -165,35 +183,40 @@
                 </configuration>
             </plugin>
 
+            <!-- Sources Plugin (для Maven Central) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>${maven-resources-plugin.version}</version>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven-source-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Javadoc Plugin (для Maven Central) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
                 <configuration>
-                    <resources>
-                        <resource>
-                            <directory>src/main/resources</directory>
-                            <excludes>
-                                <exclude>**/junit-platform.properties</exclude>
-                                <exclude>**/testomatio.properties</exclude>
-                            </excludes>
-                        </resource>
-                    </resources>
+                    <source>11</source>
+                    <quiet>true</quiet>
+                    <doclint>none</doclint>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
-
-        <resources>
-            <resource>
-                <directory>maven-build/src/main/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-                <excludes>
-                    <exclude>**/junit-platform.properties</exclude>
-                    <exclude>**/testomatio.properties</exclude>
-                </excludes>
-            </resource>
-        </resources>
     </build>
 </project>
