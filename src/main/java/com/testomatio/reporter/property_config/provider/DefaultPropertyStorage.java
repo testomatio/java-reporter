@@ -2,6 +2,10 @@ package com.testomatio.reporter.property_config.provider;
 
 import java.util.Map;
 
+/**
+ * Storage for default property values used as final fallback.
+ * Contains sensible defaults for all configurable properties.
+ */
 public class DefaultPropertyStorage {
     public static final Map<String, String> DEFAULTS;
 

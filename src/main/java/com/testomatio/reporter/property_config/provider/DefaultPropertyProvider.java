@@ -7,8 +7,13 @@ import java.util.logging.Logger;
 
 import static com.testomatio.reporter.logger.LoggerConfig.getLogger;
 
+/**
+ * Property provider that provides default values as final fallback.
+ * Last priority in the property resolution chain.
+ */
 public class DefaultPropertyProvider extends AbstractPropertyProvider {
     private static final Logger LOGGER = getLogger(DefaultPropertyProvider.class);
+
     @Override
     public String getProperty(String key) {
         String formattedKey = StringUtils.fromEnvStyle(key);

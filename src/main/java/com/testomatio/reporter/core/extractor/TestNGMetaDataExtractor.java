@@ -9,6 +9,10 @@ import java.lang.reflect.Method;
 import java.util.logging.Logger;
 import org.testng.ITestResult;
 
+/**
+ * Extracts test metadata from TestNG test methods and results.
+ * Supports both regular and disabled tests with @Title and @TestId annotations.
+ */
 public class TestNGMetaDataExtractor implements MetaDataExtractor<TestNGTestWrapper> {
     private final Logger LOGGER = LoggerUtils.getLogger(this.getClass());
 
@@ -20,6 +24,10 @@ public class TestNGMetaDataExtractor implements MetaDataExtractor<TestNGTestWrap
             return extractTestMetadataForDisabledTest(wrapper.getMethod(), wrapper.getTestClass());
         }
     }
+
+    /**
+     * Extracts metadata from executed TestNG test result.
+     */
     private TestMetadata extractTestMetadataForRegularTest(ITestResult source) {
         Method method = source.getMethod().getConstructorOrMethod().getMethod();
         String title = getTestNGTestTitle(method, source);
@@ -31,11 +39,7 @@ public class TestNGMetaDataExtractor implements MetaDataExtractor<TestNGTestWrap
     }
 
     /**
-     * Extracts metadata for disabled tests discovered via reflection.
-     *
-     * @param method The disabled test method
-     * @param testClass The class containing the disabled test method
-     * @return TestMetadata for the disabled test
+     * Extracts metadata from disabled test method via reflection.
      */
     private TestMetadata extractTestMetadataForDisabledTest(Method method, Class<?> testClass) {
         String title = getTestTitle(method);
@@ -49,16 +53,25 @@ public class TestNGMetaDataExtractor implements MetaDataExtractor<TestNGTestWrap
         return new TestMetadata(title, testId, suiteTitle, file);
     }
 
+    /**
+     * Gets test ID from @TestId annotation.
+     */
     private String getTestId(Method method) {
         TestId testIdAnnotation = method.getAnnotation(TestId.class);
         return testIdAnnotation != null ? testIdAnnotation.value() : null;
     }
 
+    /**
+     * Gets test title from @Title annotation or method name.
+     */
     private String getTestTitle(Method method) {
         Title titleAnnotation = method.getAnnotation(Title.class);
         return titleAnnotation != null ? titleAnnotation.value() : method.getName();
     }
 
+    /**
+     * Gets test title from @Title annotation or TestNG result name.
+     */
     private String getTestNGTestTitle(Method method, ITestResult result) {
         Title titleAnnotation = method.getAnnotation(Title.class);
         return titleAnnotation != null ? titleAnnotation.value() : result.getName();

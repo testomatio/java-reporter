@@ -1,12 +1,12 @@
 package com.testomatio.reporter.core.framework_integration;
 
 import com.testomatio.reporter.core.GlobalRunManager;
-import com.testomatio.reporter.core.constructor.JUnitTestCaseResultConstructor;
+import com.testomatio.reporter.core.constructor.JUnitTestResultConstructor;
 import com.testomatio.reporter.core.constructor.ResultConstructor;
 import com.testomatio.reporter.core.constructor.TestCaseResultWrapper;
 import com.testomatio.reporter.core.extractor.JUnitMetaDataExtractor;
 import com.testomatio.reporter.core.extractor.wrapper.JUnitTestWrapper;
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import com.testomatio.reporter.model.TestMetadata;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +40,7 @@ class JUnitExtensionTest {
     private TestMetadata testMetadata;
     
     @Mock
-    private TestCaseResult testCaseResult;
+    private TestResult testResult;
     
     @Mock
     private ResultConstructor resultConstructor;
@@ -124,7 +124,7 @@ class JUnitExtensionTest {
         
         // Assert
         assertNotNull(result);
-        assertTrue(result instanceof JUnitTestCaseResultConstructor);
+        assertTrue(result instanceof JUnitTestResultConstructor);
     }
 
     @Test

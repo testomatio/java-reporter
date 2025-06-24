@@ -1,10 +1,14 @@
 package com.testomatio.reporter.core.constructor;
 
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class JUnitTestCaseResultConstructor extends AbstractTestCaseResultConstructor {
+/**
+ * Constructs test case results from JUnit 5 extension contexts.
+ * Supports custom messages and extracts exception details from execution context.
+ */
+public class JUnitTestResultConstructor extends AbstractTestResultConstructor {
 
     @Override
     protected boolean hasCustomMessage(TestCaseResultWrapper holder) {
@@ -17,7 +21,7 @@ public class JUnitTestCaseResultConstructor extends AbstractTestCaseResultConstr
     }
 
     @Override
-    protected TestCaseResult createWithCustomMessage(TestCaseResultWrapper holder) {
+    protected TestResult createWithCustomMessage(TestCaseResultWrapper holder) {
         var stack = extractStackTrace(holder);
 
         return buildTestResult(holder)
@@ -27,7 +31,7 @@ public class JUnitTestCaseResultConstructor extends AbstractTestCaseResultConstr
     }
 
     @Override
-    protected TestCaseResult createWithExceptionDetails(TestCaseResultWrapper holder) {
+    protected TestResult createWithExceptionDetails(TestCaseResultWrapper holder) {
         var exceptionDetails = extractExceptionDetails(holder);
 
         return buildTestResult(holder)
@@ -41,6 +45,9 @@ public class JUnitTestCaseResultConstructor extends AbstractTestCaseResultConstr
         return "JUnit";
     }
 
+    /**
+     * Extracts exception details from JUnit extension context.
+     */
     private ExceptionDetails extractExceptionDetails(TestCaseResultWrapper holder) {
         return Optional.ofNullable(holder.getJUnitExtensionContext())
                 .flatMap(ExtensionContext::getExecutionException)

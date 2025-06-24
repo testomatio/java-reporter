@@ -1,8 +1,13 @@
 package com.testomatio.reporter.core.extractor.wrapper;
 
 import java.lang.reflect.Method;
+import lombok.Getter;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
+/**
+ * Wrapper for JUnit 5 test method and extension context.
+ */
+@Getter
 public class JUnitTestWrapper {
     private final Method testMethod;
     private final ExtensionContext extensionContext;
@@ -10,13 +15,5 @@ public class JUnitTestWrapper {
     public JUnitTestWrapper(Method testMethod, ExtensionContext extensionContext) {
         this.testMethod = testMethod;
         this.extensionContext = extensionContext;
-    }
-
-    public Method getTestMethod() {
-        return testMethod;
-    }
-
-    public ExtensionContext getExtensionContext() {
-        return extensionContext;
     }
 }

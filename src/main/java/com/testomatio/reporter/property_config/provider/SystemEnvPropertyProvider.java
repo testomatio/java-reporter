@@ -1,11 +1,14 @@
 package com.testomatio.reporter.property_config.provider;
 
-
 import com.testomatio.reporter.exception.PropertyNotFoundException;
 import com.testomatio.reporter.property_config.interf.AbstractPropertyProvider;
 import com.testomatio.reporter.property_config.util.StringUtils;
 import java.util.logging.Logger;
 
+/**
+ * Property provider that reads from system environment variables.
+ * Second priority in the property resolution chain.
+ */
 public class SystemEnvPropertyProvider extends AbstractPropertyProvider {
     private final Logger LOGGER = Logger.getLogger(SystemEnvPropertyProvider.class.getName());
 

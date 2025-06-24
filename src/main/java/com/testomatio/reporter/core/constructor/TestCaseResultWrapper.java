@@ -6,6 +6,10 @@ import lombok.Getter;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testng.ITestResult;
 
+/**
+ * Wrapper containing test metadata and framework-specific data for result construction.
+ * Uses builder pattern to accommodate different test frameworks.
+ */
 @Getter
 public class TestCaseResultWrapper {
     private final TestMetadata testMetadata;
@@ -26,10 +30,16 @@ public class TestCaseResultWrapper {
         this.jUnitExtensionContext = builder.jUnitExtensionContext;
     }
 
+    /**
+     * Creates new builder instance.
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Builder for test case result wrapper.
+     */
     public static class Builder {
         private TestMetadata testMetadata;
         private String status;

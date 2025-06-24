@@ -4,7 +4,7 @@ import com.testomatio.reporter.client.ApiInterface;
 import com.testomatio.reporter.client.ClientFactory;
 import com.testomatio.reporter.client.TestomatClientFactory;
 import com.testomatio.reporter.core.batch.BatchResultManager;
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,6 +15,11 @@ import java.util.logging.Logger;
 import static com.testomatio.reporter.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
+/**
+ * Singleton manager for global test run lifecycle with Testomat.io.
+ * Handles test run initialization, suite tracking, result reporting, and finalization.
+ * Thread-safe implementation supporting concurrent test execution.
+ */
 public class GlobalRunManager {
     private static final GlobalRunManager INSTANCE = new GlobalRunManager();
 
@@ -26,14 +31,23 @@ public class GlobalRunManager {
     private final Logger LOGGER = getLogger(GlobalRunManager.class);
     private volatile long startTime;
 
-
     private GlobalRunManager() {
     }
 
+    /**
+     * Returns the singleton instance of GlobalRunManager.
+     *
+     * @return the global run manager instance
+     */
     public static GlobalRunManager getInstance() {
         return INSTANCE;
     }
 
+    /**
+     * Initializes test run if not already initialized.
+     * Creates API client, test run UID, batch manager, and registers shutdown hook.
+     * Thread-safe operation that ensures single initialization.
+     */
     public synchronized void initializeIfNeeded() {
         if (runUid.get() != null) {
             return;
@@ -58,6 +72,10 @@ public class GlobalRunManager {
         }
     }
 
+    /**
+     * Registers JVM shutdown hook for automatic test run finalization.
+     * Ensures test run is properly finalized even if application terminates unexpectedly.
+     */
     private void registerShutdownHook() {
         if (shutdownHookRegistered.compareAndSet(false, true)) {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -68,27 +86,49 @@ public class GlobalRunManager {
         }
     }
 
+    /**
+     * Increments active suite counter and initializes run if needed.
+     * Called when a test suite starts execution.
+     */
     public void incrementSuiteCounter() {
         activeSuites.incrementAndGet();
         initializeIfNeeded();
     }
 
+    /**
+     * Decrements active suite counter.
+     * Called when a test suite completes execution.
+     */
     public void decrementSuiteCounter() {
         int remaining = activeSuites.decrementAndGet();
         LOGGER.finer("Active suites remaining: " + remaining);
     }
 
-    public void reportTest(TestCaseResult result) {
+    /**
+     * Reports individual test result to batch manager.
+     *
+     * @param result test case result to report
+     */
+    public void reportTest(TestResult result) {
         BatchResultManager manager = batchManager.get();
         if (manager != null) {
             manager.addResult(result);
         }
     }
 
+    /**
+     * Checks if test run is currently active.
+     *
+     * @return true if test run is initialized and active
+     */
     public boolean isActive() {
         return runUid.get() != null;
     }
 
+    /**
+     * Finalizes test run by shutting down batch manager and closing API connection.
+     * Calculates run duration and sends completion notification to Testomat.io.
+     */
     private void finalizeRun() {
         BatchResultManager manager = batchManager.getAndSet(null);
         if (manager != null) {
@@ -109,6 +149,11 @@ public class GlobalRunManager {
         }
     }
 
+    /**
+     * Retrieves test run title from properties.
+     *
+     * @return configured run title or null if not set
+     */
     private String getRunTitle() {
         return PropertyProviderFactoryImpl.getPropertyProviderFactory()
                 .getPropertyProvider().getProperty(RUN_TITLE_PROPERTY_NAME);

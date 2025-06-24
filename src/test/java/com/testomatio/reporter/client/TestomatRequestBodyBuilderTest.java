@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.testomatio.reporter.client.request.TestomatRequestBodyBuilder;
 import com.testomatio.reporter.exception.FailedToCreateRunBodyException;
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -34,10 +34,10 @@ class TestomatRequestBodyBuilderTest {
     private ObjectMapper mockObjectMapper;
 
     @Mock
-    private TestCaseResult testRunResult1;
+    private TestResult testRunResult1;
 
     @Mock
-    private TestCaseResult testRunResult2;
+    private TestResult testRunResult2;
 
     private static final String API_KEY = "test-api-key";
     private static final String TEST_TITLE = "Test Run Title";
@@ -187,7 +187,7 @@ class TestomatRequestBodyBuilderTest {
         requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
         setupTestRunResult(testRunResult2, "Test 2", "T456", "Suite 2", "test2.java", "FAILED", "Error", "stack2");
-        List<TestCaseResult> results = Arrays.asList(testRunResult1, testRunResult2);
+        List<TestResult> results = Arrays.asList(testRunResult1, testRunResult2);
         when(mockObjectMapper.writeValueAsString(any())).thenReturn(EXPECTED_JSON);
 
         // When
@@ -203,7 +203,7 @@ class TestomatRequestBodyBuilderTest {
         requestBodyBuilder = new TestomatRequestBodyBuilder();
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
         setupTestRunResult(testRunResult2, "Test 2", "T456", "Suite 2", "test2.java", "FAILED", "Error", "stack2");
-        List<TestCaseResult> results = Arrays.asList(testRunResult1, testRunResult2);
+        List<TestResult> results = Arrays.asList(testRunResult1, testRunResult2);
 
         // When
         String result = requestBodyBuilder.buildBatchTestReportBody(results, API_KEY);
@@ -223,7 +223,7 @@ class TestomatRequestBodyBuilderTest {
         // Given
         requestBodyBuilder = new TestomatRequestBodyBuilder();
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
-        List<TestCaseResult> results = Collections.singletonList(testRunResult1);
+        List<TestResult> results = Collections.singletonList(testRunResult1);
 
         // When
         String result = requestBodyBuilder.buildBatchTestReportBody(results, API_KEY);
@@ -239,7 +239,7 @@ class TestomatRequestBodyBuilderTest {
     void buildBatchTestReportBody_WithEmptyResults_ShouldReturnValidJson() throws Exception {
         // Given
         requestBodyBuilder = new TestomatRequestBodyBuilder();
-        List<TestCaseResult> results = Collections.emptyList();
+        List<TestResult> results = Collections.emptyList();
 
         // When
         String result = requestBodyBuilder.buildBatchTestReportBody(results, API_KEY);
@@ -256,7 +256,7 @@ class TestomatRequestBodyBuilderTest {
         // Given
         requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
-        List<TestCaseResult> results = Collections.singletonList(testRunResult1);
+        List<TestResult> results = Collections.singletonList(testRunResult1);
         when(mockObjectMapper.writeValueAsString(any()))
                 .thenThrow(new JsonProcessingException("Serialization failed") {
                 });
@@ -374,7 +374,7 @@ class TestomatRequestBodyBuilderTest {
     }
 
     // Helper method to setup TestRunResult mock
-    private void setupTestRunResult(TestCaseResult result, String title, String testId,
+    private void setupTestRunResult(TestResult result, String title, String testId,
                                     String suiteTitle, String file, String status,
                                     String message, String stack) {
         when(result.getTitle()).thenReturn(title);

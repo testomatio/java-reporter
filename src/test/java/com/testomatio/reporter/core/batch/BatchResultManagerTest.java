@@ -1,7 +1,7 @@
 package com.testomatio.reporter.core.batch;
 
 import com.testomatio.reporter.client.ApiInterface;
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
 import com.testomatio.reporter.property_config.interf.PropertyProvider;
 import com.testomatio.reporter.property_config.interf.PropertyProviderFactory;
@@ -53,13 +53,13 @@ class BatchResultManagerTest {
     private PropertyProvider propertyProvider;
 
     @Mock
-    private TestCaseResult testRunResult1;
+    private TestResult testRunResult1;
 
     @Mock
-    private TestCaseResult testRunResult2;
+    private TestResult testRunResult2;
 
     @Mock
-    private TestCaseResult testRunResult3;
+    private TestResult testRunResult3;
 
     private static final String TEST_RUN_UID = "test-run-uid-123";
 
@@ -139,7 +139,7 @@ class BatchResultManagerTest {
 
         // Then
         assertEquals(1, getPendingResults(batchResultManager).size());
-        verify(apiClient, never()).reportTest(anyString(), any(TestCaseResult.class));
+        verify(apiClient, never()).reportTest(anyString(), any(TestResult.class));
     }
 
     @Test
@@ -170,7 +170,7 @@ class BatchResultManagerTest {
 
         // Then
         assertEquals(0, getPendingResults(batchResultManager).size());
-        verify(apiClient, never()).reportTest(anyString(), any(TestCaseResult.class));
+        verify(apiClient, never()).reportTest(anyString(), any(TestResult.class));
     }
 
     @Test
@@ -197,7 +197,7 @@ class BatchResultManagerTest {
         batchResultManager.flushPendingResults();
 
         // Then
-        verify(apiClient, never()).reportTest(anyString(), any(TestCaseResult.class));
+        verify(apiClient, never()).reportTest(anyString(), any(TestResult.class));
         verify(apiClient, never()).reportTests(anyString(), anyList());
     }
 
@@ -227,7 +227,7 @@ class BatchResultManagerTest {
 
         // Then
         verify(apiClient).reportTests(eq(TEST_RUN_UID), anyList());
-        verify(apiClient, never()).reportTest(anyString(), any(TestCaseResult.class));
+        verify(apiClient, never()).reportTest(anyString(), any(TestResult.class));
     }
 
     @Test
@@ -235,7 +235,7 @@ class BatchResultManagerTest {
         // Given
         setupManagerWithDefaults();
         when(testRunResult1.getTitle()).thenReturn("Test 1");
-        doThrow(new IOException("Network error")).when(apiClient).reportTest(anyString(), any(TestCaseResult.class));
+        doThrow(new IOException("Network error")).when(apiClient).reportTest(anyString(), any(TestResult.class));
 
         // When
         invokeSendBatch(batchResultManager, List.of(testRunResult1), 1);
@@ -251,7 +251,7 @@ class BatchResultManagerTest {
         // Given
         setupManagerWithDefaults();
         when(testRunResult1.getTitle()).thenReturn("Test 1");
-        doThrow(new IOException("Network error")).when(apiClient).reportTest(anyString(), any(TestCaseResult.class));
+        doThrow(new IOException("Network error")).when(apiClient).reportTest(anyString(), any(TestResult.class));
 
         // When
         invokeSendBatch(batchResultManager, List.of(testRunResult1), 3); // Max retry attempt
@@ -307,7 +307,7 @@ class BatchResultManagerTest {
         batchResultManager.addResult(testRunResult3);
 
         // Then
-        List<TestCaseResult> pending = getPendingResults(batchResultManager);
+        List<TestResult> pending = getPendingResults(batchResultManager);
         assertEquals(3, pending.size());
         assertEquals(testRunResult1, pending.get(0));
         assertEquals(testRunResult2, pending.get(1));
@@ -364,20 +364,20 @@ class BatchResultManagerTest {
     }
 
     @SuppressWarnings("unchecked")
-    private List<TestCaseResult> getPendingResults(BatchResultManager manager) throws Exception {
+    private List<TestResult> getPendingResults(BatchResultManager manager) throws Exception {
         Field field = BatchResultManager.class.getDeclaredField("pendingResults");
         field.setAccessible(true);
-        return (List<TestCaseResult>) field.get(manager);
+        return (List<TestResult>) field.get(manager);
     }
 
     @SuppressWarnings("unchecked")
-    private List<TestCaseResult> getFailedResults(BatchResultManager manager) throws Exception {
+    private List<TestResult> getFailedResults(BatchResultManager manager) throws Exception {
         Field field = BatchResultManager.class.getDeclaredField("failedResults");
         field.setAccessible(true);
-        return (List<TestCaseResult>) field.get(manager);
+        return (List<TestResult>) field.get(manager);
     }
 
-    private void invokeSendBatch(BatchResultManager manager, List<TestCaseResult> results, int attempt) throws Exception {
+    private void invokeSendBatch(BatchResultManager manager, List<TestResult> results, int attempt) throws Exception {
         Method method = BatchResultManager.class.getDeclaredMethod("sendBatch", List.class, int.class);
         method.setAccessible(true);
         method.invoke(manager, results, attempt);

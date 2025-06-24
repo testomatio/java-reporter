@@ -9,9 +9,14 @@ import java.lang.reflect.Method;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
+/**
+ * Extracts test metadata from JUnit 5 test methods.
+ * Supports @Title and @TestId annotations.
+ */
 public class JUnitMetaDataExtractor implements MetaDataExtractor<JUnitTestWrapper> {
     private final Logger LOGGER = LoggerUtils.getLogger(this.getClass());
 
+    @Override
     public TestMetadata extractTestMetadata(JUnitTestWrapper wrapper) {
         String title = getJUnitTestTitle(wrapper.getTestMethod(), wrapper.getExtensionContext());
         String suiteTitle = wrapper.getExtensionContext()
@@ -27,7 +32,10 @@ public class JUnitMetaDataExtractor implements MetaDataExtractor<JUnitTestWrappe
         return new TestMetadata(title, testId, suiteTitle, file);
     }
 
-    private  String getJUnitTestTitle(Method testMethod, ExtensionContext context) {
+    /**
+     * Gets test title from @Title annotation or JUnit display name.
+     */
+    private String getJUnitTestTitle(Method testMethod, ExtensionContext context) {
         Title titleAnnotation = testMethod.getAnnotation(Title.class);
         String title = titleAnnotation != null ? titleAnnotation.value() : context.getDisplayName();
         LOGGER.finer(String.format("Using test title: %s (from %s)", title,
@@ -35,6 +43,9 @@ public class JUnitMetaDataExtractor implements MetaDataExtractor<JUnitTestWrappe
         return title;
     }
 
+    /**
+     * Gets test ID from @TestId annotation.
+     */
     static String getTestId(Method method) {
         TestId testIdAnnotation = method.getAnnotation(TestId.class);
         return testIdAnnotation != null ? testIdAnnotation.value() : null;

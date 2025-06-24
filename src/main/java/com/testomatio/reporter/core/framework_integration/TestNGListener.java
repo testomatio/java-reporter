@@ -2,7 +2,7 @@ package com.testomatio.reporter.core.framework_integration;
 
 import com.testomatio.reporter.core.constructor.ResultConstructor;
 import com.testomatio.reporter.core.constructor.TestCaseResultWrapper;
-import com.testomatio.reporter.core.constructor.TestNGTestCaseResultConstructor;
+import com.testomatio.reporter.core.constructor.TestNGTestResultConstructor;
 import com.testomatio.reporter.core.extractor.MetaDataExtractor;
 import com.testomatio.reporter.core.extractor.TestNGMetaDataExtractor;
 import com.testomatio.reporter.core.extractor.wrapper.TestNGTestWrapper;
@@ -22,11 +22,9 @@ import static com.testomatio.reporter.constants.CommonConstants.PASSED;
 import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
 
 /**
- * TestNG listener implementation that integrates test execution with Testomat.io reporting system.
- * Extends AbstractTestFrameworkListener to leverage common reporting functionality.
- * Implements ISuiteListener, ITestListener, and IInvokedMethodListener to handle suite-level,
- * test-level events, and disabled tests.
- * Supports custom annotations (@Title, @TestId) for enhanced test metadata.
+ * TestNG listener for Testomat.io integration.
+ * Reports TestNG test execution results to Testomat.io platform.
+ * Supports custom annotations (@Title, @TestId) and handles disabled tests.
  */
 public class TestNGListener extends AbstractTestFrameworkListener
         implements ISuiteListener, ITestListener, IInvokedMethodListener {
@@ -35,13 +33,16 @@ public class TestNGListener extends AbstractTestFrameworkListener
     private final MetaDataExtractor<TestNGTestWrapper> metaDataExtractor = new TestNGMetaDataExtractor();
     private final Set<String> processedTests = new HashSet<>();
 
+    /**
+     * Creates new TestNG listener.
+     */
     public TestNGListener() {
         super();
     }
 
     @Override
     protected ResultConstructor createResultConstructor() {
-        return new TestNGTestCaseResultConstructor();
+        return new TestNGTestResultConstructor();
     }
 
     @Override
@@ -51,34 +52,62 @@ public class TestNGListener extends AbstractTestFrameworkListener
         }
     }
 
+    /**
+     * Called when test suite starts. Initializes suite tracking and reports disabled tests.
+     *
+     * @param suite TestNG test suite
+     */
     @Override
     public void onStart(ISuite suite) {
         handleSuiteStarted(suite.getName());
         checkAndReportDisabledTests(suite);
     }
 
+    /**
+     * Called when test suite finishes. Completes suite tracking.
+     *
+     * @param suite TestNG test suite
+     */
     @Override
     public void onFinish(ISuite suite) {
         handleSuiteFinished(suite.getName());
     }
 
+    /**
+     * Called when test passes successfully. Reports test as passed.
+     *
+     * @param result TestNG test result
+     */
     @Override
     public void onTestSuccess(ITestResult result) {
         handleTestNGResult(result, PASSED);
     }
 
+    /**
+     * Called when test fails. Reports test as failed.
+     *
+     * @param result TestNG test result
+     */
     @Override
     public void onTestFailure(ITestResult result) {
         handleTestNGResult(result, FAILED);
     }
 
+    /**
+     * Called when test is skipped. Reports test as skipped.
+     *
+     * @param result TestNG test result
+     */
     @Override
     public void onTestSkipped(ITestResult result) {
         handleTestNGResult(result, SKIPPED);
     }
 
     /**
-     * Common method for handling TestNG test results.
+     * Handles TestNG test results and prevents duplicate reporting.
+     *
+     * @param result TestNG test result
+     * @param status test status (PASSED, FAILED, SKIPPED)
      */
     private void handleTestNGResult(ITestResult result, String status) {
         String methodKey = result.getTestClass().getName() + "." + result.getMethod().getMethodName();
@@ -94,9 +123,9 @@ public class TestNGListener extends AbstractTestFrameworkListener
     }
 
     /**
-     * Checks for disabled tests in the suite and reports them with SKIPPED status.
-     * This method iterates through all test methods in the suite and identifies
-     * those marked with @Test(enabled = false).
+     * Identifies and reports disabled tests marked with {@code @Test(enabled = false)}.
+     *
+     * @param suite TestNG test suite to scan for disabled tests
      */
     private void checkAndReportDisabledTests(ISuite suite) {
         if (!runManager.isActive()) {
@@ -130,7 +159,10 @@ public class TestNGListener extends AbstractTestFrameworkListener
     }
 
     /**
-     * Reports a disabled test method with SKIPPED status.
+     * Reports disabled test method with SKIPPED status.
+     *
+     * @param method disabled test method
+     * @param testClass class containing the disabled test
      */
     private void reportDisabledTest(Method method, Class<?> testClass) {
         TestNGTestWrapper wrapper = TestNGTestWrapper.forDisabledTest(method, testClass);

@@ -14,8 +14,8 @@ import static com.testomatio.reporter.constants.CommonConstants.MEDIA_TYPE_JSON;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 /**
- * Implementation of HttpClient using OkHttp library.
- * Handles HTTP communication with proper timeout configuration and response processing.
+ * HTTP client implementation using OkHttp library.
+ * Configured with timeouts and automatic JSON response handling.
  */
 public class OkHttpClientImpl implements HttpClient {
     private final Logger LOGGER = getLogger(OkHttpClientImpl.class);
@@ -24,7 +24,7 @@ public class OkHttpClientImpl implements HttpClient {
     private final ObjectMapper objectMapper;
 
     /**
-     * Constructs a new OkHttpClientImpl with default timeout settings.
+     * Creates HTTP client with default timeout configuration.
      */
     public OkHttpClientImpl() {
         this.client = new OkHttpClient.Builder()
@@ -56,13 +56,7 @@ public class OkHttpClientImpl implements HttpClient {
     }
 
     /**
-     * Executes an HTTP request and processes the response.
-     *
-     * @param request      the HTTP request to execute
-     * @param responseType the expected response type class
-     * @param <T>          the response type
-     * @return the deserialized response object, or null if no response expected
-     * @throws IOException if the request fails or response cannot be processed
+     * Executes HTTP request and processes response with error handling.
      */
     private <T> T executeRequest(Request request, Class<T> responseType) throws IOException {
         getLogger(HttpClient.class).finer("Making request to: " + request.url());
