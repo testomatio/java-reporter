@@ -23,16 +23,9 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
 
     private final ObjectMapper objectMapper;
 
-    /**
-     * Constructs a new TestomatRequestBodyBuilder with default ObjectMapper.
-     */
     public TestomatRequestBodyBuilder() {
         this.objectMapper = new ObjectMapper();
     }
-
-    /**
-     * @param objectMapper the ObjectMapper instance for JSON serialization
-     */
     public TestomatRequestBodyBuilder(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
@@ -64,7 +57,7 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
     @Override
     public String buildSingleTestReportBody(TestCaseResult result) throws JsonProcessingException {
         Map<String, Object> body = buildTestResultMap(result);
-        body.put("create", true);
+        body.put("create", "true");
         return objectMapper.writeValueAsString(body);
     }
 
@@ -86,7 +79,7 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put(API_KEY_STRING, apiKey);
         requestBody.put(TESTS_STRING, testsArray);
-        requestBody.put("create", true);
+        requestBody.put("create", "true");
 
         return objectMapper.writeValueAsString(requestBody);
     }
@@ -115,6 +108,7 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
      */
     private Map<String, Object> buildTestResultMap(TestCaseResult result) {
         Map<String, Object> body = new HashMap<>();
+        body.put("create", "true");
         body.put(ApiRequestFields.TITLE, result.getTitle());
 
         if (result.getTestId() != null) {
