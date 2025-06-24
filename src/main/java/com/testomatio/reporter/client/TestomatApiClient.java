@@ -90,6 +90,7 @@ public class TestomatApiClient implements ApiInterface {
 
             String url = RequestUrlBuilderUtil.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildSingleTestReportBody(result);
+            LOGGER.finest("-----" + requestBody);
             httpClient.post(url, requestBody, null);
 
         } catch (Exception e) {

@@ -160,7 +160,7 @@ public abstract class AbstractTestFrameworkListener {
 
     protected void logTestReported(TestCaseResult result) {
         if (result.getTestId() != null) {
-            LOGGER.info("✓ TestId " + result.getTestId() + " successfully sent to Testomat.io as test_id field");
+            LOGGER.fine("✓ TestId " + result.getTestId() + " successfully sent to Testomat.io as test_id field");
         }
     }
 
