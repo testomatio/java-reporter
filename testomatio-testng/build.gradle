@@ -1,4 +1,0 @@
-dependencies {
-    api project(':testomatio-java-core')
-    implementation 'org.testng:testng:7.10.2'
-}
