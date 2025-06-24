@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TestCaseResult {
+public class TestResult {
     private String title;
     private String testId;
     private String suiteTitle;
@@ -62,8 +62,8 @@ public class TestCaseResult {
             return this;
         }
 
-        public TestCaseResult build() {
-            return new TestCaseResult(title, testId, suiteTitle, file, status, message, stack);
+        public TestResult build() {
+            return new TestResult(title, testId, suiteTitle, file, status, message, stack);
         }
     }
 

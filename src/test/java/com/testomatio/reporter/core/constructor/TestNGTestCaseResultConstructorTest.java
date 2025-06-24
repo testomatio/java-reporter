@@ -1,6 +1,6 @@
 package com.testomatio.reporter.core.constructor;
 
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import com.testomatio.reporter.model.TestMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 
 class TestNGTestCaseResultConstructorTest {
 
-    private TestNGTestCaseResultConstructor constructor;
+    private TestNGTestResultConstructor constructor;
 
     @Mock
     private TestCaseResultWrapper holder;
@@ -27,7 +27,7 @@ class TestNGTestCaseResultConstructorTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        constructor = new TestNGTestCaseResultConstructor();
+        constructor = new TestNGTestResultConstructor();
         
         when(testMetadata.getTitle()).thenReturn("TestNG Test Title");
         when(testMetadata.getTestId()).thenReturn("testng-test-id-123");
@@ -110,7 +110,7 @@ class TestNGTestCaseResultConstructorTest {
         when(holder.getReason()).thenReturn(reason);
         when(holder.getMessage()).thenReturn("Other message");
         
-        TestCaseResult result = constructor.createWithCustomMessage(holder);
+        TestResult result = constructor.createWithCustomMessage(holder);
         
         assertNotNull(result);
         assertEquals("TestNG Test Title", result.getTitle());
@@ -129,7 +129,7 @@ class TestNGTestCaseResultConstructorTest {
         when(holder.getReason()).thenReturn(null);
         when(holder.getMessage()).thenReturn(message);
         
-        TestCaseResult result = constructor.createWithCustomMessage(holder);
+        TestResult result = constructor.createWithCustomMessage(holder);
         
         assertNotNull(result);
         assertEquals(message, result.getMessage());
@@ -143,7 +143,7 @@ class TestNGTestCaseResultConstructorTest {
         when(holder.getTestResult()).thenReturn(testResult);
         when(testResult.getThrowable()).thenReturn(testException);
         
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
         
         assertNotNull(result);
         assertEquals("TestNG Test Title", result.getTitle());
@@ -157,7 +157,7 @@ class TestNGTestCaseResultConstructorTest {
         when(holder.getTestResult()).thenReturn(testResult);
         when(testResult.getThrowable()).thenReturn(null);
         
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
         
         assertNotNull(result);
         assertNull(result.getMessage());
@@ -168,7 +168,7 @@ class TestNGTestCaseResultConstructorTest {
     void createWithExceptionDetails_shouldCreateResultWithEmptyDetails_whenNoTestResult() {
         when(holder.getTestResult()).thenReturn(null);
         
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
         
         assertNotNull(result);
         assertNull(result.getMessage());
@@ -183,7 +183,7 @@ class TestNGTestCaseResultConstructorTest {
         when(holder.getTestResult()).thenReturn(testResult);
         when(testResult.getThrowable()).thenReturn(abortedException);
         
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
         
         assertNotNull(result);
         assertNull(result.getMessage());
@@ -197,7 +197,7 @@ class TestNGTestCaseResultConstructorTest {
         when(holder.getReason()).thenReturn(reason);
         when(holder.getMessage()).thenReturn(null);
         
-        TestCaseResult result = constructor.constructTestRunResult(holder);
+        TestResult result = constructor.constructTestRunResult(holder);
         
         assertNotNull(result);
         assertEquals(reason, result.getMessage());
@@ -211,7 +211,7 @@ class TestNGTestCaseResultConstructorTest {
         when(holder.getReason()).thenReturn(null);
         when(holder.getMessage()).thenReturn(message);
         
-        TestCaseResult result = constructor.constructTestRunResult(holder);
+        TestResult result = constructor.constructTestRunResult(holder);
         
         assertNotNull(result);
         assertEquals(message, result.getMessage());
@@ -227,7 +227,7 @@ class TestNGTestCaseResultConstructorTest {
         when(holder.getTestResult()).thenReturn(testResult);
         when(testResult.getThrowable()).thenReturn(testException);
         
-        TestCaseResult result = constructor.constructTestRunResult(holder);
+        TestResult result = constructor.constructTestRunResult(holder);
         
         assertNotNull(result);
         assertEquals("TestNG exception", result.getMessage());
@@ -241,7 +241,7 @@ class TestNGTestCaseResultConstructorTest {
         when(holder.getMessage()).thenReturn(null);
         when(holder.getTestResult()).thenReturn(null);
         
-        TestCaseResult result = constructor.constructTestRunResult(holder);
+        TestResult result = constructor.constructTestRunResult(holder);
         
         assertNotNull(result);
         assertEquals("TestNG Test Title", result.getTitle());

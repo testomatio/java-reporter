@@ -5,6 +5,10 @@ import io.cucumber.plugin.event.TestCase;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+/**
+ * Extracts test metadata from Cucumber test cases.
+ * Supports @title: tags for custom titles and @T[8chars] tags for test IDs.
+ */
 public class CucumberMetaDataExtractor implements MetaDataExtractor<TestCase> {
 
     private static final String TEST_ID_REGEX = "@T[a-z0-9]{8}";
@@ -24,6 +28,9 @@ public class CucumberMetaDataExtractor implements MetaDataExtractor<TestCase> {
         return new TestMetadata(title, testId, suiteTitle, file);
     }
 
+    /**
+     * Extracts test title from @title: tag or falls back to test case name.
+     */
     private String extractTitle(TestCase testCase) {
         if (testCase == null) {
             return UNKNOWN_TEST;
@@ -37,6 +44,9 @@ public class CucumberMetaDataExtractor implements MetaDataExtractor<TestCase> {
         );
     }
 
+    /**
+     * Extracts test ID from @T[8chars] tag format.
+     */
     private String extractTestId(TestCase testCase) {
         if (testCase == null || testCase.getTags() == null) {
             return null;
@@ -48,12 +58,18 @@ public class CucumberMetaDataExtractor implements MetaDataExtractor<TestCase> {
                 .orElse(null);
     }
 
+    /**
+     * Extracts suite title from feature file name without extension.
+     */
     private String extractSuiteTitle(TestCase testCase) {
         return extractFileNameFromUri(testCase)
                 .map(this::removeFileExtension)
                 .orElse(UNKNOWN_SUITE);
     }
 
+    /**
+     * Extracts feature file name from test case URI.
+     */
     private String extractFileName(TestCase testCase) {
         return extractFileNameFromUri(testCase).orElse(UNKNOWN_FILE + ".feature");
     }

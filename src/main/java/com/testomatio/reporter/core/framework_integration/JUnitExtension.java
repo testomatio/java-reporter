@@ -1,6 +1,6 @@
 package com.testomatio.reporter.core.framework_integration;
 
-import com.testomatio.reporter.core.constructor.JUnitTestCaseResultConstructor;
+import com.testomatio.reporter.core.constructor.JUnitTestResultConstructor;
 import com.testomatio.reporter.core.constructor.ResultConstructor;
 import com.testomatio.reporter.core.constructor.TestCaseResultWrapper;
 import com.testomatio.reporter.core.extractor.JUnitMetaDataExtractor;
@@ -20,23 +20,25 @@ import static com.testomatio.reporter.constants.CommonConstants.PASSED;
 import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
 
 /**
- * JUnit 5 extension that integrates test execution with Testomat.io reporting system.
- * Extends AbstractTestFrameworkListener to leverage common reporting functionality.
- * Implements JUnit 5 extension callbacks to handle test class lifecycle and individual test results.
- * To use this extension, add @ExtendWith(JUnitExtension.class) to your test classes.
+ * JUnit 5 extension for Testomat.io integration.
+ * Reports JUnit test execution results to Testomat.io platform.
+ * Usage: Add {@code @ExtendWith(JUnitExtension.class)} to test classes.
  */
 public class JUnitExtension extends AbstractTestFrameworkListener
         implements BeforeEachCallback, BeforeAllCallback, AfterAllCallback, TestWatcher {
 
     private final MetaDataExtractor<JUnitTestWrapper> jUnitMetaDataExtractor = new JUnitMetaDataExtractor();
 
+    /**
+     * Creates new JUnit extension.
+     */
     public JUnitExtension() {
         super();
     }
 
     @Override
     protected ResultConstructor createResultConstructor() {
-        return new JUnitTestCaseResultConstructor();
+        return new JUnitTestResultConstructor();
     }
 
     @Override
@@ -46,23 +48,44 @@ public class JUnitExtension extends AbstractTestFrameworkListener
         }
     }
 
+    /**
+     * Called before all tests in a class. Starts test suite tracking.
+     *
+     * @param context JUnit extension context
+     */
     @Override
     public void beforeAll(ExtensionContext context) {
         String className = context.getTestClass().map(Class::getSimpleName).orElse("Unknown");
         handleSuiteStarted(className);
     }
 
+    /**
+     * Called after all tests in a class. Finishes test suite tracking.
+     *
+     * @param context JUnit extension context
+     */
     @Override
     public void afterAll(ExtensionContext context) {
         String className = context.getTestClass().map(Class::getSimpleName).orElse("Unknown");
         handleSuiteFinished(className);
     }
 
+    /**
+     * Called before each test method execution.
+     *
+     * @param extensionContext JUnit extension context
+     */
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
         LOGGER.finer("Starting test run: " + extensionContext.getDisplayName());
     }
 
+    /**
+     * Called when a test is disabled. Reports test as skipped.
+     *
+     * @param context JUnit extension context
+     * @param reason optional reason for disabling the test
+     */
     @Override
     public void testDisabled(ExtensionContext context, Optional<String> reason) {
         String reasonText = reason.orElse("Test disabled");
@@ -71,12 +94,23 @@ public class JUnitExtension extends AbstractTestFrameworkListener
         handleTestResult(context, SKIPPED, reasonText);
     }
 
+    /**
+     * Called when a test completes successfully. Reports test as passed.
+     *
+     * @param context JUnit extension context
+     */
     @Override
     public void testSuccessful(ExtensionContext context) {
         LOGGER.fine("Test passed successfully: " + context.getDisplayName());
         handleTestResult(context, PASSED, null);
     }
 
+    /**
+     * Called when a test is aborted. Reports test as skipped.
+     *
+     * @param context JUnit extension context
+     * @param cause exception that caused the abort
+     */
     @Override
     public void testAborted(ExtensionContext context, Throwable cause) {
         LOGGER.fine(String.format("Test aborted: %s - Cause: %s",
@@ -84,6 +118,12 @@ public class JUnitExtension extends AbstractTestFrameworkListener
         handleTestResult(context, SKIPPED, cause.getMessage());
     }
 
+    /**
+     * Called when a test fails. Reports test as failed.
+     *
+     * @param context JUnit extension context
+     * @param cause exception that caused the failure
+     */
     @Override
     public void testFailed(ExtensionContext context, Throwable cause) {
         LOGGER.fine(String.format("Test failed: %s - Cause: %s",
@@ -92,7 +132,11 @@ public class JUnitExtension extends AbstractTestFrameworkListener
     }
 
     /**
-     * Common method for handling test results from JUnit extension callbacks.
+     * Handles test result from JUnit extension callbacks.
+     *
+     * @param context JUnit extension context
+     * @param status test status (PASSED, FAILED, SKIPPED)
+     * @param message optional message describing the result
      */
     private void handleTestResult(ExtensionContext context, String status, String message) {
         Optional<Method> testMethodOptional = context.getTestMethod();

@@ -8,7 +8,7 @@ import com.testomatio.reporter.client.util.RequestUrlBuilderUtil;
 import com.testomatio.reporter.exception.FinishReportFailedException;
 import com.testomatio.reporter.exception.ReportingFailedException;
 import com.testomatio.reporter.exception.RunCreationFailedException;
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,8 @@ import static com.testomatio.reporter.constants.CommonConstants.RESPONSE_UID_KEY
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 /**
- * Client for interacting with the Testomat.io API.
+ * HTTP client for Testomat.io API operations.
+ * Handles test run lifecycle and result reporting with proper error handling.
  */
 public class TestomatApiClient implements ApiInterface {
     private final Logger LOGGER = getLogger(TestomatApiClient.class);
@@ -29,20 +30,20 @@ public class TestomatApiClient implements ApiInterface {
     private final RequestBodyBuilder requestBodyBuilder;
 
     /**
-     * Constructs a new TestomatApiClient with the provided API key and default dependencies.
+     * Creates API client with default HTTP client and request body builder.
      *
-     * @param apiKey the API key for authentication with Testomat.io
+     * @param apiKey API key for Testomat.io authentication
      */
     public TestomatApiClient(String apiKey) {
         this(apiKey, new OkHttpClientImpl(), new TestomatRequestBodyBuilder());
     }
 
     /**
-     * Constructs a new TestomatApiClient with custom dependencies for better testability.
+     * Creates API client with custom dependencies for testing.
      *
-     * @param apiKey             the API key for authentication
-     * @param httpClient         the HTTP client implementation
-     * @param requestBodyBuilder the request body builder for creating JSON payloads
+     * @param apiKey API key for authentication
+     * @param httpClient HTTP client implementation
+     * @param requestBodyBuilder request body builder for JSON payloads
      */
     public TestomatApiClient(String apiKey, HttpClient httpClient, TestomatRequestBodyBuilder requestBodyBuilder) {
         this.apiKey = apiKey;
@@ -50,13 +51,6 @@ public class TestomatApiClient implements ApiInterface {
         this.requestBodyBuilder = requestBodyBuilder;
     }
 
-    /**
-     * Creates a new test run in Testomat.io.
-     *
-     * @param title the title of the test run
-     * @return the unique identifier of the created test run
-     * @throws IOException if the API request fails or response cannot be processed
-     */
     @Override
     public String createRun(String title) throws IOException {
         LOGGER.fine("Creating run with title: " + title);
@@ -77,14 +71,8 @@ public class TestomatApiClient implements ApiInterface {
         return responseBody.get(RESPONSE_UID_KEY);
     }
 
-    /**
-     * Reports a single test result to an existing test run in Testomat.io.
-     *
-     * @param uid    the unique identifier of the test run
-     * @param result the test result to report
-     */
     @Override
-    public void reportTest(String uid, TestCaseResult result) {
+    public void reportTest(String uid, TestResult result) {
         try {
             LOGGER.fine("Reporting test result for testId: " + result.getTestId());
 
@@ -98,15 +86,8 @@ public class TestomatApiClient implements ApiInterface {
         }
     }
 
-    /**
-     * Reports multiple test results in a single batch request to Testomat.io.
-     * Uses the same endpoint as individual test reporting but with batch structure.
-     *
-     * @param uid     the unique identifier of the test run
-     * @param results the list of test results to report
-     */
     @Override
-    public void reportTests(String uid, List<TestCaseResult> results) {
+    public void reportTests(String uid, List<TestResult> results) {
         try {
             if (results == null || results.isEmpty()) {
                 LOGGER.fine("No test results to report");
@@ -125,12 +106,6 @@ public class TestomatApiClient implements ApiInterface {
         }
     }
 
-    /**
-     * Marks a test run as finished in Testomat.io via PUT request.
-     *
-     * @param uid      the unique identifier of the test run
-     * @param duration the duration of the test run in seconds
-     */
     @Override
     public void finishTestRun(String uid, float duration) {
         try {

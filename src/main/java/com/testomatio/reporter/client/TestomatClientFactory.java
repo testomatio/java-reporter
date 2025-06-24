@@ -10,6 +10,7 @@ import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 /**
  * Singleton factory for creating Testomat.io API client instances.
+ * Loads API key from properties and creates configured client.
  */
 public class TestomatClientFactory implements ClientFactory {
     private static final PropertyProvider propertyProvider =
@@ -21,7 +22,9 @@ public class TestomatClientFactory implements ClientFactory {
     }
 
     /**
-     * @return the singleton ClientFactory instance
+     * Returns singleton factory instance.
+     *
+     * @return ClientFactory instance
      */
     public static ClientFactory getClientFactory() {
         if (instance == null) {
@@ -30,14 +33,6 @@ public class TestomatClientFactory implements ClientFactory {
         return instance;
     }
 
-    /**
-     * Creates and returns a new Testomat.io API client instance.
-     * Loads the API key from the configured property provider and validates its presence.
-     *
-     * @throws ApiKeyNotFoundException if the API key is not configured or is null/empty
-     * @see TestomatApiClient
-     * @see ApiInterface
-     */
     @Override
     public ApiInterface createClient() {
         String apiKey = propertyProvider.getProperty(API_KEY_PROPERTY_NAME);

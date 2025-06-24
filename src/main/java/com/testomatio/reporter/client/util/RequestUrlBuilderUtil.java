@@ -11,8 +11,8 @@ import static com.testomatio.reporter.constants.PropertyNameConstants.HOST_URL_P
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 /**
- * Builder class for constructing Testomat.io API URLs.
- * Encapsulates URL construction logic and provides fluent interface.
+ * Utility for building Testomat.io API URLs.
+ * Constructs URLs for test run creation, reporting, and completion.
  */
 public class RequestUrlBuilderUtil {
     private static final String API_PATH = "api";
@@ -23,9 +23,9 @@ public class RequestUrlBuilderUtil {
     }
 
     /**
-     * Builds URL for creating a new test run.
+     * Builds URL for creating new test run.
      *
-     * @return the complete URL string for test run creation
+     * @return complete URL for test run creation
      * @throws IllegalStateException if required properties are not configured
      */
     public static String buildCreateRunUrl() {
@@ -45,12 +45,12 @@ public class RequestUrlBuilderUtil {
     }
 
     /**
-     * Builds URL for reporting test results to a specific test run.
+     * Builds URL for reporting test results.
      *
-     * @param testRunUid the unique identifier of the test run
-     * @return the complete URL string for test result reporting
+     * @param testRunUid test run identifier
+     * @return complete URL for test result reporting
      * @throws IllegalArgumentException if testRunUid is null or empty
-     * @throws IllegalStateException    if required properties are not configured
+     * @throws IllegalStateException if required properties are not configured
      */
     public static String buildReportTestUrl(String testRunUid) {
         if (testRunUid == null || testRunUid.trim().isEmpty()) {
@@ -75,12 +75,12 @@ public class RequestUrlBuilderUtil {
     }
 
     /**
-     * Builds URL for finishing a test run.
+     * Builds URL for finishing test run.
      *
-     * @param testRunUid the unique identifier of the test run
-     * @return the complete URL string for finishing test run
+     * @param testRunUid test run identifier
+     * @return complete URL for finishing test run
      * @throws IllegalArgumentException if testRunUid is null or empty
-     * @throws IllegalStateException    if required properties are not configured
+     * @throws IllegalStateException if required properties are not configured
      */
     public static String buildFinishTestRunUrl(String testRunUid) {
         if (testRunUid == null || testRunUid.trim().isEmpty()) {
@@ -104,10 +104,7 @@ public class RequestUrlBuilderUtil {
     }
 
     /**
-     * Gets the base URL from properties with validation.
-     *
-     * @return the base URL
-     * @throws IllegalStateException if base URL is not configured or invalid
+     * Gets base URL from properties with validation.
      */
     private static String getBaseUrl() {
         try {
@@ -133,10 +130,7 @@ public class RequestUrlBuilderUtil {
     }
 
     /**
-     * Gets the API key from properties with validation.
-     *
-     * @return the API key
-     * @throws IllegalStateException if API key is not configured
+     * Gets API key from properties with validation.
      */
     private static String getApiKey() {
         try {
@@ -156,10 +150,7 @@ public class RequestUrlBuilderUtil {
     }
 
     /**
-     * Gets the PropertyProvider instance with error handling.
-     *
-     * @return the PropertyProvider instance
-     * @throws IllegalStateException if PropertyProvider cannot be created
+     * Gets PropertyProvider instance with error handling.
      */
     private static PropertyProvider getPropertyProvider() {
         try {

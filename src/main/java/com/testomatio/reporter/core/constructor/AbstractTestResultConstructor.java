@@ -1,14 +1,18 @@
 package com.testomatio.reporter.core.constructor;
 
 import com.testomatio.reporter.logger.LoggerUtils;
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import java.util.logging.Logger;
 
-public abstract class AbstractTestCaseResultConstructor implements ResultConstructor {
-    private static final Logger LOGGER = LoggerUtils.getLogger(AbstractTestCaseResultConstructor.class);
+/**
+ * Base constructor for framework-specific test case results.
+ * Uses template method pattern to handle custom messages vs exception details.
+ */
+public abstract class AbstractTestResultConstructor implements ResultConstructor {
+    private static final Logger LOGGER = LoggerUtils.getLogger(AbstractTestResultConstructor.class);
 
     @Override
-    public final TestCaseResult constructTestRunResult(TestCaseResultWrapper holder) {
+    public final TestResult constructTestRunResult(TestCaseResultWrapper holder) {
         validateHolder(holder);
 
         boolean hasCustomMessage = hasCustomMessage(holder);
@@ -19,6 +23,12 @@ public abstract class AbstractTestCaseResultConstructor implements ResultConstru
                 : createWithExceptionDetails(holder);
     }
 
+    /**
+     * Validates that wrapper and its metadata are not null.
+     *
+     * @param holder wrapper to validate
+     * @throws IllegalArgumentException if wrapper or metadata is null
+     */
     protected final void validateHolder(TestCaseResultWrapper holder) {
         if (holder == null) {
             throw new IllegalArgumentException("TestRunResultWrapper cannot be null");
@@ -28,6 +38,9 @@ public abstract class AbstractTestCaseResultConstructor implements ResultConstru
         }
     }
 
+    /**
+     * Logs test result creation details for debugging.
+     */
     protected final void logTestResultCreation(TestCaseResultWrapper holder, boolean hasCustomMessage) {
         var testTitle = holder.getTestMetadata().getTitle();
         if (hasCustomMessage) {
@@ -40,9 +53,15 @@ public abstract class AbstractTestCaseResultConstructor implements ResultConstru
         }
     }
 
-    protected final TestCaseResult.Builder buildTestResult(TestCaseResultWrapper holder) {
+    /**
+     * Builds test result with basic metadata and status.
+     *
+     * @param holder wrapper containing test metadata
+     * @return test result builder with basic fields populated
+     */
+    protected final TestResult.Builder buildTestResult(TestCaseResultWrapper holder) {
         var metadata = holder.getTestMetadata();
-        return TestCaseResult.builder()
+        return TestResult.builder()
                 .withTitle(metadata.getTitle())
                 .withTestId(metadata.getTestId())
                 .withSuiteTitle(metadata.getSuiteTitle())
@@ -50,6 +69,12 @@ public abstract class AbstractTestCaseResultConstructor implements ResultConstru
                 .withStatus(holder.getStatus());
     }
 
+    /**
+     * Creates exception details with message and stack trace.
+     *
+     * @param throwable exception to extract details from
+     * @return exception details object
+     */
     protected final ExceptionDetails createExceptionDetails(Throwable throwable) {
         var message = throwable.getMessage();
         var stack = getStackTrace(throwable);
@@ -57,9 +82,28 @@ public abstract class AbstractTestCaseResultConstructor implements ResultConstru
         return new ExceptionDetails(message, stack);
     }
 
+    /**
+     * Checks if wrapper contains custom message for the test result.
+     */
     protected abstract boolean hasCustomMessage(TestCaseResultWrapper holder);
+
+    /**
+     * Extracts custom message from wrapper.
+     */
     protected abstract String getCustomMessage(TestCaseResultWrapper holder);
-    protected abstract TestCaseResult createWithCustomMessage(TestCaseResultWrapper holder);
-    protected abstract TestCaseResult createWithExceptionDetails(TestCaseResultWrapper holder);
+
+    /**
+     * Creates test result using custom message from wrapper.
+     */
+    protected abstract TestResult createWithCustomMessage(TestCaseResultWrapper holder);
+
+    /**
+     * Creates test result using exception details from framework-specific data.
+     */
+    protected abstract TestResult createWithExceptionDetails(TestCaseResultWrapper holder);
+
+    /**
+     * Returns name of the test framework for logging purposes.
+     */
     protected abstract String getFrameworkName();
 }

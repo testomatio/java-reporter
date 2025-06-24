@@ -1,33 +1,34 @@
 package com.testomatio.reporter.core.constructor;
 
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import java.util.Optional;
-import org.testng.ITestResult;
 
-public class TestNGTestCaseResultConstructor extends AbstractTestCaseResultConstructor {
+/**
+ * Constructs test case results from Cucumber test case finished events.
+ * Extracts exception details from Cucumber result errors when available.
+ */
+public class CucumberTestResultConstructor extends AbstractTestResultConstructor {
 
     @Override
     protected boolean hasCustomMessage(TestCaseResultWrapper holder) {
-        return holder.getReason() != null || holder.getMessage() != null;
+        return false;
     }
 
     @Override
     protected String getCustomMessage(TestCaseResultWrapper holder) {
-        return Optional.ofNullable(holder.getReason()).orElse(holder.getMessage());
+        return null;
     }
 
     @Override
-    protected TestCaseResult createWithCustomMessage(TestCaseResultWrapper holder) {
-        var message = getCustomMessage(holder);
-
+    protected TestResult createWithCustomMessage(TestCaseResultWrapper holder) {
         return buildTestResult(holder)
-                .withMessage(message)
+                .withMessage(null)
                 .withStack(null)
                 .build();
     }
 
     @Override
-    protected TestCaseResult createWithExceptionDetails(TestCaseResultWrapper holder) {
+    protected TestResult createWithExceptionDetails(TestCaseResultWrapper holder) {
         var exceptionDetails = extractExceptionDetails(holder);
 
         return buildTestResult(holder)
@@ -38,12 +39,15 @@ public class TestNGTestCaseResultConstructor extends AbstractTestCaseResultConst
 
     @Override
     protected String getFrameworkName() {
-        return "TestNG";
+        return "Cucumber";
     }
 
+    /**
+     * Extracts exception details from Cucumber test case finished event.
+     */
     private ExceptionDetails extractExceptionDetails(TestCaseResultWrapper holder) {
-        return Optional.ofNullable(holder.getTestResult())
-                .map(ITestResult::getThrowable)
+        return Optional.ofNullable(holder.getCucumberTestCaseFinished())
+                .map(event -> event.getResult().getError())
                 .filter(this::isReportableException)
                 .map(this::createExceptionDetails)
                 .orElse(ExceptionDetails.empty());

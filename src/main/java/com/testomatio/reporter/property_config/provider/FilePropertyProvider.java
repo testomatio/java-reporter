@@ -11,6 +11,10 @@ import java.util.logging.Logger;
 
 import static com.testomatio.reporter.constants.PropertyNameConstants.PROPERTIES_FILE_NAME;
 
+/**
+ * Property provider that reads from properties file on classpath.
+ * Third priority in the property resolution chain.
+ */
 public class FilePropertyProvider extends AbstractPropertyProvider {
     private final Logger LOGGER = Logger.getLogger(FilePropertyProvider.class.getName());
 
@@ -28,6 +32,12 @@ public class FilePropertyProvider extends AbstractPropertyProvider {
         throw new PropertyNotFoundException("No such property: " + key);
     }
 
+    /**
+     * Loads properties from classpath file.
+     *
+     * @return Properties object, empty if file not found
+     * @throws NoPropertyFileException if file loading fails
+     */
     private Properties loadProperties() {
         Properties properties = new Properties();
         try (InputStream input = getClass().getClassLoader().getResourceAsStream(PROPERTIES_FILE_NAME)) {

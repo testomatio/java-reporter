@@ -1,7 +1,7 @@
 package com.testomatio.reporter.core.batch;
 
 import com.testomatio.reporter.client.ApiInterface;
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
 import com.testomatio.reporter.property_config.interf.PropertyProvider;
 import java.io.IOException;
@@ -18,12 +18,9 @@ import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_SIZE
 import static com.testomatio.reporter.logger.LoggerConfig.getLogger;
 
 /**
- * Manages batch processing and reporting of test results to the Testomat.io API.
- * This class collects test results in batches and periodically flushes them to improve
- * performance and reduce API calls during test execution.
- * <p>
- * The manager automatically starts a background thread for periodic flushing
- * and handles both single test and batch reporting scenarios.
+ * Manages batch processing of test results for efficient API reporting.
+ * Collects test results in batches and periodically flushes them to Testomat.io.
+ * Provides automatic retry mechanism and graceful shutdown handling.
  */
 public class BatchResultManager {
 
@@ -32,8 +29,8 @@ public class BatchResultManager {
     private static final int DEFAULT_FLUSH_INTERVAL_SECONDS = 5;
     private static final int MAX_RETRY_ATTEMPTS = 3;
 
-    private final List<TestCaseResult> pendingResults = new ArrayList<>();
-    private final List<TestCaseResult> failedResults = new ArrayList<>();
+    private final List<TestResult> pendingResults = new ArrayList<>();
+    private final List<TestResult> failedResults = new ArrayList<>();
     private final int batchSize;
     private final ApiInterface apiClient;
     private final String runUid;
@@ -41,13 +38,13 @@ public class BatchResultManager {
     private final AtomicBoolean isActive = new AtomicBoolean(true);
 
     /**
-     * Constructs a new BatchResultManager with configurable batch settings.
-     * Initializes the batch size and flush interval from properties, falling back to defaults.
-     * Starts a background scheduler for automatic periodic flushing.
+     * Creates batch result manager with configurable settings.
+     * Initializes batch size and flush interval from properties with fallback to defaults.
+     * Starts background scheduler for automatic periodic flushing.
      *
-     * @param apiClient the API client interface for reporting test results
-     * @param runUid    the unique identifier of the test run to report results to
-     * @throws NumberFormatException if batch size or flush interval properties are not valid integers
+     * @param apiClient API client for reporting test results
+     * @param runUid    unique identifier of the test run
+     * @throws NumberFormatException if batch size or flush interval properties are invalid
      */
     public BatchResultManager(ApiInterface apiClient, String runUid) {
         this.apiClient = apiClient;
@@ -80,14 +77,13 @@ public class BatchResultManager {
     }
 
     /**
-     * Adds a test result to the pending batch for reporting.
-     * If the batch size is reached, automatically triggers a flush operation.
-     * Thread-safe operation that can be called concurrently from multiple test threads.
+     * Adds test result to pending batch for reporting.
+     * Automatically flushes batch when size limit is reached.
+     * Thread-safe operation for concurrent test execution.
      *
-     * @param result the test result to add to the batch
-     * @throws IllegalStateException if the manager is not active (shutdown has been called)
+     * @param result test result to add to batch
      */
-    public synchronized void addResult(TestCaseResult result) {
+    public synchronized void addResult(TestResult result) {
         if (!isActive.get()) {
             LOGGER.warning("BatchResultManager is not active, skipping result: " + result.getTitle());
             return;
@@ -103,33 +99,26 @@ public class BatchResultManager {
     }
 
     /**
-     * Immediately flushes all pending test results to the API.
-     * Creates a copy of pending results, clears the pending list, and sends the batch
-     * for processing. This method is called automatically when batch size is reached
-     * or during scheduled flushes.
-     * <p>
-     * Thread-safe operation that handles concurrent access to pending results.
+     * Immediately flushes all pending test results to API.
+     * Thread-safe operation that can be called concurrently.
      */
     public synchronized void flushPendingResults() {
         if (pendingResults.isEmpty()) {
             return;
         }
-        List<TestCaseResult> toSend = new ArrayList<>(pendingResults);
+        List<TestResult> toSend = new ArrayList<>(pendingResults);
         pendingResults.clear();
         sendBatch(toSend, 1);
     }
 
     /**
-     * Sends a batch of test results to the API with retry mechanism.
-     * Attempts to report the results, and if it fails, schedules a retry with exponential backoff.
-     * After maximum retry attempts, moves failed results to the failed results list.
-     * <p>
-     * Uses different API methods for single results vs. batch results for optimization.
+     * Sends batch of test results with retry mechanism.
+     * Uses exponential backoff for retries and moves failed results to failed list.
      *
-     * @param results the list of test results to send
-     * @param attempt the current attempt number (1-based)
+     * @param results list of test results to send
+     * @param attempt current attempt number (1-based)
      */
-    private void sendBatch(List<TestCaseResult> results, int attempt) {
+    private void sendBatch(List<TestResult> results, int attempt) {
         try {
             if (results.size() == 1) {
                 apiClient.reportTest(runUid, results.get(0));
@@ -156,18 +145,9 @@ public class BatchResultManager {
     }
 
     /**
-     * Gracefully shuts down the batch result manager.
-     * Stops accepting new results, flushes any remaining pending results,
-     * and shuts down the background scheduler thread.
-     * <p>
-     * This method should be called when test execution is complete to ensure
-     * all pending results are reported before the application terminates.
-     * <p>
-     * The shutdown process:
-     * 1. Sets the manager as inactive to reject new results
-     * 2. Flushes any remaining pending results
-     * 3. Shuts down the scheduler with a 10-second timeout
-     * 4. Reports any failed results that couldn't be sent
+     * Gracefully shuts down batch result manager.
+     * Flushes remaining results, stops scheduler, and reports any failures.
+     * Should be called when test execution completes.
      */
     public synchronized void shutdown() {
         isActive.set(false);

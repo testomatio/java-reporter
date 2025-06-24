@@ -4,11 +4,21 @@ import com.testomatio.reporter.property_config.interf.AbstractPropertyProvider;
 import com.testomatio.reporter.property_config.interf.PropertyProvider;
 import com.testomatio.reporter.property_config.interf.PropertyProviderFactory;
 
+/**
+ * Singleton factory creating property provider chains with fallback behavior.
+ * Configures chain order: JVM properties → Environment → File → Defaults.
+ */
 public class PropertyProviderFactoryImpl implements PropertyProviderFactory {
     private static PropertyProviderFactory instance;
+
     private PropertyProviderFactoryImpl() {
     }
 
+    /**
+     * Returns singleton factory instance.
+     *
+     * @return PropertyProviderFactory instance
+     */
     public static PropertyProviderFactory getPropertyProviderFactory() {
         if (instance == null) {
             instance = new PropertyProviderFactoryImpl();

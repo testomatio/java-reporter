@@ -1,6 +1,6 @@
 package com.testomatio.reporter.core.constructor;
 
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import com.testomatio.reporter.model.TestMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class JUnitTestCaseResultConstructorTest {
 
-    private JUnitTestCaseResultConstructor constructor;
+    private JUnitTestResultConstructor constructor;
 
     @Mock
     private TestCaseResultWrapper holder;
@@ -30,7 +30,7 @@ class JUnitTestCaseResultConstructorTest {
 
     @BeforeEach
     void setUp() {
-        constructor = new JUnitTestCaseResultConstructor();
+        constructor = new JUnitTestResultConstructor();
     }
 
     @Test
@@ -76,7 +76,7 @@ class JUnitTestCaseResultConstructorTest {
         when(holder.getStatus()).thenReturn("PASSED");
         when(holder.getJUnitExtensionContext()).thenReturn(null);
 
-        TestCaseResult result = constructor.createWithCustomMessage(holder);
+        TestResult result = constructor.createWithCustomMessage(holder);
 
         assertNotNull(result);
         assertEquals(customMessage, result.getMessage());
@@ -92,7 +92,7 @@ class JUnitTestCaseResultConstructorTest {
         when(holder.getJUnitExtensionContext()).thenReturn(extensionContext);
         when(extensionContext.getExecutionException()).thenReturn(Optional.of(testException));
 
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
 
         assertNotNull(result);
         assertEquals("Test Title", result.getTitle());
@@ -108,7 +108,7 @@ class JUnitTestCaseResultConstructorTest {
         when(holder.getJUnitExtensionContext()).thenReturn(extensionContext);
         when(extensionContext.getExecutionException()).thenReturn(Optional.empty());
 
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
 
         assertNotNull(result);
         assertNull(result.getMessage());
@@ -121,7 +121,7 @@ class JUnitTestCaseResultConstructorTest {
         when(holder.getStatus()).thenReturn("PASSED");
         when(holder.getJUnitExtensionContext()).thenReturn(null);
 
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
 
         assertNotNull(result);
         assertNull(result.getMessage());
@@ -136,7 +136,7 @@ class JUnitTestCaseResultConstructorTest {
         when(holder.getMessage()).thenReturn(customMessage);
         when(holder.getStatus()).thenReturn("PASSED");
 
-        TestCaseResult result = constructor.constructTestRunResult(holder);
+        TestResult result = constructor.constructTestRunResult(holder);
 
         assertNotNull(result);
         assertEquals(customMessage, result.getMessage());
@@ -152,7 +152,7 @@ class JUnitTestCaseResultConstructorTest {
         when(holder.getJUnitExtensionContext()).thenReturn(extensionContext);
         when(extensionContext.getExecutionException()).thenReturn(Optional.of(testException));
 
-        TestCaseResult result = constructor.constructTestRunResult(holder);
+        TestResult result = constructor.constructTestRunResult(holder);
 
         assertNotNull(result);
         assertEquals("Exception message", result.getMessage());

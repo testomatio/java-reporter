@@ -1,6 +1,6 @@
 package com.testomatio.reporter.core.constructor;
 
-import com.testomatio.reporter.model.TestCaseResult;
+import com.testomatio.reporter.model.TestResult;
 import com.testomatio.reporter.model.TestMetadata;
 import io.cucumber.plugin.event.Result;
 import io.cucumber.plugin.event.TestCaseFinished;
@@ -14,7 +14,7 @@ import static org.mockito.Mockito.*;
 
 class CucumberTestCaseResultConstructorTest {
 
-    private CucumberTestCaseResultConstructor constructor;
+    private CucumberTestResultConstructor constructor;
 
     @Mock
     private TestCaseResultWrapper holder;
@@ -31,7 +31,7 @@ class CucumberTestCaseResultConstructorTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        constructor = new CucumberTestCaseResultConstructor();
+        constructor = new CucumberTestResultConstructor();
         
         when(testMetadata.getTitle()).thenReturn("Cucumber Test Title");
         when(testMetadata.getTestId()).thenReturn("cucumber-test-id-123");
@@ -70,7 +70,7 @@ class CucumberTestCaseResultConstructorTest {
 
     @Test
     void createWithCustomMessage_shouldCreateResultWithNullMessageAndStack() {
-        TestCaseResult result = constructor.createWithCustomMessage(holder);
+        TestResult result = constructor.createWithCustomMessage(holder);
         
         assertNotNull(result);
         assertEquals("Cucumber Test Title", result.getTitle());
@@ -90,7 +90,7 @@ class CucumberTestCaseResultConstructorTest {
         when(testCaseFinished.getResult()).thenReturn(cucumberResult);
         when(cucumberResult.getError()).thenReturn(testException);
         
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
         
         assertNotNull(result);
         assertEquals("Cucumber Test Title", result.getTitle());
@@ -105,7 +105,7 @@ class CucumberTestCaseResultConstructorTest {
         when(testCaseFinished.getResult()).thenReturn(cucumberResult);
         when(cucumberResult.getError()).thenReturn(null);
         
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
         
         assertNotNull(result);
         assertNull(result.getMessage());
@@ -116,7 +116,7 @@ class CucumberTestCaseResultConstructorTest {
     void createWithExceptionDetails_shouldCreateResultWithEmptyDetails_whenNoTestCaseFinished() {
         when(holder.getCucumberTestCaseFinished()).thenReturn(null);
         
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
         
         assertNotNull(result);
         assertNull(result.getMessage());
@@ -132,7 +132,7 @@ class CucumberTestCaseResultConstructorTest {
         when(testCaseFinished.getResult()).thenReturn(cucumberResult);
         when(cucumberResult.getError()).thenReturn(abortedException);
         
-        TestCaseResult result = constructor.createWithExceptionDetails(holder);
+        TestResult result = constructor.createWithExceptionDetails(holder);
         
         assertNotNull(result);
         assertNull(result.getMessage());
@@ -147,7 +147,7 @@ class CucumberTestCaseResultConstructorTest {
         when(testCaseFinished.getResult()).thenReturn(cucumberResult);
         when(cucumberResult.getError()).thenReturn(testException);
         
-        TestCaseResult result = constructor.constructTestRunResult(holder);
+        TestResult result = constructor.constructTestRunResult(holder);
         
         assertNotNull(result);
         assertEquals("Cucumber error", result.getMessage());
@@ -160,7 +160,7 @@ class CucumberTestCaseResultConstructorTest {
         when(holder.getStatus()).thenReturn("PASSED");
         when(holder.getCucumberTestCaseFinished()).thenReturn(null);
         
-        TestCaseResult result = constructor.constructTestRunResult(holder);
+        TestResult result = constructor.constructTestRunResult(holder);
         
         assertNotNull(result);
         assertEquals("Cucumber Test Title", result.getTitle());
