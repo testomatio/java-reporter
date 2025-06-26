@@ -13,6 +13,5 @@ public class CommonConstants {
     public static final String FAILED = "failed";
     public static final String RESPONSE_UID_KEY = "uid";
 
-    public static final int HTTP_TIMEOUT_SECONDS = 30;
 
 }

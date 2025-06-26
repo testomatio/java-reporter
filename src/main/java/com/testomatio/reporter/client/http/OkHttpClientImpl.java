@@ -9,8 +9,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static com.testomatio.reporter.constants.CommonConstants.HTTP_TIMEOUT_SECONDS;
 import static com.testomatio.reporter.constants.CommonConstants.MEDIA_TYPE_JSON;
+import static com.testomatio.reporter.constants.PropertyValuesConstants.HTTP_TIMEOUT_SECONDS;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 /**

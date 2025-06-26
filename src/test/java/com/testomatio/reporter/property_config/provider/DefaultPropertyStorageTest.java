@@ -45,7 +45,6 @@ class DefaultPropertyStorageTest {
 
     @Test
     void testMapIsImmutable() {
-        // Test that we cannot modify the map
         assertThrows(UnsupportedOperationException.class, () -> {
             DefaultPropertyStorage.DEFAULTS.put("new.key", "new.value");
         });
@@ -54,8 +53,6 @@ class DefaultPropertyStorageTest {
             DefaultPropertyStorage.DEFAULTS.remove("testomatio.batch.size");
         });
 
-        assertThrows(UnsupportedOperationException.class, () -> {
-            DefaultPropertyStorage.DEFAULTS.clear();
-        });
+        assertThrows(UnsupportedOperationException.class, DefaultPropertyStorage.DEFAULTS::clear);
     }
 }
