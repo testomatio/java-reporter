@@ -18,20 +18,16 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- Core dependencies versions -->
         <okhttp.version>4.12.0</okhttp.version>
         <jackson.version>2.15.2</jackson.version>
         <lombok.version>1.18.38</lombok.version>
 
-        <!-- Test framework versions (provided by users) -->
         <junit.version>5.10.0</junit.version>
         <testng.version>7.8.0</testng.version>
         <cucumber.version>7.15.0</cucumber.version>
 
-        <!-- Test-only dependencies -->
         <mockito.version>5.5.0</mockito.version>
 
-        <!-- Plugin versions -->
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
@@ -39,7 +35,6 @@
     </properties>
 
     <dependencies>
-        <!-- CORE DEPENDENCIES (будуть включені у jar) -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
@@ -52,7 +47,6 @@
             <version>${jackson.version}</version>
         </dependency>
 
-        <!-- BUILD-TIME DEPENDENCIES (не будуть включені у jar) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -60,8 +54,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- TEST FRAMEWORK DEPENDENCIES (provided by user projects) -->
-        <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -70,7 +62,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- TestNG -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
@@ -79,7 +70,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Cucumber Core -->
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-core</artifactId>
@@ -96,8 +86,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- TEST SCOPE DEPENDENCIES (тільки для внутрішнього тестування бібліотеки) -->
-        <!-- JUnit 5 для тестування -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
@@ -112,7 +100,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Cucumber для тестування -->
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit-platform-engine</artifactId>
@@ -127,7 +114,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Mockito для тестування -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -152,7 +138,17 @@
 
     <build>
         <plugins>
-            <!-- Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -170,7 +166,6 @@
                 </configuration>
             </plugin>
 
-            <!-- JAR Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -183,7 +178,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Sources Plugin (для Maven Central) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -198,7 +192,6 @@
                 </executions>
             </plugin>
 
-            <!-- Javadoc Plugin (для Maven Central) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
