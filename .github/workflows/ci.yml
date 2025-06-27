@@ -1,0 +1,26 @@
+image: openjdk:11-jdk
+
+stages:
+  - test
+
+cache:
+  paths:
+    - .m2/repository/
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+test:
+  stage: test
+  script:
+    - mvn clean test
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+    paths:
+      - target/
+  only:
+    - 1.x
+    - merge_requests
