@@ -4,14 +4,39 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.testomatio.reporter</groupId>
+    <groupId>io.testomat</groupId>
     <artifactId>java-reporter</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter</name>
-    <description>Java reporter library for Testomat.io integration with JUnit 5, TestNG, and Cucumber</description>
+    <description>Java reporter library for Testomat.io integration with JUnit 5, TestNG, and Cucumber support
+    </description>
     <url>https://github.com/testomatio/java-reporter</url>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>YevheniiVlasenko</id>
+            <name>Testomat.io Team</name>
+            <email>YevheniiVlasenko@testomat.work</email>
+            <organization>Testomat.io</organization>
+            <organizationUrl>https://testomat.io</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/testomatio/java-reporter.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/testomatio/java-reporter.git</developerConnection>
+        <url>https://github.com/testomatio/java-reporter/tree/1.x</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -32,6 +57,9 @@
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
+
+        <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+        <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -149,6 +177,7 @@
                     </includes>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -210,6 +239,52 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <configuration>
+                            <executable>gpg</executable>
+                            <passphrase>${env.GPG_PASSPHRASE}</passphrase>  <!-- ДОДАТИ -->
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                                <arg>--batch</arg>
+                                <arg>--yes</arg>
+                            </gpgArguments>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <!-- решта без змін -->
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
