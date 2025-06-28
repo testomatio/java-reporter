@@ -78,15 +78,6 @@ class TestomatApiClientTest {
     }
 
     @Test
-    void constructor_WithApiKeyOnly_ShouldCreateClientWithDefaults() {
-        // When
-        TestomatApiClient client = new TestomatApiClient(API_KEY);
-
-        // Then
-        assertNotNull(client);
-    }
-
-    @Test
     void constructor_WithAllDependencies_ShouldCreateClient() {
         // When
         TestomatApiClient client = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.testomatio.reporter.exception.RequestExecutionFailedException;
 import com.testomatio.reporter.exception.RequestStatusNotSuccessException;
+import com.testomatio.reporter.exception.RequestTimeoutException;
 import com.testomatio.reporter.exception.RequestUriBuildingException;
 import com.testomatio.reporter.exception.ResponseJsonParsingException;
 import com.testomatio.reporter.logger.LoggerUtils;
@@ -13,6 +14,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.logging.Logger;
@@ -29,6 +31,7 @@ public class NativeHttpClient implements CustomHttpClient {
     private final HttpClient client;
 
     public NativeHttpClient() {
+        LOGGER.info("Initializing Native HttpClient");
         this.client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(HTTP_TIMEOUT_SECONDS))
                 .followRedirects(HttpClient.Redirect.NORMAL)
@@ -73,8 +76,15 @@ public class NativeHttpClient implements CustomHttpClient {
         HttpResponse<String> response;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            throw new RequestExecutionFailedException("API request failed", e);
+        } catch (HttpTimeoutException e) {
+            throw new RequestTimeoutException(
+                    String.format("Request timeout after %d seconds for URI: %s",
+                            REQUEST_TIMEOUT_SECONDS, request.uri()));
+        } catch (IOException e) {
+            throw new RequestExecutionFailedException("Network error occurred", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RequestExecutionFailedException("Request was interrupted", e);
         }
         checkResponseStatus(response);
         return mapJsonResponse(response.body(), responseType);
@@ -82,14 +92,16 @@ public class NativeHttpClient implements CustomHttpClient {
 
     private void checkResponseStatus(HttpResponse<String> response) {
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            LOGGER.severe(String.format("API request failed: HTTP %s | URI: %s | Response: %s",
-                    response.statusCode(), response.uri(), response.body()));
+
             throw new RequestStatusNotSuccessException(
                     "API request returned status code " + response.statusCode());
         }
     }
 
     private <T> T mapJsonResponse(String responseBody, Class<T> responseType) {
+        if (responseType == null) {
+            return null;
+        }
         try {
             return objectMapper.readValue(responseBody, responseType);
         } catch (JsonProcessingException | IllegalArgumentException e) {
