@@ -1,7 +1,6 @@
 package com.testomatio.reporter.client;
 
 import com.testomatio.reporter.client.http.CustomHttpClient;
-import com.testomatio.reporter.client.http.OkHttpClientImpl;
 import com.testomatio.reporter.client.request.RequestBodyBuilder;
 import com.testomatio.reporter.client.request.TestomatRequestBodyBuilder;
 import com.testomatio.reporter.client.util.RequestUrlBuilderUtil;
@@ -28,15 +27,6 @@ public class TestomatApiClient implements ApiInterface {
     private final String apiKey;
     private final CustomHttpClient client;
     private final RequestBodyBuilder requestBodyBuilder;
-
-    /**
-     * Creates API client with default HTTP client and request body builder.
-     *
-     * @param apiKey API key for Testomat.io authentication
-     */
-    public TestomatApiClient(String apiKey) {
-        this(apiKey, new OkHttpClientImpl(), new TestomatRequestBodyBuilder());
-    }
 
     /**
      * Creates API client with custom dependencies for testing.
