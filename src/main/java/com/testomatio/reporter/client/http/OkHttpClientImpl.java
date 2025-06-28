@@ -17,7 +17,7 @@ import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
  * HTTP client implementation using OkHttp library.
  * Configured with timeouts and automatic JSON response handling.
  */
-public class OkHttpClientImpl implements HttpClient {
+public class OkHttpClientImpl implements CustomHttpClient {
     private final Logger LOGGER = getLogger(OkHttpClientImpl.class);
 
     private final OkHttpClient client;
@@ -59,7 +59,7 @@ public class OkHttpClientImpl implements HttpClient {
      * Executes HTTP request and processes response with error handling.
      */
     private <T> T executeRequest(Request request, Class<T> responseType) throws IOException {
-        getLogger(HttpClient.class).finer("Making request to: " + request.url());
+        LOGGER.finer("Making request to: " + request.url());
 
         try (Response response = client.newCall(request).execute()) {
             String responseBodyString = response.body() != null ? response.body().string() : "No response body";

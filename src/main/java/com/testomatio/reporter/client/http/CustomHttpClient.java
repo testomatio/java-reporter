@@ -5,7 +5,7 @@ import java.io.IOException;
 /**
  * HTTP client abstraction for making API requests.
  */
-public interface HttpClient {
+public interface CustomHttpClient {
 
     /**
      * Executes HTTP POST request with JSON body.
