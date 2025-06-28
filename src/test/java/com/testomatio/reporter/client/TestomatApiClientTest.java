@@ -1,6 +1,6 @@
 package com.testomatio.reporter.client;
 
-import com.testomatio.reporter.client.http.HttpClient;
+import com.testomatio.reporter.client.http.CustomHttpClient;
 import com.testomatio.reporter.client.request.TestomatRequestBodyBuilder;
 import com.testomatio.reporter.client.util.RequestUrlBuilderUtil;
 import com.testomatio.reporter.exception.FinishReportFailedException;
@@ -41,7 +41,7 @@ class TestomatApiClientTest {
     private AutoCloseable mockitoCloseable;
 
     @Mock
-    private HttpClient httpClient;
+    private CustomHttpClient customHttpClient;
 
     @Mock
     private TestomatRequestBodyBuilder requestBodyBuilder;
@@ -74,7 +74,7 @@ class TestomatApiClientTest {
     }
 
     private void resetAllMocks() {
-        reset(httpClient, requestBodyBuilder, testRunResult1, testRunResult2);
+        reset(customHttpClient, requestBodyBuilder, testRunResult1, testRunResult2);
     }
 
     @Test
@@ -89,7 +89,7 @@ class TestomatApiClientTest {
     @Test
     void constructor_WithAllDependencies_ShouldCreateClient() {
         // When
-        TestomatApiClient client = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        TestomatApiClient client = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         // Then
         assertNotNull(client);
@@ -98,7 +98,7 @@ class TestomatApiClientTest {
     @Test
     void createRun_WithValidTitle_ShouldReturnRunId() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         Map<String, String> response = new HashMap<>();
         response.put(RESPONSE_UID_KEY, TEST_RUN_UID);
@@ -106,7 +106,7 @@ class TestomatApiClientTest {
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(RequestUrlBuilderUtil::buildCreateRunUrl).thenReturn(TEST_URL);
             when(requestBodyBuilder.buildCreateRunBody(TEST_TITLE)).thenReturn(REQUEST_BODY);
-            when(httpClient.post(TEST_URL, REQUEST_BODY, Map.class)).thenReturn(response);
+            when(customHttpClient.post(TEST_URL, REQUEST_BODY, Map.class)).thenReturn(response);
 
             // When
             String result = testomatApiClient.createRun(TEST_TITLE);
@@ -114,19 +114,19 @@ class TestomatApiClientTest {
             // Then
             assertEquals(TEST_RUN_UID, result);
             verify(requestBodyBuilder).buildCreateRunBody(TEST_TITLE);
-            verify(httpClient).post(TEST_URL, REQUEST_BODY, Map.class);
+            verify(customHttpClient).post(TEST_URL, REQUEST_BODY, Map.class);
         }
     }
 
     @Test
     void createRun_WithNullResponse_ShouldThrowException() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(RequestUrlBuilderUtil::buildCreateRunUrl).thenReturn(TEST_URL);
             when(requestBodyBuilder.buildCreateRunBody(TEST_TITLE)).thenReturn(REQUEST_BODY);
-            when(httpClient.post(TEST_URL, REQUEST_BODY, Map.class)).thenReturn(null);
+            when(customHttpClient.post(TEST_URL, REQUEST_BODY, Map.class)).thenReturn(null);
 
             // When & Then
             assertThrows(RunCreationFailedException.class,
@@ -137,7 +137,7 @@ class TestomatApiClientTest {
     @Test
     void createRun_WithResponseMissingUid_ShouldThrowException() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         Map<String, String> response = new HashMap<>();
         // Response without RESPONSE_UID_KEY
@@ -145,7 +145,7 @@ class TestomatApiClientTest {
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(RequestUrlBuilderUtil::buildCreateRunUrl).thenReturn(TEST_URL);
             when(requestBodyBuilder.buildCreateRunBody(TEST_TITLE)).thenReturn(REQUEST_BODY);
-            when(httpClient.post(TEST_URL, REQUEST_BODY, Map.class)).thenReturn(response);
+            when(customHttpClient.post(TEST_URL, REQUEST_BODY, Map.class)).thenReturn(response);
 
             // When & Then
             assertThrows(RunCreationFailedException.class,
@@ -156,12 +156,12 @@ class TestomatApiClientTest {
     @Test
     void createRun_WithIOException_ShouldPropagateException() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(RequestUrlBuilderUtil::buildCreateRunUrl).thenReturn(TEST_URL);
             when(requestBodyBuilder.buildCreateRunBody(TEST_TITLE)).thenReturn(REQUEST_BODY);
-            when(httpClient.post(TEST_URL, REQUEST_BODY, Map.class))
+            when(customHttpClient.post(TEST_URL, REQUEST_BODY, Map.class))
                     .thenThrow(new IOException("Network error"));
 
             // When & Then
@@ -172,7 +172,7 @@ class TestomatApiClientTest {
     @Test
     void reportTest_WithValidResult_ShouldCallHttpClient() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(() -> RequestUrlBuilderUtil.buildReportTestUrl(TEST_RUN_UID))
@@ -185,21 +185,21 @@ class TestomatApiClientTest {
 
             // Then
             verify(requestBodyBuilder).buildSingleTestReportBody(testRunResult1);
-            verify(httpClient).post(TEST_URL, REQUEST_BODY, null);
+            verify(customHttpClient).post(TEST_URL, REQUEST_BODY, null);
         }
     }
 
     @Test
     void reportTest_WithHttpException_ShouldThrowReportingFailedException() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(() -> RequestUrlBuilderUtil.buildReportTestUrl(TEST_RUN_UID))
                     .thenReturn(TEST_URL);
             when(testRunResult1.getTestId()).thenReturn("test-id-1");
             when(requestBodyBuilder.buildSingleTestReportBody(testRunResult1)).thenReturn(REQUEST_BODY);
-            when(httpClient.post(TEST_URL, REQUEST_BODY, null))
+            when(customHttpClient.post(TEST_URL, REQUEST_BODY, null))
                     .thenThrow(new IOException("Network error"));
 
             // When & Then
@@ -211,7 +211,7 @@ class TestomatApiClientTest {
     @Test
     void reportTests_WithValidResults_ShouldCallHttpClient() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         List<TestResult> results = Arrays.asList(testRunResult1, testRunResult2);
 
@@ -225,38 +225,38 @@ class TestomatApiClientTest {
 
             // Then
             verify(requestBodyBuilder).buildBatchTestReportBody(results, API_KEY);
-            verify(httpClient).post(TEST_URL, REQUEST_BODY, null);
+            verify(customHttpClient).post(TEST_URL, REQUEST_BODY, null);
         }
     }
 
     @Test
     void reportTests_WithNullResults_ShouldReturnEarly() throws IOException {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         // When
         testomatApiClient.reportTests(TEST_RUN_UID, null);
 
         // Then
-        verify(httpClient, never()).post(anyString(), anyString(), any());
+        verify(customHttpClient, never()).post(anyString(), anyString(), any());
     }
 
     @Test
     void reportTests_WithEmptyResults_ShouldReturnEarly() throws IOException {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         // When
         testomatApiClient.reportTests(TEST_RUN_UID, Collections.emptyList());
 
         // Then
-        verify(httpClient, never()).post(anyString(), anyString(), any());
+        verify(customHttpClient, never()).post(anyString(), anyString(), any());
     }
 
     @Test
     void reportTests_WithHttpException_ShouldThrowReportingFailedException() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         List<TestResult> results = Arrays.asList(testRunResult1);
 
@@ -264,7 +264,7 @@ class TestomatApiClientTest {
             urlBuilderMock.when(() -> RequestUrlBuilderUtil.buildReportTestUrl(TEST_RUN_UID))
                     .thenReturn(TEST_URL);
             when(requestBodyBuilder.buildBatchTestReportBody(results, API_KEY)).thenReturn(REQUEST_BODY);
-            when(httpClient.post(TEST_URL, REQUEST_BODY, null))
+            when(customHttpClient.post(TEST_URL, REQUEST_BODY, null))
                     .thenThrow(new IOException("Network error"));
 
             // When & Then
@@ -276,7 +276,7 @@ class TestomatApiClientTest {
     @Test
     void finishTestRun_WithValidParameters_ShouldCallHttpClient() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         float duration = 123.45f;
 
@@ -290,14 +290,14 @@ class TestomatApiClientTest {
 
             // Then
             verify(requestBodyBuilder).buildFinishRunBody(duration);
-            verify(httpClient).put(TEST_URL, REQUEST_BODY, null);
+            verify(customHttpClient).put(TEST_URL, REQUEST_BODY, null);
         }
     }
 
     @Test
     void finishTestRun_WithHttpException_ShouldThrowFinishReportFailedException() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         float duration = 123.45f;
 
@@ -305,7 +305,7 @@ class TestomatApiClientTest {
             urlBuilderMock.when(() -> RequestUrlBuilderUtil.buildFinishTestRunUrl(TEST_RUN_UID))
                     .thenReturn(TEST_URL);
             when(requestBodyBuilder.buildFinishRunBody(duration)).thenReturn(REQUEST_BODY);
-            when(httpClient.put(TEST_URL, REQUEST_BODY, null))
+            when(customHttpClient.put(TEST_URL, REQUEST_BODY, null))
                     .thenThrow(new IOException("Network error"));
 
             // When & Then
@@ -317,7 +317,7 @@ class TestomatApiClientTest {
     @Test
     void finishTestRun_WithZeroDuration_ShouldWork() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         float duration = 0.0f;
 
@@ -331,14 +331,14 @@ class TestomatApiClientTest {
 
             // Then
             verify(requestBodyBuilder).buildFinishRunBody(duration);
-            verify(httpClient).put(TEST_URL, REQUEST_BODY, null);
+            verify(customHttpClient).put(TEST_URL, REQUEST_BODY, null);
         }
     }
 
     @Test
     void finishTestRun_WithNegativeDuration_ShouldWork() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         float duration = -1.0f;
 
@@ -352,14 +352,14 @@ class TestomatApiClientTest {
 
             // Then
             verify(requestBodyBuilder).buildFinishRunBody(duration);
-            verify(httpClient).put(TEST_URL, REQUEST_BODY, null);
+            verify(customHttpClient).put(TEST_URL, REQUEST_BODY, null);
         }
     }
 
     @Test
     void reportTest_WithNullResult_ShouldThrowReportingFailedException() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(() -> RequestUrlBuilderUtil.buildReportTestUrl(TEST_RUN_UID))
@@ -376,7 +376,7 @@ class TestomatApiClientTest {
     @Test
     void createRun_WithNullTitle_ShouldPassToBuilder() throws Exception {
         // Given
-        testomatApiClient = new TestomatApiClient(API_KEY, httpClient, requestBodyBuilder);
+        testomatApiClient = new TestomatApiClient(API_KEY, customHttpClient, requestBodyBuilder);
 
         Map<String, String> response = new HashMap<>();
         response.put(RESPONSE_UID_KEY, TEST_RUN_UID);
@@ -384,7 +384,7 @@ class TestomatApiClientTest {
         try (MockedStatic<RequestUrlBuilderUtil> urlBuilderMock = mockStatic(RequestUrlBuilderUtil.class)) {
             urlBuilderMock.when(RequestUrlBuilderUtil::buildCreateRunUrl).thenReturn(TEST_URL);
             when(requestBodyBuilder.buildCreateRunBody(null)).thenReturn(REQUEST_BODY);
-            when(httpClient.post(TEST_URL, REQUEST_BODY, Map.class)).thenReturn(response);
+            when(customHttpClient.post(TEST_URL, REQUEST_BODY, Map.class)).thenReturn(response);
 
             // When
             String result = testomatApiClient.createRun(null);

@@ -1,6 +1,6 @@
 package com.testomatio.reporter.client;
 
-import com.testomatio.reporter.client.http.HttpClient;
+import com.testomatio.reporter.client.http.CustomHttpClient;
 import com.testomatio.reporter.client.http.OkHttpClientImpl;
 import com.testomatio.reporter.client.request.RequestBodyBuilder;
 import com.testomatio.reporter.client.request.TestomatRequestBodyBuilder;
@@ -26,7 +26,7 @@ public class TestomatApiClient implements ApiInterface {
     private final Logger LOGGER = getLogger(TestomatApiClient.class);
 
     private final String apiKey;
-    private final HttpClient httpClient;
+    private final CustomHttpClient client;
     private final RequestBodyBuilder requestBodyBuilder;
 
     /**
@@ -42,12 +42,14 @@ public class TestomatApiClient implements ApiInterface {
      * Creates API client with custom dependencies for testing.
      *
      * @param apiKey API key for authentication
-     * @param httpClient HTTP client implementation
+     * @param client HTTP client implementation
      * @param requestBodyBuilder request body builder for JSON payloads
      */
-    public TestomatApiClient(String apiKey, HttpClient httpClient, TestomatRequestBodyBuilder requestBodyBuilder) {
+    public TestomatApiClient(String apiKey,
+                             CustomHttpClient client,
+                             TestomatRequestBodyBuilder requestBodyBuilder) {
         this.apiKey = apiKey;
-        this.httpClient = httpClient;
+        this.client = client;
         this.requestBodyBuilder = requestBodyBuilder;
     }
 
@@ -59,7 +61,7 @@ public class TestomatApiClient implements ApiInterface {
         LOGGER.finer("Creating run with request url: " + url);
         String requestBody = requestBodyBuilder.buildCreateRunBody(title);
 
-        Map<String, String> responseBody = httpClient.post(url, requestBody, Map.class);
+        Map<String, String> responseBody = client.post(url, requestBody, Map.class);
 
         if (responseBody == null || !responseBody.containsKey(RESPONSE_UID_KEY)) {
             throw new RunCreationFailedException("Invalid response: missing UID in create test run response");
@@ -79,7 +81,7 @@ public class TestomatApiClient implements ApiInterface {
             String url = RequestUrlBuilderUtil.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildSingleTestReportBody(result);
             LOGGER.finest("-----" + requestBody);
-            httpClient.post(url, requestBody, null);
+            client.post(url, requestBody, null);
 
         } catch (Exception e) {
             throw new ReportingFailedException("Failed to report test /n" + e.getMessage());
@@ -99,7 +101,7 @@ public class TestomatApiClient implements ApiInterface {
             String url = RequestUrlBuilderUtil.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildBatchTestReportBody(results, apiKey);
 
-            httpClient.post(url, requestBody, null);
+            client.post(url, requestBody, null);
         } catch (Exception e) {
             LOGGER.severe("Failed to report batch test /n" + e.getMessage());
             throw new ReportingFailedException("Failed to report batch /n" + e.getMessage());
@@ -114,7 +116,7 @@ public class TestomatApiClient implements ApiInterface {
             String url = RequestUrlBuilderUtil.buildFinishTestRunUrl(uid);
             String requestBody = requestBodyBuilder.buildFinishRunBody(duration);
 
-            httpClient.put(url, requestBody, null);
+            client.put(url, requestBody, null);
         } catch (Exception e) {
             LOGGER.severe("Failed to finish test run with uid: " + uid);
             throw new FinishReportFailedException("Failed to finish test run " + e.getMessage());

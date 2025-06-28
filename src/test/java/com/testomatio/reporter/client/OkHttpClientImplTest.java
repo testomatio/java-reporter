@@ -1,7 +1,7 @@
 package com.testomatio.reporter.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.testomatio.reporter.client.http.HttpClient;
+import com.testomatio.reporter.client.http.CustomHttpClient;
 import com.testomatio.reporter.client.http.OkHttpClientImpl;
 import java.io.IOException;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OkHttpClientImplTest {
 
-    private HttpClient httpClient;
+    private CustomHttpClient customHttpClient;
     private AutoCloseable mockitoCloseable;
 
     @Mock
@@ -99,7 +99,7 @@ class OkHttpClientImplTest {
                          when(mock.readValue(anyString(), eq(Map.class))).thenReturn(expectedResponse);
                      })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenReturn(mockResponse);
             when(mockResponse.isSuccessful()).thenReturn(true);
@@ -107,7 +107,7 @@ class OkHttpClientImplTest {
             when(mockResponseBody.string()).thenReturn(RESPONSE_BODY);
 
             // When
-            Map<String, String> result = httpClient.post(TEST_URL, REQUEST_BODY, Map.class);
+            Map<String, String> result = customHttpClient.post(TEST_URL, REQUEST_BODY, Map.class);
 
             // Then
             assertEquals(expectedResponse, result);
@@ -122,7 +122,7 @@ class OkHttpClientImplTest {
                     when(mock.newCall(any(Request.class))).thenReturn(mockCall);
                 })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenReturn(mockResponse);
             when(mockResponse.isSuccessful()).thenReturn(true);
@@ -130,7 +130,7 @@ class OkHttpClientImplTest {
             when(mockResponseBody.string()).thenReturn(RESPONSE_BODY);
 
             // When
-            Object result = httpClient.post(TEST_URL, REQUEST_BODY, null);
+            Object result = customHttpClient.post(TEST_URL, REQUEST_BODY, null);
 
             // Then
             assertNull(result);
@@ -145,7 +145,7 @@ class OkHttpClientImplTest {
                     when(mock.newCall(any(Request.class))).thenReturn(mockCall);
                 })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenReturn(mockResponse);
             when(mockResponse.isSuccessful()).thenReturn(false);
@@ -155,7 +155,7 @@ class OkHttpClientImplTest {
             when(mockResponseBody.string()).thenReturn("Error details");
 
             // When & Then
-            assertThrows(IOException.class, () -> httpClient.post(TEST_URL, REQUEST_BODY, Map.class));
+            assertThrows(IOException.class, () -> customHttpClient.post(TEST_URL, REQUEST_BODY, Map.class));
         }
     }
 
@@ -167,7 +167,7 @@ class OkHttpClientImplTest {
                     when(mock.newCall(any(Request.class))).thenReturn(mockCall);
                 })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenReturn(mockResponse);
             when(mockResponse.isSuccessful()).thenReturn(false);
@@ -176,7 +176,7 @@ class OkHttpClientImplTest {
             when(mockResponse.body()).thenReturn(null);
 
             // When & Then
-            assertThrows(IOException.class, () -> httpClient.post(TEST_URL, REQUEST_BODY, Map.class));
+            assertThrows(IOException.class, () -> customHttpClient.post(TEST_URL, REQUEST_BODY, Map.class));
         }
     }
 
@@ -188,12 +188,12 @@ class OkHttpClientImplTest {
                     when(mock.newCall(any(Request.class))).thenReturn(mockCall);
                 })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenThrow(new IOException("Network error"));
 
             // When & Then
-            assertThrows(IOException.class, () -> httpClient.post(TEST_URL, REQUEST_BODY, Map.class));
+            assertThrows(IOException.class, () -> customHttpClient.post(TEST_URL, REQUEST_BODY, Map.class));
         }
     }
 
@@ -205,7 +205,7 @@ class OkHttpClientImplTest {
                     when(mock.newCall(any(Request.class))).thenReturn(mockCall);
                 })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenReturn(mockResponse);
             when(mockResponse.isSuccessful()).thenReturn(true);
@@ -213,7 +213,7 @@ class OkHttpClientImplTest {
             when(mockResponseBody.string()).thenReturn(RESPONSE_BODY);
 
             // When
-            Object result = httpClient.put(TEST_URL, REQUEST_BODY, null);
+            Object result = customHttpClient.put(TEST_URL, REQUEST_BODY, null);
 
             // Then
             assertNull(result);
@@ -228,7 +228,7 @@ class OkHttpClientImplTest {
                     when(mock.newCall(any(Request.class))).thenReturn(mockCall);
                 })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenReturn(mockResponse);
             when(mockResponse.isSuccessful()).thenReturn(false);
@@ -238,7 +238,7 @@ class OkHttpClientImplTest {
             when(mockResponseBody.string()).thenReturn("Resource not found");
 
             // When & Then
-            assertThrows(IOException.class, () -> httpClient.put(TEST_URL, REQUEST_BODY, Map.class));
+            assertThrows(IOException.class, () -> customHttpClient.put(TEST_URL, REQUEST_BODY, Map.class));
         }
     }
 
@@ -250,12 +250,12 @@ class OkHttpClientImplTest {
                     when(mock.newCall(any(Request.class))).thenReturn(mockCall);
                 })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenThrow(new IOException("Connection timeout"));
 
             // When & Then
-            assertThrows(IOException.class, () -> httpClient.put(TEST_URL, REQUEST_BODY, Map.class));
+            assertThrows(IOException.class, () -> customHttpClient.put(TEST_URL, REQUEST_BODY, Map.class));
         }
     }
 
@@ -273,7 +273,7 @@ class OkHttpClientImplTest {
                          when(mock.readValue(anyString(), eq(String.class))).thenReturn(expectedResponse);
                      })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenReturn(mockResponse);
             when(mockResponse.isSuccessful()).thenReturn(true);
@@ -281,7 +281,7 @@ class OkHttpClientImplTest {
             when(mockResponseBody.string()).thenReturn("\"Success\"");
 
             // When
-            String result = httpClient.post(TEST_URL, REQUEST_BODY, String.class);
+            String result = customHttpClient.post(TEST_URL, REQUEST_BODY, String.class);
 
             // Then
             assertEquals(expectedResponse, result);
@@ -302,7 +302,7 @@ class OkHttpClientImplTest {
                          when(mock.readValue(anyString(), eq(TestResponse.class))).thenReturn(expectedResponse);
                      })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenReturn(mockResponse);
             when(mockResponse.isSuccessful()).thenReturn(true);
@@ -310,7 +310,7 @@ class OkHttpClientImplTest {
             when(mockResponseBody.string()).thenReturn("{\"id\":\"test-id\",\"status\":\"completed\"}");
 
             // When
-            TestResponse result = httpClient.put(TEST_URL, REQUEST_BODY, TestResponse.class);
+            TestResponse result = customHttpClient.put(TEST_URL, REQUEST_BODY, TestResponse.class);
 
             // Then
             assertEquals(expectedResponse, result);
@@ -325,7 +325,7 @@ class OkHttpClientImplTest {
                     when(mock.newCall(any(Request.class))).thenReturn(mockCall);
                 })) {
 
-            httpClient = new OkHttpClientImpl();
+            customHttpClient = new OkHttpClientImpl();
 
             when(mockCall.execute()).thenReturn(mockResponse);
             when(mockResponse.isSuccessful()).thenReturn(true);
@@ -333,7 +333,7 @@ class OkHttpClientImplTest {
             when(mockResponseBody.string()).thenReturn("");
 
             // When
-            Object result = httpClient.post(TEST_URL, REQUEST_BODY, null);
+            Object result = customHttpClient.post(TEST_URL, REQUEST_BODY, null);
 
             // Then
             assertNull(result);
