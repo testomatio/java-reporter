@@ -8,7 +8,6 @@ import com.testomatio.reporter.exception.RequestStatusNotSuccessException;
 import com.testomatio.reporter.exception.RequestTimeoutException;
 import com.testomatio.reporter.exception.RequestUriBuildingException;
 import com.testomatio.reporter.exception.ResponseJsonParsingException;
-import com.testomatio.reporter.exception.UndefinedResponseTypeException;
 import com.testomatio.reporter.logger.LoggerUtils;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -184,15 +183,15 @@ public class NativeHttpClient implements CustomHttpClient {
 
     private <T> T mapJsonResponse(String responseBody, Class<T> responseType) {
         if (responseType == null) {
-            throw new UndefinedResponseTypeException("Response type is not provided for " + responseBody);
+            return null;
         }
         try {
             return objectMapper.readValue(responseBody, responseType);
         } catch (JsonProcessingException | IllegalArgumentException e) {
-            throw new ResponseJsonParsingException("Failed to parse response json "
-                    + (responseBody.length() > MAX_RESPONSE_BODY_SIZE
-                    ? responseBody.substring(0, MAX_RESPONSE_BODY_SIZE)
-                    : responseBody));
+            String truncatedBody = responseBody != null && responseBody.length() > MAX_RESPONSE_BODY_SIZE
+                    ? responseBody.substring(0, MAX_RESPONSE_BODY_SIZE) + "..."
+                    : responseBody;
+            throw new ResponseJsonParsingException("Failed to parse response json: " + truncatedBody);
         }
     }
 }
