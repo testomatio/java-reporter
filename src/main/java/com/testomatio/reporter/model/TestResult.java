@@ -70,5 +70,4 @@ public class TestResult {
     public static Builder builder() {
         return new Builder();
     }
-
 }

@@ -1,14 +1,14 @@
 package com.testomatio.reporter.client.util;
 
-import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
-import com.testomatio.reporter.property_config.interf.PropertyProvider;
-import java.util.Objects;
-import okhttp3.HttpUrl;
-
 import static com.testomatio.reporter.constants.CommonConstants.API_KEY_STRING;
 import static com.testomatio.reporter.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.HOST_URL_PROPERTY_NAME;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
+
+import com.testomatio.reporter.propertyconfig.impl.PropertyProviderFactoryImpl;
+import com.testomatio.reporter.propertyconfig.interf.PropertyProvider;
+import java.util.Objects;
+import okhttp3.HttpUrl;
 
 /**
  * Utility for building Testomat.io API URLs.
@@ -32,7 +32,8 @@ public class RequestUrlBuilderUtil {
         String baseUrl = getBaseUrl();
         String apiKey = getApiKey();
 
-        HttpUrl url = Objects.requireNonNull(HttpUrl.parse(baseUrl), "Invalid base URL: " + baseUrl)
+        HttpUrl url = Objects.requireNonNull(HttpUrl.parse(baseUrl), "Invalid base URL: "
+                        + baseUrl)
                 .newBuilder()
                 .addPathSegment(API_PATH)
                 .addPathSegment(REPORTER_PATH)
@@ -40,7 +41,8 @@ public class RequestUrlBuilderUtil {
                 .build();
 
         String urlString = url.toString();
-        getLogger(RequestUrlBuilderUtil.class).finer("Built create test run URL: " + urlString);
+        getLogger(RequestUrlBuilderUtil.class).finer("Built create test run URL: "
+                + urlString);
         return urlString;
     }
 
@@ -50,7 +52,7 @@ public class RequestUrlBuilderUtil {
      * @param testRunUid test run identifier
      * @return complete URL for test result reporting
      * @throws IllegalArgumentException if testRunUid is null or empty
-     * @throws IllegalStateException if required properties are not configured
+     * @throws IllegalStateException    if required properties are not configured
      */
     public static String buildReportTestUrl(String testRunUid) {
         if (testRunUid == null || testRunUid.trim().isEmpty()) {
@@ -60,7 +62,8 @@ public class RequestUrlBuilderUtil {
         String baseUrl = getBaseUrl();
         String apiKey = getApiKey();
 
-        HttpUrl url = Objects.requireNonNull(HttpUrl.parse(baseUrl), "Invalid base URL: " + baseUrl)
+        HttpUrl url = Objects.requireNonNull(HttpUrl.parse(baseUrl), "Invalid base URL: "
+                        + baseUrl)
                 .newBuilder()
                 .addPathSegment(API_PATH)
                 .addPathSegment(REPORTER_PATH)
@@ -80,7 +83,7 @@ public class RequestUrlBuilderUtil {
      * @param testRunUid test run identifier
      * @return complete URL for finishing test run
      * @throws IllegalArgumentException if testRunUid is null or empty
-     * @throws IllegalStateException if required properties are not configured
+     * @throws IllegalStateException    if required properties are not configured
      */
     public static String buildFinishTestRunUrl(String testRunUid) {
         if (testRunUid == null || testRunUid.trim().isEmpty()) {
@@ -90,7 +93,8 @@ public class RequestUrlBuilderUtil {
         String baseUrl = getBaseUrl();
         String apiKey = getApiKey();
 
-        HttpUrl url = Objects.requireNonNull(HttpUrl.parse(baseUrl), "Invalid base URL: " + baseUrl)
+        HttpUrl url = Objects.requireNonNull(HttpUrl.parse(baseUrl), "Invalid base URL: "
+                        + baseUrl)
                 .newBuilder()
                 .addPathSegment(API_PATH)
                 .addPathSegment(REPORTER_PATH)
@@ -99,7 +103,8 @@ public class RequestUrlBuilderUtil {
                 .build();
 
         String urlString = url.toString();
-        getLogger(RequestUrlBuilderUtil.class).finer("Built finish test run URL: " + urlString);
+        getLogger(RequestUrlBuilderUtil.class).finer("Built finish test run URL: "
+                + urlString);
         return urlString;
     }
 
@@ -119,12 +124,14 @@ public class RequestUrlBuilderUtil {
             baseUrl = baseUrl.trim();
             if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
                 throw new IllegalStateException(
-                        "Invalid base URL format. Must start with http:// or https://. Got: " + baseUrl);
+                        "Invalid base URL format. Must start with http:// or https://. Got: "
+                                + baseUrl);
             }
 
             return baseUrl;
         } catch (Exception e) {
-            getLogger(RequestUrlBuilderUtil.class).severe("Failed to get base URL from properties" + e.getCause());
+            getLogger(RequestUrlBuilderUtil.class).severe(
+                    "Failed to get base URL from properties" + e.getCause());
             throw new IllegalStateException("Failed to load base URL configuration", e);
         }
     }
@@ -144,7 +151,8 @@ public class RequestUrlBuilderUtil {
 
             return apiKey.trim();
         } catch (Exception e) {
-            getLogger(RequestUrlBuilderUtil.class).severe("Failed to get API key from properties" + e.getCause());
+            getLogger(RequestUrlBuilderUtil.class).severe(
+                    "Failed to get API key from properties" + e.getCause());
             throw new IllegalStateException("Failed to load API key configuration", e);
         }
     }
@@ -156,7 +164,8 @@ public class RequestUrlBuilderUtil {
         try {
             return PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
         } catch (Exception e) {
-            getLogger(RequestUrlBuilderUtil.class).severe("Failed to create PropertyProvider" + e.getCause());
+            getLogger(RequestUrlBuilderUtil.class).severe(
+                    "Failed to create PropertyProvider" + e.getCause());
             throw new IllegalStateException("Failed to initialize property provider", e);
         }
     }

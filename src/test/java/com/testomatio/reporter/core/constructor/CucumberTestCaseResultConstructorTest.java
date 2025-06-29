@@ -17,7 +17,7 @@ class CucumberTestCaseResultConstructorTest {
     private CucumberTestResultConstructor constructor;
 
     @Mock
-    private TestCaseResultWrapper holder;
+    private TestResultWrapper holder;
 
     @Mock
     private TestMetadata testMetadata;

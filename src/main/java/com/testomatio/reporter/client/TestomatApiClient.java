@@ -1,5 +1,9 @@
 package com.testomatio.reporter.client;
 
+import static com.testomatio.reporter.constants.CommonConstants.REPORTER_VERSION;
+import static com.testomatio.reporter.constants.CommonConstants.RESPONSE_UID_KEY;
+import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
+
 import com.testomatio.reporter.client.http.CustomHttpClient;
 import com.testomatio.reporter.client.request.RequestBodyBuilder;
 import com.testomatio.reporter.client.request.TestomatRequestBodyBuilder;
@@ -13,16 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import static com.testomatio.reporter.constants.CommonConstants.REPORTER_VERSION;
-import static com.testomatio.reporter.constants.CommonConstants.RESPONSE_UID_KEY;
-import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
-
 /**
  * HTTP client for Testomat.io API operations.
  * Handles test run lifecycle and result reporting with proper error handling.
  */
 public class TestomatApiClient implements ApiInterface {
-    private final Logger LOGGER = getLogger(TestomatApiClient.class);
+    private static final Logger LOGGER = getLogger(TestomatApiClient.class);
 
     private final String apiKey;
     private final CustomHttpClient client;
@@ -31,8 +31,8 @@ public class TestomatApiClient implements ApiInterface {
     /**
      * Creates API client with custom dependencies for testing.
      *
-     * @param apiKey API key for authentication
-     * @param client HTTP client implementation
+     * @param apiKey             API key for authentication
+     * @param client             HTTP client implementation
      * @param requestBodyBuilder request body builder for JSON payloads
      */
     public TestomatApiClient(String apiKey,
@@ -54,7 +54,8 @@ public class TestomatApiClient implements ApiInterface {
         Map<String, String> responseBody = client.post(url, requestBody, Map.class);
 
         if (responseBody == null || !responseBody.containsKey(RESPONSE_UID_KEY)) {
-            throw new RunCreationFailedException("Invalid response: missing UID in create test run response");
+            throw new RunCreationFailedException(
+                    "Invalid response: missing UID in create test run response");
         }
         LOGGER.fine("Created test run with UID: " + responseBody.get(RESPONSE_UID_KEY));
         LOGGER.info("Testomat.io java reporter version: " + REPORTER_VERSION);

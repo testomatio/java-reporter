@@ -1,7 +1,11 @@
 package com.testomatio.reporter.logger;
 
-import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
-import com.testomatio.reporter.property_config.interf.PropertyProvider;
+import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_CONSOLE;
+import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_FILE;
+import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_LEVEL;
+
+import com.testomatio.reporter.propertyconfig.impl.PropertyProviderFactoryImpl;
+import com.testomatio.reporter.propertyconfig.interf.PropertyProvider;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -11,10 +15,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_CONSOLE;
-import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_FILE;
-import static com.testomatio.reporter.constants.PropertyNameConstants.TESTOMATIO_LOG_LEVEL;
-
 public class LoggerConfig {
     private static final String ROOT_LOGGER_NAME = "com.testomatio.reporter";
 
@@ -22,7 +22,9 @@ public class LoggerConfig {
     private static PropertyProvider propertyProvider;
 
     public static synchronized void ensureInitialized() {
-        if (initialized) return;
+        if (initialized) {
+            return;
+        }
 
         try {
             propertyProvider = PropertyProviderFactoryImpl
@@ -112,7 +114,6 @@ public class LoggerConfig {
             handler.setFormatter(new SimpleFormatter());
             handler.setLevel(level);
             logger.addHandler(handler);
-
 
             return true;
         } catch (Exception e) {

@@ -1,5 +1,8 @@
 package com.testomatio.reporter.client.request;
 
+import static com.testomatio.reporter.constants.CommonConstants.API_KEY_STRING;
+import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.testomatio.reporter.constants.ApiRequestFields;
@@ -10,9 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.EqualsAndHashCode;
-
-import static com.testomatio.reporter.constants.CommonConstants.API_KEY_STRING;
-import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
 
 /**
  * JSON request body builder for Testomat.io API operations.
@@ -50,7 +50,8 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
     }
 
     @Override
-    public String buildBatchTestReportBody(List<TestResult> results, String apiKey) throws JsonProcessingException {
+    public String buildBatchTestReportBody(List<TestResult> results, String apiKey)
+            throws JsonProcessingException {
         List<Map<String, Object>> testsArray = new ArrayList<>();
         for (TestResult result : results) {
             testsArray.add(buildTestResultMap(result));
@@ -98,5 +99,6 @@ public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
         }
 
         return body;
+
     }
 }

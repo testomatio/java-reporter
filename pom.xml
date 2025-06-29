@@ -57,6 +57,7 @@
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
+        <checkstyle-maven-plugin.version>3.6.0</checkstyle-maven-plugin.version>
 
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
@@ -163,7 +164,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- WireMock для мокування HTTP сервера -->
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock-jre8</artifactId>
@@ -257,42 +257,63 @@
                     <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <linkXRef>false</linkXRef>
+                    <sourceDirectories>
+                        <sourceDirectory>src/main/java</sourceDirectory>
+                    </sourceDirectories>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
-<!--    keep this segment commented 'cause the env.GPG_PASSPHRASE is being resolved only on release execution-->
-<!--    <profiles>-->
-<!--        <profile>-->
-<!--            <id>release</id>-->
-<!--            <build>-->
-<!--                <plugins>-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.apache.maven.plugins</groupId>-->
-<!--                        <artifactId>maven-gpg-plugin</artifactId>-->
-<!--                        <version>${maven-gpg-plugin.version}</version>-->
-<!--                        <configuration>-->
-<!--                            <executable>gpg</executable>-->
-<!--                            <passphrase>${env.GPG_PASSPHRASE}</passphrase>  -->
-<!--                            <gpgArguments>-->
-<!--                                <arg>&#45;&#45;pinentry-mode</arg>-->
-<!--                                <arg>loopback</arg>-->
-<!--                                <arg>&#45;&#45;batch</arg>-->
-<!--                                <arg>&#45;&#45;yes</arg>-->
-<!--                            </gpgArguments>-->
-<!--                        </configuration>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <id>sign-artifacts</id>-->
-<!--                                <phase>verify</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>sign</goal>-->
-<!--                                </goals>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                    </plugin>-->
-<!--                </plugins>-->
-<!--            </build>-->
-<!--        </profile>-->
-<!--    </profiles>-->
+    <!--    keep this segment commented 'cause the env.GPG_PASSPHRASE is being resolved only on release execution-->
+    <!--    <profiles>-->
+    <!--        <profile>-->
+    <!--            <id>release</id>-->
+    <!--            <build>-->
+    <!--                <plugins>-->
+    <!--                    <plugin>-->
+    <!--                        <groupId>org.apache.maven.plugins</groupId>-->
+    <!--                        <artifactId>maven-gpg-plugin</artifactId>-->
+    <!--                        <version>${maven-gpg-plugin.version}</version>-->
+    <!--                        <configuration>-->
+    <!--                            <executable>gpg</executable>-->
+    <!--                            <passphrase>${env.GPG_PASSPHRASE}</passphrase>  -->
+    <!--                            <gpgArguments>-->
+    <!--                                <arg>&#45;&#45;pinentry-mode</arg>-->
+    <!--                                <arg>loopback</arg>-->
+    <!--                                <arg>&#45;&#45;batch</arg>-->
+    <!--                                <arg>&#45;&#45;yes</arg>-->
+    <!--                            </gpgArguments>-->
+    <!--                        </configuration>-->
+    <!--                        <executions>-->
+    <!--                            <execution>-->
+    <!--                                <id>sign-artifacts</id>-->
+    <!--                                <phase>verify</phase>-->
+    <!--                                <goals>-->
+    <!--                                    <goal>sign</goal>-->
+    <!--                                </goals>-->
+    <!--                            </execution>-->
+    <!--                        </executions>-->
+    <!--                    </plugin>-->
+    <!--                </plugins>-->
+    <!--            </build>-->
+    <!--        </profile>-->
+    <!--    </profiles>-->
 </project>

@@ -1,9 +1,13 @@
 package com.testomatio.reporter.core.batch;
 
+import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_FLUSH_INTERVAL_PROPERTY_NAME;
+import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_SIZE_PROPERTY_NAME;
+import static com.testomatio.reporter.logger.LoggerConfig.getLogger;
+
 import com.testomatio.reporter.client.ApiInterface;
 import com.testomatio.reporter.model.TestResult;
-import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
-import com.testomatio.reporter.property_config.interf.PropertyProvider;
+import com.testomatio.reporter.propertyconfig.impl.PropertyProviderFactoryImpl;
+import com.testomatio.reporter.propertyconfig.interf.PropertyProvider;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +16,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
-
-import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_FLUSH_INTERVAL_PROPERTY_NAME;
-import static com.testomatio.reporter.constants.PropertyNameConstants.BATCH_SIZE_PROPERTY_NAME;
-import static com.testomatio.reporter.logger.LoggerConfig.getLogger;
 
 /**
  * Manages batch processing of test results for efficient API reporting.
@@ -72,7 +72,8 @@ public class BatchResultManager {
         scheduler.scheduleAtFixedRate(this::flushPendingResults,
                 flushInterval, flushInterval, TimeUnit.SECONDS);
 
-        LOGGER.finer(String.format("BatchResultManager initialized: batchSize= %d, flushInterval= %d sec",
+        LOGGER.finer(String.format(
+                "BatchResultManager initialized: batchSize= %d, flushInterval= %d sec",
                 batchSize, flushInterval));
     }
 
@@ -85,7 +86,8 @@ public class BatchResultManager {
      */
     public synchronized void addResult(TestResult result) {
         if (!isActive.get()) {
-            LOGGER.warning("BatchResultManager is not active, skipping result: " + result.getTitle());
+            LOGGER.warning("BatchResultManager is not active, skipping result: "
+                    + result.getTitle());
             return;
         }
 
@@ -164,7 +166,8 @@ public class BatchResultManager {
         }
 
         if (!failedResults.isEmpty()) {
-            LOGGER.warning(String.format("BatchResultManager shutdown with %d failed results", failedResults.size()));
+            LOGGER.warning(String.format("BatchResultManager shutdown with %d failed results",
+                    failedResults.size()));
         }
 
         LOGGER.fine("BatchResultManager shutdown completed");
