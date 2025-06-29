@@ -12,7 +12,7 @@ public abstract class AbstractTestResultConstructor implements ResultConstructor
     private static final Logger LOGGER = LoggerUtils.getLogger(AbstractTestResultConstructor.class);
 
     @Override
-    public final TestResult constructTestRunResult(TestCaseResultWrapper holder) {
+    public final TestResult constructTestRunResult(TestResultWrapper holder) {
         validateHolder(holder);
 
         boolean hasCustomMessage = hasCustomMessage(holder);
@@ -29,7 +29,7 @@ public abstract class AbstractTestResultConstructor implements ResultConstructor
      * @param holder wrapper to validate
      * @throws IllegalArgumentException if wrapper or metadata is null
      */
-    protected final void validateHolder(TestCaseResultWrapper holder) {
+    protected final void validateHolder(TestResultWrapper holder) {
         if (holder == null) {
             throw new IllegalArgumentException("TestRunResultWrapper cannot be null");
         }
@@ -41,14 +41,17 @@ public abstract class AbstractTestResultConstructor implements ResultConstructor
     /**
      * Logs test result creation details for debugging.
      */
-    protected final void logTestResultCreation(TestCaseResultWrapper holder, boolean hasCustomMessage) {
+    protected final void logTestResultCreation(TestResultWrapper holder,
+                                               boolean hasCustomMessage) {
         var testTitle = holder.getTestMetadata().getTitle();
         if (hasCustomMessage) {
             var message = getCustomMessage(holder);
-            LOGGER.finer("Creating " + getFrameworkName() + " test result with custom message: "
+            LOGGER.finer("Creating " + getFrameworkName()
+                    + " test result with custom message: "
                     + testTitle + " - " + message);
         } else {
-            LOGGER.finer("Creating " + getFrameworkName() + " test result with exception details for: "
+            LOGGER.finer("Creating " + getFrameworkName()
+                    + " test result with exception details for: "
                     + testTitle);
         }
     }
@@ -59,7 +62,7 @@ public abstract class AbstractTestResultConstructor implements ResultConstructor
      * @param holder wrapper containing test metadata
      * @return test result builder with basic fields populated
      */
-    protected final TestResult.Builder buildTestResult(TestCaseResultWrapper holder) {
+    protected final TestResult.Builder buildTestResult(TestResultWrapper holder) {
         var metadata = holder.getTestMetadata();
         return TestResult.builder()
                 .withTitle(metadata.getTitle())
@@ -85,22 +88,22 @@ public abstract class AbstractTestResultConstructor implements ResultConstructor
     /**
      * Checks if wrapper contains custom message for the test result.
      */
-    protected abstract boolean hasCustomMessage(TestCaseResultWrapper holder);
+    protected abstract boolean hasCustomMessage(TestResultWrapper holder);
 
     /**
      * Extracts custom message from wrapper.
      */
-    protected abstract String getCustomMessage(TestCaseResultWrapper holder);
+    protected abstract String getCustomMessage(TestResultWrapper holder);
 
     /**
      * Creates test result using custom message from wrapper.
      */
-    protected abstract TestResult createWithCustomMessage(TestCaseResultWrapper holder);
+    protected abstract TestResult createWithCustomMessage(TestResultWrapper holder);
 
     /**
      * Creates test result using exception details from framework-specific data.
      */
-    protected abstract TestResult createWithExceptionDetails(TestCaseResultWrapper holder);
+    protected abstract TestResult createWithExceptionDetails(TestResultWrapper holder);
 
     /**
      * Returns name of the test framework for logging purposes.

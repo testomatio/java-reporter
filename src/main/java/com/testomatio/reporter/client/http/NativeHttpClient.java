@@ -1,6 +1,9 @@
 package com.testomatio.reporter.client.http;
 
-import com.testomatio.reporter.client.http.retryable.DefaultRetryRequestExecutor;
+import static com.testomatio.reporter.constants.CommonConstants.HTTP_TIMEOUT_SECONDS;
+import static com.testomatio.reporter.constants.CommonConstants.REQUEST_TIMEOUT_SECONDS;
+
+import com.testomatio.reporter.client.http.retryable.DefaultRetryableRequestExecutor;
 import com.testomatio.reporter.client.http.retryable.RetryableRequestExecutor;
 import com.testomatio.reporter.client.http.util.JsonResponseMapperUtil;
 import com.testomatio.reporter.exception.RequestExecutionFailedException;
@@ -15,15 +18,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.logging.Logger;
 
-import static com.testomatio.reporter.constants.CommonConstants.HTTP_TIMEOUT_SECONDS;
-import static com.testomatio.reporter.constants.CommonConstants.REQUEST_TIMEOUT_SECONDS;
-
 public class NativeHttpClient implements CustomHttpClient {
     private static final String HEADER_CONTENT_NAME = "Content-Type";
     private static final String HEADER_CONTENT_VALUE = "application/json";
     private static final Logger LOGGER = LoggerUtils.getLogger(NativeHttpClient.class);
+
     private final HttpClient client;
-    private final RetryableRequestExecutor retryableRequestExecutor = new DefaultRetryRequestExecutor();
+    private final RetryableRequestExecutor retryableRequestExecutor =
+            new DefaultRetryableRequestExecutor();
 
     public NativeHttpClient() {
         LOGGER.fine("Initializing Native HttpClient");

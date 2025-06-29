@@ -1,7 +1,5 @@
 package com.testomatio.reporter.constants;
 
-import okhttp3.MediaType;
-
 public class CommonConstants {
     public static final String REPORTER_VERSION = "0.1.0";
 
@@ -15,5 +13,4 @@ public class CommonConstants {
     public static final int HTTP_TIMEOUT_SECONDS = 10;
     public static final int REQUEST_TIMEOUT_SECONDS = 30;
     public static final int MAX_RESPONSE_BODY_SIZE = 300;
-
 }

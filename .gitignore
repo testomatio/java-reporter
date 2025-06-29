@@ -11,6 +11,7 @@ target/
 !**/src/test/**/target/
 
 **/logs/
+**/log/
 
 **/testomatio.properties
 

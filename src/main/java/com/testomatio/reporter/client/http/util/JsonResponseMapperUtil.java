@@ -1,11 +1,11 @@
 package com.testomatio.reporter.client.http.util;
 
+import static com.testomatio.reporter.constants.CommonConstants.MAX_RESPONSE_BODY_SIZE;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.testomatio.reporter.exception.ResponseJsonParsingException;
-
-import static com.testomatio.reporter.constants.CommonConstants.MAX_RESPONSE_BODY_SIZE;
 
 public class JsonResponseMapperUtil {
     private static final ObjectMapper objectMapper = new ObjectMapper()
@@ -19,10 +19,12 @@ public class JsonResponseMapperUtil {
         try {
             return objectMapper.readValue(responseBody, responseType);
         } catch (JsonProcessingException | IllegalArgumentException e) {
-            String truncatedBody = responseBody != null && responseBody.length() > MAX_RESPONSE_BODY_SIZE
+            String truncatedBody = responseBody != null
+                    && responseBody.length() > MAX_RESPONSE_BODY_SIZE
                     ? responseBody.substring(0, MAX_RESPONSE_BODY_SIZE) + "..."
                     : responseBody;
-            throw new ResponseJsonParsingException("Failed to parse response json: " + truncatedBody);
+            throw new ResponseJsonParsingException(
+                    "Failed to parse response json: " + truncatedBody);
         }
     }
 }

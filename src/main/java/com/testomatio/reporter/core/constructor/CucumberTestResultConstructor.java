@@ -10,17 +10,17 @@ import java.util.Optional;
 public class CucumberTestResultConstructor extends AbstractTestResultConstructor {
 
     @Override
-    protected boolean hasCustomMessage(TestCaseResultWrapper holder) {
+    protected boolean hasCustomMessage(TestResultWrapper holder) {
         return false;
     }
 
     @Override
-    protected String getCustomMessage(TestCaseResultWrapper holder) {
+    protected String getCustomMessage(TestResultWrapper holder) {
         return null;
     }
 
     @Override
-    protected TestResult createWithCustomMessage(TestCaseResultWrapper holder) {
+    protected TestResult createWithCustomMessage(TestResultWrapper holder) {
         return buildTestResult(holder)
                 .withMessage(null)
                 .withStack(null)
@@ -28,7 +28,7 @@ public class CucumberTestResultConstructor extends AbstractTestResultConstructor
     }
 
     @Override
-    protected TestResult createWithExceptionDetails(TestCaseResultWrapper holder) {
+    protected TestResult createWithExceptionDetails(TestResultWrapper holder) {
         var exceptionDetails = extractExceptionDetails(holder);
 
         return buildTestResult(holder)
@@ -45,7 +45,7 @@ public class CucumberTestResultConstructor extends AbstractTestResultConstructor
     /**
      * Extracts exception details from Cucumber test case finished event.
      */
-    private ExceptionDetails extractExceptionDetails(TestCaseResultWrapper holder) {
+    private ExceptionDetails extractExceptionDetails(TestResultWrapper holder) {
         return Optional.ofNullable(holder.getCucumberTestCaseFinished())
                 .map(event -> event.getResult().getError())
                 .filter(this::isReportableException)
