@@ -4,7 +4,7 @@ import static com.testomatio.reporter.constants.PropertyNameConstants.API_KEY_PR
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 import com.testomatio.reporter.client.http.NativeHttpClient;
-import com.testomatio.reporter.client.request.TestomatRequestBodyBuilder;
+import com.testomatio.reporter.client.request.DefaultRequestBodyBuilder;
 import com.testomatio.reporter.exception.ApiKeyNotFoundException;
 import com.testomatio.reporter.propertyconfig.impl.PropertyProviderFactoryImpl;
 import com.testomatio.reporter.propertyconfig.interf.PropertyProvider;
@@ -43,8 +43,8 @@ public class TestomatClientFactory implements ClientFactory {
             throw new ApiKeyNotFoundException(
                     "Api key should be set in properties file or in JVM params.");
         }
-        return new TestomatApiClient(apiKey,
+        return new DefaultApiClient(apiKey,
                 new NativeHttpClient(),
-                new TestomatRequestBodyBuilder());
+                new DefaultRequestBodyBuilder());
     }
 }

@@ -5,9 +5,10 @@ import static com.testomatio.reporter.constants.CommonConstants.RESPONSE_UID_KEY
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 import com.testomatio.reporter.client.http.CustomHttpClient;
+import com.testomatio.reporter.client.request.DefaultRequestBodyBuilder;
 import com.testomatio.reporter.client.request.RequestBodyBuilder;
-import com.testomatio.reporter.client.request.TestomatRequestBodyBuilder;
-import com.testomatio.reporter.client.util.RequestUrlBuilderUtil;
+import com.testomatio.reporter.client.urlbuilder.NativeUrlBuilder;
+import com.testomatio.reporter.client.urlbuilder.UrlBuilder;
 import com.testomatio.reporter.exception.FinishReportFailedException;
 import com.testomatio.reporter.exception.ReportingFailedException;
 import com.testomatio.reporter.exception.RunCreationFailedException;
@@ -21,8 +22,10 @@ import java.util.logging.Logger;
  * HTTP client for Testomat.io API operations.
  * Handles test run lifecycle and result reporting with proper error handling.
  */
-public class TestomatApiClient implements ApiInterface {
-    private static final Logger LOGGER = getLogger(TestomatApiClient.class);
+public class DefaultApiClient implements ApiInterface {
+    private static final Logger LOGGER = getLogger(DefaultApiClient.class);
+
+    private final UrlBuilder urlBuilder = new NativeUrlBuilder();
 
     private final String apiKey;
     private final CustomHttpClient client;
@@ -35,9 +38,9 @@ public class TestomatApiClient implements ApiInterface {
      * @param client             HTTP client implementation
      * @param requestBodyBuilder request body builder for JSON payloads
      */
-    public TestomatApiClient(String apiKey,
-                             CustomHttpClient client,
-                             TestomatRequestBodyBuilder requestBodyBuilder) {
+    public DefaultApiClient(String apiKey,
+                            CustomHttpClient client,
+                            DefaultRequestBodyBuilder requestBodyBuilder) {
         this.apiKey = apiKey;
         this.client = client;
         this.requestBodyBuilder = requestBodyBuilder;
@@ -47,7 +50,7 @@ public class TestomatApiClient implements ApiInterface {
     public String createRun(String title) throws IOException {
         LOGGER.fine("Creating run with title: " + title);
 
-        String url = RequestUrlBuilderUtil.buildCreateRunUrl();
+        String url = urlBuilder.buildCreateRunUrl();
         LOGGER.finer("Creating run with request url: " + url);
         String requestBody = requestBodyBuilder.buildCreateRunBody(title);
 
@@ -69,7 +72,7 @@ public class TestomatApiClient implements ApiInterface {
         try {
             LOGGER.fine("Reporting test result for testId: " + result.getTestId());
 
-            String url = RequestUrlBuilderUtil.buildReportTestUrl(uid);
+            String url = urlBuilder.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildSingleTestReportBody(result);
             LOGGER.finest("-----" + requestBody);
             client.post(url, requestBody, null);
@@ -89,7 +92,7 @@ public class TestomatApiClient implements ApiInterface {
 
             LOGGER.finer("Reporting batch of %d test results" + results.size());
 
-            String url = RequestUrlBuilderUtil.buildReportTestUrl(uid);
+            String url = urlBuilder.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildBatchTestReportBody(results, apiKey);
 
             client.post(url, requestBody, null);
@@ -104,7 +107,7 @@ public class TestomatApiClient implements ApiInterface {
         try {
             LOGGER.fine("Finishing test run with uid: " + uid);
 
-            String url = RequestUrlBuilderUtil.buildFinishTestRunUrl(uid);
+            String url = urlBuilder.buildFinishTestRunUrl(uid);
             String requestBody = requestBodyBuilder.buildFinishRunBody(duration);
 
             client.put(url, requestBody, null);

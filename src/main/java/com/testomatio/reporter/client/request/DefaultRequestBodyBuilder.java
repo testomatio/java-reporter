@@ -19,15 +19,15 @@ import lombok.EqualsAndHashCode;
  * Handles serialization and structure creation for all API endpoints.
  */
 @EqualsAndHashCode
-public class TestomatRequestBodyBuilder implements RequestBodyBuilder {
+public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
 
     private final ObjectMapper objectMapper;
 
-    public TestomatRequestBodyBuilder() {
+    public DefaultRequestBodyBuilder() {
         this.objectMapper = new ObjectMapper();
     }
 
-    public TestomatRequestBodyBuilder(ObjectMapper objectMapper) {
+    public DefaultRequestBodyBuilder(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
