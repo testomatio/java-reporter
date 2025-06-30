@@ -2,7 +2,7 @@ package com.testomatio.reporter.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.testomatio.reporter.client.request.TestomatRequestBodyBuilder;
+import com.testomatio.reporter.client.request.DefaultRequestBodyBuilder;
 import com.testomatio.reporter.exception.FailedToCreateRunBodyException;
 import com.testomatio.reporter.model.TestResult;
 import java.util.Arrays;
@@ -25,9 +25,9 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class TestomatRequestBodyBuilderTest {
+class DefaultRequestBodyBuilderTest {
 
-    private TestomatRequestBodyBuilder requestBodyBuilder;
+    private DefaultRequestBodyBuilder requestBodyBuilder;
     private AutoCloseable mockitoCloseable;
 
     @Mock
@@ -65,7 +65,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void constructor_WithDefaultObjectMapper_ShouldCreateInstance() {
         // When
-        TestomatRequestBodyBuilder builder = new TestomatRequestBodyBuilder();
+        DefaultRequestBodyBuilder builder = new DefaultRequestBodyBuilder();
 
         // Then
         assertNotNull(builder);
@@ -74,7 +74,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void constructor_WithCustomObjectMapper_ShouldCreateInstance() {
         // When
-        TestomatRequestBodyBuilder builder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        DefaultRequestBodyBuilder builder = new DefaultRequestBodyBuilder(mockObjectMapper);
 
         // Then
         assertNotNull(builder);
@@ -83,7 +83,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildCreateRunBody_WithValidTitle_ShouldReturnJsonString() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        requestBodyBuilder = new DefaultRequestBodyBuilder(mockObjectMapper);
         when(mockObjectMapper.writeValueAsString(any())).thenReturn(EXPECTED_JSON);
 
         // When
@@ -96,7 +96,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildCreateRunBody_WithRealObjectMapper_ShouldReturnValidJson() {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder();
+        requestBodyBuilder = new DefaultRequestBodyBuilder();
 
         // When
         String result = requestBodyBuilder.buildCreateRunBody(TEST_TITLE);
@@ -110,7 +110,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildCreateRunBody_WithJsonProcessingException_ShouldThrowFailedToCreateRunBodyException() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        requestBodyBuilder = new DefaultRequestBodyBuilder(mockObjectMapper);
         when(mockObjectMapper.writeValueAsString(any()))
                 .thenThrow(new JsonProcessingException("Serialization failed") {
                 });
@@ -123,7 +123,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildSingleTestReportBody_WithValidResult_ShouldReturnJsonString() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        requestBodyBuilder = new DefaultRequestBodyBuilder(mockObjectMapper);
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
         when(mockObjectMapper.writeValueAsString(any())).thenReturn(EXPECTED_JSON);
 
@@ -137,7 +137,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildSingleTestReportBody_WithRealObjectMapper_ShouldReturnValidJson() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder();
+        requestBodyBuilder = new DefaultRequestBodyBuilder();
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
 
         // When
@@ -154,7 +154,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildSingleTestReportBody_WithNullOptionalFields_ShouldReturnValidJson() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder();
+        requestBodyBuilder = new DefaultRequestBodyBuilder();
         setupTestRunResult(testRunResult1, "Test 1", null, "Suite 1", "test.java", "PASSED", null, null);
 
         // When
@@ -170,7 +170,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildSingleTestReportBody_WithJsonProcessingException_ShouldThrowException() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        requestBodyBuilder = new DefaultRequestBodyBuilder(mockObjectMapper);
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
         when(mockObjectMapper.writeValueAsString(any()))
                 .thenThrow(new JsonProcessingException("Serialization failed") {
@@ -184,7 +184,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildBatchTestReportBody_WithValidResults_ShouldReturnJsonString() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        requestBodyBuilder = new DefaultRequestBodyBuilder(mockObjectMapper);
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
         setupTestRunResult(testRunResult2, "Test 2", "T456", "Suite 2", "test2.java", "FAILED", "Error", "stack2");
         List<TestResult> results = Arrays.asList(testRunResult1, testRunResult2);
@@ -200,7 +200,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildBatchTestReportBody_WithRealObjectMapper_ShouldReturnValidJson() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder();
+        requestBodyBuilder = new DefaultRequestBodyBuilder();
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
         setupTestRunResult(testRunResult2, "Test 2", "T456", "Suite 2", "test2.java", "FAILED", "Error", "stack2");
         List<TestResult> results = Arrays.asList(testRunResult1, testRunResult2);
@@ -221,7 +221,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildBatchTestReportBody_WithSingleResult_ShouldReturnValidJson() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder();
+        requestBodyBuilder = new DefaultRequestBodyBuilder();
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
         List<TestResult> results = Collections.singletonList(testRunResult1);
 
@@ -238,7 +238,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildBatchTestReportBody_WithEmptyResults_ShouldReturnValidJson() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder();
+        requestBodyBuilder = new DefaultRequestBodyBuilder();
         List<TestResult> results = Collections.emptyList();
 
         // When
@@ -254,7 +254,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildBatchTestReportBody_WithJsonProcessingException_ShouldThrowException() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        requestBodyBuilder = new DefaultRequestBodyBuilder(mockObjectMapper);
         setupTestRunResult(testRunResult1, "Test 1", "T123", "Suite 1", "test.java", "PASSED", "Success", "stack");
         List<TestResult> results = Collections.singletonList(testRunResult1);
         when(mockObjectMapper.writeValueAsString(any()))
@@ -269,7 +269,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildFinishRunBody_WithValidDuration_ShouldReturnJsonString() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        requestBodyBuilder = new DefaultRequestBodyBuilder(mockObjectMapper);
         float duration = 123.45f;
         when(mockObjectMapper.writeValueAsString(any())).thenReturn(EXPECTED_JSON);
 
@@ -283,7 +283,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildFinishRunBody_WithRealObjectMapper_ShouldReturnValidJson() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder();
+        requestBodyBuilder = new DefaultRequestBodyBuilder();
         float duration = 123.45f;
 
         // When
@@ -300,7 +300,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildFinishRunBody_WithZeroDuration_ShouldReturnValidJson() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder();
+        requestBodyBuilder = new DefaultRequestBodyBuilder();
         float duration = 0.0f;
 
         // When
@@ -315,7 +315,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildFinishRunBody_WithNegativeDuration_ShouldReturnValidJson() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder();
+        requestBodyBuilder = new DefaultRequestBodyBuilder();
         float duration = -1.0f;
 
         // When
@@ -330,7 +330,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void buildFinishRunBody_WithJsonProcessingException_ShouldThrowException() throws Exception {
         // Given
-        requestBodyBuilder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        requestBodyBuilder = new DefaultRequestBodyBuilder(mockObjectMapper);
         float duration = 123.45f;
         when(mockObjectMapper.writeValueAsString(any()))
                 .thenThrow(new JsonProcessingException("Serialization failed") {
@@ -344,8 +344,8 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void equals_WithSameObjectMapper_ShouldReturnTrue() {
         // Given
-        TestomatRequestBodyBuilder builder1 = new TestomatRequestBodyBuilder(mockObjectMapper);
-        TestomatRequestBodyBuilder builder2 = new TestomatRequestBodyBuilder(mockObjectMapper);
+        DefaultRequestBodyBuilder builder1 = new DefaultRequestBodyBuilder(mockObjectMapper);
+        DefaultRequestBodyBuilder builder2 = new DefaultRequestBodyBuilder(mockObjectMapper);
 
         // When & Then
         assertEquals(builder1, builder2);
@@ -355,8 +355,8 @@ class TestomatRequestBodyBuilderTest {
     void equals_WithDifferentObjectMapper_ShouldReturnFalse() {
         // Given
         ObjectMapper anotherMapper = new ObjectMapper();
-        TestomatRequestBodyBuilder builder1 = new TestomatRequestBodyBuilder(mockObjectMapper);
-        TestomatRequestBodyBuilder builder2 = new TestomatRequestBodyBuilder(anotherMapper);
+        DefaultRequestBodyBuilder builder1 = new DefaultRequestBodyBuilder(mockObjectMapper);
+        DefaultRequestBodyBuilder builder2 = new DefaultRequestBodyBuilder(anotherMapper);
 
         // When & Then
         assertNotNull(builder1);
@@ -366,7 +366,7 @@ class TestomatRequestBodyBuilderTest {
     @Test
     void hashCode_ShouldNotThrowException() {
         // Given
-        TestomatRequestBodyBuilder builder = new TestomatRequestBodyBuilder(mockObjectMapper);
+        DefaultRequestBodyBuilder builder = new DefaultRequestBodyBuilder(mockObjectMapper);
 
         // When & Then - should not throw exception
         int hashCode = builder.hashCode();
