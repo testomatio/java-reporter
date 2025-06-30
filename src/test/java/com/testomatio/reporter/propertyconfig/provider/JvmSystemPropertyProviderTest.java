@@ -15,28 +15,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class JvmSystemPropertyProviderTest {
     private static final String KEY = "test.key";
     private static final String ENV_STYLE_KEY = "TEST_KEY";
-    private static final String CONVERTED_ENV_KEY = "test_key"; // ENV_STYLE_KEY converted to system property format
+    private static final String CONVERTED_ENV_KEY = "test_key";
 
     private JvmSystemPropertyProvider provider;
-    private Set<String> propertiesToClean; // Відстежуємо всі властивості які встановлюємо
-    private AbstractPropertyProvider originalNextProvider; // Зберігаємо оригінальний next provider
+    private Set<String> propertiesToClean;
+    private AbstractPropertyProvider originalNextProvider;
 
     @BeforeEach
     public void setUp() {
         provider = new JvmSystemPropertyProvider();
         propertiesToClean = new HashSet<>();
-        originalNextProvider = getNextProvider(provider); // Зберігаємо оригінальний стан
+        originalNextProvider = getNextProvider(provider);
     }
 
     @AfterEach
     public void tearDown() {
-        // Очищуємо всі встановлені властивості
         for (String property : propertiesToClean) {
             System.clearProperty(property);
         }
         propertiesToClean.clear();
 
-        // Відновлюємо оригінальний next provider
         setNextProvider(provider, originalNextProvider);
     }
 
@@ -51,7 +49,6 @@ public class JvmSystemPropertyProviderTest {
 
     @Test
     public void testGetExistingPropertyWithEnvStyleKey() {
-        // fromEnvStyle перетворює TEST_KEY на "test.key" (припущення)
         setSystemProperty(KEY, "value2");
 
         String result = provider.getProperty(ENV_STYLE_KEY);
@@ -63,11 +60,11 @@ public class JvmSystemPropertyProviderTest {
     public void testDoesNotDelegateWhenPropertyExists() {
         setSystemProperty(KEY, "value3");
 
-        // Встановлюємо next provider який кидає виключення при виклику
         AbstractPropertyProvider throwingProvider = new AbstractPropertyProvider() {
             @Override
             public String getProperty(String key) {
-                throw new AssertionError("Next provider should not be called when property exists");
+                throw new AssertionError(
+                        "Next provider should not be called when property exists");
             }
         };
         setNextProvider(provider, throwingProvider);
@@ -79,7 +76,6 @@ public class JvmSystemPropertyProviderTest {
 
     @Test
     public void testDelegateToNextWhenNotFound() {
-        // Встановлюємо next provider який повертає відоме значення
         AbstractPropertyProvider delegateProvider = new AbstractPropertyProvider() {
             @Override
             public String getProperty(String key) {
@@ -95,7 +91,6 @@ public class JvmSystemPropertyProviderTest {
 
     @Test
     public void testThrowsWhenNotFoundAndNoNext() {
-        // Переконуємося що next provider null
         setNextProvider(provider, null);
 
         assertThrows(PropertyNotFoundException.class,
@@ -104,7 +99,6 @@ public class JvmSystemPropertyProviderTest {
 
     @Test
     public void testMultiplePropertiesIsolation() {
-        // Тест для перевірки ізольованості між різними властивостями
         setSystemProperty("prop1", "value1");
         setSystemProperty("prop2", "value2");
 
@@ -115,19 +109,11 @@ public class JvmSystemPropertyProviderTest {
                 () -> provider.getProperty("prop3"));
     }
 
-    // Допоміжні методи для безпечної роботи з системними властивостями та reflection
-
-    /**
-     * Встановлює системну властивість і додає її до списку для очищення
-     */
     private void setSystemProperty(String key, String value) {
         System.setProperty(key, value);
         propertiesToClean.add(key);
     }
 
-    /**
-     * Безпечно отримує next provider через reflection
-     */
     private AbstractPropertyProvider getNextProvider(AbstractPropertyProvider provider) {
         try {
             Field nextField = AbstractPropertyProvider.class.getDeclaredField("next");
@@ -138,9 +124,6 @@ public class JvmSystemPropertyProviderTest {
         }
     }
 
-    /**
-     * Безпечно встановлює next provider через reflection
-     */
     private void setNextProvider(AbstractPropertyProvider provider, AbstractPropertyProvider next) {
         try {
             Field nextField = AbstractPropertyProvider.class.getDeclaredField("next");
