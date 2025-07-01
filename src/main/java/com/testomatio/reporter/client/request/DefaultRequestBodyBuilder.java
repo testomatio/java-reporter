@@ -12,13 +12,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.EqualsAndHashCode;
 
 /**
  * JSON request body builder for Testomat.io API operations.
  * Handles serialization and structure creation for all API endpoints.
  */
-@EqualsAndHashCode
 public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
 
     private final ObjectMapper objectMapper;

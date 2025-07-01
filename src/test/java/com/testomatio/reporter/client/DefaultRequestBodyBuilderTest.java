@@ -342,28 +342,6 @@ class DefaultRequestBodyBuilderTest {
     }
 
     @Test
-    void equals_WithSameObjectMapper_ShouldReturnTrue() {
-        // Given
-        DefaultRequestBodyBuilder builder1 = new DefaultRequestBodyBuilder(mockObjectMapper);
-        DefaultRequestBodyBuilder builder2 = new DefaultRequestBodyBuilder(mockObjectMapper);
-
-        // When & Then
-        assertEquals(builder1, builder2);
-    }
-
-    @Test
-    void equals_WithDifferentObjectMapper_ShouldReturnFalse() {
-        // Given
-        ObjectMapper anotherMapper = new ObjectMapper();
-        DefaultRequestBodyBuilder builder1 = new DefaultRequestBodyBuilder(mockObjectMapper);
-        DefaultRequestBodyBuilder builder2 = new DefaultRequestBodyBuilder(anotherMapper);
-
-        // When & Then
-        assertNotNull(builder1);
-        assertNotNull(builder2);
-    }
-
-    @Test
     void hashCode_ShouldNotThrowException() {
         // Given
         DefaultRequestBodyBuilder builder = new DefaultRequestBodyBuilder(mockObjectMapper);

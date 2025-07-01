@@ -1,23 +1,16 @@
 package com.testomatio.reporter.core.extractor.wrapper;
 
 import java.lang.reflect.Method;
-import lombok.Getter;
 import org.testng.ITestResult;
 
 /**
  * Wrapper for TestNG tests supporting both regular and disabled test contexts.
  */
-@Getter
 public class TestNgTestWrapper {
     private final ITestResult testResult;
     private final Method method;
     private final Class<?> testClass;
     private final TestType testType;
-
-    public enum TestType {
-        REGULAR_TEST,
-        DISABLED_TEST
-    }
 
     /**
      * Creates wrapper for regular executed test.
@@ -37,6 +30,24 @@ public class TestNgTestWrapper {
         this.method = method;
         this.testClass = testClass;
         this.testType = TestType.DISABLED_TEST;
+    }
+
+    public enum TestType {
+        REGULAR_TEST,
+        DISABLED_TEST
+
+    }
+
+    public ITestResult getTestResult() {
+        return testResult;
+    }
+
+    public Method getMethod() {
+        return method;
+    }
+
+    public Class<?> getTestClass() {
+        return testClass;
     }
 
     public boolean isRegularTest() {

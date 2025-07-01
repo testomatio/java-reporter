@@ -1,11 +1,8 @@
 package com.testomatio.reporter.core.constructor;
 
-import lombok.Getter;
-
 /**
  * Immutable container for exception message and stack trace.
  */
-@Getter
 public final class ExceptionDetails {
     private final String message;
     private final String stack;
@@ -20,5 +17,13 @@ public final class ExceptionDetails {
      */
     static ExceptionDetails empty() {
         return new ExceptionDetails(null, null);
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getStack() {
+        return stack;
     }
 }

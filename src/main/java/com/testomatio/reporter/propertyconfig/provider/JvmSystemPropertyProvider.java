@@ -5,15 +5,17 @@ import com.testomatio.reporter.logger.LoggerUtils;
 import com.testomatio.reporter.propertyconfig.interf.AbstractPropertyProvider;
 import com.testomatio.reporter.propertyconfig.util.StringUtils;
 import java.util.logging.Logger;
-import lombok.Data;
 
 /**
  * Property provider that reads from JVM system properties.
  * First priority in the property resolution chain.
  */
-@Data
+
 public class JvmSystemPropertyProvider extends AbstractPropertyProvider {
     private static final Logger LOGGER = LoggerUtils.getLogger(JvmSystemPropertyProvider.class);
+
+    public JvmSystemPropertyProvider() {
+    }
 
     @Override
     public String getProperty(String key) {

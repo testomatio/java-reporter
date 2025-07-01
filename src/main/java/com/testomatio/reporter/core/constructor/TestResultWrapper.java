@@ -2,7 +2,6 @@ package com.testomatio.reporter.core.constructor;
 
 import com.testomatio.reporter.model.TestMetadata;
 import io.cucumber.plugin.event.TestCaseFinished;
-import lombok.Getter;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testng.ITestResult;
 
@@ -10,7 +9,6 @@ import org.testng.ITestResult;
  * Wrapper containing test metadata and framework-specific data for result construction.
  * Uses builder pattern to accommodate different test frameworks.
  */
-@Getter
 public class TestResultWrapper {
     private final TestMetadata testMetadata;
     private final String status;
@@ -87,5 +85,33 @@ public class TestResultWrapper {
         public TestResultWrapper build() {
             return new TestResultWrapper(this);
         }
+    }
+
+    public TestMetadata getTestMetadata() {
+        return testMetadata;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public ITestResult getTestResult() {
+        return testResult;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public TestCaseFinished getCucumberTestCaseFinished() {
+        return cucumberTestCaseFinished;
+    }
+
+    public ExtensionContext getJunitExtensionContext() {
+        return junitExtensionContext;
     }
 }
