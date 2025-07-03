@@ -4,20 +4,17 @@ import static com.testomatio.reporter.constants.PropertyNameConstants.PROPERTIES
 
 import com.testomatio.reporter.exception.NoPropertyFileException;
 import com.testomatio.reporter.exception.PropertyNotFoundException;
-import com.testomatio.reporter.logger.LoggerUtils;
 import com.testomatio.reporter.propertyconfig.interf.AbstractPropertyProvider;
 import com.testomatio.reporter.propertyconfig.util.StringUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 /**
  * Property provider that reads from properties file on classpath.
  * Third priority in the property resolution chain.
  */
 public class FilePropertyProvider extends AbstractPropertyProvider {
-    private static final Logger LOGGER = LoggerUtils.getLogger(FilePropertyProvider.class);
 
     @Override
     public String getProperty(String key) {
@@ -47,7 +44,6 @@ public class FilePropertyProvider extends AbstractPropertyProvider {
                 properties.load(input);
             }
         } catch (IOException e) {
-            LOGGER.severe("Error loading properties file: " + e.getMessage());
             throw new NoPropertyFileException("Error loading properties file: " + e.getMessage());
         }
         return properties;

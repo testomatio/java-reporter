@@ -10,6 +10,7 @@ import com.testomatio.reporter.core.constructor.TestResultWrapper;
 import com.testomatio.reporter.core.extractor.MetaDataExtractor;
 import com.testomatio.reporter.core.extractor.TestNgMetaDataExtractor;
 import com.testomatio.reporter.core.extractor.wrapper.TestNgTestWrapper;
+import com.testomatio.reporter.exception.TestClassNotFoundException;
 import com.testomatio.reporter.model.TestMetadata;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -122,7 +123,6 @@ public class TestNgListener extends AbstractTestFrameworkListener
         processedTests.add(methodKey);
         TestNgTestWrapper wrapper = TestNgTestWrapper.forRegularTest(result);
         TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);
-        logMetadataCreation(metadata);
         reportTestResult(metadata, status, result);
     }
 
@@ -150,13 +150,12 @@ public class TestNgListener extends AbstractTestFrameworkListener
                             if (!processedTests.contains(methodKey)) {
                                 processedTests.add(methodKey);
                                 reportDisabledTest(method, testClass);
-                                LOGGER.finer("Reported disabled test: " + methodKey);
                             }
                         }
                     }
                 } catch (ClassNotFoundException e) {
-                    LOGGER.severe(String.format("Could not load test class for: %s \n %s \n %s",
-                            xmlClass.getName(), e.getCause(), e.getMessage()));
+                    throw new TestClassNotFoundException("Failed to load test class: "
+                            + xmlClass.getName(), e);
                 }
             });
         });
@@ -171,10 +170,6 @@ public class TestNgListener extends AbstractTestFrameworkListener
     private void reportDisabledTest(Method method, Class<?> testClass) {
         TestNgTestWrapper wrapper = TestNgTestWrapper.forDisabledTest(method, testClass);
         TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);
-        logMetadataCreation(metadata);
         reportTestResult(metadata, SKIPPED, DISABLED_MESSAGE, null);
-
-        LOGGER.fine(String.format("Disabled test reported: %s - %s",
-                metadata.getTitle(), DISABLED_MESSAGE));
     }
 }

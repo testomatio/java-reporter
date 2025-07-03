@@ -79,7 +79,6 @@ public class JunitExtension extends AbstractTestFrameworkListener
      */
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-        LOGGER.finer("Starting test run: " + extensionContext.getDisplayName());
     }
 
     /**
@@ -91,8 +90,7 @@ public class JunitExtension extends AbstractTestFrameworkListener
     @Override
     public void testDisabled(ExtensionContext context, Optional<String> reason) {
         String reasonText = reason.orElse("Test disabled");
-        LOGGER.fine(String.format("Test disabled: %s - Reason: %s",
-                context.getDisplayName(), reasonText));
+
         handleTestResult(context, SKIPPED, reasonText);
     }
 
@@ -103,7 +101,6 @@ public class JunitExtension extends AbstractTestFrameworkListener
      */
     @Override
     public void testSuccessful(ExtensionContext context) {
-        LOGGER.fine("Test passed successfully: " + context.getDisplayName());
         handleTestResult(context, PASSED, null);
     }
 
@@ -115,8 +112,7 @@ public class JunitExtension extends AbstractTestFrameworkListener
      */
     @Override
     public void testAborted(ExtensionContext context, Throwable cause) {
-        LOGGER.fine(String.format("Test aborted: %s - Cause: %s",
-                context.getDisplayName(), cause.getMessage()));
+
         handleTestResult(context, SKIPPED, cause.getMessage());
     }
 
@@ -128,8 +124,7 @@ public class JunitExtension extends AbstractTestFrameworkListener
      */
     @Override
     public void testFailed(ExtensionContext context, Throwable cause) {
-        LOGGER.fine(String.format("Test failed: %s - Cause: %s",
-                context.getDisplayName(), cause.getMessage()));
+
         handleTestResult(context, FAILED, cause.getMessage());
     }
 
@@ -143,7 +138,6 @@ public class JunitExtension extends AbstractTestFrameworkListener
     private void handleTestResult(ExtensionContext context, String status, String message) {
         Optional<Method> testMethodOptional = context.getTestMethod();
         if (testMethodOptional.isEmpty()) {
-            LOGGER.warning("No test method found in context, cannot report test result");
             return;
         }
 
@@ -151,7 +145,6 @@ public class JunitExtension extends AbstractTestFrameworkListener
         JUnitTestWrapper testWrapper = new JUnitTestWrapper(testMethod, context);
         TestMetadata metadata = junitMetaDataExtractor.extractTestMetadata(testWrapper);
 
-        logMetadataCreation(metadata);
         reportTestResult(metadata, status, message, context);
     }
 }

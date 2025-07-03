@@ -3,7 +3,6 @@ package com.testomatio.reporter.core.frameworkintegration;
 import static com.testomatio.reporter.constants.CommonConstants.FAILED;
 import static com.testomatio.reporter.constants.CommonConstants.PASSED;
 import static com.testomatio.reporter.constants.CommonConstants.SKIPPED;
-import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
 import com.testomatio.reporter.core.GlobalRunManager;
 import com.testomatio.reporter.core.constructor.ResultConstructor;
@@ -11,21 +10,18 @@ import com.testomatio.reporter.core.constructor.TestResultWrapper;
 import com.testomatio.reporter.exception.ReportTestResultException;
 import com.testomatio.reporter.model.TestMetadata;
 import com.testomatio.reporter.model.TestResult;
-import java.util.logging.Logger;
 
 /**
  * Base class for test framework integrations with Testomat.io.
  * Provides common functionality for JUnit, TestNG, and Cucumber listeners.
  */
 public abstract class AbstractTestFrameworkListener {
-    protected static final Logger LOGGER = getLogger(AbstractTestFrameworkListener.class);
 
     protected final GlobalRunManager runManager = GlobalRunManager.getInstance();
     protected final ResultConstructor resultConstructor;
 
     protected AbstractTestFrameworkListener() {
         this.resultConstructor = createResultConstructor();
-        LOGGER.fine(getClass().getSimpleName() + " initialized");
     }
 
     /**
@@ -41,9 +37,7 @@ public abstract class AbstractTestFrameworkListener {
      * @param suiteName name of the starting test suite
      */
     protected void handleSuiteStarted(String suiteName) {
-        LOGGER.fine("Starting test suite: " + suiteName);
         runManager.incrementSuiteCounter();
-        LOGGER.finer("Active suite count incremented for: " + suiteName);
     }
 
     /**
@@ -52,9 +46,7 @@ public abstract class AbstractTestFrameworkListener {
      * @param suiteName name of the finished test suite
      */
     protected void handleSuiteFinished(String suiteName) {
-        LOGGER.fine("Finishing test suite: " + suiteName);
         runManager.decrementSuiteCounter();
-        LOGGER.finer("Active suite count decremented for: " + suiteName);
     }
 
     /**
@@ -83,7 +75,6 @@ public abstract class AbstractTestFrameworkListener {
                                     String message,
                                     Object frameworkSpecificData) {
         if (!runManager.isActive()) {
-            LOGGER.fine("Test run manager is not active, skipping test result reporting");
             return;
         }
 
@@ -92,7 +83,6 @@ public abstract class AbstractTestFrameworkListener {
             logAndReportResult(result, status, message);
         } catch (Exception e) {
             String testName = metadata != null ? metadata.getTitle() : "Unknown Test";
-            LOGGER.severe("Failed to report test result for: " + testName);
             throw new ReportTestResultException("Failed to report test result for: " + testName, e);
         }
     }
@@ -158,29 +148,6 @@ public abstract class AbstractTestFrameworkListener {
     protected void logAndReportResult(TestResult result, String status, String message) {
         logTestReporting(result, status, message);
         runManager.reportTest(result);
-        logTestReported(result);
-        LOGGER.finer("Test result reported successfully: " + result.getTitle());
-    }
-
-    /**
-     * Logs test metadata creation details for debugging.
-     *
-     * @param metadata test metadata to log
-     */
-    protected void logMetadataCreation(TestMetadata metadata) {
-        LOGGER.finer("Created TestMetadata: Title="
-                + metadata.getTitle()
-                + ", TestId="
-                + metadata.getTestId()
-                + ", Suite="
-                + metadata.getSuiteTitle()
-                + ", File="
-                + metadata.getFile());
-
-        if (metadata.getTestId() != null) {
-            LOGGER.fine("TestMetadata contains TestId: " + metadata.getTestId()
-                    + " which will be sent as test_id field");
-        }
     }
 
     /**
@@ -198,7 +165,6 @@ public abstract class AbstractTestFrameworkListener {
             if (message != null) {
                 logMessage += " | Message: " + message;
             }
-            LOGGER.info(logMessage);
         } else {
             String logMessage = "Reporting test without TestId: "
                     + result.getTitle()
@@ -207,20 +173,6 @@ public abstract class AbstractTestFrameworkListener {
             if (message != null) {
                 logMessage += " | Message: " + message;
             }
-            LOGGER.fine(logMessage);
-        }
-    }
-
-    /**
-     * Logs successful test result submission.
-     *
-     * @param result submitted test case result
-     */
-    protected void logTestReported(TestResult result) {
-        if (result.getTestId() != null) {
-            LOGGER.fine("✓ TestId "
-                    + result.getTestId()
-                    + " successfully sent to Testomat.io as test_id field");
         }
     }
 
