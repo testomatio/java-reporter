@@ -38,7 +38,6 @@ public class CucumberListener
      */
     public CucumberListener(String out) {
         super();
-        LOGGER.fine("CucumberListener initialized with output: " + out);
     }
 
     @Override
@@ -91,7 +90,6 @@ public class CucumberListener
      * @param event test case started event
      */
     private void handleTestCaseStarted(TestCaseStarted event) {
-        LOGGER.finer("Starting test case: " + event.getTestCase().getName());
     }
 
     /**
@@ -103,7 +101,6 @@ public class CucumberListener
         String status = determineTestStatus(event);
         TestMetadata metadata = metaDataExtractor.extractTestMetadata(event.getTestCase());
 
-        logMetadataCreation(metadata);
         reportTestResult(metadata, status, event);
     }
 
