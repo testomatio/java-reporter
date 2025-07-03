@@ -223,8 +223,6 @@ class JunitExtensionTest {
         // Act
         junitExtension.beforeEach(extensionContext);
         
-        // Assert
-        //        verify(extensionContext).getDisplayName();
     }
 
     @Test
