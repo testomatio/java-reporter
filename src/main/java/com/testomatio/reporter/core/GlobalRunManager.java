@@ -1,5 +1,6 @@
 package com.testomatio.reporter.core;
 
+import static com.testomatio.reporter.constants.PropertyNameConstants.CUSTOM_RUN_UID_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
 
@@ -9,6 +10,7 @@ import com.testomatio.reporter.client.TestomatClientFactory;
 import com.testomatio.reporter.core.batch.BatchResultManager;
 import com.testomatio.reporter.model.TestResult;
 import com.testomatio.reporter.propertyconfig.impl.PropertyProviderFactoryImpl;
+import com.testomatio.reporter.propertyconfig.interf.PropertyProvider;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,6 +26,8 @@ public class GlobalRunManager {
     private static final GlobalRunManager INSTANCE = new GlobalRunManager();
     private static final Logger LOGGER = getLogger(GlobalRunManager.class);
 
+    private final PropertyProvider provider
+            = PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
     private final AtomicInteger activeSuites = new AtomicInteger(0);
     private final AtomicReference<String> runUid = new AtomicReference<>();
     private final AtomicReference<BatchResultManager> batchManager = new AtomicReference<>();
@@ -56,7 +60,7 @@ public class GlobalRunManager {
         try {
             ClientFactory clientFactory = TestomatClientFactory.getClientFactory();
             ApiInterface client = clientFactory.createClient();
-            String uid = client.createRun(getRunTitle());
+            String uid = getRunUid(client);
 
             apiClient.set(client);
             runUid.set(uid);
@@ -157,5 +161,15 @@ public class GlobalRunManager {
     private String getRunTitle() {
         return PropertyProviderFactoryImpl.getPropertyProviderFactory()
                 .getPropertyProvider().getProperty(RUN_TITLE_PROPERTY_NAME);
+    }
+
+    private String getRunUid(ApiInterface client) throws IOException {
+        String customUid;
+        try {
+            customUid = provider.getProperty(CUSTOM_RUN_UID_PROPERTY_NAME);
+        } catch (Exception e) {
+            customUid = client.createRun(getRunTitle());
+        }
+        return customUid;
     }
 }
