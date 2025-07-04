@@ -4,6 +4,7 @@ import static com.testomatio.reporter.constants.CommonConstants.API_KEY_STRING;
 import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
 import static com.testomatio.reporter.constants.PropertyNameConstants.CREATE_TEST_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.ENVIRONMENT_PROPERTY_NAME;
+import static com.testomatio.reporter.constants.PropertyNameConstants.PUBLISH_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.RUN_GROUP_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.SHARED_RUN_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.SHARED_TIMEOUT_PROPERTY_NAME;
@@ -19,8 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * JSON request body builder for Testomat.io API operations.
@@ -30,27 +29,29 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
     private final String createParam;
     private final String sharedRun;
     private final String sharedRunTimeout;
+    private final String publishParam;
 
     private final ObjectMapper objectMapper;
     private final PropertyProvider provider =
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
 
     public DefaultRequestBodyBuilder() {
-        this.sharedRun = getSharedRun();
-        this.sharedRunTimeout = getSharedRunTimeout();
+        this.publishParam = getPublishProperty();
+        this.sharedRun = getSharedRunProperty();
+        this.sharedRunTimeout = getSharedRunTimeoutProperty();
         this.objectMapper = new ObjectMapper();
-        this.createParam = getCreateParam();
+        this.createParam = getCreateParamProperty();
     }
 
     @Override
     public String buildCreateRunBody(String title) {
         try {
             Map<String, String> body = new HashMap<>(Map.of(ApiRequestFields.TITLE, title));
-            String customEnv = getCustomEnvironment();
+            String customEnv = getCustomEnvironmentProperty();
             if (customEnv != null) {
                 body.put(ApiRequestFields.ENVIRONMENT, customEnv);
             }
-            String groupTitle = getRunGroupTitle();
+            String groupTitle = getRunGroupTitleProperty();
             if (groupTitle != null) {
                 body.put(ApiRequestFields.GROUP_TITLE, groupTitle);
             }
@@ -62,8 +63,10 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
                 body.put("shared_run_timeout", sharedRunTimeout);
 
             }
-            Logger.getLogger(DefaultRequestBodyBuilder.class.getName())
-                    .log(Level.INFO, body.toString());
+            if (this.publishParam != null) {
+                body.put("access_event", "publish");
+            }
+
             return objectMapper.writeValueAsString(body);
 
         } catch (JsonProcessingException e) {
@@ -126,11 +129,10 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
         if (this.createParam != null) {
             body.put("create", "true");
         }
-
         return body;
     }
 
-    private String getCustomEnvironment() {
+    private String getCustomEnvironmentProperty() {
         try {
             return provider.getProperty(ENVIRONMENT_PROPERTY_NAME);
         } catch (Exception e) {
@@ -138,7 +140,7 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
         }
     }
 
-    private String getRunGroupTitle() {
+    private String getRunGroupTitleProperty() {
         try {
             return provider.getProperty(RUN_GROUP_PROPERTY_NAME);
         } catch (Exception e) {
@@ -146,7 +148,7 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
         }
     }
 
-    private String getCreateParam() {
+    private String getCreateParamProperty() {
         try {
             return provider.getProperty(CREATE_TEST_PROPERTY_NAME);
         } catch (Exception e) {
@@ -154,7 +156,7 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
         }
     }
 
-    private String getSharedRun() {
+    private String getSharedRunProperty() {
         try {
             return provider.getProperty(SHARED_RUN_PROPERTY_NAME);
         } catch (Exception e) {
@@ -162,9 +164,17 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
         }
     }
 
-    private String getSharedRunTimeout() {
+    private String getSharedRunTimeoutProperty() {
         try {
             return provider.getProperty(SHARED_TIMEOUT_PROPERTY_NAME);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getPublishProperty() {
+        try {
+            return provider.getProperty(PUBLISH_PROPERTY_NAME);
         } catch (Exception e) {
             return null;
         }

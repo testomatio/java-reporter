@@ -83,7 +83,7 @@ public class GlobalRunManager {
     private void registerShutdownHook() {
         if (shutdownHookRegistered.compareAndSet(false, true)) {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                LOGGER.info("JVM is shutting down, finalizing test run...");
+                LOGGER.finer("JVM is shutting down, finalizing test run...");
                 finalizeRun();
             }, "TestRunFinalizer"));
             LOGGER.finer("Shutdown hook registered for test run finalization");
@@ -146,7 +146,7 @@ public class GlobalRunManager {
             try {
                 float duration = (System.currentTimeMillis() - startTime) / 1000.0f;
                 client.finishTestRun(uid, duration);
-                LOGGER.info("Test run finished: " + uid);
+                LOGGER.fine("Test run finished: " + uid);
             } catch (IOException e) {
                 LOGGER.severe("Failed to finish test run" + e.getCause());
             }
