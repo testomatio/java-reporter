@@ -5,6 +5,8 @@ import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
 import static com.testomatio.reporter.constants.PropertyNameConstants.CREATE_TEST_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.ENVIRONMENT_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.RUN_GROUP_PROPERTY_NAME;
+import static com.testomatio.reporter.constants.PropertyNameConstants.SHARED_RUN_PROPERTY_NAME;
+import static com.testomatio.reporter.constants.PropertyNameConstants.SHARED_TIMEOUT_PROPERTY_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * JSON request body builder for Testomat.io API operations.
@@ -24,18 +28,17 @@ import java.util.Map;
  */
 public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
     private final String createParam;
+    private final String sharedRun;
+    private final String sharedRunTimeout;
 
     private final ObjectMapper objectMapper;
     private final PropertyProvider provider =
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
 
     public DefaultRequestBodyBuilder() {
+        this.sharedRun = getSharedRun();
+        this.sharedRunTimeout = getSharedRunTimeout();
         this.objectMapper = new ObjectMapper();
-        this.createParam = getCreateParam();
-    }
-
-    public DefaultRequestBodyBuilder(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
         this.createParam = getCreateParam();
     }
 
@@ -51,6 +54,16 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
             if (groupTitle != null) {
                 body.put(ApiRequestFields.GROUP_TITLE, groupTitle);
             }
+            if (this.sharedRun != null) {
+                body.put("shared_run", sharedRun);
+
+            }
+            if (this.sharedRunTimeout != null) {
+                body.put("shared_run_timeout", sharedRunTimeout);
+
+            }
+            Logger.getLogger(DefaultRequestBodyBuilder.class.getName())
+                    .log(Level.INFO, body.toString());
             return objectMapper.writeValueAsString(body);
 
         } catch (JsonProcessingException e) {
@@ -111,7 +124,7 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
             body.put(ApiRequestFields.STACK, result.getStack());
         }
         if (this.createParam != null) {
-            body.put("create","true");
+            body.put("create", "true");
         }
 
         return body;
@@ -136,6 +149,22 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
     private String getCreateParam() {
         try {
             return provider.getProperty(CREATE_TEST_PROPERTY_NAME);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getSharedRun() {
+        try {
+            return provider.getProperty(SHARED_RUN_PROPERTY_NAME);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getSharedRunTimeout() {
+        try {
+            return provider.getProperty(SHARED_TIMEOUT_PROPERTY_NAME);
         } catch (Exception e) {
             return null;
         }
