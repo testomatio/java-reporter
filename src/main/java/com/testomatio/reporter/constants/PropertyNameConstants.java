@@ -10,6 +10,7 @@ public class PropertyNameConstants {
             "testomatio.batch.flush.interval";
     public static final String CUSTOM_RUN_UID_PROPERTY_NAME = "testomatio.run.id";
     public static final String ENVIRONMENT_PROPERTY_NAME = "testomatio.env";
+    public static final String RUN_GROUP_PROPERTY_NAME = "testomatio.run.group";
 
     public static final String TESTOMATIO_LOG_LEVEL = "testomatio.log.level";
     public static final String TESTOMATIO_LOG_FILE = "testomatio.log.file";
