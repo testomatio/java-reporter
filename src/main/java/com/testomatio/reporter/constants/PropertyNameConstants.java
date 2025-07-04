@@ -6,6 +6,7 @@ public class PropertyNameConstants {
     public static final String CREATE_TEST_PROPERTY_NAME = "testomatio.create";
     public static final String HOST_URL_PROPERTY_NAME = "testomatio.url";
     public static final String ENVIRONMENT_PROPERTY_NAME = "testomatio.env";
+    public static final String PUBLISH_PROPERTY_NAME = "testomatio.publish";
 
     public static final String RUN_TITLE_PROPERTY_NAME = "testomatio.run.title";
     public static final String CUSTOM_RUN_UID_PROPERTY_NAME = "testomatio.run.id";
