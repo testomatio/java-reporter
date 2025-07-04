@@ -1,14 +1,5 @@
 package com.testomatio.reporter.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class TestResult {
     private String title;
     private String testId;
@@ -17,6 +8,21 @@ public class TestResult {
     private String status;
     private String message;
     private String stack;
+
+    public TestResult() {
+    }
+
+    public TestResult(String title, String testId,
+                      String suiteTitle, String file,
+                      String status, String message, String stack) {
+        this.title = title;
+        this.testId = testId;
+        this.suiteTitle = suiteTitle;
+        this.file = file;
+        this.status = status;
+        this.message = message;
+        this.stack = stack;
+    }
 
     public static class Builder {
         private String title;
@@ -71,4 +77,59 @@ public class TestResult {
         return new Builder();
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getTestId() {
+        return testId;
+    }
+
+    public void setTestId(String testId) {
+        this.testId = testId;
+    }
+
+    public String getSuiteTitle() {
+        return suiteTitle;
+    }
+
+    public void setSuiteTitle(String suiteTitle) {
+        this.suiteTitle = suiteTitle;
+    }
+
+    public String getFile() {
+        return file;
+    }
+
+    public void setFile(String file) {
+        this.file = file;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getStack() {
+        return stack;
+    }
+
+    public void setStack(String stack) {
+        this.stack = stack;
+    }
 }

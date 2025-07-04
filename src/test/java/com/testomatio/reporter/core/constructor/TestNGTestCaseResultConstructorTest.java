@@ -13,10 +13,10 @@ import static org.mockito.Mockito.*;
 
 class TestNGTestCaseResultConstructorTest {
 
-    private TestNGTestResultConstructor constructor;
+    private TestNgTestResultConstructor constructor;
 
     @Mock
-    private TestCaseResultWrapper holder;
+    private TestResultWrapper holder;
 
     @Mock
     private TestMetadata testMetadata;
@@ -27,7 +27,7 @@ class TestNGTestCaseResultConstructorTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        constructor = new TestNGTestResultConstructor();
+        constructor = new TestNgTestResultConstructor();
         
         when(testMetadata.getTitle()).thenReturn("TestNG Test Title");
         when(testMetadata.getTestId()).thenReturn("testng-test-id-123");

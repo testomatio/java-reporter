@@ -15,10 +15,10 @@ public interface ResultConstructor {
     /**
      * Constructs test case result from wrapper containing framework-specific data.
      *
-     * @param testCaseResultWrapper wrapper containing test metadata and framework data
+     * @param testResultWrapper wrapper containing test metadata and framework data
      * @return constructed test case result
      */
-    TestResult constructTestRunResult(TestCaseResultWrapper testCaseResultWrapper);
+    TestResult constructTestRunResult(TestResultWrapper testResultWrapper);
 
     /**
      * Converts throwable to stack trace string.
@@ -39,8 +39,8 @@ public interface ResultConstructor {
      * @param holder wrapper containing JUnit extension context
      * @return stack trace string or null if no reportable exception
      */
-    default String extractStackTrace(TestCaseResultWrapper holder) {
-        return Optional.ofNullable(holder.getJUnitExtensionContext())
+    default String extractStackTrace(TestResultWrapper holder) {
+        return Optional.ofNullable(holder.getJunitExtensionContext())
                 .flatMap(ExtensionContext::getExecutionException)
                 .filter(this::isReportableException)
                 .map(this::getStackTrace)

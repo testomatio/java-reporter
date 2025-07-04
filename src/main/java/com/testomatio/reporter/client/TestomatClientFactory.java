@@ -1,12 +1,14 @@
 package com.testomatio.reporter.client;
 
-import com.testomatio.reporter.exception.ApiKeyNotFoundException;
-import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
-import com.testomatio.reporter.property_config.interf.PropertyProvider;
-import java.util.logging.Logger;
-
 import static com.testomatio.reporter.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 import static com.testomatio.reporter.logger.LoggerUtils.getLogger;
+
+import com.testomatio.reporter.client.http.NativeHttpClient;
+import com.testomatio.reporter.client.request.DefaultRequestBodyBuilder;
+import com.testomatio.reporter.exception.ApiKeyNotFoundException;
+import com.testomatio.reporter.propertyconfig.impl.PropertyProviderFactoryImpl;
+import com.testomatio.reporter.propertyconfig.interf.PropertyProvider;
+import java.util.logging.Logger;
 
 /**
  * Singleton factory for creating Testomat.io API client instances.
@@ -38,9 +40,11 @@ public class TestomatClientFactory implements ClientFactory {
         String apiKey = propertyProvider.getProperty(API_KEY_PROPERTY_NAME);
         if (apiKey == null) {
             LOGGER.severe("Api key environment variable not set.");
-            throw new ApiKeyNotFoundException("Api key should be set in properties file or in JVM params.");
+            throw new ApiKeyNotFoundException(
+                    "Api key should be set in properties file or in JVM params.");
         }
-
-        return new TestomatApiClient(apiKey);
+        return new DefaultApiClient(apiKey,
+                new NativeHttpClient(),
+                new DefaultRequestBodyBuilder());
     }
 }

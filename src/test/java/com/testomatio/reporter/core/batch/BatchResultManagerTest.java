@@ -2,9 +2,9 @@ package com.testomatio.reporter.core.batch;
 
 import com.testomatio.reporter.client.ApiInterface;
 import com.testomatio.reporter.model.TestResult;
-import com.testomatio.reporter.property_config.impl.PropertyProviderFactoryImpl;
-import com.testomatio.reporter.property_config.interf.PropertyProvider;
-import com.testomatio.reporter.property_config.interf.PropertyProviderFactory;
+import com.testomatio.reporter.propertyconfig.impl.PropertyProviderFactoryImpl;
+import com.testomatio.reporter.propertyconfig.interf.PropertyProvider;
+import com.testomatio.reporter.propertyconfig.interf.PropertyProviderFactory;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
