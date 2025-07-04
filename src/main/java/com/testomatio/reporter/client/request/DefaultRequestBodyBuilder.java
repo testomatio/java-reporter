@@ -3,6 +3,7 @@ package com.testomatio.reporter.client.request;
 import static com.testomatio.reporter.constants.CommonConstants.API_KEY_STRING;
 import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
 import static com.testomatio.reporter.constants.PropertyNameConstants.ENVIRONMENT_PROPERTY_NAME;
+import static com.testomatio.reporter.constants.PropertyNameConstants.RUN_GROUP_PROPERTY_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +42,10 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
             String customEnv = getCustomEnvironment();
             if (customEnv != null) {
                 body.put(ApiRequestFields.ENVIRONMENT, customEnv);
+            }
+            String groupTitle = getRunGroupTitle();
+            if (groupTitle != null) {
+                body.put(ApiRequestFields.GROUP_TITLE, groupTitle);
             }
             return objectMapper.writeValueAsString(body);
 
@@ -111,6 +116,14 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
     private String getCustomEnvironment() {
         try {
             return provider.getProperty(ENVIRONMENT_PROPERTY_NAME);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getRunGroupTitle() {
+        try {
+            return provider.getProperty(RUN_GROUP_PROPERTY_NAME);
         } catch (Exception e) {
             return null;
         }

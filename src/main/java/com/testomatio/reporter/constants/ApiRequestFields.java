@@ -11,4 +11,5 @@ public class ApiRequestFields {
     public static final String MESSAGE = "message";
     public static final String STACK = "stack";
     public static final String ENVIRONMENT = "env";
+    public static final String GROUP_TITLE = "group_title";
 }
