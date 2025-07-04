@@ -60,7 +60,7 @@ public class GlobalRunManager {
         try {
             ClientFactory clientFactory = TestomatClientFactory.getClientFactory();
             ApiInterface client = clientFactory.createClient();
-            String uid = getRunUid(client);
+            String uid = getCustomRunUid(client);
 
             apiClient.set(client);
             runUid.set(uid);
@@ -163,7 +163,7 @@ public class GlobalRunManager {
                 .getPropertyProvider().getProperty(RUN_TITLE_PROPERTY_NAME);
     }
 
-    private String getRunUid(ApiInterface client) throws IOException {
+    private String getCustomRunUid(ApiInterface client) throws IOException {
         String customUid;
         try {
             customUid = provider.getProperty(CUSTOM_RUN_UID_PROPERTY_NAME);

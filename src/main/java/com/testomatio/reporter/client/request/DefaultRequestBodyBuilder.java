@@ -2,12 +2,15 @@ package com.testomatio.reporter.client.request;
 
 import static com.testomatio.reporter.constants.CommonConstants.API_KEY_STRING;
 import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
+import static com.testomatio.reporter.constants.PropertyNameConstants.ENVIRONMENT_PROPERTY_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.testomatio.reporter.constants.ApiRequestFields;
 import com.testomatio.reporter.exception.FailedToCreateRunBodyException;
 import com.testomatio.reporter.model.TestResult;
+import com.testomatio.reporter.propertyconfig.impl.PropertyProviderFactoryImpl;
+import com.testomatio.reporter.propertyconfig.interf.PropertyProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +23,8 @@ import java.util.Map;
 public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
 
     private final ObjectMapper objectMapper;
+    private final PropertyProvider provider =
+            PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
 
     public DefaultRequestBodyBuilder() {
         this.objectMapper = new ObjectMapper();
@@ -32,7 +37,11 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
     @Override
     public String buildCreateRunBody(String title) {
         try {
-            Map<String, String> body = Map.of(ApiRequestFields.TITLE, title);
+            Map<String, String> body = new HashMap<>(Map.of(ApiRequestFields.TITLE, title));
+            String customEnv = getCustomEnvironment();
+            if (customEnv != null) {
+                body.put(ApiRequestFields.ENVIRONMENT, customEnv);
+            }
             return objectMapper.writeValueAsString(body);
 
         } catch (JsonProcessingException e) {
@@ -97,6 +106,13 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
         }
 
         return body;
+    }
 
+    private String getCustomEnvironment() {
+        try {
+            return provider.getProperty(ENVIRONMENT_PROPERTY_NAME);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
