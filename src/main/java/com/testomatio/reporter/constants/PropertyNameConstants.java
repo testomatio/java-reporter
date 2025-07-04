@@ -19,4 +19,7 @@ public class PropertyNameConstants {
     public static final String TESTOMATIO_LOG_FILE = "testomatio.log.file";
     public static final String TESTOMATIO_LOG_CONSOLE = "testomatio.log.console";
 
+    public static final String SHARED_RUN_PROPERTY_NAME = "testomatio.shared.run";
+    public static final String SHARED_TIMEOUT_PROPERTY_NAME = "testomatio.shared.run.timeout";
+
 }
