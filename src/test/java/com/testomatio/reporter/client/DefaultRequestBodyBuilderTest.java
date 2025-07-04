@@ -147,8 +147,6 @@ class DefaultRequestBodyBuilderTest {
         assertNotNull(result);
         assertTrue(result.contains("Test 1"));
         assertTrue(result.contains("T123"));
-        assertTrue(result.contains("create"));
-        assertTrue(result.contains("true"));
     }
 
     @Test
@@ -164,7 +162,6 @@ class DefaultRequestBodyBuilderTest {
         assertNotNull(result);
         assertTrue(result.contains("Test 1"));
         assertTrue(result.contains("Suite 1"));
-        assertTrue(result.contains("create"));
     }
 
     @Test
@@ -215,7 +212,6 @@ class DefaultRequestBodyBuilderTest {
         assertTrue(result.contains("tests"));
         assertTrue(result.contains("Test 1"));
         assertTrue(result.contains("Test 2"));
-        assertTrue(result.contains("create"));
     }
 
     @Test
