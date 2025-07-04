@@ -2,6 +2,7 @@ package com.testomatio.reporter.client.request;
 
 import static com.testomatio.reporter.constants.CommonConstants.API_KEY_STRING;
 import static com.testomatio.reporter.constants.CommonConstants.TESTS_STRING;
+import static com.testomatio.reporter.constants.PropertyNameConstants.CREATE_TEST_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.ENVIRONMENT_PROPERTY_NAME;
 import static com.testomatio.reporter.constants.PropertyNameConstants.RUN_GROUP_PROPERTY_NAME;
 
@@ -22,6 +23,7 @@ import java.util.Map;
  * Handles serialization and structure creation for all API endpoints.
  */
 public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
+    private final String createParam;
 
     private final ObjectMapper objectMapper;
     private final PropertyProvider provider =
@@ -29,10 +31,12 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
 
     public DefaultRequestBodyBuilder() {
         this.objectMapper = new ObjectMapper();
+        this.createParam = getCreateParam();
     }
 
     public DefaultRequestBodyBuilder(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        this.createParam = getCreateParam();
     }
 
     @Override
@@ -57,7 +61,6 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
     @Override
     public String buildSingleTestReportBody(TestResult result) throws JsonProcessingException {
         Map<String, Object> body = buildTestResultMap(result);
-        body.put("create", "true");
         return objectMapper.writeValueAsString(body);
     }
 
@@ -72,7 +75,6 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put(API_KEY_STRING, apiKey);
         requestBody.put(TESTS_STRING, testsArray);
-        requestBody.put("create", "true");
 
         return objectMapper.writeValueAsString(requestBody);
     }
@@ -91,7 +93,6 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
      */
     private Map<String, Object> buildTestResultMap(TestResult result) {
         Map<String, Object> body = new HashMap<>();
-        body.put("create", "true");
         body.put(ApiRequestFields.TITLE, result.getTitle());
 
         if (result.getTestId() != null) {
@@ -109,6 +110,9 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
         if (result.getStack() != null) {
             body.put(ApiRequestFields.STACK, result.getStack());
         }
+        if (this.createParam != null) {
+            body.put("create","true");
+        }
 
         return body;
     }
@@ -124,6 +128,14 @@ public class DefaultRequestBodyBuilder implements RequestBodyBuilder {
     private String getRunGroupTitle() {
         try {
             return provider.getProperty(RUN_GROUP_PROPERTY_NAME);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getCreateParam() {
+        try {
+            return provider.getProperty(CREATE_TEST_PROPERTY_NAME);
         } catch (Exception e) {
             return null;
         }
