@@ -11,17 +11,17 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public class JUnitTestResultConstructor extends AbstractTestResultConstructor {
 
     @Override
-    protected boolean hasCustomMessage(TestCaseResultWrapper holder) {
+    protected boolean hasCustomMessage(TestResultWrapper holder) {
         return holder.getMessage() != null;
     }
 
     @Override
-    protected String getCustomMessage(TestCaseResultWrapper holder) {
+    protected String getCustomMessage(TestResultWrapper holder) {
         return holder.getMessage();
     }
 
     @Override
-    protected TestResult createWithCustomMessage(TestCaseResultWrapper holder) {
+    protected TestResult createWithCustomMessage(TestResultWrapper holder) {
         var stack = extractStackTrace(holder);
 
         return buildTestResult(holder)
@@ -31,7 +31,7 @@ public class JUnitTestResultConstructor extends AbstractTestResultConstructor {
     }
 
     @Override
-    protected TestResult createWithExceptionDetails(TestCaseResultWrapper holder) {
+    protected TestResult createWithExceptionDetails(TestResultWrapper holder) {
         var exceptionDetails = extractExceptionDetails(holder);
 
         return buildTestResult(holder)
@@ -48,8 +48,8 @@ public class JUnitTestResultConstructor extends AbstractTestResultConstructor {
     /**
      * Extracts exception details from JUnit extension context.
      */
-    private ExceptionDetails extractExceptionDetails(TestCaseResultWrapper holder) {
-        return Optional.ofNullable(holder.getJUnitExtensionContext())
+    private ExceptionDetails extractExceptionDetails(TestResultWrapper holder) {
+        return Optional.ofNullable(holder.getJunitExtensionContext())
                 .flatMap(ExtensionContext::getExecutionException)
                 .filter(this::isReportableException)
                 .map(this::createExceptionDetails)

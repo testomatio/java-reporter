@@ -35,7 +35,8 @@ public interface RequestBodyBuilder {
      * @return JSON request body
      * @throws JsonProcessingException if JSON serialization fails
      */
-    String buildBatchTestReportBody(List<TestResult> results, String apiKey) throws JsonProcessingException;
+    String buildBatchTestReportBody(List<TestResult> results, String apiKey)
+            throws JsonProcessingException;
 
     /**
      * Builds request body for finishing test run.

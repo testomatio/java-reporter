@@ -10,13 +10,12 @@ import java.util.function.Supplier;
  * Supports @title: tags for custom titles and @T[8chars] tags for test IDs.
  */
 public class CucumberMetaDataExtractor implements MetaDataExtractor<TestCase> {
-
-    private static final String TEST_ID_REGEX = "@T[a-z0-9]{8}";
-    private static final String TITLE_PREFIX = "@title:";
-
     protected static final String UNKNOWN_SUITE = "Unknown Suite";
     protected static final String UNKNOWN_FILE = "unknown";
     protected static final String UNKNOWN_TEST = "Unknown Test";
+
+    private static final String TEST_ID_REGEX = "@T[a-z0-9]{8}";
+    private static final String TITLE_PREFIX = "@title:";
 
     @Override
     public TestMetadata extractTestMetadata(TestCase testCase) {

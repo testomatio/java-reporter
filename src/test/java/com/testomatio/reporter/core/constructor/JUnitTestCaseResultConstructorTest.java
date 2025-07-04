@@ -20,7 +20,7 @@ class JUnitTestCaseResultConstructorTest {
     private JUnitTestResultConstructor constructor;
 
     @Mock
-    private TestCaseResultWrapper holder;
+    private TestResultWrapper holder;
 
     @Mock
     private TestMetadata testMetadata;
@@ -74,7 +74,7 @@ class JUnitTestCaseResultConstructorTest {
         setupBasicTestMetadata();
         when(holder.getMessage()).thenReturn(customMessage);
         when(holder.getStatus()).thenReturn("PASSED");
-        when(holder.getJUnitExtensionContext()).thenReturn(null);
+        when(holder.getJunitExtensionContext()).thenReturn(null);
 
         TestResult result = constructor.createWithCustomMessage(holder);
 
@@ -89,7 +89,7 @@ class JUnitTestCaseResultConstructorTest {
 
         setupBasicTestMetadata();
         when(holder.getStatus()).thenReturn("FAILED");
-        when(holder.getJUnitExtensionContext()).thenReturn(extensionContext);
+        when(holder.getJunitExtensionContext()).thenReturn(extensionContext);
         when(extensionContext.getExecutionException()).thenReturn(Optional.of(testException));
 
         TestResult result = constructor.createWithExceptionDetails(holder);
@@ -105,7 +105,7 @@ class JUnitTestCaseResultConstructorTest {
     void createWithExceptionDetails_shouldCreateResultWithEmptyDetails_whenNoException() {
         setupBasicTestMetadata();
         when(holder.getStatus()).thenReturn("PASSED");
-        when(holder.getJUnitExtensionContext()).thenReturn(extensionContext);
+        when(holder.getJunitExtensionContext()).thenReturn(extensionContext);
         when(extensionContext.getExecutionException()).thenReturn(Optional.empty());
 
         TestResult result = constructor.createWithExceptionDetails(holder);
@@ -119,7 +119,7 @@ class JUnitTestCaseResultConstructorTest {
     void createWithExceptionDetails_shouldCreateResultWithEmptyDetails_whenNoExtensionContext() {
         setupBasicTestMetadata();
         when(holder.getStatus()).thenReturn("PASSED");
-        when(holder.getJUnitExtensionContext()).thenReturn(null);
+        when(holder.getJunitExtensionContext()).thenReturn(null);
 
         TestResult result = constructor.createWithExceptionDetails(holder);
 
@@ -149,7 +149,7 @@ class JUnitTestCaseResultConstructorTest {
         setupBasicTestMetadata();
         when(holder.getMessage()).thenReturn(null);
         when(holder.getStatus()).thenReturn("FAILED");
-        when(holder.getJUnitExtensionContext()).thenReturn(extensionContext);
+        when(holder.getJunitExtensionContext()).thenReturn(extensionContext);
         when(extensionContext.getExecutionException()).thenReturn(Optional.of(testException));
 
         TestResult result = constructor.constructTestRunResult(holder);

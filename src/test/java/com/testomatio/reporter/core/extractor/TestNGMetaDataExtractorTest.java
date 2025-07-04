@@ -2,7 +2,7 @@ package com.testomatio.reporter.core.extractor;
 
 import com.testomatio.reporter.annotation.TestId;
 import com.testomatio.reporter.annotation.Title;
-import com.testomatio.reporter.core.extractor.wrapper.TestNGTestWrapper;
+import com.testomatio.reporter.core.extractor.wrapper.TestNgTestWrapper;
 import com.testomatio.reporter.model.TestMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.testng.ITestResult;
 import org.testng.ITestNGMethod;
-import org.testng.xml.XmlTest;
 
 import java.lang.reflect.Method;
 
@@ -23,7 +22,7 @@ import static org.mockito.Mockito.doReturn;
 class TestNGMetaDataExtractorTest {
 
     @Mock
-    private TestNGTestWrapper testWrapper;
+    private TestNgTestWrapper testWrapper;
 
     @Mock
     private ITestResult testResult;
@@ -34,11 +33,11 @@ class TestNGMetaDataExtractorTest {
     @Mock
     private org.testng.IClass testClass;
 
-    private TestNGMetaDataExtractor extractor;
+    private TestNgMetaDataExtractor extractor;
 
     @BeforeEach
     void setUp() {
-        extractor = new TestNGMetaDataExtractor();
+        extractor = new TestNgMetaDataExtractor();
     }
 
     @Test
