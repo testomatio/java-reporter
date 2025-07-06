@@ -55,14 +55,17 @@ public class DefaultApiClient implements ApiInterface {
         String requestBody = requestBodyBuilder.buildCreateRunBody(title);
 
         Map<String, String> responseBody = client.post(url, requestBody, Map.class);
+        LOGGER.fine(responseBody.toString());
 
         if (responseBody == null || !responseBody.containsKey(RESPONSE_UID_KEY)) {
             throw new RunCreationFailedException(
                     "Invalid response: missing UID in create test run response");
         }
+        LOGGER.info("[TESTOMATIO] Testomat.io java reporter version: "
+                + "[" + REPORTER_VERSION + "]");
+        LOGGER.info("[TESTOMATIO] Public url: " + responseBody.get("public_url"));
         LOGGER.fine("Created test run with UID: " + responseBody.get(RESPONSE_UID_KEY));
-        LOGGER.info("Testomat.io java reporter version: " + REPORTER_VERSION);
-        LOGGER.info("See run aggregation at: " + responseBody.get("url"));
+        LOGGER.info("[TESTOMATIO] See run aggregation at: " + responseBody.get("url"));
 
         return responseBody.get(RESPONSE_UID_KEY);
     }
