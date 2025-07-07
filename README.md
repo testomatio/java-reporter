@@ -1,103 +1,310 @@
-# Testomat.io Java Reporter
-### [0.1.0]
+# 🚀 Testomat.io Java Reporter
 
-## Overview
+> **Transform your test reporting experience!** Connect your Java tests directly to Testomat.io with minimal setup and maximum insight.
 
-This is the Java implementation of Testomat.io reporter.  
-The library is still being developed, so some Testomat.io functionality is to be implemented.
+## 🎯 Quick Start 
 
+1. **Add dependency** to your `pom.xml`:
+   ```xml
+   <dependency>
+       <groupId>io.testomat</groupId>
+       <artifactId>java-reporter</artifactId>
+       <version>0.x.0</version>
+   </dependency>
+   ```
 
-By this time next features are implemented:
- - Out-of-the-box support for JUnit5, TestNG, Cucumber test cases' lifecycle;
- - Autorun with minimal configuration;
- - Customizable test run parameters (see full list of JVM properties below);
- - Async tests handling;
- - Core classes (frameworks' extensions) overriding for user;
- - Test run grouping, merging;
+2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
 
-## Installation
+3. **Set your API key** as environment variable:
+   ```bash
+   export testomatio.api.key=tstmt_your_key_here
+   ```
 
-- Use **maven dependency** to integrate the library into your project:
-```xhtml
+4. **Run your tests** - that's it! 🎉
+
+---
+
+## 📖 What is this?
+
+This is the **official Java reporter** for [Testomat.io](https://testomat.io/) - a powerful test management platform. It automatically sends your test results to the cloud, giving you beautiful reports, analytics, and team collaboration features.
+
+### 🌟 Why you'll love it
+
+- ✅ **Zero configuration** for most projects
+- ✅ **Works with your existing tests** (JUnit, TestNG, Cucumber)
+- ✅ **Real-time reporting** as tests run
+- ✅ **Team collaboration** with shared reports
+- ✅ **Historical tracking** of test trends
+- ✅ **Public shareable reports** for stakeholders
+
+### 🔄 Current Status & Roadmap
+
+> 🚧 **Actively developed** - New features added regularly!
+
+#### ✅ Ready to Use (Current Features)
+- ✅ **Complete framework integration** - JUnit5, TestNG, and Cucumber support
+- ✅ **Automatic test discovery** - Zero-config test detection and reporting
+- ✅ **Customizable run parameters** - Full control over test run configuration
+- ✅ **Async test processing** - High-performance parallel result processing
+- ✅ **Advanced customization** - Override core classes for custom behavior
+- ✅ **Test run grouping** - Organize and merge related test runs
+- ✅ **Team collaboration** - Shared runs and real-time reporting
+
+#### 🚀 Coming Soon (Planned Features)
+- ⏳ **Test artifacts support** - Screenshots, logs, and file attachments
+- ⏳ **Step-by-step reporting** - Detailed test step execution tracking
+- ⏳ **Enhanced error reporting** - Stack traces and failure analysis
+- ⏳ **Integration hooks** - Pre/post test execution callbacks
+- ⏳ **Advanced filtering** - Custom test selection and reporting rules
+
+## 🖥️ System Requirements
+
+| What you need | Version | We tested with |
+|--------------|---------|----------------|
+| ☕ **Java** | 11 or newer | All versions |
+| 🧪 **JUnit** | 5.x | 5.9.2 |
+| 🧪 **TestNG** | 7.x | 7.7.1 |
+| 🥒 **Cucumber** | 7.x | 7.14.0 |
+
+## 📦 Installation
+
+### Maven
+```xml
 <dependency>
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter</artifactId>
     <version>0.x.0</version>
 </dependency>
 ```
-- Be aware that the dependency uses **jackson-databind 2.15.2**
 
-## Configuration
-
-### Without core classes overriding
-
-#### JUnit5
-
-- In your `src/main/resources` create the `junit-platform.properties` and add this line:
-```properties
-    junit.jupiter.extensions.autodetection.enabled = true
+### Gradle
+```gradle
+testImplementation 'io.testomat:java-reporter:0.x.0'
 ```
 
-#### TestNG and Cucumber will run the extensions from library themselves.
+> 💡 **Heads up!** This library includes `jackson-databind 2.15.2` - no conflicts expected with modern projects.
 
-### With core classes overriding(not recommended) or customization:
-**In addition to the previous configuration for JUnit (if you use it)**  
-**NOTE: If you use Cucumber with any other framework - configure only for Cucumber**
+---
 
-The core classes in the library that are responsible for the tests lifecycles are totally customizable and replaceable.  
-Core classes: **CucumberListener**, **TestNgListener**, **JunitListener**. 
+## ⚡ Setup Guide
 
-You can customize them to add any additional
-logic based on the tests behavior (like external API calls, etc.)  
-by copying to your project or 
-extend the one you need and override the methods in the way you want.
+> **Choose your adventure!** Most people should start with **Simple Setup** 👇
 
+### 🎯 Simple Setup (Recommended for 99% of users)
 
+This gets you running in under 2 minutes with zero custom code.
 
-- In your `src/main/resources` create the directories `META-INF/services` and add particular file related to your test 
-framework:
+#### 🧪 For JUnit 5 Projects
 
-#### JUnit5:
-- Filename:
+**Step 1:** Create file `src/main/resources/junit-platform.properties`
+
+**Step 2:** Add this single line:
 ```properties
-    org.junit.jupiter.api.extension.Extension
-```
-#### TestNG
-- Filename:
-```properties
-    org.testng.ITestNGListener io.cucumber.plugin.Plugin
+junit.jupiter.extensions.autodetection.enabled = true
 ```
 
-#### Cucumber
-- Filename:
-```properties
-    io.cucumber.plugin.Plugin
+**Step 3:** Run your tests with API key:
+```bash
+mvn test -Dtestomatio.api.key=tstmt_your_key_here
 ```
 
-#### Content to put into the created file:
-```properties
-    your.extension.file.path (path from source root without .java extension)  
-    for example com.testomatio.reporter.core.frameworkintegration.CucumberListener
+**That's it!** ✨ Your tests now report to Testomat.io automatically.
+
+#### 🥒 For Cucumber Projects
+
+**Step 1:** Add our listener to your test runner:
+
+```java
+@RunWith(Cucumber.class)
+@CucumberOptions(
+        features = "src/test/resources/features",
+        glue = {"steps"},
+        plugin = {
+                "pretty",
+                "json:target/cucumber-reports/",
+                "html:target/cucumber-reports/",
+                "com.testomatio.reporter.core.frameworkintegration.CucumberListener"  // 👈 Add this line
+        }
+)
+public class TestRunner {
+}
 ```
 
-## Usage
-In order to report your tests to the Testomat.io api you will need to provide the project API KEY  
-(starts with "tstmt_") and you might want to change the run title. All other properties have default values.  
-
-The list of available properties by this time (with default value if it has):
-```properties
-testomatio.api.key = your project api key. Mandatory.
-testomatio.batch.size= test batch size default and minimum = 5
-testomatio.batch.flush.interval= batch flush interval default and minimum = 5
-testomatio.url= default value = https://app.testomat.io/
-testomatio.run.title= default value = default_run_title
-
-testomatio.run.id = add current run test results to some that already exists
-testomatio.env = the environment name
-testomatio.run.group = group name if you group your runs
-testomatio.create = the test that are not yet registered in the run will be created and registered to the current run
-testomatio.shared.run = shared run name
-testomatio.shared.run.timeout = shared run timeout
-testomatio.publish = 1 if you want to get public url to your test run result
+**Step 2:** Run with your API key:
+```bash
+mvn test -Dtestomatio.api.key=tstmt_your_key_here
 ```
 
+#### 🧪 For TestNG Projects
+
+**Good news!** TestNG works automatically - just add your API key when running tests:
+
+```bash
+mvn test -Dtestomatio.api.key=tstmt_your_key_here
+```
+
+No extra configuration needed! 🎉
+
+---
+
+### 🔧 Advanced Setup (For Power Users)
+
+> **⚠️ Only use this if you need custom behavior** - like adding extra logic to test lifecycle events.
+
+This lets you customize how the reporter works by overriding core classes:
+- `CucumberListener` - Controls Cucumber test reporting
+- `TestNgListener` - Controls TestNG test reporting
+- `JunitListener` - Controls JUnit test reporting
+
+#### When would you need this?
+- Adding custom API calls during test execution
+- Integrating with other tools
+- Custom test result processing
+- Advanced filtering or modification of results
+
+#### Setup Steps:
+
+**Step 1:** Complete the Simple Setup first (except for Cucumber-only projects)
+
+**Step 2:** Create the services directory:
+```
+📁 src/main/resources/META-INF/services/
+```
+
+**Step 3:** Create the right configuration file:
+
+| Framework | Create this file: |
+|-----------|------------------|
+| **JUnit 5** | `org.junit.jupiter.api.extension.Extension` |
+| **TestNG** | `org.testng.ITestNGListener io.cucumber.plugin.Plugin` |
+| **Cucumber** | `io.cucumber.plugin.Plugin` |
+
+**Step 4:** Add your custom class path to the file:
+```properties
+com.yourcompany.yourproject.CustomListener
+```
+
+**Step 5:** For Cucumber, update your TestRunner to use your custom class instead of ours.
+
+#### Example Custom Listener:
+```java
+public class CustomCucumberListener extends CucumberListener {
+    @Override
+    public void onTestStart(TestCase testCase) {
+        // Your custom logic here
+        super.onTestStart(testCase);
+        // More custom logic
+    }
+}
+```
+
+---
+
+## 🎮 Configuration Options
+
+### 🔑 Required Settings
+
+```properties
+# Your Testomat.io project API key (find it in your project settings)
+testomatio.api.key=tstmt_your_key_here
+```
+
+### 🎨 Customization Options
+
+Make your test runs exactly how you want them:
+
+| Setting | What it does | Default | Example |
+|---------|-------------|---------|---------|
+| 🏷️ **`testomatio.run.title`** | Custom name for your test run | `default_run_title` | `"Nightly Regression Tests"` |
+| 🌍 **`testomatio.env`** | Environment name (dev, staging, prod) | _(none)_ | `"staging"` |
+| 📊 **`testomatio.run.group`** | Group related runs together | _(none)_ | `"sprint-23"` |
+| 🌐 **`testomatio.publish`** | Make results publicly shareable | _(private)_ | `1` |
+
+### ⚙️ Performance Tuning
+
+| Setting | What it does | Default | Min Value |
+|---------|-------------|---------|-----------|
+| 📦 **`testomatio.batch.size`** | How many test results to send at once | `5` | `5` |
+| ⏱️ **`testomatio.batch.flush.interval`** | How often to send results (seconds) | `5` | `5` |
+
+### 🔗 Advanced Integration
+
+| Setting | What it does | Example |
+|---------|-------------|---------|
+| 🏠 **`testomatio.url`** | Custom Testomat.io URL (for enterprise) | `https://app.testomat.io/` |
+| 🔄 **`testomatio.run.id`** | Add results to existing run | `"run_abc123"` |
+| ✨ **`testomatio.create`** | Auto-create missing tests in Testomat.io | `true` |
+| 👥 **`testomatio.shared.run`** | Shared run name for team collaboration | `"team-integration-tests"` |
+| ⏰ **`testomatio.shared.run.timeout`** | How long to wait for shared run | `3600` |
+
+---
+
+## 💡 Usage Examples
+
+### Basic Usage
+```bash
+# Simple run with custom title
+mvn test \
+  -Dtestomatio.api.key=tstmt_your_key \
+  -Dtestomatio.run.title="My Feature Tests"
+```
+
+### Team Collaboration
+```bash
+# Shared run that team members can contribute to
+mvn test \
+  -Dtestomatio.api.key=tstmt_your_key \
+  -Dtestomatio.shared.run="integration-tests" \
+  -Dtestomatio.env="staging"
+```
+
+### Stakeholder Demo
+```bash
+# Public report for sharing with stakeholders
+mvn test \
+  -Dtestomatio.api.key=tstmt_your_key \
+  -Dtestomatio.run.title="Demo for Product Team" \
+  -Dtestomatio.publish=1
+```
+---
+
+## 📊 What You'll See
+
+When your tests start running, you'll see helpful output like this:
+
+![console img](img/console.png)
+
+**You get two types of links:**
+- **🔒 Private Link**: Full access on Testomat.io platform (for your team)
+- **🌐 Public Link**: Shareable read-only view (only if you set `testomatio.publish=1`)
+
+---
+
+## 🆘 Troubleshooting
+
+### Tests not appearing in Testomat.io?
+
+1. **Check your API key** - it should start with `tstmt_`
+2. **Verify internet connection** - the reporter needs to reach `app.testomat.io`
+3. **Check test names** - make sure they match your Testomat.io project structure
+4. **Enable auto-creation** - add `-Dtestomatio.create=true` to create missing tests
+
+
+### Framework not detected?
+
+1. **JUnit 5**: Make sure `junit-platform.properties` exists with autodetection enabled
+2. **Cucumber**: Verify the listener is in your `@CucumberOptions` plugins
+3. **TestNG**: Should work automatically if nothing is overridden - check your TestNG version (need 7.x)
+
+---
+
+## 🎉 What's Next?
+
+1. **Explore Testomat.io features**: Analytics, flaky test detection, team reports
+2. **Set up CI/CD integration**: Automate reporting in your pipeline
+3. **Try advanced features**: Test case management, requirements tracing
+4. **Join the community**: [Documentation](https://docs.testomat.io/) • [Support](https://testomat.io/support)
+
+---
+
+> 💝 **Love this tool?** Star the repo and share with your team!
