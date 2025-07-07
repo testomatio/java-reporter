@@ -1,9 +1,8 @@
 # 🚀 Testomat.io Java Reporter
 
-> **Transform your test reporting experience - realtime + easy analytics!**   
-> Connect your Java tests directly to Testomat.io with minimal setup and maximum insight.
+> **Transform your test reporting experience!** Connect your Java tests directly to Testomat.io with minimal setup and maximum insight.
 
-## 🎯 Quick Start 
+## 🎯 Quick Start (2 minutes setup!)
 
 1. **Add dependency** to your `pom.xml`:
    ```xml
@@ -22,6 +21,80 @@
    ```
 
 4. **Run your tests** - that's it! 🎉
+
+---
+
+## 🏷️ Test Identification & Titles
+
+Connect your code tests directly to your Testomat.io test cases using simple annotations!
+
+### 📋 For JUnit & TestNG
+
+Use `@TestId` and `@Title` annotations to make your tests perfectly trackable:
+
+```java
+import com.testomatio.reporter.annotation.TestId;
+import com.testomatio.reporter.annotation.Title;
+
+public class LoginTests {
+    
+    @Test
+    @TestId("auth-001")
+    @Title("User can login with valid credentials")
+    public void testValidLogin() {
+        // Your test code here
+    }
+    
+    @Test
+    @TestId("auth-002") 
+    @Title("Login fails with invalid password")
+    public void testInvalidPassword() {
+        // Your test code here
+    }
+    
+    @Test
+    @Title("User sees helpful error message")  // Just title, auto-generated ID
+    public void testErrorMessage() {
+        // Your test code here
+    }
+}
+```
+
+### 🥒 For Cucumber
+
+Use tags to identify your scenarios:
+
+```gherkin
+Feature: User Authentication
+
+  @TestId:auth-001 @Title:User_can_login_with_valid_credentials
+  Scenario: Valid user login
+    Given user is on login page
+    When user enters valid credentials
+    Then user should be logged in successfully
+
+  @TestId:auth-002 @Title:Login_fails_with_invalid_password  
+  Scenario: Invalid password login
+    Given user is on login page
+    When user enters invalid password
+    Then login should fail
+    
+  @Title:User_sees_helpful_error_message
+  Scenario: Error message display
+    Given user is on login page
+    When login fails
+    Then error message should be displayed
+```
+
+### 💡 Pro Tips
+
+- **@TestId**: Links your code test to specific test case in Testomat.io
+- **@Title**: Gives readable names (overrides method/scenario names)
+- **Use both**: For maximum clarity and traceability
+- **Title only**: Auto-generates ID, still creates nice reports
+- **Neither**: Uses method name - still works, but less organized
+
+**Result:** Your Testomat.io dashboard shows exactly which tests ran, with clear titles and perfect traceability! 🎯
 
 ---
 
@@ -45,6 +118,7 @@ This is the **official Java reporter** for [Testomat.io](https://testomat.io/) -
 #### ✅ Ready to Use (Current Features)
 - ✅ **Complete framework integration** - JUnit5, TestNG, and Cucumber support
 - ✅ **Automatic test discovery** - Zero-config test detection and reporting
+- ✅ **Test identification & titles** - `@TestId` and `@Title` annotations for precise test mapping
 - ✅ **Customizable run parameters** - Full control over test run configuration
 - ✅ **Async test processing** - High-performance parallel result processing
 - ✅ **Advanced customization** - Override core classes for custom behavior
@@ -76,6 +150,11 @@ This is the **official Java reporter** for [Testomat.io](https://testomat.io/) -
     <artifactId>java-reporter</artifactId>
     <version>0.x.0</version>
 </dependency>
+```
+
+### Gradle
+```gradle
+testImplementation 'io.testomat:java-reporter:0.x.0'
 ```
 
 > 💡 **Heads up!** This library includes `jackson-databind 2.15.2` - no conflicts expected with modern projects.
@@ -149,7 +228,7 @@ No extra configuration needed! 🎉
 
 This lets you customize how the reporter works by overriding core classes:
 - `CucumberListener` - Controls Cucumber test reporting
-- `TestNgListener` - Controls TestNG test reporting
+- `TestNgListener` - Controls TestNG test reporting  
 - `JunitListener` - Controls JUnit test reporting
 
 #### When would you need this?
@@ -234,78 +313,6 @@ Make your test runs exactly how you want them:
 | ⏰ **`testomatio.shared.run.timeout`** | How long to wait for shared run | `3600` |
 
 ---
-## 🏷️ Test Identification & Titles
-
-Connect your code tests directly to your Testomat.io test cases using simple annotations!
-
-### 📋 For JUnit & TestNG
-
-Use `@TestId` and `@Title` annotations to make your tests perfectly trackable:
-
-```java
-import com.testomatio.reporter.annotation.TestId;
-import com.testomatio.reporter.annotation.Title;
-
-public class LoginTests {
-    
-    @Test
-    @TestId("auth-001")
-    @Title("User can login with valid credentials")
-    public void testValidLogin() {
-        // Your test code here
-    }
-    
-    @Test
-    @TestId("auth-002") 
-    @Title("Login fails with invalid password")
-    public void testInvalidPassword() {
-        // Your test code here
-    }
-    
-    @Test
-    @Title("User sees helpful error message")  // Just title, auto-generated ID
-    public void testErrorMessage() {
-        // Your test code here
-    }
-}
-```
-
-### 🥒 For Cucumber
-
-Use tags to identify your scenarios:
-
-```gherkin
-Feature: User Authentication
-
-  @TestId:auth-001 @Title:User_can_login_with_valid_credentials
-  Scenario: Valid user login
-    Given user is on login page
-    When user enters valid credentials
-    Then user should be logged in successfully
-
-  @TestId:auth-002 @Title:Login_fails_with_invalid_password  
-  Scenario: Invalid password login
-    Given user is on login page
-    When user enters invalid password
-    Then login should fail
-    
-  @Title:User_sees_helpful_error_message
-  Scenario: Error message display
-    Given user is on login page
-    When login fails
-    Then error message should be displayed
-```
-
-### 💡 Pro Tips
-
-- **@TestId**: Links your code test to specific test case in Testomat.io
-- **@Title**: Gives readable names (overrides method/scenario names)
-- **Use both**: For maximum clarity and traceability
-- **Title only**: Still creates nice reports
-
-**Result:** Your Testomat.io dashboard shows exactly which tests ran, with clear titles and perfect traceability! 🎯
-
----
 
 ## 💡 Usage Examples
 
@@ -334,21 +341,36 @@ mvn test \
   -Dtestomatio.run.title="Demo for Product Team" \
   -Dtestomatio.publish=1
 ```
+
+### Local Development
+```bash
+# Detailed local testing with full tracking
+mvn test \
+  -Dtestomatio.api.key=tstmt_your_key \
+  -Dtestomatio.run.title="Local Development Tests" \
+  -Dtestomatio.env="local" \
+  -Dtestomatio.run.group="feature-development"
+```
+
 ---
 
 ## 📊 What You'll See
 
 When your tests start running, you'll see helpful output like this:
 
+```
+🚀 Testomat.io Reporter Started
+📊 Run: "My Feature Tests" 
+🌍 Environment: staging
+🔗 View results: https://app.testomat.io/projects/123/runs/456
+🌐 Public URL: https://public.testomat.io/runs/456
+```
+
 ![console img](img/console.png)
 
 **You get two types of links:**
 - **🔒 Private Link**: Full access on Testomat.io platform (for your team)
 - **🌐 Public Link**: Shareable read-only view (only if you set `testomatio.publish=1`)
-
-And the dashboard - something like this:  
-<img src=img/platform.png alt="Description" width=50% />
-
 
 ---
 
@@ -361,18 +383,23 @@ And the dashboard - something like this:
 3. **Check test names** - make sure they match your Testomat.io project structure
 4. **Enable auto-creation** - add `-Dtestomatio.create=true` to create missing tests
 
+### Performance issues?
+
+1. **Increase batch size** - try `-Dtestomatio.batch.size=10`
+2. **Reduce flush interval** - try `-Dtestomatio.batch.flush.interval=10`
 
 ### Framework not detected?
 
 1. **JUnit 5**: Make sure `junit-platform.properties` exists with autodetection enabled
 2. **Cucumber**: Verify the listener is in your `@CucumberOptions` plugins
-3. **TestNG**: Should work automatically if nothing is overridden - check your TestNG version (need 7.x)
+3. **TestNG**: Should work automatically - check your TestNG version (need 7.x)
 
 ---
 
 ## 🎉 What's Next?
 
-1. **Explore Testomat.io features**: Analytics, team reports
+1. **Explore Testomat.io features**: Analytics, flaky test detection, team reports
+2. **Set up CI/CD integration**: Automate reporting in your pipeline  
 3. **Try advanced features**: Test case management, requirements tracing
 4. **Join the community**: [Documentation](https://docs.testomat.io/) • [Support](https://testomat.io/support)
 
