@@ -211,27 +211,27 @@ Make your test runs exactly how you want them:
 
 | Setting | What it does | Default | Example |
 |---------|-------------|---------|---------|
-| 🏷️ **`testomatio.run.title`** | Custom name for your test run | `default_run_title` | `"Nightly Regression Tests"` |
-| 🌍 **`testomatio.env`** | Environment name (dev, staging, prod) | _(none)_ | `"staging"` |
-| 📊 **`testomatio.run.group`** | Group related runs together | _(none)_ | `"sprint-23"` |
-| 🌐 **`testomatio.publish`** | Make results publicly shareable | _(private)_ | `1` |
+| **`testomatio.run.title`** | Custom name for your test run | `default_run_title` | `"Nightly Regression Tests"` |
+|**`testomatio.env`** | Environment name (dev, staging, prod) | _(none)_ | `"staging"` |
+|**`testomatio.run.group`** | Group related runs together | _(none)_ | `"sprint-23"` |
+|**`testomatio.publish`** | Make results publicly shareable | _(private)_ | `1` |
 
 ### ⚙️ Performance Tuning
 
 | Setting | What it does | Default | Min Value |
 |---------|-------------|---------|-----------|
-| 📦 **`testomatio.batch.size`** | How many test results to send at once | `5` | `5` |
-| ⏱️ **`testomatio.batch.flush.interval`** | How often to send results (seconds) | `5` | `5` |
+|**`testomatio.batch.size`** | How many test results to send at once | `5` | `5` |
+| **`testomatio.batch.flush.interval`** | How often to send results (seconds) | `5` | `5` |
 
 ### 🔗 Advanced Integration
 
 | Setting | What it does | Example |
 |---------|-------------|---------|
-| 🏠 **`testomatio.url`** | Custom Testomat.io URL (for enterprise) | `https://app.testomat.io/` |
-| 🔄 **`testomatio.run.id`** | Add results to existing run | `"run_abc123"` |
-| ✨ **`testomatio.create`** | Auto-create missing tests in Testomat.io | `true` |
-| 👥 **`testomatio.shared.run`** | Shared run name for team collaboration | `"team-integration-tests"` |
-| ⏰ **`testomatio.shared.run.timeout`** | How long to wait for shared run | `3600` |
+|**`testomatio.url`** | Custom Testomat.io URL (for enterprise) | `https://app.testomat.io/` |
+|**`testomatio.run.id`** | Add results to existing run | `"run_abc123"` |
+|**`testomatio.create`** | Auto-create missing tests in Testomat.io | `true` |
+|**`testomatio.shared.run`** | Shared run name for team collaboration | `"team-integration-tests"` |
+|**`testomatio.shared.run.timeout`** | How long to wait for shared run | `3600` |
 
 ---
 ## 🏷️ Test Identification & Titles
@@ -277,31 +277,26 @@ Use tags to identify your scenarios:
 ```gherkin
 Feature: User Authentication
 
-  @TestId:auth-001 @Title:User_can_login_with_valid_credentials
+  @TestId:auth-001
   Scenario: Valid user login
     Given user is on login page
     When user enters valid credentials
     Then user should be logged in successfully
 
-  @TestId:auth-002 @Title:Login_fails_with_invalid_password  
+  @TestId:auth-002
   Scenario: Invalid password login
     Given user is on login page
     When user enters invalid password
     Then login should fail
-    
-  @Title:User_sees_helpful_error_message
+
+   @TestId:auth-003
   Scenario: Error message display
     Given user is on login page
     When login fails
     Then error message should be displayed
 ```
-
-### 💡 Pro Tips
-
 - **@TestId**: Links your code test to specific test case in Testomat.io
-- **@Title**: Gives readable names (overrides method/scenario names)
-- **Use both**: For maximum clarity and traceability
-- **Title only**: Still creates nice reports
+
 
 **Result:** Your Testomat.io dashboard shows exactly which tests ran, with clear titles and perfect traceability! 🎯
 
