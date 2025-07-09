@@ -32,7 +32,6 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        System.out.println("FROM SPLIT JUNIT REPORTER");
         handleSuiteStarted();
     }
 
