@@ -4,7 +4,6 @@ import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
-import io.testomat.core.exception.NoMethodInContextException;
 import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
@@ -178,7 +177,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
     /**
      * Logs and reports test result to run manager.
      *
-     * @param result  test case result to report
+     * @param result test case result to report
      */
     private void reportResult(TestResult result) {
         runManager.reportTest(result);
