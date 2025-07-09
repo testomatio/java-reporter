@@ -61,11 +61,8 @@ public class NativeApiClient implements ApiInterface {
             throw new RunCreationFailedException(
                     "Invalid response: missing UID in create test run response");
         }
-        log.info("[TESTOMATIO] Testomat.io java reporter version: [{}]", REPORTER_VERSION);
-        log.info("[TESTOMATIO] Public url: {}", responseBody.get("public_url"));
+        logAndPrintUrls(responseBody);
         log.debug("Created test run with UID: {}", responseBody.get(RESPONSE_UID_KEY));
-        log.info("[TESTOMATIO] See run aggregation at: {}", responseBody.get("url"));
-
         return responseBody.get(RESPONSE_UID_KEY);
     }
 
@@ -117,5 +114,20 @@ public class NativeApiClient implements ApiInterface {
             log.error("Failed to finish test run with uid: {}", uid);
             throw new FinishReportFailedException("Failed to finish test run " + e.getMessage());
         }
+    }
+
+    private void logAndPrintUrls(Map<String, String> responseBody) {
+        String publicUrl = responseBody.get("public_url");
+
+        log.info("[TESTOMATIO] Testomat.io java reporter version: [{}]", REPORTER_VERSION);
+        System.out.println(String.format("[TESTOMATIO] Testomat.io java reporter version: [%s]", REPORTER_VERSION));
+
+        if (publicUrl != null) {
+            System.out.println(String.format("[TESTOMATIO] Public url: %s", publicUrl));
+            log.info("[TESTOMATIO] Public url: {}", publicUrl);
+        }
+
+        log.info("[TESTOMATIO] See run aggregation at: {}", responseBody.get("url"));
+        System.out.println(String.format("[TESTOMATIO] See run aggregation at: %s", responseBody.get("url")));
     }
 }

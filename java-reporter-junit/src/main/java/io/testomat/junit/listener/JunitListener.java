@@ -1,4 +1,4 @@
-package io.testomat.junit;
+package io.testomat.junit.listener;
 
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
@@ -9,6 +9,9 @@ import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.junit.constructor.JUnitTestResultConstructor;
+import io.testomat.junit.extractor.JunitMetaDataExtractor;
+import io.testomat.junit.model.TestResultWrapper;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -21,7 +24,7 @@ import org.junit.jupiter.api.extension.TestWatcher;
  * Reports JUnit test execution results to Testomat.io platform.
  * Usage: Add {@code @ExtendWith(JUnitExtension.class)} to test classes.
  */
-public class JunitExtension implements BeforeEachCallback, BeforeAllCallback,
+public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         AfterAllCallback, TestWatcher {
 
     private final GlobalRunManager runManager = GlobalRunManager.getInstance();
@@ -88,19 +91,6 @@ public class JunitExtension implements BeforeEachCallback, BeforeAllCallback,
      */
     private void handleSuiteFinished() {
         runManager.decrementSuiteCounter();
-    }
-
-    /**
-     * Reports test result to Testomat.io.
-     *
-     * @param metadata              test metadata containing title, ID, and suite info
-     * @param status                test execution status (PASSED, FAILED, SKIPPED)
-     * @param frameworkSpecificData framework-specific test data
-     */
-    private void reportTestResult(TestMetadata metadata,
-                                  String status,
-                                  Object frameworkSpecificData) {
-        reportTestResult(metadata, status, null, frameworkSpecificData);
     }
 
     /**
@@ -192,42 +182,5 @@ public class JunitExtension implements BeforeEachCallback, BeforeAllCallback,
      */
     private void reportResult(TestResult result) {
         runManager.reportTest(result);
-    }
-
-    /**
-     * Normalizes framework-specific status to standard format.
-     *
-     * @param frameworkStatus framework-specific status object
-     * @return normalized status (PASSED, FAILED, or SKIPPED)
-     */
-    private String normalizeStatus(Object frameworkStatus) {
-        if (frameworkStatus == null) {
-            return FAILED;
-        }
-
-        String statusStr = frameworkStatus.toString().toUpperCase();
-        switch (statusStr) {
-            case "PASSED":
-            case "SUCCESS":
-            case "SUCCESSFUL":
-                return PASSED;
-            case "SKIPPED":
-            case "PENDING":
-            case "UNDEFINED":
-            case "AMBIGUOUS":
-            case "DISABLED":
-            case "ABORTED":
-                return SKIPPED;
-            default:
-                return FAILED;
-        }
-    }
-
-    private String getClassName(ExtensionContext context) {
-        return context.getTestClass()
-                .map(Class::getSimpleName)
-                .orElseThrow(
-                        () -> new NoMethodInContextException(
-                                "No method in context: " + context.getDisplayName()));
     }
 }

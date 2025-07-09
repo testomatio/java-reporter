@@ -1,4 +1,4 @@
-package io.testomat.junit;
+package io.testomat.junit.extractor;
 
 import io.testomat.core.annotation.TestId;
 import io.testomat.core.annotation.Title;
@@ -27,15 +27,11 @@ public class JunitMetaDataExtractor {
      */
     private String getJUnitTestTitle(ExtensionContext context) {
         Title titleAnnotation = getTestMethod(context).getAnnotation(Title.class);
-        String title = titleAnnotation != null ? titleAnnotation.value() : context.getDisplayName();
 
-        return title;
+        return titleAnnotation != null ? titleAnnotation.value() : context.getDisplayName();
     }
 
-    /**
-     * Gets test ID from @TestId annotation.
-     */
-    static String getTestId(Method method) {
+    private String getTestId(Method method) {
         TestId testIdAnnotation = method.getAnnotation(TestId.class);
         return testIdAnnotation != null ? testIdAnnotation.value() : null;
     }

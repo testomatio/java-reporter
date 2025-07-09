@@ -1,1 +1,1 @@
-io.testomat.junit.JunitExtension
+io.testomat.junit.listener.JunitListener

@@ -1,4 +1,4 @@
-package io.testomat.junit;
+package io.testomat.junit.model;
 
 import io.testomat.core.model.TestMetadata;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -11,14 +11,12 @@ public class TestResultWrapper {
     private final TestMetadata testMetadata;
     private final String status;
     private final String message;
-    private final String reason;
     private final ExtensionContext junitExtensionContext;
 
     private TestResultWrapper(Builder builder) {
         this.testMetadata = builder.testMetadata;
         this.status = builder.status;
         this.message = builder.message;
-        this.reason = builder.reason;
         this.junitExtensionContext = builder.junitExtensionContext;
     }
 
@@ -36,7 +34,6 @@ public class TestResultWrapper {
         private TestMetadata testMetadata;
         private String status;
         private String message;
-        private String reason;
         private ExtensionContext junitExtensionContext;
 
         public Builder withTestMetadata(TestMetadata testMetadata) {
@@ -51,11 +48,6 @@ public class TestResultWrapper {
 
         public Builder withMessage(String message) {
             this.message = message;
-            return this;
-        }
-
-        public Builder withReason(String reason) {
-            this.reason = reason;
             return this;
         }
 
@@ -79,10 +71,6 @@ public class TestResultWrapper {
 
     public String getMessage() {
         return message;
-    }
-
-    public String getReason() {
-        return reason;
     }
 
     public ExtensionContext getJunitExtensionContext() {
