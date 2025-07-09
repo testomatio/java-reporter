@@ -7,7 +7,7 @@
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter</artifactId>
     <version>0.1.0</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>Testomat.io Java Reporter</name>
     <description>Java reporter library for Testomat.io integration with JUnit 5, TestNG, and Cucumber support
@@ -31,11 +31,15 @@
             <organizationUrl>https://testomat.io</organizationUrl>
         </developer>
     </developers>
+    <modules>
+        <module>java-reporter-core</module>
+        <module>java-reporter-junit</module>
+    </modules>
 
     <scm>
         <connection>scm:git:git://github.com/testomatio/java-reporter.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/testomatio/java-reporter.git</developerConnection>
-        <url>https://github.com/testomatio/java-reporter/tree/1.x</url>
+        <url>https://github.com/testomatio/java-reporter/tree/1.1</url>
     </scm>
 
     <properties>
