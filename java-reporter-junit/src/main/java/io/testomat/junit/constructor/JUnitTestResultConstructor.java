@@ -1,7 +1,7 @@
 package io.testomat.junit.constructor;
 
+import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
-import io.testomat.junit.model.ExceptionDetails;
 import io.testomat.junit.model.TestResultWrapper;
 import java.io.PrintWriter;
 import java.io.StringWriter;
