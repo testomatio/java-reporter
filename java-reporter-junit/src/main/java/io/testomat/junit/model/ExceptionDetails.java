@@ -1,4 +1,4 @@
-package io.testomat.junit;
+package io.testomat.junit.model;
 
 /**
  * Immutable container for exception message and stack trace.
