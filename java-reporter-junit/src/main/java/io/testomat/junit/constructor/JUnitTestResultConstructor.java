@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * Supports custom messages and extracts exception details from execution context.
  */
 public class JUnitTestResultConstructor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(JUnitTestResultConstructor.class);
+    private static final Logger log = LoggerFactory.getLogger(JUnitTestResultConstructor.class);
 
     public TestResult constructTestRunResult(TestResultWrapper holder) {
         validateHolder(holder);
@@ -51,10 +51,10 @@ public class JUnitTestResultConstructor {
         var testTitle = holder.getTestMetadata().getTitle();
         if (hasCustomMessage) {
             var message = getCustomMessage(holder);
-            LOGGER.debug("Creating JUnit test result with custom message: {} - {}",
+            log.debug("Creating JUnit test result with custom message: {} - {}",
                     testTitle, message);
         } else {
-            LOGGER.debug("Creating JUnit test result with exception details for: {}",
+            log.debug("Creating JUnit test result with exception details for: {}",
                     testTitle);
         }
     }
@@ -84,7 +84,7 @@ public class JUnitTestResultConstructor {
     private ExceptionDetails createExceptionDetails(Throwable throwable) {
         var message = throwable.getMessage();
         var stack = getStackTrace(throwable);
-        LOGGER.debug("Including error details for failed test");
+        log.debug("Including error details for failed test");
         return new ExceptionDetails(message, stack);
     }
 
