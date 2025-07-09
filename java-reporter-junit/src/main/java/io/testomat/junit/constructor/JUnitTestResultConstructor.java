@@ -18,15 +18,15 @@ import org.slf4j.LoggerFactory;
 public class JUnitTestResultConstructor {
     private static final Logger log = LoggerFactory.getLogger(JUnitTestResultConstructor.class);
 
-    public TestResult constructTestRunResult(TestResultWrapper holder) {
-        validateHolder(holder);
+    public TestResult constructTestRunResult(TestResultWrapper wrapper) {
+        validateWrapper(wrapper);
 
-        boolean hasCustomMessage = hasCustomMessage(holder);
-        logTestResultCreation(holder, hasCustomMessage);
+        boolean hasCustomMessage = hasCustomMessage(wrapper);
+        logTestResultCreation(wrapper, hasCustomMessage);
 
         return hasCustomMessage
-                ? createWithCustomMessage(holder)
-                : createWithExceptionDetails(holder);
+                ? createWithCustomMessage(wrapper)
+                : createWithExceptionDetails(wrapper);
     }
 
     /**
@@ -35,7 +35,7 @@ public class JUnitTestResultConstructor {
      * @param holder wrapper to validate
      * @throws IllegalArgumentException if wrapper or metadata is null
      */
-    private void validateHolder(TestResultWrapper holder) {
+    private void validateWrapper(TestResultWrapper holder) {
         if (holder == null) {
             throw new IllegalArgumentException("TestRunResultWrapper cannot be null");
         }
