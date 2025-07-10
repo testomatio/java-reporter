@@ -22,7 +22,6 @@
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
             <version>0.1.0</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
