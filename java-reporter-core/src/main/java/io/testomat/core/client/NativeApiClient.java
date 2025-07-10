@@ -120,7 +120,8 @@ public class NativeApiClient implements ApiInterface {
         String publicUrl = responseBody.get("public_url");
 
         log.info("[TESTOMATIO] Testomat.io java reporter version: [{}]", REPORTER_VERSION);
-        System.out.println(String.format("[TESTOMATIO] Testomat.io java reporter version: [%s]", REPORTER_VERSION));
+        System.out.println(String.format(
+                "[TESTOMATIO] Testomat.io java core reporter version: [%n]", REPORTER_VERSION));
 
         if (publicUrl != null) {
             System.out.println(String.format("[TESTOMATIO] Public url: %s", publicUrl));
@@ -128,6 +129,7 @@ public class NativeApiClient implements ApiInterface {
         }
 
         log.info("[TESTOMATIO] See run aggregation at: {}", responseBody.get("url"));
-        System.out.println(String.format("[TESTOMATIO] See run aggregation at: %s", responseBody.get("url")));
+        System.out.println(String.format(
+                "[TESTOMATIO] See run aggregation at: %s", responseBody.get("url")));
     }
 }
