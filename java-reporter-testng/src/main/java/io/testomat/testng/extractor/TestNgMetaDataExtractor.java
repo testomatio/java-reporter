@@ -10,37 +10,29 @@ import org.testng.ITestResult;
  * Extracts test metadata from TestNG test methods and results.
  * Supports both regular and disabled tests with @Title and @TestId annotations.
  */
-public class TestNgMetaDataExtractor implements MetaDataExtractor<TestNgTestWrapper> {
+public class TestNgMetaDataExtractor {
 
-    @Override
+    /**
+     * Extracts test metadata from framework-specific test wrapper.
+     *
+     * @param wrapper TestNG test wrapper containing test data
+     * @return extracted test metadata
+     */
     public TestMetadata extractTestMetadata(TestNgTestWrapper wrapper) {
+        Method method;
+        String suiteTitle;
+
         if (wrapper.isRegularTest()) {
-            return extractTestMetadataForRegularTest(wrapper.getTestResult());
+            ITestResult testResult = wrapper.getTestResult();
+            method = testResult.getMethod().getConstructorOrMethod().getMethod();
+            suiteTitle = testResult.getTestClass().getName();
         } else {
-            return extractTestMetadataForDisabledTest(wrapper.getMethod(), wrapper.getTestClass());
+            method = wrapper.getMethod();
+            suiteTitle = wrapper.getTestClass().getSimpleName();
         }
-    }
 
-    /**
-     * Extracts metadata from executed TestNG test result.
-     */
-    private TestMetadata extractTestMetadataForRegularTest(ITestResult source) {
-        Method method = source.getMethod().getConstructorOrMethod().getMethod();
         String title = getTestTitle(method);
         String testId = getTestId(method);
-        String suiteTitle = source.getTestClass().getName();
-        String file = suiteTitle + ".java";
-
-        return new TestMetadata(title, testId, suiteTitle, file);
-    }
-
-    /**
-     * Extracts metadata from disabled test method via reflection.
-     */
-    private TestMetadata extractTestMetadataForDisabledTest(Method method, Class<?> testClass) {
-        String title = getTestTitle(method);
-        String testId = getTestId(method);
-        String suiteTitle = testClass.getSimpleName();
         String file = suiteTitle + ".java";
 
         return new TestMetadata(title, testId, suiteTitle, file);

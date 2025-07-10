@@ -1,9 +1,9 @@
 package io.reporter.testng.extractor;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 
 import io.testomat.core.annotation.TestId;
 import io.testomat.core.annotation.Title;
@@ -11,16 +11,17 @@ import io.testomat.core.model.TestMetadata;
 import io.testomat.testng.extractor.TestNgMetaDataExtractor;
 import io.testomat.testng.extractor.TestNgTestWrapper;
 import java.lang.reflect.Method;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.IClass;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
-public class TestNgMetaDataExtractorTest {
+class TestNgMetaDataExtractorTest {
 
     private TestNgMetaDataExtractor extractor;
 
@@ -35,21 +36,22 @@ public class TestNgMetaDataExtractorTest {
 
     private AutoCloseable mockitoCloseable;
 
-    @BeforeMethod
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mockitoCloseable = MockitoAnnotations.openMocks(this);
         extractor = new TestNgMetaDataExtractor();
     }
 
-    @AfterMethod
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         if (mockitoCloseable != null) {
             mockitoCloseable.close();
         }
     }
 
-    @Test(description = "Should extract metadata from regular test with both @Title and @TestId annotations")
-    public void shouldExtractMetadataFromRegularTestWithBothAnnotations() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should extract metadata from regular test with both @Title and @TestId annotations")
+    void shouldExtractMetadataFromRegularTestWithBothAnnotations() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithBothAnnotations");
         TestNgTestWrapper wrapper = setupRegularTestWrapper(testMethod, "com.example.TestClass");
@@ -59,14 +61,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "Custom Test Title");
-        assertEquals(metadata.getTestId(), "TEST-123");
-        assertEquals(metadata.getSuiteTitle(), "com.example.TestClass");
-        assertEquals(metadata.getFile(), "com.example.TestClass.java");
+        assertEquals("Custom Test Title", metadata.getTitle());
+        assertEquals("TEST-123", metadata.getTestId());
+        assertEquals("com.example.TestClass", metadata.getSuiteTitle());
+        assertEquals("com.example.TestClass.java", metadata.getFile());
     }
 
-    @Test(description = "Should extract metadata from regular test with only @Title annotation")
-    public void shouldExtractMetadataFromRegularTestWithOnlyTitle() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should extract metadata from regular test with only @Title annotation")
+    void shouldExtractMetadataFromRegularTestWithOnlyTitle() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithOnlyTitle");
         TestNgTestWrapper wrapper = setupRegularTestWrapper(testMethod, "com.example.TestClass");
@@ -76,14 +79,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "Title Only Test");
+        assertEquals("Title Only Test", metadata.getTitle());
         assertNull(metadata.getTestId());
-        assertEquals(metadata.getSuiteTitle(), "com.example.TestClass");
-        assertEquals(metadata.getFile(), "com.example.TestClass.java");
+        assertEquals("com.example.TestClass", metadata.getSuiteTitle());
+        assertEquals("com.example.TestClass.java", metadata.getFile());
     }
 
-    @Test(description = "Should extract metadata from regular test with only @TestId annotation")
-    public void shouldExtractMetadataFromRegularTestWithOnlyTestId() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should extract metadata from regular test with only @TestId annotation")
+    void shouldExtractMetadataFromRegularTestWithOnlyTestId() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithOnlyTestId");
         TestNgTestWrapper wrapper = setupRegularTestWrapper(testMethod, "com.example.TestClass");
@@ -93,14 +97,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "methodWithOnlyTestId"); // Method name when no @Title
-        assertEquals(metadata.getTestId(), "TEST-456");
-        assertEquals(metadata.getSuiteTitle(), "com.example.TestClass");
-        assertEquals(metadata.getFile(), "com.example.TestClass.java");
+        assertEquals("methodWithOnlyTestId", metadata.getTitle()); // Method name when no @Title
+        assertEquals("TEST-456", metadata.getTestId());
+        assertEquals("com.example.TestClass", metadata.getSuiteTitle());
+        assertEquals("com.example.TestClass.java", metadata.getFile());
     }
 
-    @Test(description = "Should extract metadata from regular test without annotations")
-    public void shouldExtractMetadataFromRegularTestWithoutAnnotations() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should extract metadata from regular test without annotations")
+    void shouldExtractMetadataFromRegularTestWithoutAnnotations() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithoutAnnotations");
         TestNgTestWrapper wrapper = setupRegularTestWrapper(testMethod, "com.example.TestClass");
@@ -110,14 +115,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "methodWithoutAnnotations"); // Method name
+        assertEquals("methodWithoutAnnotations", metadata.getTitle()); // Method name
         assertNull(metadata.getTestId());
-        assertEquals(metadata.getSuiteTitle(), "com.example.TestClass");
-        assertEquals(metadata.getFile(), "com.example.TestClass.java");
+        assertEquals("com.example.TestClass", metadata.getSuiteTitle());
+        assertEquals("com.example.TestClass.java", metadata.getFile());
     }
 
-    @Test(description = "Should extract metadata from disabled test with both annotations")
-    public void shouldExtractMetadataFromDisabledTestWithBothAnnotations() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should extract metadata from disabled test with both annotations")
+    void shouldExtractMetadataFromDisabledTestWithBothAnnotations() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithBothAnnotations");
         Class<?> testClass = TestMethods.class;
@@ -128,14 +134,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "Custom Test Title");
-        assertEquals(metadata.getTestId(), "TEST-123");
-        assertEquals(metadata.getSuiteTitle(), "TestMethods");
-        assertEquals(metadata.getFile(), "TestMethods.java");
+        assertEquals("Custom Test Title", metadata.getTitle());
+        assertEquals("TEST-123", metadata.getTestId());
+        assertEquals("TestMethods", metadata.getSuiteTitle());
+        assertEquals("TestMethods.java", metadata.getFile());
     }
 
-    @Test(description = "Should extract metadata from disabled test with only @Title annotation")
-    public void shouldExtractMetadataFromDisabledTestWithOnlyTitle() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should extract metadata from disabled test with only @Title annotation")
+    void shouldExtractMetadataFromDisabledTestWithOnlyTitle() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithOnlyTitle");
         Class<?> testClass = TestMethods.class;
@@ -146,14 +153,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "Title Only Test");
+        assertEquals("Title Only Test", metadata.getTitle());
         assertNull(metadata.getTestId());
-        assertEquals(metadata.getSuiteTitle(), "TestMethods");
-        assertEquals(metadata.getFile(), "TestMethods.java");
+        assertEquals("TestMethods", metadata.getSuiteTitle());
+        assertEquals("TestMethods.java", metadata.getFile());
     }
 
-    @Test(description = "Should extract metadata from disabled test without annotations")
-    public void shouldExtractMetadataFromDisabledTestWithoutAnnotations() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should extract metadata from disabled test without annotations")
+    void shouldExtractMetadataFromDisabledTestWithoutAnnotations() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithoutAnnotations");
         Class<?> testClass = TestMethods.class;
@@ -164,14 +172,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "methodWithoutAnnotations"); // Method name
+        assertEquals("methodWithoutAnnotations", metadata.getTitle()); // Method name
         assertNull(metadata.getTestId());
-        assertEquals(metadata.getSuiteTitle(), "TestMethods");
-        assertEquals(metadata.getFile(), "TestMethods.java");
+        assertEquals("TestMethods", metadata.getSuiteTitle());
+        assertEquals("TestMethods.java", metadata.getFile());
     }
 
-    @Test(description = "Should handle regular test with complex class name")
-    public void shouldHandleRegularTestWithComplexClassName() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should handle regular test with complex class name")
+    void shouldHandleRegularTestWithComplexClassName() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithoutAnnotations");
         TestNgTestWrapper wrapper = setupRegularTestWrapper(testMethod, "com.example.integration.ComplexTestSuite");
@@ -181,14 +190,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "methodWithoutAnnotations");
+        assertEquals("methodWithoutAnnotations", metadata.getTitle());
         assertNull(metadata.getTestId());
-        assertEquals(metadata.getSuiteTitle(), "com.example.integration.ComplexTestSuite");
-        assertEquals(metadata.getFile(), "com.example.integration.ComplexTestSuite.java");
+        assertEquals("com.example.integration.ComplexTestSuite", metadata.getSuiteTitle());
+        assertEquals("com.example.integration.ComplexTestSuite.java", metadata.getFile());
     }
 
-    @Test(description = "Should handle disabled test with nested class")
-    public void shouldHandleDisabledTestWithNestedClass() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should handle disabled test with nested class")
+    void shouldHandleDisabledTestWithNestedClass() throws NoSuchMethodException {
         // Given
         Method testMethod = NestedTestClass.class.getMethod("nestedTestMethod");
         Class<?> testClass = NestedTestClass.class;
@@ -199,14 +209,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "nestedTestMethod");
-        assertEquals(metadata.getTestId(), "NESTED-001");
-        assertEquals(metadata.getSuiteTitle(), "NestedTestClass");
-        assertEquals(metadata.getFile(), "NestedTestClass.java");
+        assertEquals("nestedTestMethod", metadata.getTitle());
+        assertEquals("NESTED-001", metadata.getTestId());
+        assertEquals("NestedTestClass", metadata.getSuiteTitle());
+        assertEquals("NestedTestClass.java", metadata.getFile());
     }
 
-    @Test(description = "Should handle empty title annotation")
-    public void shouldHandleEmptyTitleAnnotation() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should handle empty title annotation")
+    void shouldHandleEmptyTitleAnnotation() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithEmptyTitle");
         TestNgTestWrapper wrapper = setupRegularTestWrapper(testMethod, "com.example.TestClass");
@@ -216,14 +227,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), ""); // Empty string from annotation
-        assertEquals(metadata.getTestId(), "EMPTY-TITLE");
-        assertEquals(metadata.getSuiteTitle(), "com.example.TestClass");
-        assertEquals(metadata.getFile(), "com.example.TestClass.java");
+        assertEquals("", metadata.getTitle()); // Empty string from annotation
+        assertEquals("EMPTY-TITLE", metadata.getTestId());
+        assertEquals("com.example.TestClass", metadata.getSuiteTitle());
+        assertEquals("com.example.TestClass.java", metadata.getFile());
     }
 
-    @Test(description = "Should handle empty testId annotation")
-    public void shouldHandleEmptyTestIdAnnotation() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should handle empty testId annotation")
+    void shouldHandleEmptyTestIdAnnotation() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithEmptyTestId");
         Class<?> testClass = TestMethods.class;
@@ -234,14 +246,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "Test With Empty ID");
-        assertEquals(metadata.getTestId(), ""); // Empty string from annotation
-        assertEquals(metadata.getSuiteTitle(), "TestMethods");
-        assertEquals(metadata.getFile(), "TestMethods.java");
+        assertEquals("Test With Empty ID", metadata.getTitle());
+        assertEquals("", metadata.getTestId()); // Empty string from annotation
+        assertEquals("TestMethods", metadata.getSuiteTitle());
+        assertEquals("TestMethods.java", metadata.getFile());
     }
 
-    @Test(description = "Should handle regular test with method that throws exception during reflection")
-    public void shouldHandleRegularTestMethod() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should handle regular test with method that throws exception during reflection")
+    void shouldHandleRegularTestMethod() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("methodWithSpecialCharacters");
         TestNgTestWrapper wrapper = setupRegularTestWrapper(testMethod, "com.example.TestClass");
@@ -251,14 +264,15 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "Test with 特殊字符 and émojis 🎯");
-        assertEquals(metadata.getTestId(), "SPECIAL-CHARS");
-        assertEquals(metadata.getSuiteTitle(), "com.example.TestClass");
-        assertEquals(metadata.getFile(), "com.example.TestClass.java");
+        assertEquals("Test with 特殊字符 and émojis 🎯", metadata.getTitle());
+        assertEquals("SPECIAL-CHARS", metadata.getTestId());
+        assertEquals("com.example.TestClass", metadata.getSuiteTitle());
+        assertEquals("com.example.TestClass.java", metadata.getFile());
     }
 
-    @Test(description = "Should handle package-less class for disabled test")
-    public void shouldHandlePackageLessClassForDisabledTest() throws NoSuchMethodException {
+    @Test
+    @DisplayName("Should handle package-less class for disabled test")
+    void shouldHandlePackageLessClassForDisabledTest() throws NoSuchMethodException {
         // Given
         Method testMethod = SimpleTestClass.class.getMethod("simpleTest");
         Class<?> testClass = SimpleTestClass.class;
@@ -269,10 +283,10 @@ public class TestNgMetaDataExtractorTest {
 
         // Then
         assertNotNull(metadata);
-        assertEquals(metadata.getTitle(), "simpleTest");
+        assertEquals("simpleTest", metadata.getTitle());
         assertNull(metadata.getTestId());
-        assertEquals(metadata.getSuiteTitle(), "SimpleTestClass");
-        assertEquals(metadata.getFile(), "SimpleTestClass.java");
+        assertEquals("SimpleTestClass", metadata.getSuiteTitle());
+        assertEquals("SimpleTestClass.java", metadata.getFile());
     }
 
     private TestNgTestWrapper setupRegularTestWrapper(Method method, String className) {
