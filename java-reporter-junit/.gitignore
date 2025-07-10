@@ -12,6 +12,7 @@ target/
 
 **/logs/
 **/log/
+*.jar
 
 **/testomatio.properties
 

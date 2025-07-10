@@ -1,1 +1,1 @@
-com.testomatio.reporter.core.frameworkintegration.CucumberListener
+io.testomat.cucumber.listener.CucumberListener
