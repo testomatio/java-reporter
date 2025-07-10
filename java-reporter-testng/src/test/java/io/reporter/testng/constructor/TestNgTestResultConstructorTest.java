@@ -3,25 +3,26 @@ package io.reporter.testng.constructor;
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.expectThrows;
 
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
 import io.testomat.testng.constructor.TestNgTestResultConstructor;
 import io.testomat.testng.constructor.TestResultWrapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testng.ITestResult;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
-public class TestNgTestResultConstructorTest {
+class TestNgTestResultConstructorTest {
 
     private TestNgTestResultConstructor constructor;
 
@@ -36,8 +37,8 @@ public class TestNgTestResultConstructorTest {
 
     private AutoCloseable mockitoCloseable;
 
-    @BeforeMethod
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mockitoCloseable = MockitoAnnotations.openMocks(this);
         constructor = new TestNgTestResultConstructor();
 
@@ -50,40 +51,43 @@ public class TestNgTestResultConstructorTest {
         when(mockWrapper.getStatus()).thenReturn(PASSED);
     }
 
-    @AfterMethod
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         if (mockitoCloseable != null) {
             mockitoCloseable.close();
         }
     }
 
-    @Test(description = "Should throw IllegalArgumentException when wrapper is null")
-    public void shouldThrowExceptionWhenWrapperIsNull() {
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when wrapper is null")
+    void shouldThrowExceptionWhenWrapperIsNull() {
         // When & Then
-        IllegalArgumentException exception = expectThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> constructor.constructTestRunResult(null)
         );
 
-        assertEquals(exception.getMessage(), "TestRunResultWrapper cannot be null");
+        assertEquals("TestRunResultWrapper cannot be null", exception.getMessage());
     }
 
-    @Test(description = "Should throw IllegalArgumentException when metadata is null")
-    public void shouldThrowExceptionWhenMetadataIsNull() {
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when metadata is null")
+    void shouldThrowExceptionWhenMetadataIsNull() {
         // Given
         when(mockWrapper.getTestMetadata()).thenReturn(null);
 
         // When & Then
-        IllegalArgumentException exception = expectThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> constructor.constructTestRunResult(mockWrapper)
         );
 
-        assertEquals(exception.getMessage(), "TestMetadata cannot be null");
+        assertEquals("TestMetadata cannot be null", exception.getMessage());
     }
 
-    @Test(description = "Should create TestResult with reason when reason is provided")
-    public void shouldCreateTestResultWithReason() {
+    @Test
+    @DisplayName("Should create TestResult with reason when reason is provided")
+    void shouldCreateTestResultWithReason() {
         // Given
         String reason = "Test was skipped due to configuration";
         when(mockWrapper.getReason()).thenReturn(reason);
@@ -94,17 +98,18 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getTitle(), "Test Method");
-        assertEquals(result.getTestId(), "test-123");
-        assertEquals(result.getSuiteTitle(), "TestSuite");
-        assertEquals(result.getFile(), "TestSuite.java");
-        assertEquals(result.getStatus(), PASSED);
-        assertEquals(result.getMessage(), reason);
+        assertEquals("Test Method", result.getTitle());
+        assertEquals("test-123", result.getTestId());
+        assertEquals("TestSuite", result.getSuiteTitle());
+        assertEquals("TestSuite.java", result.getFile());
+        assertEquals(PASSED, result.getStatus());
+        assertEquals(reason, result.getMessage());
         assertNull(result.getStack()); // Custom message doesn't include stack
     }
 
-    @Test(description = "Should create TestResult with message when message is provided")
-    public void shouldCreateTestResultWithMessage() {
+    @Test
+    @DisplayName("Should create TestResult with message when message is provided")
+    void shouldCreateTestResultWithMessage() {
         // Given
         String message = "Custom test message";
         when(mockWrapper.getReason()).thenReturn(null);
@@ -115,12 +120,13 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getMessage(), message);
+        assertEquals(message, result.getMessage());
         assertNull(result.getStack()); // Custom message doesn't include stack
     }
 
-    @Test(description = "Should prioritize reason over message when both are provided")
-    public void shouldPrioritizeReasonOverMessage() {
+    @Test
+    @DisplayName("Should prioritize reason over message when both are provided")
+    void shouldPrioritizeReasonOverMessage() {
         // Given
         String reason = "Test reason";
         String message = "Test message";
@@ -132,12 +138,13 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getMessage(), reason); // Reason should take priority
+        assertEquals(reason, result.getMessage()); // Reason should take priority
         assertNull(result.getStack());
     }
 
-    @Test(description = "Should create TestResult with exception details when no custom message")
-    public void shouldCreateTestResultWithExceptionDetails() {
+    @Test
+    @DisplayName("Should create TestResult with exception details when no custom message")
+    void shouldCreateTestResultWithExceptionDetails() {
         // Given
         RuntimeException testException = new RuntimeException("Test failed");
 
@@ -151,14 +158,15 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getMessage(), "Test failed");
+        assertEquals("Test failed", result.getMessage());
         assertNotNull(result.getStack());
         assertTrue(result.getStack().contains("RuntimeException"));
         assertTrue(result.getStack().contains("Test failed"));
     }
 
-    @Test(description = "Should create TestResult with empty exception details when no exception in test result")
-    public void shouldCreateTestResultWithEmptyExceptionDetailsWhenNoException() {
+    @Test
+    @DisplayName("Should create TestResult with empty exception details when no exception in test result")
+    void shouldCreateTestResultWithEmptyExceptionDetailsWhenNoException() {
         // Given
         when(mockWrapper.getReason()).thenReturn(null);
         when(mockWrapper.getMessage()).thenReturn(null);
@@ -174,8 +182,9 @@ public class TestNgTestResultConstructorTest {
         assertNull(result.getStack());
     }
 
-    @Test(description = "Should create TestResult with empty exception details when no test result")
-    public void shouldCreateTestResultWithEmptyExceptionDetailsWhenNoTestResult() {
+    @Test
+    @DisplayName("Should create TestResult with empty exception details when no test result")
+    void shouldCreateTestResultWithEmptyExceptionDetailsWhenNoTestResult() {
         // Given
         when(mockWrapper.getReason()).thenReturn(null);
         when(mockWrapper.getMessage()).thenReturn(null);
@@ -186,14 +195,15 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getTitle(), "Test Method");
-        assertEquals(result.getStatus(), PASSED);
+        assertEquals("Test Method", result.getTitle());
+        assertEquals(PASSED, result.getStatus());
         assertNull(result.getMessage());
         assertNull(result.getStack());
     }
 
-    @Test(description = "Should handle failed test status correctly")
-    public void shouldHandleFailedTestStatus() {
+    @Test
+    @DisplayName("Should handle failed test status correctly")
+    void shouldHandleFailedTestStatus() {
         // Given
         AssertionError assertionError = new AssertionError("Expected <true> but was <false>");
 
@@ -208,13 +218,14 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getStatus(), FAILED);
-        assertEquals(result.getMessage(), "Expected <true> but was <false>");
+        assertEquals(FAILED, result.getStatus());
+        assertEquals("Expected <true> but was <false>", result.getMessage());
         assertNotNull(result.getStack());
     }
 
-    @Test(description = "Should handle skipped test status correctly")
-    public void shouldHandleSkippedTestStatus() {
+    @Test
+    @DisplayName("Should handle skipped test status correctly")
+    void shouldHandleSkippedTestStatus() {
         // Given
         when(mockWrapper.getStatus()).thenReturn(SKIPPED);
         when(mockWrapper.getReason()).thenReturn("Test dependencies not met");
@@ -224,12 +235,13 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getStatus(), SKIPPED);
-        assertEquals(result.getMessage(), "Test dependencies not met");
+        assertEquals(SKIPPED, result.getStatus());
+        assertEquals("Test dependencies not met", result.getMessage());
     }
 
-    @Test(description = "Should handle metadata with null testId correctly")
-    public void shouldHandleMetadataWithNullTestId() {
+    @Test
+    @DisplayName("Should handle metadata with null testId correctly")
+    void shouldHandleMetadataWithNullTestId() {
         // Given
         when(mockMetadata.getTestId()).thenReturn(null);
         when(mockWrapper.getMessage()).thenReturn("Test message");
@@ -240,12 +252,13 @@ public class TestNgTestResultConstructorTest {
         // Then
         assertNotNull(result);
         assertNull(result.getTestId());
-        assertEquals(result.getTitle(), "Test Method");
-        assertEquals(result.getMessage(), "Test message");
+        assertEquals("Test Method", result.getTitle());
+        assertEquals("Test message", result.getMessage());
     }
 
-    @Test(description = "Should preserve all metadata fields in result")
-    public void shouldPreserveAllMetadataFields() {
+    @Test
+    @DisplayName("Should preserve all metadata fields in result")
+    void shouldPreserveAllMetadataFields() {
         // Given
         when(mockMetadata.getTitle()).thenReturn("Custom Test Title");
         when(mockMetadata.getTestId()).thenReturn("custom-id-456");
@@ -258,16 +271,17 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getTitle(), "Custom Test Title");
-        assertEquals(result.getTestId(), "custom-id-456");
-        assertEquals(result.getSuiteTitle(), "CustomSuite");
-        assertEquals(result.getFile(), "CustomSuite.java");
-        assertEquals(result.getStatus(), PASSED);
-        assertEquals(result.getMessage(), "Custom message");
+        assertEquals("Custom Test Title", result.getTitle());
+        assertEquals("custom-id-456", result.getTestId());
+        assertEquals("CustomSuite", result.getSuiteTitle());
+        assertEquals("CustomSuite.java", result.getFile());
+        assertEquals(PASSED, result.getStatus());
+        assertEquals("Custom message", result.getMessage());
     }
 
-    @Test(description = "Should handle nested exceptions correctly")
-    public void shouldHandleNestedExceptions() {
+    @Test
+    @DisplayName("Should handle nested exceptions correctly")
+    void shouldHandleNestedExceptions() {
         // Given
         RuntimeException cause = new RuntimeException("Root cause");
         RuntimeException wrapper = new RuntimeException("Wrapper exception", cause);
@@ -282,14 +296,15 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getMessage(), "Wrapper exception");
+        assertEquals("Wrapper exception", result.getMessage());
         assertNotNull(result.getStack());
         assertTrue(result.getStack().contains("Wrapper exception"));
         assertTrue(result.getStack().contains("Root cause"));
     }
 
-    @Test(description = "Should handle exception without message")
-    public void shouldHandleExceptionWithoutMessage() {
+    @Test
+    @DisplayName("Should handle exception without message")
+    void shouldHandleExceptionWithoutMessage() {
         // Given
         RuntimeException exceptionWithoutMessage = new RuntimeException();
 
@@ -308,8 +323,9 @@ public class TestNgTestResultConstructorTest {
         assertTrue(result.getStack().contains("RuntimeException"));
     }
 
-    @Test(description = "getStackTrace should convert throwable to string")
-    public void getStackTraceShouldConvertThrowableToString() {
+    @Test
+    @DisplayName("getStackTrace should convert throwable to string")
+    void getStackTraceShouldConvertThrowableToString() {
         // Given
         RuntimeException testException = new RuntimeException("Test exception");
 
@@ -323,8 +339,9 @@ public class TestNgTestResultConstructorTest {
         assertTrue(stackTrace.contains("at "));
     }
 
-    @Test(description = "getStackTrace should handle nested exceptions")
-    public void getStackTraceShouldHandleNestedException() {
+    @Test
+    @DisplayName("getStackTrace should handle nested exceptions")
+    void getStackTraceShouldHandleNestedException() {
         // Given
         RuntimeException cause = new RuntimeException("Original cause");
         IllegalStateException wrapper = new IllegalStateException("Wrapper", cause);
@@ -341,8 +358,9 @@ public class TestNgTestResultConstructorTest {
         assertTrue(stackTrace.contains("Original cause"));
     }
 
-    @Test(description = "getStackTrace should handle exception without message")
-    public void getStackTraceShouldHandleExceptionWithoutMessage() {
+    @Test
+    @DisplayName("getStackTrace should handle exception without message")
+    void getStackTraceShouldHandleExceptionWithoutMessage() {
         // Given
         NullPointerException npe = new NullPointerException();
 
@@ -355,8 +373,9 @@ public class TestNgTestResultConstructorTest {
         assertTrue(stackTrace.contains("at "));
     }
 
-    @Test(description = "Should handle empty reason correctly")
-    public void shouldHandleEmptyReason() {
+    @Test
+    @DisplayName("Should handle empty reason correctly")
+    void shouldHandleEmptyReason() {
         // Given
         when(mockWrapper.getReason()).thenReturn("");
         when(mockWrapper.getMessage()).thenReturn("Fallback message");
@@ -366,11 +385,12 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getMessage(), "");
+        assertEquals("", result.getMessage());
     }
 
-    @Test(description = "Should handle empty message correctly")
-    public void shouldHandleEmptyMessage() {
+    @Test
+    @DisplayName("Should handle empty message correctly")
+    void shouldHandleEmptyMessage() {
         // Given
         when(mockWrapper.getReason()).thenReturn(null);
         when(mockWrapper.getMessage()).thenReturn("");
@@ -380,7 +400,7 @@ public class TestNgTestResultConstructorTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(result.getMessage(), "");
+        assertEquals("", result.getMessage());
         assertNull(result.getStack());
     }
 }
