@@ -119,9 +119,9 @@ public class NativeApiClient implements ApiInterface {
     private void logAndPrintUrls(Map<String, String> responseBody) {
         String publicUrl = responseBody.get("public_url");
 
-        log.info("[TESTOMATIO] Testomat.io java reporter version: [{}]", REPORTER_VERSION);
+        log.info("[TESTOMATIO] Testomat.io java core reporter version: [{}]", REPORTER_VERSION);
         System.out.println(String.format(
-                "[TESTOMATIO] Testomat.io java core reporter version: [%n]", REPORTER_VERSION));
+                "[TESTOMATIO] Testomat.io java core reporter version: [%s]", REPORTER_VERSION));
 
         if (publicUrl != null) {
             System.out.println(String.format("[TESTOMATIO] Public url: %s", publicUrl));
