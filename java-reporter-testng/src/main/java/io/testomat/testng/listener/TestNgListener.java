@@ -18,6 +18,8 @@ import io.testomat.testng.extractor.TestNgTestWrapper;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.IInvokedMethodListener;
 import org.testng.ISuite;
 import org.testng.ISuiteListener;
@@ -31,6 +33,7 @@ import org.testng.annotations.Test;
  * Supports custom annotations (@Title, @TestId) and handles disabled tests.
  */
 public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMethodListener {
+    private static final Logger log = LoggerFactory.getLogger(TestNgListener.class);
     private static final String DISABLED_MESSAGE = "Test disabled via @Test(enabled = false)";
 
     private final ResultConstructor resultConstructor = new TestNgTestResultConstructor();
@@ -39,13 +42,8 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
     private final MetaDataExtractor<TestNgTestWrapper> metaDataExtractor =
             new TestNgMetaDataExtractor();
 
-    static {
-        System.out.println("Testng listener initializing...");
-    }
-
     @Override
     public void onStart(ISuite suite) {
-        System.out.println("TESTNG MODULE STARTED");
         handleSuiteStarted(suite.getName());
         checkAndReportDisabledTests(suite);
     }
