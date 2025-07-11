@@ -6,8 +6,30 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-testng</artifactId>
-    <version>0.1.0</version>
+    <version>0.6.0</version>
     <packaging>jar</packaging>
+
+    <name>Testomat.io Java Reporter TestNG</name>
+    <description>Java reporter library for Testomat.io integration with TestNG</description>
+    <url>https://github.com/testomatio/java-reporter</url>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>YevheniiVlasenko</id>
+            <name>Yevhenii Vlasenko</name>
+            <email>YevheniiVlasenko@testomat.work</email>
+            <organization>Testomat.io</organization>
+            <organizationUrl>https://testomat.io</organizationUrl>
+        </developer>
+    </developers>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -19,8 +41,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.1.0</version>
-            <scope>compile</scope>
+            <version>0.6.0</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>

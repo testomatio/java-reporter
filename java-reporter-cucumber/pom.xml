@@ -7,7 +7,29 @@
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-cucumber</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.0</version>
+    <version>0.6.0</version>
+
+    <name>Testomat.io Java Reporter Cucumber</name>
+    <description>Java reporter library for Testomat.io integration with Cucumber</description>
+    <url>https://github.com/testomatio/java-reporter</url>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>YevheniiVlasenko</id>
+            <name>Yevhenii Vlasenko</name>
+            <email>YevheniiVlasenko@testomat.work</email>
+            <organization>Testomat.io</organization>
+            <organizationUrl>https://testomat.io</organizationUrl>
+        </developer>
+    </developers>
 
     <properties>
         <junit.version>5.10.0</junit.version>
@@ -21,7 +43,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.1.0</version>
+            <version>0.6.0</version>
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
