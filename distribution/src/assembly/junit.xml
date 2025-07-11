@@ -1,0 +1,18 @@
+<assembly>
+    <id>junit</id>
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <dependencySets>
+        <dependencySet>
+            <includes>
+                <include>io.testomat:java-reporter-core</include>
+                <include>io.testomat:java-reporter-junit</include>
+            </includes>
+            <unpack>true</unpack>
+            <scope>runtime</scope>
+        </dependencySet>
+    </dependencySets>
+</assembly>
