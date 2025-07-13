@@ -5,15 +5,21 @@
 
 ## 🎯 Quick Start 
 
-1. **Add dependency** to your `pom.xml`:
+1. **Add dependency** to your `pom.xml` with classifier to align your test framework:
    ```xml
    <dependency>
        <groupId>io.testomat</groupId>
-       <artifactId>java-reporter</artifactId>
-       <version>0.x.0</version>
+       <artifactId>java-reporter-distribution</artifactId>
+       <version>0.6.0</version>
+       <classifier>junit</classifier>
    </dependency>
    ```
-
+   By now supported frameworks are:
+   - Junit5
+   - TestNG
+   - Cucumber  
+   (use lowercase in the classifier tag)
+   
 2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
 
 3. **Set your API key** as environment variable:
@@ -73,8 +79,9 @@ This is the **official Java reporter** for [Testomat.io](https://testomat.io/) -
 ```xml
 <dependency>
     <groupId>io.testomat</groupId>
-    <artifactId>java-reporter</artifactId>
-    <version>0.x.0</version>
+    <artifactId>java-reporter-distribution</artifactId>
+    <version>0.6.0</version>
+    <classifier>xxx</classifier>
 </dependency>
 ```
 
@@ -119,16 +126,17 @@ mvn test -Dtestomatio.api.key=tstmt_your_key_here
                 "pretty",
                 "json:target/cucumber-reports/",
                 "html:target/cucumber-reports/",
-                "com.testomatio.reporter.core.frameworkintegration.CucumberListener"  // 👈 Add this line
+                "io.testomat.cucumber.listener.CucumberListener"  // 👈 Add this line
         }
 )
 public class TestRunner {
 }
 ```
 
+
 **Step 2:** Run with your API key:
 ```bash
-mvn test -Dtestomatio.api.key=tstmt_your_key_here
+   mvn test -Dtestomatio.api.key=tstmt_your_key_here
 ```
 
 #### 🧪 For TestNG Projects
