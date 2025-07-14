@@ -10,7 +10,7 @@
    <dependency>
        <groupId>io.testomat</groupId>
        <artifactId>java-reporter-distribution</artifactId>
-       <version>0.6.0</version>
+       <version>0.6.1</version>
        <classifier>junit</classifier>
    </dependency>
    ```
