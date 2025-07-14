@@ -1,0 +1,96 @@
+package io.testomat.testng.constructor;
+
+import io.testomat.core.model.ExceptionDetails;
+import io.testomat.core.model.TestResult;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Optional;
+import org.testng.ITestResult;
+
+/**
+ * Constructs test case results from TestNG test results.
+ * Supports custom messages/reasons and extracts exception details from test results.
+ */
+public class TestNgTestResultConstructor {
+
+    /**
+     * Constructs test case result from wrapper containing framework-specific data.
+     *
+     * @param wrapper wrapper containing test metadata and framework data
+     * @return constructed test case result
+     */
+    public TestResult constructTestRunResult(TestResultWrapper wrapper) {
+        validateWrapper(wrapper);
+
+        String message;
+        String stack;
+
+        if (wrapper.getReason() != null || wrapper.getMessage() != null) {
+            message = Optional.ofNullable(wrapper.getReason()).orElse(wrapper.getMessage());
+            stack = null;
+        } else {
+            ExceptionDetails details = extractExceptionDetails(wrapper);
+            message = details.getMessage();
+            stack = details.getStack();
+        }
+
+        return buildTestResult(wrapper, message, stack);
+    }
+
+    /**
+     * Validates that wrapper and its metadata are not null.
+     */
+    private void validateWrapper(TestResultWrapper wrapper) {
+        if (wrapper == null) {
+            throw new IllegalArgumentException("TestRunResultWrapper cannot be null");
+        }
+        if (wrapper.getTestMetadata() == null) {
+            throw new IllegalArgumentException("TestMetadata cannot be null");
+        }
+    }
+
+    /**
+     * Builds test result with provided message and stack trace.
+     */
+    private TestResult buildTestResult(TestResultWrapper wrapper, String message, String stack) {
+        var metadata = wrapper.getTestMetadata();
+        return TestResult.builder()
+                .withTitle(metadata.getTitle())
+                .withTestId(metadata.getTestId())
+                .withSuiteTitle(metadata.getSuiteTitle())
+                .withFile(metadata.getFile())
+                .withStatus(wrapper.getStatus())
+                .withMessage(message)
+                .withStack(stack)
+                .build();
+    }
+
+    /**
+     * Extracts exception details from TestNG test result.
+     */
+    private ExceptionDetails extractExceptionDetails(TestResultWrapper wrapper) {
+        return Optional.ofNullable(wrapper.getTestResult())
+                .map(ITestResult::getThrowable)
+                .map(this::createExceptionDetails)
+                .orElse(ExceptionDetails.empty());
+    }
+
+    /**
+     * Creates exception details with message and stack trace.
+     */
+    private ExceptionDetails createExceptionDetails(Throwable throwable) {
+        String message = throwable.getMessage();
+        String stack = getStackTrace(throwable);
+        return new ExceptionDetails(message, stack);
+    }
+
+    /**
+     * Converts throwable to stack trace string.
+     */
+    public String getStackTrace(Throwable throwable) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        return sw.toString();
+    }
+}
