@@ -48,22 +48,22 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.1</version>
         </dependency>
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-junit</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.1</version>
         </dependency>
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-testng</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.1</version>
         </dependency>
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-cucumber</artifactId>
-            <version>0.6.0</version>
+            <version>0.6.1</version>
         </dependency>
     </dependencies>
 
