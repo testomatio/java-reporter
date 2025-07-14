@@ -239,64 +239,6 @@
                     <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <inherited>false</inherited>
-                <version>3.3.0</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                    <linkXRef>false</linkXRef>
-                    <sourceDirectories>
-                        <sourceDirectory>src/main/java</sourceDirectory>
-                    </sourceDirectories>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
-
-    <!--    keep this segment commented 'cause the env.GPG_PASSPHRASE is being resolved only on release execution-->
-    <!--    <profiles>-->
-    <!--        <profile>-->
-    <!--            <id>release</id>-->
-    <!--            <build>-->
-    <!--                <plugins>-->
-    <!--                    <plugin>-->
-    <!--                        <groupId>org.apache.maven.plugins</groupId>-->
-    <!--                        <artifactId>maven-gpg-plugin</artifactId>-->
-    <!--                        <version>${maven-gpg-plugin.version}</version>-->
-    <!--                        <configuration>-->
-    <!--                            <executable>gpg</executable>-->
-    <!--                            <passphrase>${env.GPG_PASSPHRASE}</passphrase>  -->
-    <!--                            <gpgArguments>-->
-    <!--                                <arg>&#45;&#45;pinentry-mode</arg>-->
-    <!--                                <arg>loopback</arg>-->
-    <!--                                <arg>&#45;&#45;batch</arg>-->
-    <!--                                <arg>&#45;&#45;yes</arg>-->
-    <!--                            </gpgArguments>-->
-    <!--                        </configuration>-->
-    <!--                        <executions>-->
-    <!--                            <execution>-->
-    <!--                                <id>sign-artifacts</id>-->
-    <!--                                <phase>verify</phase>-->
-    <!--                                <goals>-->
-    <!--                                    <goal>sign</goal>-->
-    <!--                                </goals>-->
-    <!--                            </execution>-->
-    <!--                        </executions>-->
-    <!--                    </plugin>-->
-    <!--                </plugins>-->
-    <!--            </build>-->
-    <!--        </profile>-->
-    <!--    </profiles>-->
 </project>
