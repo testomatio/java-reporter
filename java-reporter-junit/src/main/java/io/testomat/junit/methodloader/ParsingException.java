@@ -1,4 +1,4 @@
-package io.testomat.methodloader.junit;
+package io.testomat.junit.methodloader;
 
 public class ParsingException extends RuntimeException {
     public ParsingException(String message) {

@@ -1,4 +1,4 @@
-package io.testomat.methodloader.junit;
+package io.testomat.junit.methodloader;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
 
