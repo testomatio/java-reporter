@@ -10,8 +10,8 @@ import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.constructor.JUnitTestResultConstructor;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
+import io.testomat.junit.methodloader.MethodBodyExporter;
 import io.testomat.junit.model.TestResultWrapper;
-import io.testomat.methodloader.junit.TestLoader;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -26,21 +26,20 @@ import org.junit.jupiter.api.extension.TestWatcher;
 public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         AfterAllCallback, TestWatcher {
 
-    private final TestLoader testLoader = new TestLoader();
+    private final MethodBodyExporter methodBodyExporter = new MethodBodyExporter();
     private final GlobalRunManager runManager = GlobalRunManager.getInstance();
     private final JUnitTestResultConstructor resultConstructor = new JUnitTestResultConstructor();
     private final JunitMetaDataExtractor metaDataExtractor = new JunitMetaDataExtractor();
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        testLoader.loadTestBodyIfRequired(context);
         runManager.incrementSuiteCounter();
     }
 
     @Override
     public void afterAll(ExtensionContext context) {
+        methodBodyExporter.loadTestBodyIfRequired(context);
         runManager.decrementSuiteCounter();
-        testLoader.loadTestBodyIfRequired(context);
     }
 
     @Override

@@ -11,7 +11,7 @@ public class RequestBodyBuilder {
     public static final Boolean NO_EMPTY_FLAG = true;
     public static final Boolean NO_DETACH_FLAG = true;
     public static final Boolean STRUCTURE_FLAG = true;
-    public static final Boolean SYNC_FLAG = false;
+    public static final Boolean SYNC_FLAG = true;
 
     /**
      * Builds a JSON request body from a list of test cases.

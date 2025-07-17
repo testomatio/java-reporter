@@ -33,7 +33,6 @@
     </developers>
     <modules>
         <module>distribution</module>
-        <module>java-reporter-method-loader</module>
     </modules>
 
     <scm>
