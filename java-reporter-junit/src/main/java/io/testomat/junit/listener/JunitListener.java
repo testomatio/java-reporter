@@ -10,7 +10,7 @@ import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.constructor.JUnitTestResultConstructor;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
-import io.testomat.junit.methodloader.MethodExportManager;
+import io.testomat.junit.methodexporter.MethodExportManager;
 import io.testomat.junit.model.TestResultWrapper;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.AfterAllCallback;

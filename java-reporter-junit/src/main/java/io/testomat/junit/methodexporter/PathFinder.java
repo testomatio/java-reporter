@@ -1,9 +1,12 @@
-package io.testomat.junit.methodloader;
+package io.testomat.junit.methodexporter;
 
 import java.nio.file.Paths;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PathFinder {
+    private static final Logger log = LoggerFactory.getLogger(PathFinder.class);
 
     public String getTestClassFilePath(ExtensionContext extensionContext) {
         try {
@@ -14,7 +17,8 @@ public class PathFinder {
                     return path;
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.debug(e.getMessage(), e);
         }
 
         return findTestFileByClassName(extensionContext);
@@ -22,7 +26,7 @@ public class PathFinder {
 
     public String getPath(ExtensionContext context) {
         Class<?> testClass = context.getTestClass().orElseThrow(
-                () -> new MethodLoaderException("No test class found"));
+                () -> new MethodExporterException("No test class found"));
 
         return testClass.getProtectionDomain()
                 .getCodeSource()

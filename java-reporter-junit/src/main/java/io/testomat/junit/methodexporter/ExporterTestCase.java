@@ -1,8 +1,8 @@
-package io.testomat.junit.methodloader;
+package io.testomat.junit.methodexporter;
 
 import java.util.List;
 
-public class LoaderTestCase {
+public class ExporterTestCase {
     private String name;
     private List<String> suites;
     private String code;

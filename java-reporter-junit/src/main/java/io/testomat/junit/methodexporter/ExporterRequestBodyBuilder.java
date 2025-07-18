@@ -1,25 +1,25 @@
-package io.testomat.junit.methodloader;
+package io.testomat.junit.methodexporter;
 
 import java.util.List;
 
 /**
  * Builds JSON request bodies for test case submissions to the testomat.io service.
  */
-public class RequestBodyBuilder {
+public class ExporterRequestBodyBuilder {
     private static final String FRAMEWORK_NAME = "junit";
-    public static final String LANGUAGE_NAME = "java";
-    public static final Boolean NO_EMPTY_FLAG = true;
-    public static final Boolean NO_DETACH_FLAG = true;
-    public static final Boolean STRUCTURE_FLAG = true;
-    public static final Boolean SYNC_FLAG = true;
+    private static final String LANGUAGE_NAME = "java";
+    private static final Boolean NO_EMPTY_FLAG = true;
+    private static final Boolean NO_DETACH_FLAG = true;
+    private static final Boolean STRUCTURE_FLAG = true;
+    private static final Boolean SYNC_FLAG = true;
 
     /**
      * Builds a JSON request body from a list of test cases.
      *
-     * @param loaderTestCases the test cases to include in the request
+     * @param exporterTestCases the test cases to include in the request
      * @return JSON string representing the request body
      */
-    public String buildRequestBody(List<LoaderTestCase> loaderTestCases) {
+    public String buildRequestBody(List<ExporterTestCase> exporterTestCases) {
         StringBuilder json = new StringBuilder();
 
         json.append("{\n")
@@ -31,11 +31,11 @@ public class RequestBodyBuilder {
                 .append("  \"sync\": ").append(SYNC_FLAG).append(",\n")
                 .append("  \"tests\": [\n");
 
-        for (int i = 0; i < loaderTestCases.size(); i++) {
-            LoaderTestCase testCase = loaderTestCases.get(i);
+        for (int i = 0; i < exporterTestCases.size(); i++) {
+            ExporterTestCase testCase = exporterTestCases.get(i);
             appendTestCase(json, testCase);
 
-            if (i < loaderTestCases.size() - 1) {
+            if (i < exporterTestCases.size() - 1) {
                 json.append(",");
             }
             json.append("\n");
@@ -45,16 +45,16 @@ public class RequestBodyBuilder {
         return json.toString();
     }
 
-
-
-    private void appendTestCase(StringBuilder json, LoaderTestCase testCase) {
+    private void appendTestCase(StringBuilder json, ExporterTestCase testCase) {
         json.append("    {\n")
                 .append("      \"name\": \"").append(escapeJson(testCase.getName())).append("\",\n")
-                .append("      \"suites\": ").append(formatStringArray(testCase.getSuites())).append(",\n")
+                .append("      \"suites\": ").append(formatStringArray(testCase.getSuites()))
+                .append(",\n")
                 .append("      \"code\": \"").append(escapeJson(testCase.getCode())).append("\",\n")
                 .append("      \"file\": \"").append(escapeJson(testCase.getFile())).append("\",\n")
                 .append("      \"skipped\": ").append(testCase.isSkipped()).append(",\n")
-                .append("      \"labels\": ").append(formatStringArray(testCase.getLabels())).append("\n")
+                .append("      \"labels\": ").append(formatStringArray(testCase.getLabels()))
+                .append("\n")
                 .append("    }");
     }
 

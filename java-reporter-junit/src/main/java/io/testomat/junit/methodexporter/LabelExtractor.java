@@ -1,4 +1,4 @@
-package io.testomat.junit.methodloader;
+package io.testomat.junit.methodexporter;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
@@ -96,9 +96,15 @@ public class LabelExtractor {
 
     private void extractNamePatternLabels(MethodDeclaration testMethod, List<String> labels) {
         String methodName = testMethod.getNameAsString().toLowerCase();
-        if (methodName.contains("integration")) labels.add("integration");
-        if (methodName.contains("smoke")) labels.add("smoke");
-        if (methodName.contains("performance")) labels.add("performance");
+        if (methodName.contains("integration")) {
+            labels.add("integration");
+        }
+        if (methodName.contains("smoke")) {
+            labels.add("smoke");
+        }
+        if (methodName.contains("performance")) {
+            labels.add("performance");
+        }
     }
 
     public String getAnnotationValue(AnnotationExpr annotation) {

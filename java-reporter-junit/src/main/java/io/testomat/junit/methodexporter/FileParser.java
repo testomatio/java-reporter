@@ -1,4 +1,4 @@
-package io.testomat.junit.methodloader;
+package io.testomat.junit.methodexporter;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -18,7 +18,7 @@ public class FileParser {
                 return StaticJavaParser.parse(filePath);
             }
         } catch (Exception e) {
-            return null;
+            throw new MethodExporterException("Failed to parse file " + filepath, e);
         }
     }
 }

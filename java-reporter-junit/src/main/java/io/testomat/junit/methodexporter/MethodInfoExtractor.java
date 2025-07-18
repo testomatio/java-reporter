@@ -1,4 +1,4 @@
-package io.testomat.junit.methodloader;
+package io.testomat.junit.methodexporter;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -41,7 +41,9 @@ public class MethodInfoExtractor {
 
             if (!method.getParameters().isEmpty()) {
                 for (int i = 0; i < method.getParameters().size(); i++) {
-                    if (i > 0) code.append(", ");
+                    if (i > 0) {
+                        code.append(", ");
+                    }
                     code.append(method.getParameter(i).toString());
                 }
             }
@@ -50,7 +52,9 @@ public class MethodInfoExtractor {
             if (!method.getThrownExceptions().isEmpty()) {
                 code.append(" throws ");
                 for (int i = 0; i < method.getThrownExceptions().size(); i++) {
-                    if (i > 0) code.append(", ");
+                    if (i > 0) {
+                        code.append(", ");
+                    }
                     code.append(method.getThrownException(i).toString());
                 }
             }
@@ -68,10 +72,10 @@ public class MethodInfoExtractor {
         try {
             return method.getAnnotations().stream()
                     .anyMatch(ann ->
-                            ann.getNameAsString().equals("Disabled") ||
-                                    ann.getNameAsString().equals("Ignore")) ||
-                    method.getNameAsString().startsWith("ignore") ||
-                    method.getNameAsString().startsWith("skip");
+                            ann.getNameAsString().equals("Disabled")
+                                    || ann.getNameAsString().equals("Ignore"))
+                    || method.getNameAsString().startsWith("ignore")
+                    || method.getNameAsString().startsWith("skip");
         } catch (Exception e) {
             return false;
         }
@@ -87,7 +91,8 @@ public class MethodInfoExtractor {
 
             while (currentClass != null) {
                 classHierarchy.add(0, currentClass);
-                currentClass = currentClass.findAncestor(ClassOrInterfaceDeclaration.class).orElse(null);
+                currentClass =
+                        currentClass.findAncestor(ClassOrInterfaceDeclaration.class).orElse(null);
             }
 
             for (ClassOrInterfaceDeclaration clazz : classHierarchy) {

@@ -22,5 +22,4 @@ public class PropertyNameConstants {
 
     public static final String SHARED_RUN_PROPERTY_NAME = "testomatio.shared.run";
     public static final String SHARED_TIMEOUT_PROPERTY_NAME = "testomatio.shared.run.timeout";
-
 }
