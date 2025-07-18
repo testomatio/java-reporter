@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -25,6 +27,26 @@ public class MethodExportManagerTest {
         @org.junit.jupiter.api.Test
         public void testMethod() {
         }
+    }
+
+    @BeforeEach
+    void setUp() {
+        // Встановлюємо тестові properties перед кожним тестом
+        System.setProperty("testomatio.api.key", "test-key-12345");
+        System.setProperty("testomatio.url", "https://app.testomat.io");
+        System.setProperty("testomatio.create", "false");
+        System.setProperty("testomatio.publish", "false");
+        System.setProperty("testomatio.export.required", "true");
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Очищаємо тестові properties після кожного тесту
+        System.clearProperty("testomatio.api.key");
+        System.clearProperty("testomatio.url");
+        System.clearProperty("testomatio.create");
+        System.clearProperty("testomatio.publish");
+        System.clearProperty("testomatio.export.required");
     }
 
     @Test
@@ -146,6 +168,15 @@ public class MethodExportManagerTest {
                 }, "Should handle path format: " + pathFormat);
             }
         }
+    }
+
+    @Test
+    public void testLoadTestBodyWithNullExtensionContext() {
+        MethodExportManager manager = new MethodExportManager();
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            manager.loadTestBodyIfRequired(null);
+        });
     }
 
     @Test
