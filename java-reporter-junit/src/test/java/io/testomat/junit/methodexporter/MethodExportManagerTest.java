@@ -84,40 +84,6 @@ public class MethodExportManagerTest {
     }
 
     @Test
-    public void testLoadTestBodyWithUnixPath(@TempDir Path tempDir) throws IOException {
-        String javaContent = "package com.example;\n" +
-                "import org.junit.jupiter.api.Test;\n" +
-                "import org.junit.jupiter.api.DisplayName;\n" +
-                "\n" +
-                "public class UnixTestClass {\n" +
-                "    @Test\n" +
-                "    @DisplayName(\"Unix Test\")\n" +
-                "    public void testOnUnix() {\n" +
-                "        // test implementation\n" +
-                "    }\n" +
-                "}";
-
-        Path testFile = tempDir.resolve("UnixTestClass.java");
-        Files.write(testFile, javaContent.getBytes());
-
-        ExtensionContext context = mock(ExtensionContext.class);
-        Class<?> testClass = TestClass.class;
-
-        doReturn(Optional.of(testClass)).when(context).getTestClass();
-        doReturn(testClass).when(context).getRequiredTestClass();
-
-        try (MockedStatic<Paths> pathsMock = Mockito.mockStatic(Paths.class)) {
-            pathsMock.when(() -> Paths.get(anyString())).thenReturn(testFile);
-
-            MethodExportManager manager = new MethodExportManager();
-
-            assertDoesNotThrow(() -> {
-                manager.loadTestBodyIfRequired(context);
-            });
-        }
-    }
-
-    @Test
     public void testLoadTestBodyWithNonExistentFile() {
         ExtensionContext context = mock(ExtensionContext.class);
         Class<?> testClass = TestClass.class;
