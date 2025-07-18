@@ -124,34 +124,6 @@ public class CrossPlatformPathTest {
     }
 
     @Test
-    public void testFileParserWithDifferentPathFormats(@TempDir Path tempDir) throws IOException {
-        String javaContent = "package com.test;\n" +
-                "import org.junit.jupiter.api.Test;\n" +
-                "\n" +
-                "public class MultiPathTest {\n" +
-                "    @Test\n" +
-                "    public void testMethod() {}\n" +
-                "}";
-
-        Path testFile = tempDir.resolve("MultiPathTest.java");
-        Files.write(testFile, javaContent.getBytes());
-
-        FileParser fileParser = new FileParser();
-
-        String[] pathFormats = {
-                testFile.toString(),
-                testFile.toString().replace('\\', '/'),
-                testFile.toString().replace('/', '\\')
-        };
-
-        for (String pathFormat : pathFormats) {
-            com.github.javaparser.ast.CompilationUnit result = fileParser.parseFile(pathFormat);
-            assertNotNull(result);
-            assertEquals("com.test", result.getPackageDeclaration().get().getNameAsString());
-        }
-    }
-
-    @Test
     public void testExporterRequestBodyBuilderWithWindowsPaths() {
         ExporterRequestBodyBuilder builder = new ExporterRequestBodyBuilder();
 

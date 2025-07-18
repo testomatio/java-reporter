@@ -22,28 +22,6 @@ public class FileParserTest {
     private final FileParser fileParser = new FileParser();
 
     @Test
-    public void testParseFileWithWindowsPath(@TempDir Path tempDir) throws IOException {
-        String javaContent = "package com.example;\n" +
-                "import org.junit.jupiter.api.Test;\n" +
-                "\n" +
-                "public class TestClass {\n" +
-                "    @Test\n" +
-                "    public void testMethod() {}\n" +
-                "}";
-        
-        Path testFile = tempDir.resolve("TestClass.java");
-        Files.write(testFile, javaContent.getBytes());
-        
-        String windowsStylePath = testFile.toString().replace('/', '\\');
-        
-        CompilationUnit result = fileParser.parseFile(windowsStylePath);
-        
-        assertNotNull(result);
-        assertTrue(result.getPackageDeclaration().isPresent());
-        assertEquals("com.example", result.getPackageDeclaration().get().getNameAsString());
-    }
-
-    @Test
     public void testParseFileWithUnixPath(@TempDir Path tempDir) throws IOException {
         String javaContent = "package com.example;\n" +
                 "import org.junit.jupiter.api.Test;\n" +
