@@ -52,4 +52,27 @@ public class PathFinder {
             return "src/test/java/UnknownTest.java";
         }
     }
+
+    public String extractRelativeFilePath(String filepath) {
+        try {
+            String normalizedPath = filepath.replace('\\', '/');
+
+            if (normalizedPath.length() > 2 && normalizedPath.charAt(1) == ':') {
+                normalizedPath = normalizedPath.substring(2);
+            }
+
+            if (normalizedPath.startsWith("/")) {
+                normalizedPath = normalizedPath.substring(1);
+            }
+
+            int srcIndex = normalizedPath.indexOf("src/");
+            if (srcIndex != -1) {
+                return normalizedPath.substring(srcIndex);
+            }
+
+            return normalizedPath.isEmpty() ? "src/test/java/UnknownFile.java" : normalizedPath;
+        } catch (Exception e) {
+            return "unknown";
+        }
+    }
 }
