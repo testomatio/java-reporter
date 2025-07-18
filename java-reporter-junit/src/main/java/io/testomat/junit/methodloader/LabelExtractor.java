@@ -101,7 +101,7 @@ public class LabelExtractor {
         if (methodName.contains("performance")) labels.add("performance");
     }
 
-    private String getAnnotationValue(AnnotationExpr annotation) {
+    public String getAnnotationValue(AnnotationExpr annotation) {
         if (annotation instanceof SingleMemberAnnotationExpr) {
             return ((SingleMemberAnnotationExpr) annotation)
                     .getMemberValue()
