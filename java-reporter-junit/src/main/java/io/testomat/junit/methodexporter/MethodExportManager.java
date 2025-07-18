@@ -46,12 +46,17 @@ public class MethodExportManager {
 
         List<ExporterTestCase> testCases = methodCaseExtractor.extractTestCases(cu, filepath);
 
+        if (testCases.isEmpty()) {
+            return;
+        }
+
         exportSender.sendTestCases(testCases);
     }
 
     private String initializeExportRequired() {
         try {
-            return provider.getProperty(EXPORT_REQUIRED_PROPERTY_NAME);
+            String value = provider.getProperty(EXPORT_REQUIRED_PROPERTY_NAME);
+            return value;
         } catch (Exception e) {
             return null;
         }

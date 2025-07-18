@@ -17,8 +17,13 @@ public class ExportSender {
     private final String apiKey = provider.getProperty(API_KEY_PROPERTY_NAME);
 
     public void sendTestCases(List<ExporterTestCase> exporterTestCases) {
+        if (exporterTestCases.isEmpty()) {
+            return;
+        }
+
         ExporterRequestBodyBuilder exporterRequestBodyBuilder = new ExporterRequestBodyBuilder();
         CustomHttpClient client = new NativeHttpClient();
+        
         String requestBody = exporterRequestBodyBuilder.buildRequestBody(exporterTestCases);
         String url = LOAD_URL + apiKey;
 
@@ -27,10 +32,15 @@ public class ExportSender {
                 if (attempt > 1) {
                     Thread.sleep(RETRY_TIMEOUT_MILLISECONDS);
                 }
+                
                 client.post(url, requestBody, null);
                 return;
             } catch (Exception e) {
-                if (!e.getMessage().contains("422") || attempt == RETRY_MAX_ATTEMPTS) {
+                boolean is422Error = e.getMessage().contains("422");
+                boolean isLastAttempt = attempt == RETRY_MAX_ATTEMPTS;
+                
+                if (!is422Error || isLastAttempt) {
+                    e.printStackTrace();
                     break;
                 }
             }

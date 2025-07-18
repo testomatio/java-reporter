@@ -33,6 +33,7 @@ public class ExporterRequestBodyBuilder {
 
         for (int i = 0; i < exporterTestCases.size(); i++) {
             ExporterTestCase testCase = exporterTestCases.get(i);
+            
             appendTestCase(json, testCase);
 
             if (i < exporterTestCases.size() - 1) {
@@ -42,6 +43,7 @@ public class ExporterRequestBodyBuilder {
         }
 
         json.append("  ]\n").append("}");
+        
         return json.toString();
     }
 
