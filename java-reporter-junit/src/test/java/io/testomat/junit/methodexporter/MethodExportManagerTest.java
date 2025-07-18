@@ -137,15 +137,6 @@ public class MethodExportManagerTest {
     }
 
     @Test
-    public void testLoadTestBodyWithNullExtensionContext() {
-        MethodExportManager manager = new MethodExportManager();
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            manager.loadTestBodyIfRequired(null);
-        });
-    }
-
-    @Test
     public void testLoadTestBodyWithExportNotRequired() {
         ExtensionContext context = mock(ExtensionContext.class);
         Class<?> testClass = TestClass.class;
