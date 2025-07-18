@@ -34,16 +34,28 @@ class JunitListenerTest {
 
     @BeforeEach
     void setUp() {
+        // Встановлюємо тестові properties перед ініціалізацією моків
+        System.setProperty("testomatio.api.key", "test-key-12345");
+        System.setProperty("testomatio.url", "https://app.testomat.io");
+        System.setProperty("testomatio.create", "false");
+        System.setProperty("testomatio.publish", "false");
+
         mockitoCloseable = MockitoAnnotations.openMocks(this);
 
         listener = new TestableJunitListener(mockRunManager);
 
         // Default active state
-        when(mockRunManager.isActive()).thenReturn(true);
+        doReturn(true).when(mockRunManager).isActive();
     }
 
     @AfterEach
     void tearDown() throws Exception {
+        // Очищаємо тестові properties
+        System.clearProperty("testomatio.api.key");
+        System.clearProperty("testomatio.url");
+        System.clearProperty("testomatio.create");
+        System.clearProperty("testomatio.publish");
+
         if (mockitoCloseable != null) {
             mockitoCloseable.close();
         }
@@ -172,7 +184,7 @@ class JunitListenerTest {
     void shouldNotReportResultsWhenRunManagerInactive() throws NoSuchMethodException {
         // Given
         setupMockContext("testMethod", "Test Method Display Name");
-        when(mockRunManager.isActive()).thenReturn(false);
+        doReturn(false).when(mockRunManager).isActive();
 
         // When
         listener.testSuccessful(mockContext);
@@ -222,9 +234,9 @@ class JunitListenerTest {
     void shouldHandleTestWithoutTestClassCorrectly() throws NoSuchMethodException {
         // Given
         Method testMethod = TestMethods.class.getMethod("testMethod");
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-        when(mockContext.getTestClass()).thenReturn(Optional.empty());
-        when(mockContext.getDisplayName()).thenReturn("Unknown Class Test");
+        doReturn(Optional.of(testMethod)).when(mockContext).getTestMethod();
+        doReturn(Optional.empty()).when(mockContext).getTestClass();
+        doReturn("Unknown Class Test").when(mockContext).getDisplayName();
 
         // When
         listener.testSuccessful(mockContext);
@@ -241,16 +253,16 @@ class JunitListenerTest {
     // Helper methods
     private void setupMockContext(String methodName, String displayName) throws NoSuchMethodException {
         Method testMethod = TestMethods.class.getMethod(methodName);
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-        when(mockContext.getTestClass()).thenReturn(Optional.of(TestMethods.class));
-        when(mockContext.getDisplayName()).thenReturn(displayName);
+        doReturn(Optional.of(testMethod)).when(mockContext).getTestMethod();
+        doReturn(Optional.of(TestMethods.class)).when(mockContext).getTestClass();
+        doReturn(displayName).when(mockContext).getDisplayName();
     }
 
     private void setupMockContextWithAnnotations(String methodName, String displayName) throws NoSuchMethodException {
         Method testMethod = TestMethods.class.getMethod(methodName);
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-        when(mockContext.getTestClass()).thenReturn(Optional.of(TestMethods.class));
-        when(mockContext.getDisplayName()).thenReturn(displayName);
+        doReturn(Optional.of(testMethod)).when(mockContext).getTestMethod();
+        doReturn(Optional.of(TestMethods.class)).when(mockContext).getTestClass();
+        doReturn(displayName).when(mockContext).getDisplayName();
     }
 
     // Test helper classes
