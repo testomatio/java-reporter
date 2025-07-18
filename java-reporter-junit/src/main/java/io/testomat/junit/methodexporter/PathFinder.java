@@ -15,7 +15,8 @@ import org.slf4j.LoggerFactory;
 public class PathFinder {
     private static final Logger log = LoggerFactory.getLogger(PathFinder.class);
     private static final String FILE_SEPARATOR = System.getProperty("file.separator");
-    private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
+    private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase()
+            .contains("win");
 
     public String getTestClassFilePath(ExtensionContext extensionContext) {
         try {
@@ -57,7 +58,8 @@ public class PathFinder {
             String relativePath = testClass.getName().replace(".", FILE_SEPARATOR) + ".java";
 
             List<String> possiblePaths = Arrays.asList(
-                    "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java" + FILE_SEPARATOR + relativePath,
+                    "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java"
+                            + FILE_SEPARATOR + relativePath,
                     "test" + FILE_SEPARATOR + relativePath,
                     relativePath
             );
@@ -69,10 +71,12 @@ public class PathFinder {
                 }
             }
 
-            return "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java" + FILE_SEPARATOR + relativePath;
+            return "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java"
+                    + FILE_SEPARATOR + relativePath;
         } catch (Exception e) {
             log.debug("Error finding test file by class name: {}", e.getMessage(), e);
-            return "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java" + FILE_SEPARATOR + "UnknownTest.java";
+            return "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java"
+                    + FILE_SEPARATOR + "UnknownTest.java";
         }
     }
 
