@@ -48,11 +48,6 @@
     <dependencies>
         <dependency>
             <groupId>io.testomat</groupId>
-            <artifactId>java-reporter-method-loader</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
             <version>0.6.1</version>
         </dependency>
