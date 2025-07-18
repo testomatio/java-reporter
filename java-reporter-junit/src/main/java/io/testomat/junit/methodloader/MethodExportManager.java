@@ -2,13 +2,10 @@ package io.testomat.junit.methodloader;
 
 import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
-import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 public class MethodExportManager {
     private static final ConcurrentHashMap<String, Boolean> processedClasses = new ConcurrentHashMap<>();
+    private static final String EXPORT_REQUIRED_PROPERTY_NAME = "testomatio.export.required";
 
     private final PropertyProvider provider =
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
@@ -26,8 +24,13 @@ public class MethodExportManager {
     private final MethodInfoExtractor methodInfoExtractor = new MethodInfoExtractor();
     private final ExportSender exportSender = new ExportSender();
     private final FileParser fileParser = new FileParser();
+    private final String exportRequired = initializeExportRequired();
 
     public void loadTestBodyIfRequired(final ExtensionContext extensionContext) {
+        if (exportRequired == null) {
+            return;
+        }
+
         if (!canLoadTests(extensionContext)) {
             return;
         }
@@ -104,6 +107,14 @@ public class MethodExportManager {
         } catch (Exception e) {
             throw new MethodLoaderException("Failed to extract test case from: " + method
                     + "and filepath: " + filepath, e);
+        }
+    }
+
+    private String initializeExportRequired() {
+        try {
+            return provider.getProperty(EXPORT_REQUIRED_PROPERTY_NAME);
+        } catch (Exception e) {
+            return null;
         }
     }
 }
