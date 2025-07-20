@@ -2,9 +2,9 @@ package io.testomat.junit.methodexporter.extractors;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import io.testomat.junit.methodexporter.ExporterTestCase;
 import io.testomat.junit.methodexporter.MethodExporterException;
 import io.testomat.junit.methodexporter.PathFinder;
+import io.testomat.junit.model.ExporterTestCase;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

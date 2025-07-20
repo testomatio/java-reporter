@@ -1,5 +1,6 @@
 package io.testomat.junit.methodexporter;
 
+import io.testomat.junit.model.ExporterTestCase;
 import java.util.List;
 
 /**

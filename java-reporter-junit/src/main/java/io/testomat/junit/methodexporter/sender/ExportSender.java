@@ -1,4 +1,4 @@
-package io.testomat.junit.methodexporter;
+package io.testomat.junit.methodexporter.sender;
 
 import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
@@ -6,6 +6,8 @@ import io.testomat.core.client.http.CustomHttpClient;
 import io.testomat.core.client.http.NativeHttpClient;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.junit.methodexporter.ExporterRequestBodyBuilder;
+import io.testomat.junit.model.ExporterTestCase;
 import java.util.List;
 
 public class ExportSender {

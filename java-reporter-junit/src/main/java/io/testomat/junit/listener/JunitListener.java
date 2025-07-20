@@ -49,8 +49,8 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     @Override
     public void afterAll(ExtensionContext context) {
-        methodExportManager.loadTestBodyIfRequired(context);
         runManager.decrementSuiteCounter();
+        methodExportManager.loadTestBodyIfRequired(context);
     }
 
     @Override

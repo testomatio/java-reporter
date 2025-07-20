@@ -3,6 +3,7 @@ package io.testomat.junit.methodexporter;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.testomat.junit.model.ExporterTestCase;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

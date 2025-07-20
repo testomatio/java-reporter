@@ -1,4 +1,4 @@
-package io.testomat.junit.methodexporter;
+package io.testomat.junit.model;
 
 import java.util.List;
 

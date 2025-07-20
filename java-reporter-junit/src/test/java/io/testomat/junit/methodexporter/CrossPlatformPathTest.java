@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import io.testomat.junit.methodexporter.parser.FileParser;
+import io.testomat.junit.model.ExporterTestCase;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

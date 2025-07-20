@@ -6,7 +6,6 @@ import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.constructor.JUnitTestResultConstructor;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
-import io.testomat.junit.model.TestResultWrapper;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 public class JunitTestReporter {
@@ -48,17 +47,9 @@ public class JunitTestReporter {
         try {
             metadata = metaDataExtractor.extractTestMetadata(context);
 
-            TestResultWrapper.Builder builder = TestResultWrapper.builder()
-                    .withTestMetadata(metadata)
-                    .withStatus(status)
-                    .withJunitExtensionContext(context);
+            TestResult result = resultConstructor.constructTestRunResult(
+                    metadata, message, status, context);
 
-            if (message != null) {
-                builder.withMessage(message);
-            }
-
-            TestResultWrapper wrapper = builder.build();
-            TestResult result = resultConstructor.constructTestRunResult(wrapper);
             runManager.reportTest(result);
 
         } catch (Exception e) {
