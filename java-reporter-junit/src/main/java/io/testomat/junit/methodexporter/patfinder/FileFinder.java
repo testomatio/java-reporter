@@ -1,10 +1,11 @@
-package io.testomat.junit.methodexporter;
+package io.testomat.junit.methodexporter.patfinder;
 
+import io.testomat.junit.methodexporter.MethodExporterException;
 import java.io.File;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
+import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -12,11 +13,21 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PathFinder {
-    private static final Logger log = LoggerFactory.getLogger(PathFinder.class);
-    private static final String FILE_SEPARATOR = System.getProperty("file.separator");
-    private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase()
-            .contains("win");
+public class FileFinder {
+    private static final Logger log = LoggerFactory.getLogger(FileFinder.class);
+    private static final String FILE_SEPARATOR = FileSystems.getDefault().getSeparator();
+    private final PathNormalizer normalizer;
+
+    public FileFinder() {
+        normalizer = new PathNormalizer();
+    }
+
+    /**
+     * Constructor for testing
+     */
+    public FileFinder(final PathNormalizer normalizer) {
+        this.normalizer = normalizer;
+    }
 
     public String getTestClassFilePath(ExtensionContext extensionContext) {
         String foundFile = findTestFileByClassName(extensionContext);
@@ -53,7 +64,7 @@ public class PathFinder {
                 String javaFilePath = projectRoot + "src" + FILE_SEPARATOR + "test"
                         + FILE_SEPARATOR + "java" + FILE_SEPARATOR + packagePath + ".java";
 
-                return normalizePath(javaFilePath);
+                return normalizer.normalizePath(javaFilePath);
             }
 
             if (classPath.endsWith(".class")) {
@@ -78,8 +89,7 @@ public class PathFinder {
                     .getLocation()
                     .toURI();
 
-            String decodedPath = URLDecoder.decode(uri.getPath(), StandardCharsets.UTF_8.name());
-            return decodedPath;
+            return URLDecoder.decode(uri.getPath(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.debug("Error getting path from context: {}", e.getMessage(), e);
             return null;
@@ -105,8 +115,7 @@ public class PathFinder {
                 File file = new File(path);
                 if (file.exists()) {
                     String absolutePath = file.getAbsolutePath();
-                    String normalizedPath = normalizePath(absolutePath);
-                    return normalizedPath;
+                    return normalizer.normalizePath(absolutePath);
                 }
             }
 
@@ -122,8 +131,7 @@ public class PathFinder {
             for (String path : workingDirPaths) {
                 File file = new File(path);
                 if (file.exists()) {
-                    String normalizedPath = normalizePath(file.getAbsolutePath());
-                    return normalizedPath;
+                    return normalizer.normalizePath(file.getAbsolutePath());
                 }
             }
 
@@ -138,112 +146,32 @@ public class PathFinder {
         try {
             Class<?> testClass = extensionContext.getRequiredTestClass();
             String relativePath = testClass.getName().replace(".", FILE_SEPARATOR) + ".java";
-            String defaultPath = "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java"
+            return "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java"
                     + FILE_SEPARATOR + relativePath;
-            return defaultPath;
         } catch (Exception e) {
-            String fallback = "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java"
+            return "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java"
                     + FILE_SEPARATOR + "UnknownTest.java";
-            return fallback;
         }
     }
 
     public String extractRelativeFilePath(String filepath) {
         try {
             if (filepath == null || filepath.isEmpty()) {
-                String defaultPath = "src/test/java/UnknownFile.java";
-                return defaultPath;
+                return "src/test/java/UnknownFile.java";
             }
 
-            String normalizedPath = normalizePath(filepath);
+            String normalizedPath = normalizer.normalizePath(filepath);
 
             int srcIndex = normalizedPath.indexOf("src/");
 
             if (srcIndex != -1) {
-                String result = normalizedPath.substring(srcIndex);
-                return result;
+                return normalizedPath.substring(srcIndex);
             }
 
             return normalizedPath;
         } catch (Exception e) {
             log.debug("Error extracting relative file path: {}", e.getMessage(), e);
-            String fallback = "src/test/java/UnknownFile.java";
-            return fallback;
+            return "src/test/java/UnknownFile.java";
         }
-    }
-
-    private String normalizePath(String path) {
-        if (path == null || path.isEmpty()) {
-            return path;
-        }
-
-        try {
-            Path normalizedPath = Paths.get(path).normalize();
-            String result = normalizedPath.toString().replace('\\', '/');
-
-            if (IS_WINDOWS) {
-                result = normalizeWindowsPath(result);
-            } else {
-                result = normalizeUnixPath(result);
-            }
-
-            return result;
-        } catch (Exception e) {
-            log.debug("Error normalizing path '{}': {}", path, e.getMessage(), e);
-            String fallback = path.replace('\\', '/');
-            return fallback;
-        }
-    }
-
-    private String normalizeWindowsPath(String path) {
-        if (hasDriveLetter(path)) {
-            return path;
-        }
-
-        if (path.startsWith("/") && path.length() > 1) {
-            String result = path.substring(1);
-            return result;
-        }
-
-        return path;
-    }
-
-    private String normalizeUnixPath(String path) {
-        if (hasDriveLetter(path)) {
-            if (path.startsWith("/")) {
-                String result = path.substring(3);
-                return result;
-            } else {
-                String result = path.substring(2);
-                return result;
-            }
-        }
-
-        return path;
-    }
-
-    private boolean hasDriveLetter(String path) {
-        if (path.length() < 2) {
-            return false;
-        }
-
-        int colonIndex = path.indexOf(':');
-        if (colonIndex == -1) {
-            return false;
-        }
-
-        if (path.startsWith("/") && colonIndex == 2) {
-            char driveLetter = path.charAt(1);
-            boolean isLetter = Character.isLetter(driveLetter);
-            return isLetter;
-        }
-
-        if (colonIndex == 1) {
-            char driveLetter = path.charAt(0);
-            boolean isLetter = Character.isLetter(driveLetter);
-            return isLetter;
-        }
-
-        return false;
     }
 }

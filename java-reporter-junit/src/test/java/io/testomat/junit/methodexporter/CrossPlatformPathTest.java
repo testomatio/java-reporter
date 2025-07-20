@@ -11,6 +11,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import io.testomat.junit.methodexporter.parser.FileParser;
+import io.testomat.junit.methodexporter.patfinder.FileFinder;
 import io.testomat.junit.model.ExporterTestCase;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,39 +33,39 @@ public class CrossPlatformPathTest {
 
     @Test
     public void testPathFinderExtractRelativeFilePathWindows() {
-        PathFinder pathFinder = new PathFinder();
+        FileFinder fileFinder = new FileFinder();
         String windowsPath = "C:\\Users\\developer\\project\\src\\test\\java\\com\\example\\TestClass.java";
-        String result = pathFinder.extractRelativeFilePath(windowsPath);
+        String result = fileFinder.extractRelativeFilePath(windowsPath);
         assertEquals("src/test/java/com/example/TestClass.java", result);
     }
 
     @Test
     public void testPathFinderExtractRelativeFilePathLinux() {
-        PathFinder pathFinder = new PathFinder();
+        FileFinder fileFinder = new FileFinder();
         String linuxPath = "/home/user/project/src/test/java/com/example/TestClass.java";
-        String result = pathFinder.extractRelativeFilePath(linuxPath);
+        String result = fileFinder.extractRelativeFilePath(linuxPath);
         assertEquals("src/test/java/com/example/TestClass.java", result);
     }
 
     @Test
     public void testPathFinderExtractRelativeFilePathMacOS() {
-        PathFinder pathFinder = new PathFinder();
+        FileFinder fileFinder = new FileFinder();
         String macPath = "/Users/developer/workspace/project/src/test/java/MyTest.java";
-        String result = pathFinder.extractRelativeFilePath(macPath);
+        String result = fileFinder.extractRelativeFilePath(macPath);
         assertEquals("src/test/java/MyTest.java", result);
     }
 
     @Test
     public void testPathFinderWithMixedSlashes() {
-        PathFinder pathFinder = new PathFinder();
+        FileFinder fileFinder = new FileFinder();
         String mixedPath = "C:\\project/src\\test/java\\TestClass.java";
-        String result = pathFinder.extractRelativeFilePath(mixedPath);
+        String result = fileFinder.extractRelativeFilePath(mixedPath);
         assertEquals("src/test/java/TestClass.java", result);
     }
 
     @Test
     public void testPathFinderNormalizationFromDifferentOSFormats() {
-        PathFinder pathFinder = new PathFinder();
+        FileFinder fileFinder = new FileFinder();
         String[] testPaths = {
                 "C:\\Users\\dev\\project\\src\\test\\java\\Test.java",
                 "/home/user/project/src/test/java/Test.java",
@@ -73,7 +74,7 @@ public class CrossPlatformPathTest {
         };
 
         for (String path : testPaths) {
-            String result = pathFinder.extractRelativeFilePath(path);
+            String result = fileFinder.extractRelativeFilePath(path);
             assertEquals("src/test/java/Test.java", result);
             assertFalse(result.contains("\\"));
         }
@@ -81,17 +82,17 @@ public class CrossPlatformPathTest {
 
     @Test
     public void testPathFinderWithoutSrcDirectory() {
-        PathFinder pathFinder = new PathFinder();
+        FileFinder fileFinder = new FileFinder();
         String pathWithoutSrc = "com/example/TestClass.java";
-        String result = pathFinder.extractRelativeFilePath(pathWithoutSrc);
+        String result = fileFinder.extractRelativeFilePath(pathWithoutSrc);
         assertEquals("com/example/TestClass.java", result);
     }
 
     @Test
     public void testPathFinderWithEmptyPath() {
-        PathFinder pathFinder = new PathFinder();
+        FileFinder fileFinder = new FileFinder();
         String emptyPath = "";
-        String result = pathFinder.extractRelativeFilePath(emptyPath);
+        String result = fileFinder.extractRelativeFilePath(emptyPath);
         assertEquals("src/test/java/UnknownFile.java", result);
     }
 

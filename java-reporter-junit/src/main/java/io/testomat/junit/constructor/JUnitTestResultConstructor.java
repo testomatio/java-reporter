@@ -22,6 +22,10 @@ public class JUnitTestResultConstructor {
                                              String message,
                                              String status,
                                              ExtensionContext context) {
+
+        if (metadata == null) {
+            throw new IllegalArgumentException("Metadata is null");
+        }
         String stack;
 
         if (message != null) {

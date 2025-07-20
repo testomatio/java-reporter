@@ -3,7 +3,7 @@ package io.testomat.junit.methodexporter.extractors;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import io.testomat.junit.methodexporter.MethodExporterException;
-import io.testomat.junit.methodexporter.PathFinder;
+import io.testomat.junit.methodexporter.patfinder.FileFinder;
 import io.testomat.junit.model.ExporterTestCase;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,12 +13,12 @@ public class MethodCaseExtractor {
 
     private final MethodInfoExtractor methodInfoExtractor;
     private final LabelExtractor labelExtractor;
-    private final PathFinder pathFinder;
+    private final FileFinder fileFinder;
 
     public MethodCaseExtractor() {
         this.methodInfoExtractor = new MethodInfoExtractor();
         this.labelExtractor = new LabelExtractor();
-        this.pathFinder = new PathFinder();
+        this.fileFinder = new FileFinder();
     }
 
     /**
@@ -26,10 +26,10 @@ public class MethodCaseExtractor {
      */
     public MethodCaseExtractor(MethodInfoExtractor methodInfoExtractor,
                                LabelExtractor labelExtractor,
-                               PathFinder pathFinder) {
+                               FileFinder fileFinder) {
         this.methodInfoExtractor = methodInfoExtractor;
         this.labelExtractor = labelExtractor;
-        this.pathFinder = pathFinder;
+        this.fileFinder = fileFinder;
     }
 
     public List<ExporterTestCase> extractTestCases(CompilationUnit cu, String filepath) {
@@ -93,7 +93,7 @@ public class MethodCaseExtractor {
             List<String> labels = labelExtractor.extractLabels(method);
             testCase.setLabels(labels);
 
-            String relativeFilePath = pathFinder.extractRelativeFilePath(filepath);
+            String relativeFilePath = fileFinder.extractRelativeFilePath(filepath);
             testCase.setFile(relativeFilePath);
 
             return testCase;

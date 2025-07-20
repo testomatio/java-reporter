@@ -5,6 +5,7 @@ import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.junit.methodexporter.extractors.MethodCaseExtractor;
 import io.testomat.junit.methodexporter.parser.FileParser;
+import io.testomat.junit.methodexporter.patfinder.FileFinder;
 import io.testomat.junit.methodexporter.sender.ExportSender;
 import io.testomat.junit.model.ExporterTestCase;
 import java.util.List;
@@ -18,7 +19,7 @@ public class MethodExportManager {
 
     private final PropertyProvider provider;
 
-    private final PathFinder pathFinder;
+    private final FileFinder fileFinder;
     private final ExportSender exportSender;
     private final FileParser fileParser;
     private final MethodCaseExtractor methodCaseExtractor;
@@ -26,7 +27,7 @@ public class MethodExportManager {
     public MethodExportManager() {
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
-        this.pathFinder = new PathFinder();
+        this.fileFinder = new FileFinder();
         this.fileParser = new FileParser();
         this.exportSender = new ExportSender();
         this.methodCaseExtractor = new MethodCaseExtractor();
@@ -35,11 +36,11 @@ public class MethodExportManager {
     /**
      * Constructor for testing
      */
-    public MethodExportManager(PropertyProvider provider, PathFinder pathFinder,
+    public MethodExportManager(PropertyProvider provider, FileFinder fileFinder,
                                ExportSender exportSender, FileParser fileParser,
                                MethodCaseExtractor methodCaseExtractor) {
         this.provider = provider;
-        this.pathFinder = pathFinder;
+        this.fileFinder = fileFinder;
         this.exportSender = exportSender;
         this.fileParser = fileParser;
         this.methodCaseExtractor = methodCaseExtractor;
@@ -59,7 +60,7 @@ public class MethodExportManager {
             return;
         }
 
-        String filepath = pathFinder.getTestClassFilePath(extensionContext);
+        String filepath = fileFinder.getTestClassFilePath(extensionContext);
         if (filepath == null) {
             return;
         }
