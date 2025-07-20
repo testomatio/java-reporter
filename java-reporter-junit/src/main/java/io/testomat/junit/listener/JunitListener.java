@@ -4,14 +4,9 @@ import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
-import io.testomat.core.exception.ReportTestResultException;
-import io.testomat.core.model.TestMetadata;
-import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
-import io.testomat.junit.constructor.JUnitTestResultConstructor;
-import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import io.testomat.junit.methodexporter.MethodExportManager;
-import io.testomat.junit.model.TestResultWrapper;
+import io.testomat.junit.reporter.JunitReporter;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -26,10 +21,27 @@ import org.junit.jupiter.api.extension.TestWatcher;
 public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         AfterAllCallback, TestWatcher {
 
-    private final MethodExportManager methodExportManager = new MethodExportManager();
-    private final GlobalRunManager runManager = GlobalRunManager.getInstance();
-    private final JUnitTestResultConstructor resultConstructor = new JUnitTestResultConstructor();
-    private final JunitMetaDataExtractor metaDataExtractor = new JunitMetaDataExtractor();
+    private final MethodExportManager methodExportManager;
+    private final GlobalRunManager runManager;
+    private final JunitReporter reporter;
+
+    public JunitListener() {
+        this.methodExportManager = new MethodExportManager();
+        this.runManager = GlobalRunManager.getInstance();
+        this.reporter = new JunitReporter();
+    }
+
+    /**
+     * Constructor for testing
+     */
+    public JunitListener(MethodExportManager methodExportManager,
+                  GlobalRunManager runManager,
+                  JunitReporter reporter) {
+        this.methodExportManager = methodExportManager;
+        this.runManager = runManager;
+        this.reporter = reporter;
+    }
+
 
     @Override
     public void beforeAll(ExtensionContext context) {
@@ -48,56 +60,21 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     @Override
     public void testDisabled(ExtensionContext context, Optional<String> reason) {
-        reportTestResult(context, SKIPPED, reason.orElse("Test disabled"));
+        reporter.reportTestResult(context, SKIPPED, reason.orElse("Test disabled"));
     }
 
     @Override
     public void testSuccessful(ExtensionContext context) {
-        reportTestResult(context, PASSED, null);
+        reporter.reportTestResult(context, PASSED, null);
     }
 
     @Override
     public void testAborted(ExtensionContext context, Throwable cause) {
-        reportTestResult(context, SKIPPED, cause.getMessage());
+        reporter.reportTestResult(context, SKIPPED, cause.getMessage());
     }
 
     @Override
     public void testFailed(ExtensionContext context, Throwable cause) {
-        reportTestResult(context, FAILED, cause.getMessage());
-    }
-
-    /**
-     * Reports test result to Testomat.io platform.
-     *
-     * @param context JUnit extension context
-     * @param status  test execution status (PASSED, FAILED, SKIPPED)
-     * @param message optional message describing the result
-     */
-    private void reportTestResult(ExtensionContext context, String status, String message) {
-        if (!runManager.isActive()) {
-            return;
-        }
-
-        TestMetadata metadata = null;
-        try {
-            metadata = metaDataExtractor.extractTestMetadata(context);
-
-            TestResultWrapper.Builder builder = TestResultWrapper.builder()
-                    .withTestMetadata(metadata)
-                    .withStatus(status)
-                    .withJunitExtensionContext(context);
-
-            if (message != null) {
-                builder.withMessage(message);
-            }
-
-            TestResultWrapper wrapper = builder.build();
-            TestResult result = resultConstructor.constructTestRunResult(wrapper);
-            runManager.reportTest(result);
-
-        } catch (Exception e) {
-            String testName = metadata != null ? metadata.getTitle() : "Unknown Test";
-            throw new ReportTestResultException("Failed to report test result for: " + testName, e);
-        }
+        reporter.reportTestResult(context, FAILED, cause.getMessage());
     }
 }
