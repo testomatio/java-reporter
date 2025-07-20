@@ -14,16 +14,16 @@ public class ExportSender {
     private static final int RETRY_MAX_ATTEMPTS = 2;
     private final PropertyProvider provider;
 
-
     public ExportSender() {
-        this.provider =  PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+        this.provider =
+                PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
     }
 
     /**
      * Constructor for testing
      */
     public ExportSender(PropertyProvider provider) {
-        this.provider =  provider;
+        this.provider = provider;
     }
 
     public void sendTestCases(List<ExporterTestCase> exporterTestCases) {
@@ -33,7 +33,7 @@ public class ExportSender {
 
         ExporterRequestBodyBuilder exporterRequestBodyBuilder = new ExporterRequestBodyBuilder();
         CustomHttpClient client = new NativeHttpClient();
-        
+
         String requestBody = exporterRequestBodyBuilder.buildRequestBody(exporterTestCases);
         String url = LOAD_URL + provider.getProperty(API_KEY_PROPERTY_NAME);
 
@@ -42,13 +42,13 @@ public class ExportSender {
                 if (attempt > 1) {
                     Thread.sleep(RETRY_TIMEOUT_MILLISECONDS);
                 }
-                
+
                 client.post(url, requestBody, null);
                 return;
             } catch (Exception e) {
                 boolean is422Error = e.getMessage().contains("422");
                 boolean isLastAttempt = attempt == RETRY_MAX_ATTEMPTS;
-                
+
                 if (!is422Error || isLastAttempt) {
                     e.printStackTrace();
                     break;

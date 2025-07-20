@@ -35,13 +35,12 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
      * Constructor for testing
      */
     public JunitListener(MethodExportManager methodExportManager,
-                  GlobalRunManager runManager,
-                  JunitTestReporter reporter) {
+                         GlobalRunManager runManager,
+                         JunitTestReporter reporter) {
         this.methodExportManager = methodExportManager;
         this.runManager = runManager;
         this.reporter = reporter;
     }
-
 
     @Override
     public void beforeAll(ExtensionContext context) {

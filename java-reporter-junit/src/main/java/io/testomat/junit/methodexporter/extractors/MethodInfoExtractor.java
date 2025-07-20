@@ -19,7 +19,6 @@ public class MethodInfoExtractor {
         this.labelExtractor = labelExtractor;
     }
 
-
     public String getTestName(MethodDeclaration method) {
         try {
             String displayName = method.getAnnotations().stream()
