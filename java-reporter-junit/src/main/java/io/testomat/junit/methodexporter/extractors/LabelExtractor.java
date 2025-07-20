@@ -1,4 +1,4 @@
-package io.testomat.junit.methodexporter;
+package io.testomat.junit.methodexporter.extractors;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;

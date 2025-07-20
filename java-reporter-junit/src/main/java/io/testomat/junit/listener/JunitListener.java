@@ -6,7 +6,7 @@ import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.methodexporter.MethodExportManager;
-import io.testomat.junit.reporter.JunitReporter;
+import io.testomat.junit.reporter.JunitTestReporter;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -23,12 +23,12 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     private final MethodExportManager methodExportManager;
     private final GlobalRunManager runManager;
-    private final JunitReporter reporter;
+    private final JunitTestReporter reporter;
 
     public JunitListener() {
         this.methodExportManager = new MethodExportManager();
         this.runManager = GlobalRunManager.getInstance();
-        this.reporter = new JunitReporter();
+        this.reporter = new JunitTestReporter();
     }
 
     /**
@@ -36,7 +36,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
      */
     public JunitListener(MethodExportManager methodExportManager,
                   GlobalRunManager runManager,
-                  JunitReporter reporter) {
+                  JunitTestReporter reporter) {
         this.methodExportManager = methodExportManager;
         this.runManager = runManager;
         this.reporter = reporter;

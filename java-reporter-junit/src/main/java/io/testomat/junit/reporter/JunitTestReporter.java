@@ -9,10 +9,28 @@ import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import io.testomat.junit.model.TestResultWrapper;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class JunitReporter {
-    private final GlobalRunManager runManager = GlobalRunManager.getInstance();
-    private final JUnitTestResultConstructor resultConstructor = new JUnitTestResultConstructor();
-    private final JunitMetaDataExtractor metaDataExtractor = new JunitMetaDataExtractor();
+public class JunitTestReporter {
+    private final JUnitTestResultConstructor resultConstructor;
+    private final JunitMetaDataExtractor metaDataExtractor;
+    private final GlobalRunManager runManager;
+
+    public JunitTestReporter() {
+        this.resultConstructor = new JUnitTestResultConstructor();
+        this.metaDataExtractor = new JunitMetaDataExtractor();
+        this.runManager = GlobalRunManager.getInstance();
+    }
+
+    /**
+     * Constructor for testing
+     */
+    public JunitTestReporter(
+            JUnitTestResultConstructor resultConstructor,
+            JunitMetaDataExtractor metaDataExtractor,
+            GlobalRunManager runManager) {
+        this.runManager = runManager;
+        this.resultConstructor = resultConstructor;
+        this.metaDataExtractor = metaDataExtractor;
+    }
 
     /**
      * Reports test result to Testomat.io platform.

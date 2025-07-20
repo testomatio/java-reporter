@@ -1,4 +1,4 @@
-package io.testomat.junit.methodexporter;
+package io.testomat.junit.methodexporter.extractors;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -6,7 +6,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MethodInfoExtractor {
-    private final LabelExtractor labelExtractor = new LabelExtractor();
+    private final LabelExtractor labelExtractor;
+
+    public MethodInfoExtractor() {
+        this.labelExtractor = new LabelExtractor();
+    }
+
+    /**
+     * Constructor for testing
+     */
+    public MethodInfoExtractor(LabelExtractor labelExtractor) {
+        this.labelExtractor = labelExtractor;
+    }
+
 
     public String getTestName(MethodDeclaration method) {
         try {
