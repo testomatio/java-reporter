@@ -1,6 +1,6 @@
 package io.testomat.junit.methodexporter.patfinder;
 
-import io.testomat.junit.methodexporter.MethodExporterException;
+import io.testomat.junit.exception.MethodExporterException;
 import java.io.File;
 import java.net.URI;
 import java.net.URLDecoder;

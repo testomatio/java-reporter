@@ -1,4 +1,4 @@
-package io.testomat.junit.methodexporter;
+package io.testomat.junit.exception;
 
 public class MethodExporterException extends RuntimeException {
     public MethodExporterException(String message) {

@@ -2,7 +2,7 @@ package io.testomat.junit.methodexporter.parser;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import io.testomat.junit.methodexporter.MethodExporterException;
+import io.testomat.junit.exception.MethodExporterException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 

@@ -1,6 +1,7 @@
 package io.testomat.junit.methodexporter;
 
 import com.github.javaparser.ast.CompilationUnit;
+import io.testomat.junit.exception.MethodExporterException;
 import io.testomat.junit.methodexporter.parser.FileParser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

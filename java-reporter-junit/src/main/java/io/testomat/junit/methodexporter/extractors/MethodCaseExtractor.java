@@ -2,7 +2,8 @@ package io.testomat.junit.methodexporter.extractors;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import io.testomat.junit.methodexporter.MethodExporterException;
+import io.testomat.junit.exception.ExtractionException;
+import io.testomat.junit.exception.MethodExporterException;
 import io.testomat.junit.methodexporter.patfinder.FileFinder;
 import io.testomat.junit.model.ExporterTestCase;
 import java.util.ArrayList;
@@ -39,20 +40,19 @@ public class MethodCaseExtractor {
                 .filter(this::isTestMethod)
                 .collect(Collectors.toList());
 
-        List<ExporterTestCase> result = convertDeclarationsToLoaderTestCases(testMethods, filepath);
-        return result;
+        return convertDeclarationsToLoaderTestCases(testMethods, filepath);
     }
 
     private List<ExporterTestCase> convertDeclarationsToLoaderTestCases(
             List<MethodDeclaration> declarations, String filepath) {
         List<ExporterTestCase> cases = new ArrayList<>();
-        for (int i = 0; i < declarations.size(); i++) {
-            MethodDeclaration method = declarations.get(i);
+        for (MethodDeclaration method : declarations) {
             try {
                 ExporterTestCase testCase = createTestCase(method, filepath);
                 cases.add(testCase);
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new ExtractionException(
+                        "Failed to convert List<MethodDeclaration> to List<ExporterTestCase>", e);
             }
         }
         return cases;
@@ -60,7 +60,7 @@ public class MethodCaseExtractor {
 
     private boolean isTestMethod(MethodDeclaration method) {
         try {
-            boolean result = method.getAnnotations().stream()
+            return method.getAnnotations().stream()
                     .anyMatch(ann -> {
                         String name = ann.getNameAsString();
                         return "Test".equals(name)
@@ -68,7 +68,6 @@ public class MethodCaseExtractor {
                                 || "RepeatedTest".equals(name)
                                 || "TestFactory".equals(name);
                     });
-            return result;
         } catch (Exception e) {
             return false;
         }
@@ -98,7 +97,6 @@ public class MethodCaseExtractor {
 
             return testCase;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new MethodExporterException("Failed to extract test case from: " + method
                     + "and filepath: " + filepath, e);
         }

@@ -31,7 +31,6 @@ public class MethodExportManagerTest {
 
     @BeforeEach
     void setUp() {
-        // Встановлюємо тестові properties перед кожним тестом
         System.setProperty("testomatio.api.key", "test-key-12345");
         System.setProperty("testomatio.url", "https://app.testomat.io");
         System.setProperty("testomatio.create", "false");
@@ -41,7 +40,6 @@ public class MethodExportManagerTest {
 
     @AfterEach
     void tearDown() {
-        // Очищаємо тестові properties після кожного тесту
         System.clearProperty("testomatio.api.key");
         System.clearProperty("testomatio.url");
         System.clearProperty("testomatio.create");
