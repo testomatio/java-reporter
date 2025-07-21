@@ -1,0 +1,121 @@
+name: Multi-module Release
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  release:
+    # Запускається тільки якщо PR змерджений в гілку 1.x і має лейбл "release"
+    if: github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'release') &&
+      github.event.pull_request.base.ref == '1.x'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Get version from distribution module
+        id: version
+        run: |
+          cd distribution
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Build all modules
+        run: |
+          echo "Building all modules (tests already passed in CI)..."
+          
+          # Збираємо core
+          cd java-reporter-core
+          mvn clean package -DskipTests
+          cd ..
+          
+          # Збираємо junit
+          cd java-reporter-junit
+          mvn clean package -DskipTests
+          cd ..
+          
+          # Збираємо testng
+          cd java-reporter-testng
+          mvn clean package -DskipTests
+          cd ..
+          
+          # Збираємо cucumber
+          cd java-reporter-cucumber
+          mvn clean package -DskipTests
+          cd ..
+          
+          # Збираємо distribution
+          cd distribution
+          mvn clean package -DskipTests
+          cd ..
+
+      - name: Collect JAR files
+        run: |
+          echo "Collecting JAR files..."
+          
+          # Створюємо директорію для артефактів
+          mkdir -p release-artifacts
+          
+          # Знаходимо і копіюємо основні JAR файли (не sources, не javadoc, не shaded)
+          find java-reporter-core/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
+          find java-reporter-junit/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
+          find java-reporter-testng/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
+          find java-reporter-cucumber/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
+          find distribution/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -not -name "*shaded*" -exec cp {} release-artifacts/ \;
+          
+          echo "Collected artifacts:"
+          ls -la release-artifacts/
+
+      - name: Create Git tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Generate changelog
+        run: |
+          # Простий changelog на основі commit'ів від останнього тегу
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --since="1 week ago")
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" ${LAST_TAG}..HEAD)
+          fi
+          
+          echo "$CHANGELOG" > changelog.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ steps.version.outputs.version }}"
+          name: "Release v${{ steps.version.outputs.version }}"
+          body_path: changelog.txt
+          files: release-artifacts/*.jar
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,7 +6,7 @@
 
     <groupId>com.testomatio.reporter</groupId>
     <artifactId>java-reporter-junit</artifactId>
-    <version>0.6.1</version>
+    <version>0.6.3</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter JUnit</name>
