@@ -194,9 +194,9 @@ com.yourcompany.yourproject.CustomListener
 ```java
 public class CustomCucumberListener extends CucumberListener {
     @Override
-    public void onTestStart(TestCase testCase) {
+    public void onTestStart(TestCase loaderTestCase) {
         // Your custom logic here
-        super.onTestStart(testCase);
+        super.onTestStart(loaderTestCase);
         // More custom logic
     }
 }

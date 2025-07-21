@@ -3,7 +3,7 @@ name: Java CI
 on:
   push:
   pull_request:
-    branches: [ 1.x ]
+    branches: [ main, master, 1.x, develop ]
 
 jobs:
   test:
@@ -18,5 +18,20 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
-      - name: Run tests
-        run: mvn clean test
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Find and test all modules
+        run: |
+          echo "Finding all Maven modules..."
+          find . -name "pom.xml" -not -path "*/target/*" | while read pom; do
+            module_dir=$(dirname "$pom")
+            echo "Testing module: $module_dir"
+            cd "$module_dir"
+            mvn clean test -B
+            cd - > /dev/null
+          done
