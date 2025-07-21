@@ -6,7 +6,6 @@ on:
 
 jobs:
   release:
-    # Запускається тільки якщо PR змерджений в гілку 1.x і має лейбл "release"
     if: github.event.pull_request.merged == true &&
       contains(github.event.pull_request.labels.*.name, 'release') &&
       github.event.pull_request.base.ref == '1.x'
@@ -46,27 +45,22 @@ jobs:
         run: |
           echo "Building all modules (tests already passed in CI)..."
           
-          # Збираємо core
           cd java-reporter-core
           mvn clean package -DskipTests
           cd ..
           
-          # Збираємо junit
           cd java-reporter-junit
           mvn clean package -DskipTests
           cd ..
           
-          # Збираємо testng
           cd java-reporter-testng
           mvn clean package -DskipTests
           cd ..
           
-          # Збираємо cucumber
           cd java-reporter-cucumber
           mvn clean package -DskipTests
           cd ..
           
-          # Збираємо distribution
           cd distribution
           mvn clean package -DskipTests
           cd ..
@@ -75,10 +69,8 @@ jobs:
         run: |
           echo "Collecting JAR files..."
           
-          # Створюємо директорію для артефактів
           mkdir -p release-artifacts
           
-          # Знаходимо і копіюємо основні JAR файли (не sources, не javadoc, не shaded)
           find java-reporter-core/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
           find java-reporter-junit/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
           find java-reporter-testng/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
@@ -98,7 +90,6 @@ jobs:
 
       - name: Generate changelog
         run: |
-          # Простий changelog на основі commit'ів від останнього тегу
           LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -z "$LAST_TAG" ]; then
             CHANGELOG=$(git log --pretty=format:"- %s (%h)" --since="1 week ago")
