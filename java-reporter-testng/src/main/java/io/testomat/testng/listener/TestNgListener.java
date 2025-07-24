@@ -5,6 +5,7 @@ import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.testng.methodexporter.TestNgMethodExportManager;
 import io.testomat.testng.reporter.TestNgTestResultReporter;
 import org.testng.IInvokedMethodListener;
 import org.testng.ISuite;
@@ -19,10 +20,12 @@ import org.testng.ITestResult;
  */
 public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMethodListener {
 
-    private final GlobalRunManager runManager;
+    private final TestNgMethodExportManager exportManager;
     private final TestNgTestResultReporter reporter;
+    private final GlobalRunManager runManager;
 
     public TestNgListener() {
+        this.exportManager = new TestNgMethodExportManager();
         this.runManager = GlobalRunManager.getInstance();
         this.reporter = new TestNgTestResultReporter();
     }
@@ -36,6 +39,7 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
     @Override
     public void onFinish(ISuite suite) {
         runManager.decrementSuiteCounter();
+        exportManager.loadTestBodyIfRequired(suite);
     }
 
     @Override
