@@ -1,24 +1,20 @@
 name: Multi-module Release
-
 on:
   pull_request:
     types: [closed]
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.labels.*.name, 'release') &&
-      github.event.pull_request.base.ref == '1.x'
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') && github.event.pull_request.base.ref == '1.x'
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK 11
         uses: actions/setup-java@v4
@@ -41,41 +37,178 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Release version: $VERSION"
 
-      - name: Build all modules
+      - name: Setup GPG
         run: |
-          echo "Building all modules (tests already passed in CI)..."
-          
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+
+      - name: Deploy Core module
+        run: |
+          echo "Publishing core module first..."
           cd java-reporter-core
-          mvn clean package -DskipTests
+          mvn clean deploy -P release -DskipTests
           cd ..
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Wait for Core availability on Maven Central
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          echo "Waiting for core module to be available on Maven Central..."
           
+          check_availability() {
+            local module=$1
+            local version=$2
+          
+            # Check multiple endpoints for better reliability
+            local endpoints=(
+              "https://repo1.maven.org/maven2/io/testomat/$module/$version/$module-$version.pom"
+              "https://search.maven.org/remotecontent?filepath=io/testomat/$module/$version/$module-$version.pom"
+            )
+          
+            for endpoint in "${endpoints[@]}"; do
+              if curl -s -f "$endpoint" > /dev/null 2>&1; then
+                echo "✅ $module v$version found at: $endpoint"
+                return 0
+              fi
+            done
+            return 1
+          }
+          
+          for i in {1..20}; do
+            echo "Attempt $i/20: Checking if core module is available..."
+          
+            if check_availability "java-reporter-core" "$VERSION"; then
+              echo "✅ Core module is available on Maven Central!"
+              break
+            fi
+          
+            if [ $i -eq 20 ]; then
+              echo "❌ Core module not available after 20 attempts. Continuing anyway..."
+              break
+            fi
+          
+            echo "Core not yet available, waiting 45 seconds..."
+            sleep 45
+          done
+
+      - name: Deploy Framework modules
+        run: |
+          echo "Publishing framework-specific modules..."
+          
+          # Deploy junit module
           cd java-reporter-junit
-          mvn clean package -DskipTests
+          mvn clean deploy -P release -DskipTests &
+          JUNIT_PID=$!
           cd ..
           
+          # Deploy testng module  
           cd java-reporter-testng
-          mvn clean package -DskipTests
+          mvn clean deploy -P release -DskipTests &
+          TESTNG_PID=$!
           cd ..
           
-          cd java-reporter-cucumber
-          mvn clean package -DskipTests
+          # Deploy cucumber module
+          cd java-reporter-cucumber  
+          mvn clean deploy -P release -DskipTests &
+          CUCUMBER_PID=$!
           cd ..
           
+          # Wait for all framework modules to complete
+          echo "Waiting for framework modules to complete..."
+          wait $JUNIT_PID
+          echo "✅ JUnit module deployed"
+          wait $TESTNG_PID  
+          echo "✅ TestNG module deployed"
+          wait $CUCUMBER_PID
+          echo "✅ Cucumber module deployed"
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Wait for Framework modules availability
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          echo "Waiting for framework modules to be available on Maven Central..."
+          
+          check_availability() {
+            local module=$1
+            local version=$2
+          
+            local endpoints=(
+              "https://repo1.maven.org/maven2/io/testomat/$module/$version/$module-$version.pom"
+              "https://search.maven.org/remotecontent?filepath=io/testomat/$module/$version/$module-$version.pom"
+            )
+          
+            for endpoint in "${endpoints[@]}"; do
+              if curl -s -f "$endpoint" > /dev/null 2>&1; then
+                echo "✅ $module v$version found at: $endpoint"
+                return 0
+              fi
+            done
+            return 1
+          }
+          
+          modules=("java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber")
+          
+          for module in "${modules[@]}"; do
+            echo "Checking $module..."
+            for i in {1..15}; do
+              if check_availability "$module" "$VERSION"; then
+                echo "✅ $module is available!"
+                break
+              fi
+          
+              if [ $i -eq 15 ]; then
+                echo "⚠️ $module not available after 15 attempts. Continuing..."
+                break
+              fi
+          
+              echo "Attempt $i/15: $module not yet available, waiting 30 seconds..."
+              sleep 30
+            done
+          done
+
+      - name: Deploy Distribution module
+        run: |
+          echo "Publishing distribution module..."
           cd distribution
-          mvn clean package -DskipTests
+          mvn clean deploy -P release -DskipTests
           cd ..
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Build JAR files for GitHub Release
+        run: |
+          echo "Building JAR files for GitHub Release..."
+          
+          # Build all modules for local JAR collection
+          cd java-reporter-core && mvn clean package -DskipTests && cd ..
+          cd java-reporter-junit && mvn clean package -DskipTests && cd ..  
+          cd java-reporter-testng && mvn clean package -DskipTests && cd ..
+          cd java-reporter-cucumber && mvn clean package -DskipTests && cd ..
+          cd distribution && mvn clean package -DskipTests && cd ..
 
       - name: Collect JAR files
         run: |
           echo "Collecting JAR files..."
-          
           mkdir -p release-artifacts
           
+          # Core and framework modules - regular JARs only
           find java-reporter-core/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
           find java-reporter-junit/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
           find java-reporter-testng/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
           find java-reporter-cucumber/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -exec cp {} release-artifacts/ \;
-          find distribution/target -name "*.jar" -not -name "*sources*" -not -name "*javadoc*" -not -name "*shaded*" -exec cp {} release-artifacts/ \;
+          
+          # Distribution module - include shaded JARs with classifiers but exclude the original jar
+          find distribution/target -name "*-junit.jar" -exec cp {} release-artifacts/ \;
+          find distribution/target -name "*-testng.jar" -exec cp {} release-artifacts/ \;
+          find distribution/target -name "*-cucumber.jar" -exec cp {} release-artifacts/ \;
           
           echo "Collected artifacts:"
           ls -la release-artifacts/
@@ -91,6 +224,7 @@ jobs:
       - name: Generate changelog
         run: |
           LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
           if [ -z "$LAST_TAG" ]; then
             CHANGELOG=$(git log --pretty=format:"- %s (%h)" --since="1 week ago")
           else
@@ -110,3 +244,89 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create or update CHANGELOG.md
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          DATE=$(date +"%Y-%m-%d")
+          
+          # Create CHANGELOG.md if it doesn't exist
+          if [ ! -f CHANGELOG.md ]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "All notable changes to this project will be documented in this file." >> CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+          
+          # Create temporary file with new release info
+          echo "" > new_release.md
+          echo "## [$VERSION] - $DATE" >> new_release.md
+          echo "" >> new_release.md
+          
+          # Add changelog from this release
+          if [ -f changelog.txt ]; then
+            echo "### Changes" >> new_release.md
+            cat changelog.txt >> new_release.md
+            echo "" >> new_release.md
+          fi
+          
+          # Add Maven Central info
+          echo "### Maven Coordinates" >> new_release.md
+          echo "\`\`\`xml" >> new_release.md
+          echo "<dependency>" >> new_release.md
+          echo "    <groupId>io.testomat</groupId>" >> new_release.md
+          echo "    <artifactId>java-reporter-distribution</artifactId>" >> new_release.md
+          echo "    <version>$VERSION</version>" >> new_release.md
+          echo "    <classifier>junit</classifier> <!-- or testng, cucumber -->" >> new_release.md
+          echo "</dependency>" >> new_release.md
+          echo "\`\`\`" >> new_release.md
+          echo "" >> new_release.md
+          
+          # Insert new release at the top (after header)
+          if grep -q "# Changelog" CHANGELOG.md; then
+            # Find line number after "# Changelog" section
+            LINE_NUM=$(grep -n "# Changelog" CHANGELOG.md | head -1 | cut -d: -f1)
+            LINE_NUM=$((LINE_NUM + 2))
+          
+            # Insert new content
+            head -n $LINE_NUM CHANGELOG.md > temp_changelog.md
+            cat new_release.md >> temp_changelog.md
+            tail -n +$((LINE_NUM + 1)) CHANGELOG.md >> temp_changelog.md
+            mv temp_changelog.md CHANGELOG.md
+          else
+            # Prepend to existing file
+            cat new_release.md CHANGELOG.md > temp_changelog.md
+            mv temp_changelog.md CHANGELOG.md
+          fi
+          
+          rm -f new_release.md changelog.txt
+
+      - name: Commit and push CHANGELOG.md
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add CHANGELOG.md
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update CHANGELOG.md for release v${{ steps.version.outputs.version }}"
+            git push origin ${{ github.event.pull_request.base.ref }}
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup GPG
+        if: always()
+        run: |
+          # Safely cleanup GPG keys
+          KEY_IDS=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2 2>/dev/null || echo "")
+          if [ -n "$KEY_IDS" ]; then
+            for key_id in $KEY_IDS; do
+              gpg --batch --yes --delete-secret-keys "$key_id" 2>/dev/null || true
+            done
+            echo "GPG keys cleaned up"
+          else
+            echo "No GPG keys found to cleanup"
+          fi
