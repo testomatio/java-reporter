@@ -10,6 +10,9 @@ public class TestNgPathNormalizer {
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase()
             .contains("win");
 
+    /**
+     * Normalizes file path for cross-platform compatibility.
+     */
     public String normalizePath(String path) {
         if (path == null || path.isEmpty()) {
             return path;

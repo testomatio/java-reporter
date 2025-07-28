@@ -25,14 +25,13 @@ public class TestNgMethodInfoExtractor {
 
     /**
      * Extracts the test name from the method.
-     * For TestNG, just returns the method name as TestNG doesn't have @DisplayName equivalent.
      */
     public String getTestName(MethodDeclaration method) {
         return safeExecute(() -> method.getNameAsString(), method.getNameAsString());
     }
 
     /**
-     * Generates the complete method code including all annotations, signature and body.
+     * Generates the complete method code including annotations, signature and body.
      */
     public String getMethodCode(MethodDeclaration method) {
         return safeExecute(() -> buildMethodCode(method), method.toString());
@@ -40,8 +39,6 @@ public class TestNgMethodInfoExtractor {
 
     /**
      * Determines if the test method should be skipped.
-     * Checks for @Ignore annotation, method names starting with "ignore" or "skip",
-     * and @Test(enabled=false) parameter.
      */
     public boolean isTestSkipped(MethodDeclaration method) {
         return safeExecute(() ->
@@ -52,7 +49,6 @@ public class TestNgMethodInfoExtractor {
 
     /**
      * Extracts the suite hierarchy for the test method.
-     * Traverses from outermost to innermost class.
      */
     public List<String> extractSuites(MethodDeclaration testMethod) {
         return safeExecute(() ->
@@ -86,7 +82,6 @@ public class TestNgMethodInfoExtractor {
     private void appendMethodSignature(StringBuilder code, MethodDeclaration method) {
         appendModifiers(code, method);
         appendReturnTypeAndName(code, method);
-        //        appendParameters(code, method);
         appendThrownExceptions(code, method);
     }
 

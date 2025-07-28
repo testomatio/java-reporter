@@ -3,9 +3,6 @@ package io.testomat.testng.methodexporter;
 import io.testomat.testng.methodexporter.model.TestNgExporterTestCase;
 import java.util.List;
 
-/**
- * Builds JSON request bodies for TestNG test case submissions to the testomat.io service.
- */
 public class TestNgExporterRequestBodyBuilder {
     private static final String FRAMEWORK_NAME = "testng";
     private static final String LANGUAGE_NAME = "java";
@@ -15,7 +12,7 @@ public class TestNgExporterRequestBodyBuilder {
     private static final Boolean SYNC_FLAG = true;
 
     /**
-     * Builds a JSON request body from a list of test cases.
+     * Builds JSON request body for testomat.io service from test cases.
      */
     public String buildRequestBody(List<TestNgExporterTestCase> exporterTestCases) {
         StringBuilder json = new StringBuilder();
@@ -31,7 +28,7 @@ public class TestNgExporterRequestBodyBuilder {
 
         for (int i = 0; i < exporterTestCases.size(); i++) {
             TestNgExporterTestCase testCase = exporterTestCases.get(i);
-            
+
             appendTestCase(json, testCase);
 
             if (i < exporterTestCases.size() - 1) {
@@ -41,7 +38,7 @@ public class TestNgExporterRequestBodyBuilder {
         }
 
         json.append("  ]\n").append("}");
-        
+
         return json.toString();
     }
 

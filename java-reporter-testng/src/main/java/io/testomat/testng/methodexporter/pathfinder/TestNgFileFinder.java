@@ -28,8 +28,7 @@ public class TestNgFileFinder {
     }
 
     /**
-     * Gets the full file path for the test class (needed for file parsing).
-     * Returns the actual physical path to the file.
+     * Finds the source file path for the specified test class.
      */
     public String getTestClassFilePath(Class<?> testClass) {
         String foundFile = findTestFileByClassName(testClass);
@@ -74,12 +73,14 @@ public class TestNgFileFinder {
             }
 
         } catch (Exception e) {
-            // Exception handled silently
         }
 
         return null;
     }
 
+    /**
+     * Gets the location path from the test class.
+     */
     public String getPath(Class<?> testClass) {
         try {
             URI uri = testClass.getProtectionDomain()
@@ -151,8 +152,7 @@ public class TestNgFileFinder {
     }
 
     /**
-     * Extracts relative file path starting from package (removes src/test/java/ prefix).
-     * This method converts full file paths to package-relative paths like TestNgMetaDataExtractor.
+     * Extracts package-relative file path from full file path.
      */
     public String extractRelativeFilePath(String filepath) {
         try {
@@ -162,19 +162,16 @@ public class TestNgFileFinder {
 
             String normalizedPath = normalizer.normalizePath(filepath);
 
-            // Remove src/test/java/ prefix
             if (normalizedPath.contains("src/test/java/")) {
                 int index = normalizedPath.indexOf("src/test/java/");
                 return normalizedPath.substring(index + "src/test/java/".length());
             }
 
-            // Remove src/main/java/ prefix
             if (normalizedPath.contains("src/main/java/")) {
                 int index = normalizedPath.indexOf("src/main/java/");
                 return normalizedPath.substring(index + "src/main/java/".length());
             }
 
-            // Find any src/.../java/ pattern and extract after java/
             if (normalizedPath.contains("src/") && normalizedPath.contains("/java/")) {
                 int javaIndex = normalizedPath.lastIndexOf("/java/");
                 if (javaIndex != -1) {
@@ -182,12 +179,10 @@ public class TestNgFileFinder {
                 }
             }
 
-            // If no src pattern found, check if path already looks like package path
             if (!normalizedPath.contains("/") || normalizedPath.matches("^[a-zA-Z0-9._/]+\\.java$")) {
                 return normalizedPath;
             }
 
-            // Fallback: return as is
             return normalizedPath;
         } catch (Exception e) {
             log.debug("Error extracting relative file path: {}", e.getMessage(), e);
