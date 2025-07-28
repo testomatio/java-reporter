@@ -78,6 +78,16 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
+      - name: Set up Maven 4
+        run: |
+          echo "🔧 Installing Maven 4.0.0..."
+          wget https://archive.apache.org/dist/maven/maven-4/4.0.0-rc-2/binaries/apache-maven-4.0.0-rc-2-bin.tar.gz
+          tar xzf apache-maven-4.0.0-rc-2-bin.tar.gz
+          sudo mv apache-maven-4.0.0-rc-2 /opt/maven4
+          sudo ln -sf /opt/maven4/bin/mvn /usr/local/bin/mvn
+          mvn -version
+          echo "✅ Maven 4 installed successfully"
+
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
