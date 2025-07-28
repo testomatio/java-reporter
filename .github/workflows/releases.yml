@@ -170,7 +170,7 @@ jobs:
           echo "Updating properties in distribution module..."
           cd distribution || { echo "❌ Failed to enter distribution directory"; exit 1; }
           
-          if ! retry_maven ${{ env.MAX_RETRY_ATTEMPTS }} ${{ env.RETRY_DELAY }} mvn versions:update-properties -DgenerateBackupPoms=false -q; then
+          if ! retry_maven ${{ env.MAX_RETRY_ATTEMPTS }} ${{ env.RETRY_DELAY }} mvn versions:update-properties -DincludesList="io.testomat:*" -DgenerateBackupPoms=false -q; then
 
             echo "❌ Failed to update properties in distribution"
             exit 1
