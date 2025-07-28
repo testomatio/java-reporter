@@ -1,0 +1,505 @@
+name: Multi-module Release
+on:
+  release:
+    types: [published]
+
+env:
+  GROUP_ID: io.testomat
+  MAVEN_CENTRAL_BASE: https://repo1.maven.org/maven2
+  MAVEN_SEARCH_BASE: https://search.maven.org/remotecontent
+  MAVEN_TIMEOUT: 1800
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate project structure
+        run: |
+          echo "🔍 Validating project structure..."
+          REQUIRED_DIRS=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
+          
+          for dir in "${REQUIRED_DIRS[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "❌ Directory $dir not found"
+              exit 1
+            fi
+            if [ ! -f "$dir/pom.xml" ]; then
+              echo "❌ pom.xml not found in $dir"
+              exit 1
+            fi
+            echo "✅ $dir - OK"
+          done
+          echo "✅ Project structure validation passed"
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Get version from release tag
+        id: version
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          if [ -z "$TAG_NAME" ]; then
+            echo "❌ No tag name found in release event"
+            exit 1
+          fi
+          
+          # Remove 'v' prefix if present
+          VERSION=${TAG_NAME#v}
+          
+          # Validate version format (basic semver check)
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$'; then
+            echo "❌ Invalid version format: $VERSION"
+            echo "Expected format: X.Y.Z or X.Y.Z-suffix"
+            exit 1
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Release version: $VERSION"
+
+      - name: Update module versions
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          echo "🔄 Updating module versions to $VERSION..."
+          
+          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
+          
+          for module in "${MODULES[@]}"; do
+            echo "Updating $module..."
+            cd "$module" || { echo "❌ Failed to enter $module directory"; exit 1; }
+          
+            if ! timeout ${{ env.MAVEN_TIMEOUT }} mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -q; then
+              echo "❌ Failed to update version in $module"
+              exit 1
+            fi
+          
+            cd .. || { echo "❌ Failed to return to root directory"; exit 1; }
+            echo "✅ $module version updated"
+          done
+          
+          # Update properties in distribution module
+          echo "Updating properties in distribution module..."
+          cd distribution || { echo "❌ Failed to enter distribution directory"; exit 1; }
+          
+          if ! timeout ${{ env.MAVEN_TIMEOUT }} mvn versions:update-properties -DgenerateBackupPoms=false -q; then
+            echo "❌ Failed to update properties in distribution"
+            exit 1
+          fi
+          
+          cd .. || { echo "❌ Failed to return to root directory"; exit 1; }
+          echo "✅ All module versions updated successfully"
+
+      - name: Setup GPG
+        run: |
+          echo "🔐 Setting up GPG..."
+          if [ -z "${{ secrets.GPG_PRIVATE_KEY }}" ]; then
+            echo "❌ GPG_PRIVATE_KEY secret not found"
+            exit 1
+          fi
+          
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+          echo "✅ GPG setup completed"
+
+      - name: Deploy Core module
+        run: |
+          echo "🚀 Deploying Core module..."
+          cd java-reporter-core || { echo "❌ Failed to enter java-reporter-core directory"; exit 1; }
+          
+          if ! timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -q; then
+            echo "❌ Failed to deploy core module"
+            exit 1
+          fi
+          
+          cd .. || { echo "❌ Failed to return to root directory"; exit 1; }
+          echo "✅ Core module deployed successfully"
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Wait for Core availability on Maven Central
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          MODULE="java-reporter-core"
+          
+          check_availability() {
+            local module=$1
+            local version=$2
+          
+            local endpoints=(
+              "${{ env.MAVEN_CENTRAL_BASE }}/${{ env.GROUP_ID }}/$module/$version/$module-$version.pom"
+              "${{ env.MAVEN_SEARCH_BASE }}?filepath=${{ env.GROUP_ID }}/$module/$version/$module-$version.pom"
+            )
+          
+            for endpoint in "${endpoints[@]}"; do
+              # Replace dots with slashes in group ID for URL path
+              local group_path=$(echo "${{ env.GROUP_ID }}" | tr '.' '/')
+              local full_url=$(echo "$endpoint" | sed "s|${{ env.GROUP_ID }}|$group_path|g")
+          
+              if curl -s -f --max-time 30 "$full_url" > /dev/null 2>&1; then
+                echo "✅ $module v$version found at: $full_url"
+                return 0
+              fi
+            done
+            return 1
+          }
+          
+          echo "⏳ Waiting for Core module availability on Maven Central..."
+          for i in {1..20}; do
+            echo "Attempt $i/20: Checking if core module is available..."
+          
+            if check_availability "$MODULE" "$VERSION"; then
+              echo "✅ Core module is available on Maven Central!"
+              break
+            fi
+          
+            if [ $i -eq 20 ]; then
+              echo "⚠️ Core module not available after 20 attempts (20 minutes). Continuing anyway..."
+              echo "This might cause dependency resolution issues for framework modules."
+              break
+            fi
+          
+            echo "Core not yet available, waiting 60 seconds..."
+            sleep 60
+          done
+
+      - name: Deploy Framework modules
+        run: |
+          echo "🚀 Deploying Framework modules in parallel..."
+          
+          # Function to deploy a module
+          deploy_module() {
+            local module=$1
+            echo "Starting deployment of $module..."
+            cd "$module" || { echo "❌ Failed to enter $module directory"; return 1; }
+          
+            if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -q; then
+              echo "✅ $module deployed successfully"
+              cd .. || { echo "❌ Failed to return to root directory"; return 1; }
+              return 0
+            else
+              echo "❌ Failed to deploy $module"
+              cd .. || { echo "❌ Failed to return to root directory"; return 1; }
+              return 1
+            fi
+          }
+          
+          # Deploy modules in parallel
+          deploy_module "java-reporter-junit" &
+          JUNIT_PID=$!
+          
+          deploy_module "java-reporter-testng" &
+          TESTNG_PID=$!
+          
+          deploy_module "java-reporter-cucumber" &
+          CUCUMBER_PID=$!
+          
+          # Wait for all deployments to complete and check results
+          echo "Waiting for framework modules to complete..."
+          
+          JUNIT_SUCCESS=true
+          TESTNG_SUCCESS=true
+          CUCUMBER_SUCCESS=true
+          
+          if ! wait $JUNIT_PID; then
+            echo "❌ JUnit module deployment failed"
+            JUNIT_SUCCESS=false
+          fi
+          
+          if ! wait $TESTNG_PID; then
+            echo "❌ TestNG module deployment failed"
+            TESTNG_SUCCESS=false
+          fi
+          
+          if ! wait $CUCUMBER_PID; then
+            echo "❌ Cucumber module deployment failed"
+            CUCUMBER_SUCCESS=false
+          fi
+          
+          # Check if all deployments were successful
+          if [ "$JUNIT_SUCCESS" = true ] && [ "$TESTNG_SUCCESS" = true ] && [ "$CUCUMBER_SUCCESS" = true ]; then
+            echo "✅ All framework modules deployed successfully"
+          else
+            echo "❌ One or more framework module deployments failed"
+            exit 1
+          fi
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Wait for Framework modules availability
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          
+          check_availability() {
+            local module=$1
+            local version=$2
+          
+            local endpoints=(
+              "${{ env.MAVEN_CENTRAL_BASE }}/${{ env.GROUP_ID }}/$module/$version/$module-$version.pom"
+              "${{ env.MAVEN_SEARCH_BASE }}?filepath=${{ env.GROUP_ID }}/$module/$version/$module-$version.pom"
+            )
+          
+            for endpoint in "${endpoints[@]}"; do
+              # Replace dots with slashes in group ID for URL path
+              local group_path=$(echo "${{ env.GROUP_ID }}" | tr '.' '/')
+              local full_url=$(echo "$endpoint" | sed "s|${{ env.GROUP_ID }}|$group_path|g")
+          
+              if curl -s -f --max-time 30 "$full_url" > /dev/null 2>&1; then
+                echo "✅ $module v$version found at: $full_url"
+                return 0
+              fi
+            done
+            return 1
+          }
+          
+          modules=("java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber")
+          
+          echo "⏳ Waiting for Framework modules availability on Maven Central..."
+          for module in "${modules[@]}"; do
+            echo "Checking $module..."
+            for i in {1..15}; do
+              if check_availability "$module" "$VERSION"; then
+                echo "✅ $module is available!"
+                break
+              fi
+          
+              if [ $i -eq 15 ]; then
+                echo "⚠️ $module not available after 15 attempts (15 minutes). Continuing..."
+                break
+              fi
+          
+              echo "Attempt $i/15: $module not yet available, waiting 60 seconds..."
+              sleep 60
+            done
+          done
+
+      - name: Deploy Distribution module
+        run: |
+          echo "🚀 Deploying Distribution module..."
+          cd distribution || { echo "❌ Failed to enter distribution directory"; exit 1; }
+          
+          if ! timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -q; then
+            echo "❌ Failed to deploy distribution module"
+            exit 1
+          fi
+          
+          cd .. || { echo "❌ Failed to return to root directory"; exit 1; }
+          echo "✅ Distribution module deployed successfully"
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Generate changelog for current version
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          TAG_NAME="v$VERSION"
+          
+          echo "📝 Generating changelog for version $VERSION..."
+          
+          # Get the previous tag, handle case when this is the first release
+          if LAST_TAG=$(git describe --tags --abbrev=0 "$TAG_NAME^" 2>/dev/null); then
+            echo "Previous tag found: $LAST_TAG"
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" ${LAST_TAG}..${TAG_NAME} 2>/dev/null || echo "")
+          else
+            echo "No previous tag found (first release), generating changelog from recent commits"
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --since="1 month ago" 2>/dev/null || echo "")
+          fi
+          
+          if [ -z "$CHANGELOG" ]; then
+            echo "No commits found for changelog"
+            echo "- Initial release" > current_release_changelog.txt
+          else
+            echo "$CHANGELOG" > current_release_changelog.txt
+          fi
+          
+          echo "✅ Changelog generated"
+
+      - name: Create or update CHANGELOG.md
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          DATE=$(date +"%Y-%m-%d")
+          
+          echo "📄 Creating/updating CHANGELOG.md..."
+          
+          # Create CHANGELOG.md if it doesn't exist
+          if [ ! -f CHANGELOG.md ]; then
+            echo "Creating new CHANGELOG.md..."
+            cat > CHANGELOG.md << 'EOF'
+# Changelog
+
+          All notable changes to this project will be documented in this file.
+          
+          The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+          and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+          
+          EOF
+          fi
+          
+          # Create new release section
+          {
+          echo ""
+          echo "## [$VERSION] - $DATE"
+          echo ""
+          
+          if [ -f current_release_changelog.txt ] && [ -s current_release_changelog.txt ]; then
+          echo "### Changes"
+          cat current_release_changelog.txt
+          echo ""
+          fi
+          
+          echo "### Maven Coordinates"
+          echo ""
+          echo "#### All-in-one distribution:"
+          echo '```xml'
+          echo '<dependency>'
+          echo '    <groupId>${{ env.GROUP_ID }}</groupId>'
+          echo '    <artifactId>java-reporter-distribution</artifactId>'
+          echo "    <version>$VERSION</version>"
+          echo '    <classifier>junit</classifier> <!-- or testng, cucumber -->'
+          echo '</dependency>'
+          echo '```'
+          echo ""
+          echo "#### Individual modules:"
+          echo '```xml'
+          echo '<!-- Core module -->'
+          echo '<dependency>'
+          echo '    <groupId>${{ env.GROUP_ID }}</groupId>'
+          echo '    <artifactId>java-reporter-core</artifactId>'
+          echo "    <version>$VERSION</version>"
+          echo '</dependency>'
+          echo ""
+          echo '<!-- Framework-specific modules -->'
+          echo '<dependency>'
+          echo '    <groupId>${{ env.GROUP_ID }}</groupId>'
+          echo '    <artifactId>java-reporter-junit</artifactId> <!-- or testng, cucumber -->'
+          echo "    <version>$VERSION</version>"
+          echo '</dependency>'
+          echo '```'
+          echo ""
+          } > new_release_section.md
+          
+          # Insert new section after the header
+          if grep -q "# Changelog" CHANGELOG.md; then
+          # Find the line number after the header - split complex command
+          GREP_OUTPUT=$(grep -n "# Changelog" CHANGELOG.md)
+          FIRST_MATCH=$(echo "$GREP_OUTPUT" | head -1)
+          HEADER_LINE=$(echo "$FIRST_MATCH" | cut -d':' -f1)
+          
+          # Skip header and any existing content until we find a good insertion point
+          INSERTION_LINE=$((HEADER_LINE + 1))
+          TOTAL_LINES=$(wc -l < CHANGELOG.md)
+          while [ $INSERTION_LINE -le $TOTAL_LINES ]; do
+          LINE_CONTENT=$(sed -n "${INSERTION_LINE}p" CHANGELOG.md)
+          if [ -z "$LINE_CONTENT" ] || [[ "$LINE_CONTENT" =~ ^##[[:space:]] ]]; then
+          break
+          fi
+          INSERTION_LINE=$((INSERTION_LINE + 1))
+          done
+          
+          # Create temporary file with new content
+          head -n $((INSERTION_LINE - 1)) CHANGELOG.md > temp_changelog.md
+          cat new_release_section.md >> temp_changelog.md
+          tail -n +$INSERTION_LINE CHANGELOG.md >> temp_changelog.md
+          mv temp_changelog.md CHANGELOG.md
+          else
+          # Prepend to existing file
+          cat new_release_section.md CHANGELOG.md > temp_changelog.md
+          mv temp_changelog.md CHANGELOG.md
+          fi
+          
+          # Cleanup temporary files
+          rm -f new_release_section.md current_release_changelog.txt
+          
+          echo "✅ CHANGELOG.md updated successfully"
+
+      - name: Commit and push CHANGELOG.md
+        run: |
+          echo "📤 Committing and pushing CHANGELOG.md..."
+          
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add CHANGELOG.md
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit in CHANGELOG.md"
+          else
+            git commit -m "docs: update CHANGELOG.md for release v${{ steps.version.outputs.version }}"
+          
+            # Retry push if it fails (in case of concurrent updates)
+            for i in {1..3}; do
+              if git push origin ${{ github.ref_name }}; then
+                echo "✅ CHANGELOG.md pushed successfully"
+                break
+              else
+                echo "Push failed, attempt $i/3. Retrying..."
+                git pull --rebase origin ${{ github.ref_name }}
+                sleep 5
+              fi
+          
+              if [ $i -eq 3 ]; then
+                echo "❌ Failed to push CHANGELOG.md after 3 attempts"
+                exit 1
+              fi
+            done
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup GPG
+        if: always()
+        run: |
+          echo "🧹 Cleaning up GPG keys..."
+          KEY_IDS=$(gpg --list-secret-keys --keyid-format LONG 2>/dev/null | grep sec | awk '{print $2}' | cut -d'/' -f2 2>/dev/null || echo "")
+          if [ -n "$KEY_IDS" ]; then
+            for key_id in $KEY_IDS; do
+              gpg --batch --yes --delete-secret-keys "$key_id" 2>/dev/null || true
+            done
+            echo "✅ GPG keys cleaned up successfully"
+          else
+            echo "No GPG keys found to cleanup"
+          fi
+
+      - name: Release Summary
+        if: always()
+        run: |
+          echo "📋 Release Summary"
+          echo "=================="
+          echo "Version: ${{ steps.version.outputs.version }}"
+          echo "Tag: ${{ github.event.release.tag_name }}"
+          echo "Release URL: ${{ github.event.release.html_url }}"
+          echo ""
+          echo "Deployed modules:"
+          echo "- java-reporter-core"
+          echo "- java-reporter-junit" 
+          echo "- java-reporter-testng"
+          echo "- java-reporter-cucumber"
+          echo "- distribution"
+          echo ""
+          echo "Maven Central URLs:"
+          GROUP_PATH=$(echo "${{ env.GROUP_ID }}" | tr '.' '/')
+          echo "- Core: ${{ env.MAVEN_CENTRAL_BASE }}/$GROUP_PATH/java-reporter-core/${{ steps.version.outputs.version }}/"
+          echo "- Distribution: ${{ env.MAVEN_CENTRAL_BASE }}/$GROUP_PATH/java-reporter-distribution/${{ steps.version.outputs.version }}/"
+          echo ""
+          echo "✅ Release completed successfully!"
