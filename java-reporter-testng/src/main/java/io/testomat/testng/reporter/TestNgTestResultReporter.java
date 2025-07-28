@@ -46,7 +46,7 @@ public class TestNgTestResultReporter {
     }
 
     /**
-     * Reports test result for regular TestNG test execution.
+     * Reports test result for regular TestNG execution.
      */
     public void reportTestResult(ITestResult result, String status) {
         String methodKey = result.getTestClass().getName()
@@ -95,9 +95,6 @@ public class TestNgTestResultReporter {
         });
     }
 
-    /**
-     * Reports test result to Testomat.io with optional custom message.
-     */
     private void reportTestResult(TestMetadata metadata, String status,
                                   String message, Object frameworkSpecificData) {
         if (!runManager.isActive()) {
@@ -127,9 +124,6 @@ public class TestNgTestResultReporter {
         }
     }
 
-    /**
-     * Reports disabled test method with SKIPPED status.
-     */
     private void reportDisabledTest(Method method, Class<?> testClass) {
         TestNgTestWrapper wrapper = TestNgTestWrapper.forDisabledTest(method, testClass);
         TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);

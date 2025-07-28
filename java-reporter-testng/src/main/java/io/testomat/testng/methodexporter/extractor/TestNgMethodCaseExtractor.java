@@ -35,6 +35,9 @@ public class TestNgMethodCaseExtractor {
         this.fileFinder = fileFinder;
     }
 
+    /**
+     * Extracts test cases from compilation unit and file path.
+     */
     public List<TestNgExporterTestCase> extractTestCases(CompilationUnit cu, String filepath) {
         log.info("Extracting test cases from file: {}", filepath);
 

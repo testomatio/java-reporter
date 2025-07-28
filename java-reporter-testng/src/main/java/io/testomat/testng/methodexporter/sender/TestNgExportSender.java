@@ -32,6 +32,9 @@ public class TestNgExportSender {
         this.provider = provider;
     }
 
+    /**
+     * Sends test cases to testomat.io service with retry logic.
+     */
     public void sendTestCases(List<TestNgExporterTestCase> exporterTestCases) {
         log.info("sendTestCases called with {} test cases", exporterTestCases.size());
 

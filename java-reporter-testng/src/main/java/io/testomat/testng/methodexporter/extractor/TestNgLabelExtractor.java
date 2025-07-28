@@ -12,6 +12,9 @@ import java.util.regex.Pattern;
 public class TestNgLabelExtractor {
     private static final String COMMENT_LABEL_PATTERN = "@(\\w+)(?::(\\w+))?|#(\\w+)";
 
+    /**
+     * Extracts labels from test method annotations, comments and name patterns.
+     */
     public List<String> extractLabels(MethodDeclaration testMethod) {
         try {
             List<String> labels = new ArrayList<>();

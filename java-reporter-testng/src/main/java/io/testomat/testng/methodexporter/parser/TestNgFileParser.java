@@ -12,6 +12,9 @@ public class TestNgFileParser {
     private static final Logger log = LoggerFactory.getLogger(TestNgFileParser.class);
     private final Object lock = new Object();
 
+    /**
+     * Parses Java source file and returns compilation unit.
+     */
     public CompilationUnit parseFile(String filepath) {
         log.info("parseFile called with filepath: {}", filepath);
 

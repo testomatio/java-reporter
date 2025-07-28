@@ -27,7 +27,7 @@ public class TestNgMetaDataExtractor {
             ITestResult testResult = wrapper.getTestResult();
             method = testResult.getMethod().getConstructorOrMethod().getMethod();
             testClass = testResult.getTestClass().getRealClass();
-            suiteTitle = testClass.getName();
+            suiteTitle = testClass.getSimpleName();
             System.out.println("regular test");
         } else {
             method = wrapper.getMethod();

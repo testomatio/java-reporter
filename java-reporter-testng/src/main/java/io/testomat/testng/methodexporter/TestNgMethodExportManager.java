@@ -49,7 +49,7 @@ public class TestNgMethodExportManager {
     }
 
     /**
-     * Export test body for a specific test class
+     * Loads and exports test method bodies for the specified test class.
      */
     public void loadTestBodyForClass(Class<?> testClass) {
         log.info("loadTestBodyForClass called for class: {}", testClass.getName());
