@@ -86,7 +86,7 @@ public class TestNgMethodInfoExtractor {
     private void appendMethodSignature(StringBuilder code, MethodDeclaration method) {
         appendModifiers(code, method);
         appendReturnTypeAndName(code, method);
-        appendParameters(code, method);
+        //        appendParameters(code, method);
         appendThrownExceptions(code, method);
     }
 

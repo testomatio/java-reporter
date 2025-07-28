@@ -27,6 +27,10 @@ public class TestNgFileFinder {
         this.normalizer = normalizer;
     }
 
+    /**
+     * Gets the full file path for the test class (needed for file parsing).
+     * Returns the actual physical path to the file.
+     */
     public String getTestClassFilePath(Class<?> testClass) {
         String foundFile = findTestFileByClassName(testClass);
         if (foundFile != null && !foundFile.equals(getDefaultPath(testClass))) {
@@ -146,24 +150,48 @@ public class TestNgFileFinder {
         }
     }
 
+    /**
+     * Extracts relative file path starting from package (removes src/test/java/ prefix).
+     * This method converts full file paths to package-relative paths like TestNgMetaDataExtractor.
+     */
     public String extractRelativeFilePath(String filepath) {
         try {
             if (filepath == null || filepath.isEmpty()) {
-                return "src/test/java/UnknownFile.java";
+                return "UnknownFile.java";
             }
 
             String normalizedPath = normalizer.normalizePath(filepath);
 
-            int srcIndex = normalizedPath.indexOf("src/");
-
-            if (srcIndex != -1) {
-                return normalizedPath.substring(srcIndex);
+            // Remove src/test/java/ prefix
+            if (normalizedPath.contains("src/test/java/")) {
+                int index = normalizedPath.indexOf("src/test/java/");
+                return normalizedPath.substring(index + "src/test/java/".length());
             }
 
+            // Remove src/main/java/ prefix
+            if (normalizedPath.contains("src/main/java/")) {
+                int index = normalizedPath.indexOf("src/main/java/");
+                return normalizedPath.substring(index + "src/main/java/".length());
+            }
+
+            // Find any src/.../java/ pattern and extract after java/
+            if (normalizedPath.contains("src/") && normalizedPath.contains("/java/")) {
+                int javaIndex = normalizedPath.lastIndexOf("/java/");
+                if (javaIndex != -1) {
+                    return normalizedPath.substring(javaIndex + "/java/".length());
+                }
+            }
+
+            // If no src pattern found, check if path already looks like package path
+            if (!normalizedPath.contains("/") || normalizedPath.matches("^[a-zA-Z0-9._/]+\\.java$")) {
+                return normalizedPath;
+            }
+
+            // Fallback: return as is
             return normalizedPath;
         } catch (Exception e) {
             log.debug("Error extracting relative file path: {}", e.getMessage(), e);
-            return "src/test/java/UnknownFile.java";
+            return "UnknownFile.java";
         }
     }
 }
