@@ -13,6 +13,7 @@ env:
   MAX_RETRY_ATTEMPTS: 3
   RETRY_DELAY: 30
 
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -148,7 +149,7 @@ jobs:
             echo "❌ Command failed after $attempts attempts: $cmd"
             return 1
           }
-          
+
           MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
           
           for module in "${MODULES[@]}"; do
@@ -156,6 +157,7 @@ jobs:
             cd "$module" || { echo "❌ Failed to enter $module directory"; exit 1; }
           
             if ! retry_maven ${{ env.MAX_RETRY_ATTEMPTS }} ${{ env.RETRY_DELAY }} mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -q; then
+
               echo "❌ Failed to update version in $module"
               exit 1
             fi
@@ -169,6 +171,7 @@ jobs:
           cd distribution || { echo "❌ Failed to enter distribution directory"; exit 1; }
           
           if ! retry_maven ${{ env.MAX_RETRY_ATTEMPTS }} ${{ env.RETRY_DELAY }} mvn versions:update-properties -DgenerateBackupPoms=false -q; then
+
             echo "❌ Failed to update properties in distribution"
             exit 1
           fi
@@ -179,6 +182,7 @@ jobs:
       - name: Setup GPG
         run: |
           echo "🔐 Setting up GPG..."
+
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
           echo "✅ GPG setup completed"
@@ -230,6 +234,7 @@ jobs:
         run: |
           VERSION=${{ steps.version.outputs.version }}
           MODULE="java-reporter-core"
+
           GROUP_PATH=$(echo "${{ env.GROUP_ID }}" | tr '.' '/')
           
           # Enhanced availability check with multiple endpoints
@@ -259,17 +264,18 @@ jobs:
               echo "✅ $module v$version available via Maven dependency resolution"
               return 0
             fi
-          
             return 1
           }
           
           echo "⏳ Waiting for Core module availability on Maven Central..."
+
           WAIT_ITERATIONS=$((MAVEN_CENTRAL_WAIT_TIMEOUT / 120))  # 2 minute intervals
           
           for i in $(seq 1 $WAIT_ITERATIONS); do
             echo "Attempt $i/$WAIT_ITERATIONS: Checking if core module is available..."
           
             if check_availability "$MODULE" "$VERSION" "$GROUP_PATH" "${{ env.GROUP_ID }}"; then
+
               echo "✅ Core module is available on Maven Central!"
               break
             fi
@@ -292,6 +298,7 @@ jobs:
           
             echo "Core not yet available, waiting 2 minutes..."
             sleep 120
+
           done
 
       - name: Deploy Framework modules
@@ -340,7 +347,6 @@ jobs:
           deploy_module "java-reporter-cucumber" &
           CUCUMBER_PID=$!
           
-          # Wait for all deployments and collect results
           echo "Waiting for framework modules to complete..."
           
           JUNIT_SUCCESS=true
@@ -352,6 +358,7 @@ jobs:
             JUNIT_SUCCESS=false
             echo "JUnit deployment logs:"
             cat deploy_java-reporter-junit.log 2>/dev/null || echo "No log file found"
+
           fi
           
           if ! wait $TESTNG_PID; then
@@ -364,14 +371,13 @@ jobs:
           if ! wait $CUCUMBER_PID; then
             echo "❌ Cucumber module deployment failed"
             CUCUMBER_SUCCESS=false
+
             echo "Cucumber deployment logs:"
             cat deploy_java-reporter-cucumber.log 2>/dev/null || echo "No log file found"
           fi
           
-          # Clean up log files
           rm -f deploy_*.log
           
-          # Check if all deployments were successful
           if [ "$JUNIT_SUCCESS" = true ] && [ "$TESTNG_SUCCESS" = true ] && [ "$CUCUMBER_SUCCESS" = true ]; then
             echo "✅ All framework modules deployed successfully"
           else
@@ -380,6 +386,7 @@ jobs:
             [ "$JUNIT_SUCCESS" = false ] && echo "  - java-reporter-junit"
             [ "$TESTNG_SUCCESS" = false ] && echo "  - java-reporter-testng"
             [ "$CUCUMBER_SUCCESS" = false ] && echo "  - java-reporter-cucumber"
+
             exit 1
           fi
         env:
@@ -417,7 +424,6 @@ jobs:
               echo "✅ $module v$version available via Maven"
               return 0
             fi
-          
             return 1
           }
           
@@ -431,6 +437,7 @@ jobs:
           
             for i in $(seq 1 $WAIT_ITERATIONS); do
               if check_availability "$module" "$VERSION" "$GROUP_PATH" "${{ env.GROUP_ID }}"; then
+
                 echo "✅ $module is available!"
                 break
               fi
@@ -450,7 +457,6 @@ jobs:
           echo "🚀 Deploying Distribution module..."
           cd distribution || { echo "❌ Failed to enter distribution directory"; exit 1; }
           
-          # Enhanced deployment with retry logic
           for attempt in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
             echo "Distribution deployment attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }}..."
           
@@ -471,7 +477,7 @@ jobs:
             echo "Attempt $attempt failed, retrying in ${{ env.RETRY_DELAY }}s..."
             sleep ${{ env.RETRY_DELAY }}
           done
-          
+
           echo "✅ Distribution module deployed successfully"
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
@@ -648,7 +654,6 @@ jobs:
           else
             git commit -m "docs: update CHANGELOG.md for release v${{ steps.version.outputs.version }}"
           
-            # Enhanced retry logic for git push
             for i in {1..5}; do
               echo "Push attempt $i/5..."
           
@@ -667,6 +672,7 @@ jobs:
               git fetch origin ${{ github.ref_name }}
               git rebase origin/${{ github.ref_name }}
               sleep 10
+
             done
           fi
         env:
