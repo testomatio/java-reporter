@@ -55,14 +55,14 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
 
     @Override
     public void onStart(ISuite suite) {
-        log.info("Suite started: {}", suite.getName());
+        log.debug("Suite started: {}", suite.getName());
         runManager.incrementSuiteCounter();
         reporter.reportTestResult(suite);
     }
 
     @Override
     public void onFinish(ISuite suite) {
-        log.info("Suite finished: {}", suite.getName());
+        log.debug("Suite finished: {}", suite.getName());
         runManager.decrementSuiteCounter();
         // Don't export here - suite results are not ready yet
     }
@@ -70,7 +70,7 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
     // Export after each test context finishes (when all tests in the context are done)
     @Override
     public void onFinish(ITestContext context) {
-        log.info("Test context finished: {}", context.getName());
+        log.debug("Test context finished: {}", context.getName());
 
         // Process each test class in this context
         for (Class<?> testClass : context.getAllTestMethods()[0].getTestClass().getRealClass().getClasses()) {
@@ -109,7 +109,7 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
 
         String className = testClass.getName();
         if (processedClasses.add(className)) {
-            log.info("Exporting test class: {}", className);
+            log.debug("Exporting test class: {}", className);
             methodExportManager.loadTestBodyForClass(testClass);
         } else {
             log.debug("Test class {} already processed", className);

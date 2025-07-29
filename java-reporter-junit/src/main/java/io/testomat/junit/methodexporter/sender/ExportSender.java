@@ -11,7 +11,7 @@ import io.testomat.junit.model.ExporterTestCase;
 import java.util.List;
 
 public class ExportSender {
-    private static final String LOAD_URL = "https://app.testomat.io/api/load?api_key=";
+    private static final String LOAD_URL = "https://beta.testomat.io/api/load?api_key=";
     private static final int RETRY_TIMEOUT_MILLISECONDS = 1500;
     private static final int RETRY_MAX_ATTEMPTS = 2;
     private final PropertyProvider provider;
