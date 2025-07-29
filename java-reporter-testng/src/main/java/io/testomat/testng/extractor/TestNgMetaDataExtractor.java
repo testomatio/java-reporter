@@ -21,21 +21,38 @@ public class TestNgMetaDataExtractor {
     public TestMetadata extractTestMetadata(TestNgTestWrapper wrapper) {
         Method method;
         String suiteTitle;
+        Class<?> testClass;
 
         if (wrapper.isRegularTest()) {
             ITestResult testResult = wrapper.getTestResult();
             method = testResult.getMethod().getConstructorOrMethod().getMethod();
-            suiteTitle = testResult.getTestClass().getName();
+            testClass = testResult.getTestClass().getRealClass();
+            suiteTitle = testClass.getSimpleName();
+            System.out.println("regular test");
         } else {
             method = wrapper.getMethod();
-            suiteTitle = wrapper.getTestClass().getSimpleName();
+            testClass = wrapper.getTestClass();
+            suiteTitle = testClass.getSimpleName();
+            System.out.println("else");
         }
 
         String title = getTestTitle(method);
         String testId = getTestId(method);
-        String file = suiteTitle + ".java";
+        String filePath = getFilePath(testClass);
 
-        return new TestMetadata(title, testId, suiteTitle, file);
+        return new TestMetadata(title, testId, suiteTitle, filePath);
+    }
+
+    /**
+     * Gets the file path for the test class.
+     *
+     * @param testClass the test class
+     * @return path to the java file
+     */
+    private String getFilePath(Class<?> testClass) {
+        String packagePath = testClass.getPackage().getName().replace('.', '/');
+        String className = testClass.getSimpleName() + ".java";
+        return packagePath + "/" + className;
     }
 
     /**
