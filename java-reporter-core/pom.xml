@@ -7,7 +7,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.6.48</version>
+    <version>0.6.47</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>
@@ -55,7 +55,6 @@
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
-        <!-- Optional fallback logging implementation -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
