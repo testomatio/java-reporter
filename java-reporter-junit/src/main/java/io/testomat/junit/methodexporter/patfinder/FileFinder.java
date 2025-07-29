@@ -29,27 +29,33 @@ public class FileFinder {
         this.normalizer = normalizer;
     }
 
-    public String getTestClassFilePath(ExtensionContext extensionContext) {
-        String foundFile = findTestFileByClassName(extensionContext);
-        if (foundFile != null && !foundFile.equals(getDefaultPath(extensionContext))) {
-            return foundFile;
+    public String getTestClassFilePath(Class<?> testClass) {
+        if (testClass == null) {
+            return null;
         }
 
-        try {
-            String path = getPath(extensionContext);
+        // Convert class name to file path
+        String className = testClass.getName();
+        String packagePath = className.replace('.', '/');
+        String fileName = packagePath + ".java";
 
-            if (path != null) {
-                String javaFilePath = convertClassPathToJavaFile(path, extensionContext);
+        // Try to find the file in typical Maven/Gradle source directories
+        String[] sourceDirs = {
+                "src/test/java/",
+                "src/main/java/",
+                "test/",
+                "src/"
+        };
 
-                if (javaFilePath != null && Paths.get(javaFilePath).toFile().exists()) {
-                    return javaFilePath;
-                }
+        for (String sourceDir : sourceDirs) {
+            String fullPath = sourceDir + fileName;
+            if (new java.io.File(fullPath).exists()) {
+                return fullPath;
             }
-        } catch (Exception e) {
-            log.debug("Error getting test class file path: {}", e.getMessage(), e);
         }
 
-        return foundFile;
+        // If not found, return the relative path anyway
+        return "src/test/java/" + fileName;
     }
 
     private String convertClassPathToJavaFile(String classPath, ExtensionContext extensionContext) {
@@ -154,24 +160,47 @@ public class FileFinder {
         }
     }
 
+    /**
+     * Extracts package-relative file path from full file path.
+     * Updated to work similarly to TestNgFileFinder but for JUnit context.
+     */
     public String extractRelativeFilePath(String filepath) {
         try {
             if (filepath == null || filepath.isEmpty()) {
-                return "src/test/java/UnknownFile.java";
+                return "UnknownFile.java";
             }
 
             String normalizedPath = normalizer.normalizePath(filepath);
 
-            int srcIndex = normalizedPath.indexOf("src/");
+            // For JUnit, we primarily work with test files, so check test paths first
+            if (normalizedPath.contains("src/test/java/")) {
+                int index = normalizedPath.indexOf("src/test/java/");
+                return normalizedPath.substring(index + "src/test/java/".length());
+            }
 
-            if (srcIndex != -1) {
-                return normalizedPath.substring(srcIndex);
+            // Also check main java files (sometimes tests might reference main classes)
+            if (normalizedPath.contains("src/main/java/")) {
+                int index = normalizedPath.indexOf("src/main/java/");
+                return normalizedPath.substring(index + "src/main/java/".length());
+            }
+
+            // Fallback: look for any /java/ pattern
+            if (normalizedPath.contains("src/") && normalizedPath.contains("/java/")) {
+                int javaIndex = normalizedPath.lastIndexOf("/java/");
+                if (javaIndex != -1) {
+                    return normalizedPath.substring(javaIndex + "/java/".length());
+                }
+            }
+
+            // If it's already a simple relative path or just a filename
+            if (!normalizedPath.contains("/") || normalizedPath.matches("^[a-zA-Z0-9._/]+\\.java$")) {
+                return normalizedPath;
             }
 
             return normalizedPath;
         } catch (Exception e) {
             log.debug("Error extracting relative file path: {}", e.getMessage(), e);
-            return "src/test/java/UnknownFile.java";
+            return "UnknownFile.java";
         }
     }
 }

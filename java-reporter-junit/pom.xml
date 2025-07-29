@@ -49,7 +49,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.6.46</version>
+            <version>0.6.462</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

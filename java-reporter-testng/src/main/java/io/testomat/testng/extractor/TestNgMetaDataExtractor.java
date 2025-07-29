@@ -27,14 +27,11 @@ public class TestNgMetaDataExtractor {
             ITestResult testResult = wrapper.getTestResult();
             method = testResult.getMethod().getConstructorOrMethod().getMethod();
             testClass = testResult.getTestClass().getRealClass();
-            suiteTitle = testClass.getSimpleName();
-            System.out.println("regular test");
         } else {
             method = wrapper.getMethod();
             testClass = wrapper.getTestClass();
-            suiteTitle = testClass.getSimpleName();
-            System.out.println("else");
         }
+        suiteTitle = testClass.getSimpleName();
 
         String title = getTestTitle(method);
         String testId = getTestId(method);
