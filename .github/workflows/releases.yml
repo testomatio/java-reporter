@@ -256,7 +256,7 @@ jobs:
           echo "🚀 Deploying Core module..."
           cd java-reporter-core || { echo "❌ Failed to enter java-reporter-core directory"; exit 1; }
           
-          # Function to retry Maven deploy with detailed error logging
+          # Function to retry Maven deploy with controlled logging
           retry_deploy() {
             local attempts=$1
             local delay=$2
@@ -264,7 +264,9 @@ jobs:
           
             for i in $(seq 1 $attempts); do
               echo "Deployment attempt $i/$attempts for $module..."
-              if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -X; then
+          
+              # Use less verbose logging to avoid log truncation
+              if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -B; then
                 echo "✅ $module deployed successfully on attempt $i"
                 return 0
               fi
@@ -275,8 +277,9 @@ jobs:
                 sleep $delay
               else
                 echo "❌ All deployment attempts failed for $module"
-                echo "Last 100 lines of Maven output:"
-                tail -100 ~/.m2/maven.log 2>/dev/null || echo "No maven log found"
+                # Only show debug logs on final failure
+                echo "Re-running with debug output for troubleshooting..."
+                timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -X || true
                 return 1
               fi
             done
@@ -376,11 +379,12 @@ jobs:
               return 1
             }
           
-            # Retry deployment with detailed logging
+            # Retry deployment with controlled logging
             for attempt in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
               echo "Deployment attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }} for $module" | tee -a "$log_file"
           
-              if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -X 2>&1 | tee -a "$log_file"; then
+              # Use less verbose logging first, debug only on final failure
+              if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -B 2>&1 | tee -a "$log_file"; then
                 echo "✅ $module deployed successfully on attempt $attempt" | tee -a "$log_file"
                 cd .. || { echo "❌ Failed to return to root directory"; return 1; }
                 return 0
@@ -389,6 +393,9 @@ jobs:
               if [ $attempt -lt ${{ env.MAX_RETRY_ATTEMPTS }} ]; then
                 echo "Attempt $attempt failed for $module, retrying in ${{ env.RETRY_DELAY }}s..." | tee -a "$log_file"
                 sleep ${{ env.RETRY_DELAY }}
+              else
+                echo "❌ Final attempt failed, running with debug output..." | tee -a "$log_file"
+                timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -X 2>&1 | tail -100 | tee -a "$log_file" || true
               fi
             done
           
@@ -516,8 +523,8 @@ jobs:
           for attempt in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
             echo "Distribution deployment attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }}..."
           
-            # Force maven-compiler-plugin version to 3.11.0 to avoid Maven 4 requirement
-            if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -X \
+            # Force maven-compiler-plugin version and use less verbose logging
+            if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -B \
                -Dmaven-compiler-plugin.version=3.11.0 \
                -Dmaven.compiler.plugin.version=3.11.0; then
               echo "✅ Distribution module deployed successfully on attempt $attempt"
@@ -527,8 +534,10 @@ jobs:
           
             if [ $attempt -eq ${{ env.MAX_RETRY_ATTEMPTS }} ]; then
               echo "❌ Failed to deploy distribution module after ${{ env.MAX_RETRY_ATTEMPTS }} attempts"
-              echo "Last 100 lines of Maven output:"
-              tail -100 ~/.m2/maven.log 2>/dev/null || echo "No maven log found"
+              echo "Running final attempt with debug output..."
+              timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -X \
+                 -Dmaven-compiler-plugin.version=3.11.0 \
+                 -Dmaven.compiler.plugin.version=3.11.0 || true
               cd .. || { echo "❌ Failed to return to root directory"; exit 1; }
               exit 1
             fi
