@@ -7,7 +7,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.6.46</version>
+    <version>${current.version}</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>
@@ -33,6 +33,7 @@
     </developers>
 
     <properties>
+        <current.version>0.6.47</current.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

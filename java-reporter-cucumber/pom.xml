@@ -7,7 +7,7 @@
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-cucumber</artifactId>
     <packaging>jar</packaging>
-    <version>0.6.46</version>
+    <version>${current.version}</version>
 
     <name>Testomat.io Java Reporter Cucumber</name>
     <description>Java reporter library for Testomat.io integration with Cucumber</description>
@@ -32,6 +32,7 @@
     </developers>
 
     <properties>
+        <current.version>0.6.47</current.version>
         <junit.version>5.10.0</junit.version>
         <cucumber.version>7.15.0</cucumber.version>
 
@@ -50,7 +51,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.6.46</version>
+            <version>${current.version}</version>
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
