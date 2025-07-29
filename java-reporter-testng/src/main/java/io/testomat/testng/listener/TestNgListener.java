@@ -4,152 +4,115 @@ import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
-import io.testomat.core.exception.ReportTestResultException;
-import io.testomat.core.exception.TestClassNotFoundException;
-import io.testomat.core.model.TestMetadata;
-import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
-import io.testomat.testng.constructor.TestNgTestResultConstructor;
-import io.testomat.testng.constructor.TestResultWrapper;
-import io.testomat.testng.extractor.TestNgMetaDataExtractor;
-import io.testomat.testng.extractor.TestNgTestWrapper;
-import java.lang.reflect.Method;
-import java.util.HashSet;
+import io.testomat.testng.methodexporter.TestNgMethodExportManager;
+import io.testomat.testng.reporter.TestNgTestResultReporter;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.IInvokedMethodListener;
 import org.testng.ISuite;
 import org.testng.ISuiteListener;
+import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
-import org.testng.annotations.Test;
 
 /**
  * TestNG listener for Testomat.io integration.
  * Reports TestNG test execution results to Testomat.io platform.
  * Supports custom annotations (@Title, @TestId) and handles disabled tests.
+ * Also exports test method bodies when required.
  */
 public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMethodListener {
-    private static final String DISABLED_MESSAGE = "Test disabled via @Test(enabled = false)";
+    private static final Logger log = LoggerFactory.getLogger(TestNgListener.class);
 
-    private final TestNgTestResultConstructor resultConstructor = new TestNgTestResultConstructor();
-    private final GlobalRunManager runManager = GlobalRunManager.getInstance();
-    private final Set<String> processedTests = new HashSet<>();
-    private final TestNgMetaDataExtractor metaDataExtractor = new TestNgMetaDataExtractor();
+    private final GlobalRunManager runManager;
+    private final TestNgTestResultReporter reporter;
+    private final TestNgMethodExportManager methodExportManager;
+
+    // Track processed test classes to avoid duplicate exports
+    private final Set<String> processedClasses;
+
+    public TestNgListener() {
+        this.runManager = GlobalRunManager.getInstance();
+        this.reporter = new TestNgTestResultReporter();
+        this.methodExportManager = new TestNgMethodExportManager();
+        this.processedClasses = ConcurrentHashMap.newKeySet();
+    }
+
+    /**
+     * Constructor for testing
+     */
+    public TestNgListener(GlobalRunManager runManager,
+                          TestNgTestResultReporter reporter,
+                          TestNgMethodExportManager methodExportManager) {
+        this.runManager = runManager;
+        this.reporter = reporter;
+        this.methodExportManager = methodExportManager;
+        this.processedClasses = ConcurrentHashMap.newKeySet();
+    }
 
     @Override
     public void onStart(ISuite suite) {
+        log.info("Suite started: {}", suite.getName());
         runManager.incrementSuiteCounter();
-        checkAndReportDisabledTests(suite);
+        reporter.reportTestResult(suite);
     }
 
     @Override
     public void onFinish(ISuite suite) {
+        log.info("Suite finished: {}", suite.getName());
         runManager.decrementSuiteCounter();
+        // Don't export here - suite results are not ready yet
+    }
+
+    // Export after each test context finishes (when all tests in the context are done)
+    @Override
+    public void onFinish(ITestContext context) {
+        log.info("Test context finished: {}", context.getName());
+
+        // Process each test class in this context
+        for (Class<?> testClass : context.getAllTestMethods()[0].getTestClass().getRealClass().getClasses()) {
+            exportTestClassIfNotProcessed(testClass);
+        }
+
+        // Also process the main test class
+        if (context.getAllTestMethods().length > 0) {
+            Class<?> mainTestClass = context.getAllTestMethods()[0].getTestClass().getRealClass();
+            exportTestClassIfNotProcessed(mainTestClass);
+        }
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        handleTestNgResult(result, PASSED);
+        reporter.reportTestResult(result, PASSED);
+        exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        handleTestNgResult(result, FAILED);
+        reporter.reportTestResult(result, FAILED);
+        exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        handleTestNgResult(result, SKIPPED);
+        reporter.reportTestResult(result, SKIPPED);
+        exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
     }
 
-    /**
-     * Handles TestNG test results and prevents duplicate reporting.
-     */
-    private void handleTestNgResult(ITestResult result, String status) {
-        String methodKey = result.getTestClass().getName()
-                + "."
-                + result.getMethod().getMethodName();
-        if (processedTests.contains(methodKey)) {
+    private void exportTestClassIfNotProcessed(Class<?> testClass) {
+        if (testClass == null) {
             return;
         }
 
-        processedTests.add(methodKey);
-        TestNgTestWrapper wrapper = TestNgTestWrapper.forRegularTest(result);
-        TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);
-        reportTestResult(metadata, status, null, result);
-    }
-
-    /**
-     * Identifies and reports disabled tests marked with {@code @Test(enabled = false)}.
-     */
-    private void checkAndReportDisabledTests(ISuite suite) {
-        if (!runManager.isActive()) {
-            return;
-        }
-
-        suite.getXmlSuite().getTests().forEach(xmlTest -> {
-            xmlTest.getXmlClasses().forEach(xmlClass -> {
-                try {
-                    Class<?> testClass = Class.forName(xmlClass.getName());
-                    Method[] methods = testClass.getDeclaredMethods();
-
-                    for (Method method : methods) {
-                        Test testAnnotation = method.getAnnotation(Test.class);
-                        if (testAnnotation != null && !testAnnotation.enabled()) {
-                            String methodKey = xmlClass.getName() + "." + method.getName();
-
-                            if (!processedTests.contains(methodKey)) {
-                                processedTests.add(methodKey);
-                                reportDisabledTest(method, testClass);
-                            }
-                        }
-                    }
-                } catch (ClassNotFoundException e) {
-                    throw new TestClassNotFoundException("Failed to load test class: "
-                            + xmlClass.getName(), e);
-                }
-            });
-        });
-    }
-
-    /**
-     * Reports disabled test method with SKIPPED status.
-     */
-    private void reportDisabledTest(Method method, Class<?> testClass) {
-        TestNgTestWrapper wrapper = TestNgTestWrapper.forDisabledTest(method, testClass);
-        TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);
-        reportTestResult(metadata, SKIPPED, DISABLED_MESSAGE, null);
-    }
-
-    /**
-     * Reports test result to Testomat.io with optional custom message.
-     */
-    private void reportTestResult(TestMetadata metadata, String status,
-                                  String message, Object frameworkSpecificData) {
-        if (!runManager.isActive()) {
-            return;
-        }
-
-        try {
-            TestResultWrapper.Builder builder = TestResultWrapper.builder()
-                    .withTestMetadata(metadata)
-                    .withStatus(status);
-
-            if (message != null) {
-                builder.withMessage(message);
-            }
-
-            if (frameworkSpecificData instanceof ITestResult) {
-                builder.withTestResult((ITestResult) frameworkSpecificData);
-            }
-
-            TestResultWrapper wrapper = builder.build();
-            TestResult result = resultConstructor.constructTestRunResult(wrapper);
-            runManager.reportTest(result);
-
-        } catch (Exception e) {
-            String testName = metadata != null ? metadata.getTitle() : "Unknown Test";
-            throw new ReportTestResultException("Failed to report test result for: " + testName, e);
+        String className = testClass.getName();
+        if (processedClasses.add(className)) {
+            log.info("Exporting test class: {}", className);
+            methodExportManager.loadTestBodyForClass(testClass);
+        } else {
+            log.debug("Test class {} already processed", className);
         }
     }
 }
