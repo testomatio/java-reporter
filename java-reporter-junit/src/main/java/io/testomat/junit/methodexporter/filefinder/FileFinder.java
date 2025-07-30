@@ -1,4 +1,4 @@
-package io.testomat.junit.methodexporter.patfinder;
+package io.testomat.junit.methodexporter.filefinder;
 
 import io.testomat.junit.exception.MethodExporterException;
 import java.io.File;

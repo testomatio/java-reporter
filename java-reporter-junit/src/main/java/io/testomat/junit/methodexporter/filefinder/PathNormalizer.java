@@ -1,4 +1,4 @@
-package io.testomat.junit.methodexporter.patfinder;
+package io.testomat.junit.methodexporter.filefinder;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.testomat.junit.methodexporter.patfinder.FileFinder;
-import io.testomat.junit.methodexporter.patfinder.PathNormalizer;
+import io.testomat.junit.methodexporter.filefinder.FileFinder;
+import io.testomat.junit.methodexporter.filefinder.PathNormalizer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
