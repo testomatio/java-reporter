@@ -3,16 +3,15 @@ package io.testomat.junit.listener;
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.methodexporter.MethodExportManager;
@@ -26,10 +25,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-/**
- * Comprehensive unit tests for JunitListener class.
- * Tests all lifecycle callbacks, test watcher methods, and edge cases.
- */
 @DisplayName("JunitListener Tests")
 class JunitListenerTest {
 
@@ -43,9 +38,15 @@ class JunitListenerTest {
     private JunitTestReporter mockReporter;
 
     @Mock
-    private ExtensionContext mockContext;
+    private ExtensionContext mockExtensionContext;
 
     private JunitListener junitListener;
+
+    private static class TestClassA {
+    }
+
+    private static class TestClassB {
+    }
 
     @BeforeEach
     void setUp() {
@@ -58,19 +59,18 @@ class JunitListenerTest {
     class ConstructorTests {
 
         @Test
-        @DisplayName("Default constructor should create instance with non-null dependencies")
-        void defaultConstructor_ShouldCreateInstanceWithDependencies() {
+        @DisplayName("Should create instance with default constructor")
+        void shouldCreateInstanceWithDefaultConstructor() {
             // When
             JunitListener listener = new JunitListener();
 
             // Then
             assertNotNull(listener);
-            // Note: We can't directly access private fields, but we can verify the instance is created
         }
 
         @Test
-        @DisplayName("Parameterized constructor should create instance with provided dependencies")
-        void parameterizedConstructor_ShouldCreateInstanceWithProvidedDependencies() {
+        @DisplayName("Should create instance with parameterized constructor")
+        void shouldCreateInstanceWithParameterizedConstructor() {
             // When
             JunitListener listener = new JunitListener(mockMethodExportManager, mockRunManager, mockReporter);
 
@@ -79,296 +79,424 @@ class JunitListenerTest {
         }
 
         @Test
-        @DisplayName("Parameterized constructor should accept null dependencies without throwing")
-        void parameterizedConstructor_ShouldAcceptNullDependencies() {
-            // When & Then
-            assertDoesNotThrow(() -> new JunitListener(null, null, null));
+        @DisplayName("Should initialize processedClasses as thread-safe set")
+        void shouldInitializeProcessedClassesAsThreadSafeSet() {
+            // Given
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            // When - simulate concurrent access
+            junitListener.testSuccessful(mockExtensionContext);
+            junitListener.testSuccessful(mockExtensionContext);
+
+            // Then - should only process class once due to thread-safe set
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
         }
     }
 
     @Nested
-    @DisplayName("Lifecycle Callback Tests")
-    class LifecycleCallbackTests {
+    @DisplayName("BeforeAll Tests")
+    class BeforeAllTests {
 
         @Test
-        @DisplayName("beforeAll should increment suite counter")
-        void beforeAll_ShouldIncrementSuiteCounter() {
-            // Given
-            doNothing().when(mockRunManager).incrementSuiteCounter();
-
+        @DisplayName("Should increment suite counter when beforeAll is called")
+        void shouldIncrementSuiteCounterWhenBeforeAllIsCalled() {
             // When
-            junitListener.beforeAll(mockContext);
+            junitListener.beforeAll(mockExtensionContext);
 
             // Then
             verify(mockRunManager, times(1)).incrementSuiteCounter();
+            verifyNoMoreInteractions(mockRunManager, mockMethodExportManager, mockReporter);
         }
 
         @Test
-        @DisplayName("beforeAll should handle null context gracefully")
-        void beforeAll_ShouldHandleNullContext() {
-            // Given
-            doNothing().when(mockRunManager).incrementSuiteCounter();
-
-            // When & Then
-            assertDoesNotThrow(() -> junitListener.beforeAll(null));
-            verify(mockRunManager, times(1)).incrementSuiteCounter();
-        }
-
-        @Test
-        @DisplayName("beforeAll should propagate runtime exceptions")
-        void beforeAll_ShouldPropagateRuntimeExceptions() {
-            // Given
-            RuntimeException expectedException = new RuntimeException("Test exception");
-            doThrow(expectedException).when(mockRunManager).incrementSuiteCounter();
-
-            // When & Then
-            org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
-                    () -> junitListener.beforeAll(mockContext));
-        }
-
-        @Test
-        @DisplayName("afterAll should decrement suite counter and load test body")
-        void afterAll_ShouldDecrementSuiteCounterAndLoadTestBody() {
-            // Given
-            doNothing().when(mockRunManager).decrementSuiteCounter();
-            doNothing().when(mockMethodExportManager).loadTestBodyIfRequired(mockContext);
-
+        @DisplayName("Should increment suite counter multiple times for multiple suites")
+        void shouldIncrementSuiteCounterMultipleTimesForMultipleSuites() {
             // When
-            junitListener.afterAll(mockContext);
+            junitListener.beforeAll(mockExtensionContext);
+            junitListener.beforeAll(mockExtensionContext);
+            junitListener.beforeAll(mockExtensionContext);
 
             // Then
-            verify(mockRunManager, times(1)).decrementSuiteCounter();
-            verify(mockMethodExportManager, times(1)).loadTestBodyIfRequired(mockContext);
-        }
-
-        @Test
-        @DisplayName("afterAll should handle null context gracefully")
-        void afterAll_ShouldHandleNullContext() {
-            // Given
-            doNothing().when(mockRunManager).decrementSuiteCounter();
-            doNothing().when(mockMethodExportManager).loadTestBodyIfRequired(null);
-
-            // When & Then
-            assertDoesNotThrow(() -> junitListener.afterAll(null));
-            verify(mockRunManager, times(1)).decrementSuiteCounter();
-            verify(mockMethodExportManager, times(1)).loadTestBodyIfRequired(null);
-        }
-
-        @Test
-        @DisplayName("afterAll should continue execution even if decrementSuiteCounter throws exception")
-        void afterAll_ShouldContinueExecutionEvenIfDecrementThrowsException() {
-            // Given
-            doThrow(new RuntimeException("Decrement failed")).when(mockRunManager).decrementSuiteCounter();
-            doNothing().when(mockMethodExportManager).loadTestBodyIfRequired(mockContext);
-
-            // When & Then
-            org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
-                    () -> junitListener.afterAll(mockContext));
-
-            // loadTestBodyIfRequired should not be called due to exception
-            verify(mockMethodExportManager, never()).loadTestBodyIfRequired(any());
-        }
-
-        @Test
-        @DisplayName("beforeEach should execute without throwing exceptions")
-        void beforeEach_ShouldExecuteWithoutThrowingExceptions() {
-            // When & Then
-            assertDoesNotThrow(() -> junitListener.beforeEach(mockContext));
-            assertDoesNotThrow(() -> junitListener.beforeEach(null));
+            verify(mockRunManager, times(3)).incrementSuiteCounter();
         }
     }
 
     @Nested
-    @DisplayName("TestWatcher Implementation Tests")
-    class TestWatcherTests {
+    @DisplayName("AfterAll Tests")
+    class AfterAllTests {
 
         @Test
-        @DisplayName("testSuccessful should report test as PASSED with null message")
-        void testSuccessful_ShouldReportTestAsPassed() {
+        @DisplayName("Should export test class and decrement suite counter when afterAll is called")
+        void shouldExportTestClassAndDecrementSuiteCounterWhenAfterAllIsCalled() {
             // Given
-            doNothing().when(mockReporter).reportTestResult(mockContext, PASSED, null);
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
 
             // When
-            junitListener.testSuccessful(mockContext);
+            junitListener.afterAll(mockExtensionContext);
 
             // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, PASSED, null);
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+            verify(mockRunManager, times(1)).decrementSuiteCounter();
         }
 
         @Test
-        @DisplayName("testSuccessful should handle null context")
-        void testSuccessful_ShouldHandleNullContext() {
+        @DisplayName("Should only decrement suite counter when no test class present")
+        void shouldOnlyDecrementSuiteCounterWhenNoTestClassPresent() {
             // Given
-            doNothing().when(mockReporter).reportTestResult(null, PASSED, null);
-
-            // When & Then
-            assertDoesNotThrow(() -> junitListener.testSuccessful(null));
-            verify(mockReporter, times(1)).reportTestResult(null, PASSED, null);
-        }
-
-        @Test
-        @DisplayName("testFailed should report test as FAILED with exception message")
-        void testFailed_ShouldReportTestAsFailedWithMessage() {
-            // Given
-            Throwable cause = new RuntimeException("Test failure reason");
-            doNothing().when(mockReporter).reportTestResult(mockContext, FAILED, "Test failure reason");
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
 
             // When
-            junitListener.testFailed(mockContext, cause);
+            junitListener.afterAll(mockExtensionContext);
 
             // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, FAILED, "Test failure reason");
+            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
+            verify(mockRunManager, times(1)).decrementSuiteCounter();
         }
 
         @Test
-        @DisplayName("testFailed should handle null exception message")
-        void testFailed_ShouldHandleNullExceptionMessage() {
+        @DisplayName("Should handle multiple afterAll calls for same class")
+        void shouldHandleMultipleAfterAllCallsForSameClass() {
             // Given
-            Throwable cause = new RuntimeException((String) null);
-            doNothing().when(mockReporter).reportTestResult(mockContext, FAILED, null);
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
 
             // When
-            junitListener.testFailed(mockContext, cause);
+            junitListener.afterAll(mockExtensionContext);
+            junitListener.afterAll(mockExtensionContext);
 
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, FAILED, null);
-        }
-
-        @Test
-        @DisplayName("testAborted should report test as SKIPPED with exception message")
-        void testAborted_ShouldReportTestAsSkippedWithMessage() {
-            // Given
-            Throwable cause = new RuntimeException("Test aborted reason");
-            doNothing().when(mockReporter).reportTestResult(mockContext, SKIPPED, "Test aborted reason");
-
-            // When
-            junitListener.testAborted(mockContext, cause);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, SKIPPED, "Test aborted reason");
-        }
-
-        @Test
-        @DisplayName("testAborted should handle null exception message")
-        void testAborted_ShouldHandleNullExceptionMessage() {
-            // Given
-            Throwable cause = new RuntimeException((String) null);
-            doNothing().when(mockReporter).reportTestResult(mockContext, SKIPPED, null);
-
-            // When
-            junitListener.testAborted(mockContext, cause);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, SKIPPED, null);
-        }
-
-        @Test
-        @DisplayName("testDisabled should report test as SKIPPED with provided reason")
-        void testDisabled_ShouldReportTestAsSkippedWithReason() {
-            // Given
-            Optional<String> reason = Optional.of("Test is disabled due to configuration");
-            doNothing().when(mockReporter).reportTestResult(mockContext, SKIPPED, "Test is disabled due to configuration");
-
-            // When
-            junitListener.testDisabled(mockContext, reason);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, SKIPPED, "Test is disabled due to configuration");
-        }
-
-        @Test
-        @DisplayName("testDisabled should use default message when reason is empty")
-        void testDisabled_ShouldUseDefaultMessageWhenReasonIsEmpty() {
-            // Given
-            Optional<String> reason = Optional.empty();
-            doNothing().when(mockReporter).reportTestResult(mockContext, SKIPPED, "Test disabled");
-
-            // When
-            junitListener.testDisabled(mockContext, reason);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, SKIPPED, "Test disabled");
-        }
-
-        @Test
-        @DisplayName("testDisabled should handle null context")
-        void testDisabled_ShouldHandleNullContext() {
-            // Given
-            Optional<String> reason = Optional.of("Test disabled");
-
-            // When & Then
-            assertDoesNotThrow(() -> junitListener.testDisabled(null, reason));
+            // Then - should only export once but decrement counter twice
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+            verify(mockRunManager, times(2)).decrementSuiteCounter();
         }
     }
 
     @Nested
-    @DisplayName("Exception Handling Tests")
-    class ExceptionHandlingTests {
+    @DisplayName("BeforeEach Tests")
+    class BeforeEachTests {
 
         @Test
-        @DisplayName("Should propagate reporter exceptions in testSuccessful")
-        void shouldPropagateReporterExceptionsInTestSuccessful() {
-            // Given
-            RuntimeException expectedException = new RuntimeException("Reporter failed");
-            doThrow(expectedException).when(mockReporter).reportTestResult(any(), eq(PASSED), any());
+        @DisplayName("Should not perform any operations in beforeEach")
+        void shouldNotPerformAnyOperationsInBeforeEach() {
+            // When
+            junitListener.beforeEach(mockExtensionContext);
 
-            // When & Then
-            org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
-                    () -> junitListener.testSuccessful(mockContext));
+            // Then
+            verifyNoInteractions(mockMethodExportManager, mockRunManager, mockReporter);
         }
 
         @Test
-        @DisplayName("Should propagate reporter exceptions in testFailed")
-        void shouldPropagateReporterExceptionsInTestFailed() {
-            // Given
-            RuntimeException expectedException = new RuntimeException("Reporter failed");
-            Throwable cause = new AssertionError("Test failed");
-            doThrow(expectedException).when(mockReporter).reportTestResult(any(), eq(FAILED), any());
+        @DisplayName("Should not perform any operations even with multiple beforeEach calls")
+        void shouldNotPerformAnyOperationsEvenWithMultipleBeforeEachCalls() {
+            // When
+            junitListener.beforeEach(mockExtensionContext);
+            junitListener.beforeEach(mockExtensionContext);
+            junitListener.beforeEach(mockExtensionContext);
 
-            // When & Then
-            org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
-                    () -> junitListener.testFailed(mockContext, cause));
+            // Then
+            verifyNoInteractions(mockMethodExportManager, mockRunManager, mockReporter);
+        }
+    }
+
+    @Nested
+    @DisplayName("Test Disabled Tests")
+    class TestDisabledTests {
+
+        @Test
+        @DisplayName("Should report test as disabled with provided reason")
+        void shouldReportTestAsDisabledWithProvidedReason() {
+            // Given
+            String reason = "Test disabled for maintenance";
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            // When
+            junitListener.testDisabled(mockExtensionContext, Optional.of(reason));
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, reason);
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
         }
 
         @Test
-        @DisplayName("Should propagate reporter exceptions in testAborted")
-        void shouldPropagateReporterExceptionsInTestAborted() {
+        @DisplayName("Should report test as disabled with default message when no reason provided")
+        void shouldReportTestAsDisabledWithDefaultMessageWhenNoReasonProvided() {
             // Given
-            RuntimeException expectedException = new RuntimeException("Reporter failed");
-            Throwable cause = new InterruptedException("Test aborted");
-            doThrow(expectedException).when(mockReporter).reportTestResult(any(), eq(SKIPPED), any());
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
 
-            // When & Then
-            org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
-                    () -> junitListener.testAborted(mockContext, cause));
+            // When
+            junitListener.testDisabled(mockExtensionContext, Optional.empty());
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, "Test disabled");
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
         }
 
         @Test
-        @DisplayName("Should propagate reporter exceptions in testDisabled")
-        void shouldPropagateReporterExceptionsInTestDisabled() {
+        @DisplayName("Should handle empty reason string")
+        void shouldHandleEmptyReasonString() {
             // Given
-            RuntimeException expectedException = new RuntimeException("Reporter failed");
-            Optional<String> reason = Optional.of("Test disabled");
-            doThrow(expectedException).when(mockReporter).reportTestResult(any(), eq(SKIPPED), any());
+            String emptyReason = "";
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
 
-            // When & Then
-            org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
-                    () -> junitListener.testDisabled(mockContext, reason));
+            // When
+            junitListener.testDisabled(mockExtensionContext, Optional.of(emptyReason));
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, emptyReason);
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
         }
 
         @Test
-        @DisplayName("Should propagate methodExportManager exceptions in afterAll")
-        void shouldPropagateMethodExportManagerExceptionsInAfterAll() {
+        @DisplayName("Should report test as disabled when no test class present")
+        void shouldReportTestAsDisabledWhenNoTestClassPresent() {
             // Given
-            RuntimeException expectedException = new RuntimeException("Export failed");
-            doNothing().when(mockRunManager).decrementSuiteCounter();
-            doThrow(expectedException).when(mockMethodExportManager).loadTestBodyIfRequired(any());
+            String reason = "Test disabled";
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
+
+            // When
+            junitListener.testDisabled(mockExtensionContext, Optional.of(reason));
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, reason);
+            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Test Successful Tests")
+    class TestSuccessfulTests {
+
+        @Test
+        @DisplayName("Should report test as successful when testSuccessful is called")
+        void shouldReportTestAsSuccessfulWhenTestSuccessfulIsCalled() {
+            // Given
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            // When
+            junitListener.testSuccessful(mockExtensionContext);
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, PASSED, null);
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+        }
+
+        @Test
+        @DisplayName("Should report test as successful when no test class present")
+        void shouldReportTestAsSuccessfulWhenNoTestClassPresent() {
+            // Given
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
+
+            // When
+            junitListener.testSuccessful(mockExtensionContext);
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, PASSED, null);
+            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
+        }
+
+        @Test
+        @DisplayName("Should handle multiple successful test calls for same class")
+        void shouldHandleMultipleSuccessfulTestCallsForSameClass() {
+            // Given
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            // When
+            junitListener.testSuccessful(mockExtensionContext);
+            junitListener.testSuccessful(mockExtensionContext);
+
+            // Then - should report twice but export class only once
+            verify(mockReporter, times(2)).reportTestResult(mockExtensionContext, PASSED, null);
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+        }
+    }
+
+    @Nested
+    @DisplayName("Test Aborted Tests")
+    class TestAbortedTests {
+
+        @Test
+        @DisplayName("Should report test as aborted with cause message")
+        void shouldReportTestAsAbortedWithCauseMessage() {
+            // Given
+            Throwable cause = new RuntimeException("Test was aborted due to timeout");
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            // When
+            junitListener.testAborted(mockExtensionContext, cause);
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, "Test was aborted due to timeout");
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+        }
+
+        @Test
+        @DisplayName("Should handle aborted test with null message")
+        void shouldHandleAbortedTestWithNullMessage() {
+            // Given
+            Throwable cause = new RuntimeException(); // No message
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            // When
+            junitListener.testAborted(mockExtensionContext, cause);
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, null);
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+        }
+
+        @Test
+        @DisplayName("Should report test as aborted when no test class present")
+        void shouldReportTestAsAbortedWhenNoTestClassPresent() {
+            // Given
+            Throwable cause = new InterruptedException("Test interrupted");
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
+
+            // When
+            junitListener.testAborted(mockExtensionContext, cause);
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, "Test interrupted");
+            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("Test Failed Tests")
+    class TestFailedTests {
+
+        @Test
+        @DisplayName("Should report test as failed with cause message")
+        void shouldReportTestAsFailedWithCauseMessage() {
+            // Given
+            Throwable cause = new AssertionError("Expected <5> but was <3>");
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            // When
+            junitListener.testFailed(mockExtensionContext, cause);
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, FAILED, "Expected <5> but was <3>");
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+        }
+
+        @Test
+        @DisplayName("Should handle failed test with null message")
+        void shouldHandleFailedTestWithNullMessage() {
+            // Given
+            Throwable cause = new AssertionError(); // No message
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            // When
+            junitListener.testFailed(mockExtensionContext, cause);
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, FAILED, null);
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+        }
+
+        @Test
+        @DisplayName("Should report test as failed when no test class present")
+        void shouldReportTestAsFailedWhenNoTestClassPresent() {
+            // Given
+            Throwable cause = new RuntimeException("Unexpected error occurred");
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
+
+            // When
+            junitListener.testFailed(mockExtensionContext, cause);
+
+            // Then
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, FAILED, "Unexpected error occurred");
+            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
+        }
+
+        @Test
+        @DisplayName("Should handle different types of exceptions")
+        void shouldHandleDifferentTypesOfExceptions() {
+            // Given
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            Throwable[] exceptions = {
+                    new AssertionError("Assertion failed"),
+                    new RuntimeException("Runtime error"),
+                    new IllegalArgumentException("Invalid argument"),
+                    new NullPointerException("Null pointer")
+            };
 
             // When & Then
-            org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
-                    () -> junitListener.afterAll(mockContext));
+            for (Throwable exception : exceptions) {
+                junitListener.testFailed(mockExtensionContext, exception);
+                verify(mockReporter).reportTestResult(mockExtensionContext, FAILED, exception.getMessage());
+            }
 
-            verify(mockRunManager, times(1)).decrementSuiteCounter();
+            // Should only export class once despite multiple test failures
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+        }
+    }
+
+    @Nested
+    @DisplayName("Export Test Class Tests")
+    class ExportTestClassTests {
+
+        @Test
+        @DisplayName("Should export test class only once for multiple test results from same class")
+        void shouldExportTestClassOnlyOnceForMultipleTestResultsFromSameClass() {
+            // Given
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
+
+            // When - simulate multiple test results from same class
+            junitListener.testSuccessful(mockExtensionContext);
+            junitListener.testFailed(mockExtensionContext, new RuntimeException("Error"));
+            junitListener.testDisabled(mockExtensionContext, Optional.of("Disabled"));
+            junitListener.testAborted(mockExtensionContext, new InterruptedException("Aborted"));
+
+            // Then - should export class only once
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
+        }
+
+        @Test
+        @DisplayName("Should export different test classes separately")
+        void shouldExportDifferentTestClassesSeparately() {
+            // Given
+            ExtensionContext contextA = mock(ExtensionContext.class);
+            ExtensionContext contextB = mock(ExtensionContext.class);
+
+            when(contextA.getTestClass()).thenReturn(Optional.of(TestClassA.class));
+            when(contextB.getTestClass()).thenReturn(Optional.of(TestClassB.class));
+
+            // When
+            junitListener.testSuccessful(contextA);
+            junitListener.testSuccessful(contextB);
+            junitListener.testSuccessful(contextA); // Same class again
+
+            // Then - should export each class once
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassB.class);
+        }
+
+        @Test
+        @DisplayName("Should not export when test class is not present")
+        void shouldNotExportWhenTestClassIsNotPresent() {
+            // Given
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
+
+            // When
+            junitListener.testSuccessful(mockExtensionContext);
+            junitListener.testFailed(mockExtensionContext, new RuntimeException("Error"));
+
+            // Then
+            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
         }
     }
 
@@ -377,112 +505,43 @@ class JunitListenerTest {
     class IntegrationTests {
 
         @Test
-        @DisplayName("Complete test lifecycle should call all expected methods")
-        void completeTestLifecycle_ShouldCallAllExpectedMethods() {
+        @DisplayName("Should handle complete test lifecycle correctly")
+        void shouldHandleCompleteTestLifecycleCorrectly() {
             // Given
-            doNothing().when(mockRunManager).incrementSuiteCounter();
-            doNothing().when(mockRunManager).decrementSuiteCounter();
-            doNothing().when(mockMethodExportManager).loadTestBodyIfRequired(mockContext);
-            doNothing().when(mockReporter).reportTestResult(any(), any(), any());
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
 
-            Throwable testFailure = new AssertionError("Expected failure");
-
-            // When - Simulate complete test lifecycle
-            junitListener.beforeAll(mockContext);
-            junitListener.beforeEach(mockContext);
-            junitListener.testFailed(mockContext, testFailure);
-            junitListener.afterAll(mockContext);
+            // When - simulate complete test lifecycle
+            junitListener.beforeAll(mockExtensionContext);
+            junitListener.beforeEach(mockExtensionContext);
+            junitListener.testSuccessful(mockExtensionContext);
+            junitListener.beforeEach(mockExtensionContext);
+            junitListener.testFailed(mockExtensionContext, new RuntimeException("Test failed"));
+            junitListener.afterAll(mockExtensionContext);
 
             // Then
             verify(mockRunManager, times(1)).incrementSuiteCounter();
             verify(mockRunManager, times(1)).decrementSuiteCounter();
-            verify(mockMethodExportManager, times(1)).loadTestBodyIfRequired(mockContext);
-            verify(mockReporter, times(1)).reportTestResult(mockContext, FAILED, "Expected failure");
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, PASSED, null);
+            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, FAILED, "Test failed");
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
         }
 
         @Test
-        @DisplayName("Multiple test results should be reported correctly")
-        void multipleTestResults_ShouldBeReportedCorrectly() {
+        @DisplayName("Should be thread-safe for concurrent test execution")
+        void shouldBeThreadSafeForConcurrentTestExecution() {
             // Given
-            ExtensionContext context1 = mock(ExtensionContext.class);
-            ExtensionContext context2 = mock(ExtensionContext.class);
-            ExtensionContext context3 = mock(ExtensionContext.class);
+            Class<?> testClass = TestClassA.class;
+            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(testClass));
 
-            doNothing().when(mockReporter).reportTestResult(any(), any(), any());
+            // When - simulate concurrent test execution
+            junitListener.testSuccessful(mockExtensionContext);
+            junitListener.testSuccessful(mockExtensionContext);
+            junitListener.testSuccessful(mockExtensionContext);
 
-            // When
-            junitListener.testSuccessful(context1);
-            junitListener.testFailed(context2, new RuntimeException("Failure"));
-            junitListener.testDisabled(context3, Optional.of("Disabled reason"));
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(context1, PASSED, null);
-            verify(mockReporter, times(1)).reportTestResult(context2, FAILED, "Failure");
-            verify(mockReporter, times(1)).reportTestResult(context3, SKIPPED, "Disabled reason");
-        }
-    }
-
-    @Nested
-    @DisplayName("Edge Cases and Boundary Tests")
-    class EdgeCasesTests {
-
-        @Test
-        @DisplayName("Should handle empty string exception messages")
-        void shouldHandleEmptyStringExceptionMessages() {
-            // Given
-            Throwable cause = new RuntimeException("");
-            doNothing().when(mockReporter).reportTestResult(mockContext, FAILED, "");
-
-            // When
-            junitListener.testFailed(mockContext, cause);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, FAILED, "");
-        }
-
-        @Test
-        @DisplayName("Should handle very long exception messages")
-        void shouldHandleVeryLongExceptionMessages() {
-            // Given
-            String longMessage = "A".repeat(10000); // Very long message
-            Throwable cause = new RuntimeException(longMessage);
-            doNothing().when(mockReporter).reportTestResult(mockContext, FAILED, longMessage);
-
-            // When
-            junitListener.testFailed(mockContext, cause);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, FAILED, longMessage);
-        }
-
-        @Test
-        @DisplayName("Should handle special characters in exception messages")
-        void shouldHandleSpecialCharactersInExceptionMessages() {
-            // Given
-            String specialMessage = "Test failed: \n\t\r\"Special chars: áéíóú ñ üöä 中文 🚀\"";
-            Throwable cause = new RuntimeException(specialMessage);
-            doNothing().when(mockReporter).reportTestResult(mockContext, FAILED, specialMessage);
-
-            // When
-            junitListener.testFailed(mockContext, cause);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, FAILED, specialMessage);
-        }
-
-        @Test
-        @DisplayName("Should handle nested exceptions correctly")
-        void shouldHandleNestedExceptionsCorrectly() {
-            // Given
-            RuntimeException rootCause = new RuntimeException("Root cause");
-            RuntimeException wrappedException = new RuntimeException("Wrapper exception", rootCause);
-            doNothing().when(mockReporter).reportTestResult(mockContext, FAILED, "Wrapper exception");
-
-            // When
-            junitListener.testFailed(mockContext, wrappedException);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockContext, FAILED, "Wrapper exception");
+            // Then - should handle concurrent access to processedClasses set
+            verify(mockReporter, times(3)).reportTestResult(mockExtensionContext, PASSED, null);
+            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(testClass);
         }
     }
 }

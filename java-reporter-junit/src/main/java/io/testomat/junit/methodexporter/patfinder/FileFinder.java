@@ -6,7 +6,6 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -34,12 +33,10 @@ public class FileFinder {
             return null;
         }
 
-        // Convert class name to file path
         String className = testClass.getName();
         String packagePath = className.replace('.', '/');
         String fileName = packagePath + ".java";
 
-        // Try to find the file in typical Maven/Gradle source directories
         String[] sourceDirs = {
                 "src/test/java/",
                 "src/main/java/",
@@ -54,7 +51,6 @@ public class FileFinder {
             }
         }
 
-        // If not found, return the relative path anyway
         return "src/test/java/" + fileName;
     }
 
@@ -172,19 +168,16 @@ public class FileFinder {
 
             String normalizedPath = normalizer.normalizePath(filepath);
 
-            // For JUnit, we primarily work with test files, so check test paths first
             if (normalizedPath.contains("src/test/java/")) {
                 int index = normalizedPath.indexOf("src/test/java/");
                 return normalizedPath.substring(index + "src/test/java/".length());
             }
 
-            // Also check main java files (sometimes tests might reference main classes)
             if (normalizedPath.contains("src/main/java/")) {
                 int index = normalizedPath.indexOf("src/main/java/");
                 return normalizedPath.substring(index + "src/main/java/".length());
             }
 
-            // Fallback: look for any /java/ pattern
             if (normalizedPath.contains("src/") && normalizedPath.contains("/java/")) {
                 int javaIndex = normalizedPath.lastIndexOf("/java/");
                 if (javaIndex != -1) {
@@ -192,8 +185,8 @@ public class FileFinder {
                 }
             }
 
-            // If it's already a simple relative path or just a filename
-            if (!normalizedPath.contains("/") || normalizedPath.matches("^[a-zA-Z0-9._/]+\\.java$")) {
+            if (!normalizedPath.contains("/")
+                    || normalizedPath.matches("^[a-zA-Z0-9._/]+\\.java$")) {
                 return normalizedPath;
             }
 

@@ -31,7 +31,6 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
     private final GlobalRunManager runManager;
     private final JunitTestReporter reporter;
 
-    // Track processed test classes to avoid duplicate exports
     private final Set<String> processedClasses;
 
     public JunitListener() {

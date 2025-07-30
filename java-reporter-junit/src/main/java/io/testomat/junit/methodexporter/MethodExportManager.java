@@ -15,9 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MethodExportManager {
-    private static final Logger log = LoggerFactory.getLogger(MethodExportManager.class);
-
     public static final String EXPORT_REQUIRED_PROPERTY_NAME = "testomatio.export.required";
+
+    private static final Logger log = LoggerFactory.getLogger(MethodExportManager.class);
     private static final ConcurrentHashMap<String, Boolean> processedClasses =
             new ConcurrentHashMap<>();
 
@@ -57,7 +57,8 @@ public class MethodExportManager {
 
         try {
             if (!isInitializeExportRequired()) {
-                log.info("Export not required - property {} not set", EXPORT_REQUIRED_PROPERTY_NAME);
+                log.info("Export not required - property {} not set",
+                        EXPORT_REQUIRED_PROPERTY_NAME);
                 return;
             }
 
@@ -106,7 +107,8 @@ public class MethodExportManager {
             List<ExporterTestCase> testCases = null;
             try {
                 testCases = methodCaseExtractor.extractTestCases(cu, filepath);
-                log.info("Test case extraction completed. Extracted {} test cases", testCases != null ? testCases.size() : 0);
+                log.info("Test case extraction completed. Extracted {} test cases",
+                        testCases != null ? testCases.size() : 0);
             } catch (Exception e) {
                 log.error("Exception during test case extraction: {}", e.getMessage(), e);
                 return;
@@ -136,7 +138,8 @@ public class MethodExportManager {
             log.info("Finished processing class: {}", className);
 
         } catch (Exception e) {
-            log.error("Unexpected exception in loadTestBodyForClass for class {}: {}", testClass.getName(), e.getMessage(), e);
+            log.error("Unexpected exception in loadTestBodyForClass for class {}: {}",
+                    testClass.getName(), e.getMessage(), e);
         }
     }
 
