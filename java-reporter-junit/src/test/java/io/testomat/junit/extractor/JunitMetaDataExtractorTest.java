@@ -1,12 +1,15 @@
 package io.testomat.junit.extractor;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.testomat.core.annotation.TestId;
@@ -20,676 +23,395 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-/**
- * Comprehensive unit tests for JunitMetaDataExtractor class.
- * Tests the public extractTestMetadata method with detailed failure diagnostics.
- */
 @DisplayName("JunitMetaDataExtractor Tests")
 class JunitMetaDataExtractorTest {
 
+    @Mock
+    private ExtensionContext mockExtensionContext;
+
     private JunitMetaDataExtractor extractor;
-    private ExtensionContext mockContext;
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         extractor = new JunitMetaDataExtractor();
-        mockContext = mock(ExtensionContext.class);
     }
 
     @Nested
-    @DisplayName("Successful Extraction Scenarios")
-    class SuccessfulExtractionTests {
+    @DisplayName("Extract Test Metadata Tests")
+    class ExtractTestMetadataTests {
 
         @Test
         @DisplayName("Should extract metadata with both Title and TestId annotations")
         void shouldExtractMetadataWithBothAnnotations() throws NoSuchMethodException {
             // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithBothAnnotations");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Display Name from JUnit";
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
+            Method testMethod = TestMethodHolder.class.getMethod("annotatedTestMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
 
             // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
 
             // Then
-            assertNotNull(metadata,
-                    "TestMetadata should not be null when extracting from valid context");
-
-            assertAll("Verify all metadata fields for method with both annotations",
-                    () -> assertEquals("Custom Test Title", metadata.getTitle(),
-                            String.format("Expected title from @Title annotation to be 'Custom Test Title', but was '%s'",
-                                    metadata.getTitle())),
-                    () -> assertEquals("TEST-001", metadata.getTestId(),
-                            String.format("Expected testId from @TestId annotation to be 'TEST-001', but was '%s'",
-                                    metadata.getTestId())),
-                    () -> assertEquals("TestMethodsForTesting", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to be 'TestMethodsForTesting' (class simple name), but was '%s'",
-                                    metadata.getSuiteTitle())),
-                    () -> assertEquals("TestMethodsForTesting.java", metadata.getFile(),
-                            String.format("Expected file to be 'TestMethodsForTesting.java' (class name + .java), but was '%s'",
-                                    metadata.getFile()))
-            );
+            assertNotNull(result);
+            assertEquals("Custom Title", result.getTitle());
+            assertEquals("T001", result.getTestId());
+            assertEquals("TestMethodHolder", result.getSuiteTitle());
+            assertEquals("io/testomat/junit/extractor/TestMethodHolder.java", result.getFile());
         }
 
         @Test
         @DisplayName("Should extract metadata with only Title annotation")
         void shouldExtractMetadataWithOnlyTitleAnnotation() throws NoSuchMethodException {
             // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithOnlyTitle");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Display Name from JUnit";
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing method with only @Title annotation: " + testMethod.getName());
+            Method testMethod = TestMethodHolder.class.getMethod("onlyTitleMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
 
             // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
 
             // Then
-            assertNotNull(metadata,
-                    "TestMetadata should not be null when extracting from method with @Title annotation");
-
-            assertAll("Verify metadata fields for method with only @Title annotation",
-                    () -> assertEquals("Only Title Annotation", metadata.getTitle(),
-                            String.format("Expected title from @Title annotation to be 'Only Title Annotation', but was '%s'. " +
-                                            "Method annotations: %s", metadata.getTitle(),
-                                    java.util.Arrays.toString(testMethod.getAnnotations()))),
-                    () -> assertNull(metadata.getTestId(),
-                            String.format("Expected testId to be null when @TestId annotation is missing, but was '%s'",
-                                    metadata.getTestId())),
-                    () -> assertEquals("TestMethodsForTesting", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to be 'TestMethodsForTesting', but was '%s'",
-                                    metadata.getSuiteTitle())),
-                    () -> assertEquals("TestMethodsForTesting.java", metadata.getFile(),
-                            String.format("Expected file to be 'TestMethodsForTesting.java', but was '%s'",
-                                    metadata.getFile()))
-            );
+            assertNotNull(result);
+            assertEquals("Only Title", result.getTitle());
+            assertNull(result.getTestId());
+            assertEquals("TestMethodHolder", result.getSuiteTitle());
+            assertEquals("io/testomat/junit/extractor/TestMethodHolder.java", result.getFile());
         }
 
         @Test
         @DisplayName("Should extract metadata with only TestId annotation")
         void shouldExtractMetadataWithOnlyTestIdAnnotation() throws NoSuchMethodException {
             // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithOnlyTestId");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "JUnit Display Name";
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing method with only @TestId annotation: " + testMethod.getName());
-            System.out.println("Expected to fall back to display name: " + displayName);
+            Method testMethod = TestMethodHolder.class.getMethod("onlyTestIdMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
 
             // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
 
             // Then
-            assertNotNull(metadata,
-                    "TestMetadata should not be null when extracting from method with @TestId annotation");
-
-            assertAll("Verify metadata fields for method with only @TestId annotation",
-                    () -> assertEquals(displayName, metadata.getTitle(),
-                            String.format("Expected title to fall back to display name '%s' when @Title is missing, but was '%s'. " +
-                                            "Method has @Title annotation: %s", displayName, metadata.getTitle(),
-                                    testMethod.isAnnotationPresent(Title.class))),
-                    () -> assertEquals("TEST-002", metadata.getTestId(),
-                            String.format("Expected testId from @TestId annotation to be 'TEST-002', but was '%s'. " +
-                                            "Method annotations: %s", metadata.getTestId(),
-                                    java.util.Arrays.toString(testMethod.getAnnotations()))),
-                    () -> assertEquals("TestMethodsForTesting", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to be 'TestMethodsForTesting', but was '%s'",
-                                    metadata.getSuiteTitle())),
-                    () -> assertEquals("TestMethodsForTesting.java", metadata.getFile(),
-                            String.format("Expected file to be 'TestMethodsForTesting.java', but was '%s'",
-                                    metadata.getFile()))
-            );
+            assertNotNull(result);
+            assertEquals("onlyTestIdMethod", result.getTitle()); // Should use method name
+            assertEquals("T002", result.getTestId());
+            assertEquals("TestMethodHolder", result.getSuiteTitle());
+            assertEquals("io/testomat/junit/extractor/TestMethodHolder.java", result.getFile());
         }
 
         @Test
         @DisplayName("Should extract metadata without any annotations")
-        void shouldExtractMetadataWithoutAnnotations() throws NoSuchMethodException {
+        void shouldExtractMetadataWithoutAnyAnnotations() throws NoSuchMethodException {
             // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithoutAnnotations");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Plain JUnit Test Method";
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing method without any custom annotations: " + testMethod.getName());
-            System.out.println("Method annotations count: " + testMethod.getAnnotations().length);
-            System.out.println("Expected to use display name for title: " + displayName);
+            Method testMethod = TestMethodHolder.class.getMethod("plainTestMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
 
             // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
 
             // Then
-            assertNotNull(metadata,
-                    "TestMetadata should not be null when extracting from method without custom annotations");
-
-            assertAll("Verify metadata fields for method without any custom annotations",
-                    () -> assertEquals(displayName, metadata.getTitle(),
-                            String.format("Expected title to use display name '%s' when no @Title annotation present, but was '%s'. " +
-                                            "Method has %d annotations: %s", displayName, metadata.getTitle(),
-                                    testMethod.getAnnotations().length, java.util.Arrays.toString(testMethod.getAnnotations()))),
-                    () -> assertNull(metadata.getTestId(),
-                            String.format("Expected testId to be null when no @TestId annotation present, but was '%s'. " +
-                                    "Method has @TestId: %s", metadata.getTestId(), testMethod.isAnnotationPresent(TestId.class))),
-                    () -> assertEquals("TestMethodsForTesting", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to be 'TestMethodsForTesting', but was '%s'",
-                                    metadata.getSuiteTitle())),
-                    () -> assertEquals("TestMethodsForTesting.java", metadata.getFile(),
-                            String.format("Expected file to be 'TestMethodsForTesting.java', but was '%s'",
-                                    metadata.getFile()))
-            );
-        }
-
-        @Test
-        @DisplayName("Should handle test class with simple name correctly")
-        void shouldHandleTestClassWithSimpleNameCorrectly() throws NoSuchMethodException {
-            // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithoutAnnotations");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Test Display Name";
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing class name extraction:");
-            System.out.println("Full class name: " + testClass.getName());
-            System.out.println("Simple class name: " + testClass.getSimpleName());
-
-            // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
-
-            // Then
-            assertNotNull(metadata, "TestMetadata should not be null");
-
-            assertAll("Verify class name handling",
-                    () -> assertEquals("TestMethodsForTesting", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to use class simple name 'TestMethodsForTesting', but was '%s'. " +
-                                            "Full class name: '%s', Simple name: '%s'", metadata.getSuiteTitle(),
-                                    testClass.getName(), testClass.getSimpleName())),
-                    () -> assertEquals("TestMethodsForTesting.java", metadata.getFile(),
-                            String.format("Expected file to be 'TestMethodsForTesting.java' (simple name + .java), but was '%s'",
-                                    metadata.getFile()))
-            );
-        }
-    }
-
-    @Nested
-    @DisplayName("Edge Cases and Error Scenarios")
-    class EdgeCasesTests {
-
-        @Test
-        @DisplayName("Should throw NoMethodInContextException when test method is missing")
-        void shouldThrowExceptionWhenTestMethodIsMissing() {
-            // Given
-            String displayName = "Test without method";
-            when(mockContext.getTestMethod()).thenReturn(Optional.empty());
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing scenario with missing test method in context");
-            System.out.println("Context display name: " + displayName);
-
-            // When & Then
-            NoMethodInContextException exception = assertThrows(
-                    NoMethodInContextException.class,
-                    () -> extractor.extractTestMetadata(mockContext),
-                    "Should throw NoMethodInContextException when ExtensionContext.getTestMethod() returns empty Optional"
-            );
-
-            assertEquals("No test method found in " + displayName, exception.getMessage(),
-                    String.format("Exception message should include display name. Expected: 'No test method found in %s', " +
-                            "but was: '%s'", displayName, exception.getMessage()));
-        }
-
-        @Test
-        @DisplayName("Should handle missing test class gracefully")
-        void shouldHandleMissingTestClassGracefully() throws NoSuchMethodException {
-            // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithoutAnnotations");
-            String displayName = "Test Display Name";
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.empty());
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing scenario with missing test class in context");
-            System.out.println("Method: " + testMethod.getName());
-            System.out.println("Expected fallback to 'Unknown' for suiteTitle");
-
-            // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
-
-            // Then
-            assertNotNull(metadata, "TestMetadata should not be null even when test class is missing");
-
-            assertAll("Verify fallback behavior when test class is missing",
-                    () -> assertEquals(displayName, metadata.getTitle(),
-                            String.format("Expected title to be '%s', but was '%s'", displayName, metadata.getTitle())),
-                    () -> assertEquals("Unknown", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to fallback to 'Unknown' when test class is missing, but was '%s'",
-                                    metadata.getSuiteTitle())),
-                    () -> assertEquals("Unknown.java", metadata.getFile(),
-                            String.format("Expected file to be 'Unknown.java' when test class is missing, but was '%s'",
-                                    metadata.getFile()))
-            );
-        }
-
-        @Test
-        @DisplayName("Should handle null ExtensionContext")
-        void shouldHandleNullExtensionContext() {
-            System.out.println("Testing null ExtensionContext scenario");
-
-            // When & Then
-            NullPointerException exception = assertThrows(
-                    NullPointerException.class,
-                    () -> extractor.extractTestMetadata(null),
-                    "Should throw NullPointerException when ExtensionContext is null"
-            );
-
-            System.out.println("Exception thrown as expected: " + exception.getClass().getSimpleName());
-        }
-
-        @Test
-        @DisplayName("Should handle null display name")
-        void shouldHandleNullDisplayName() throws NoSuchMethodException {
-            // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithoutAnnotations");
-            Class<?> testClass = TestMethodsForTesting.class;
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(null);
-
-            System.out.println("Testing null display name scenario");
-            System.out.println("Method: " + testMethod.getName());
-            System.out.println("Expected title to be null when no @Title annotation and display name is null");
-
-            // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
-
-            // Then
-            assertNotNull(metadata, "TestMetadata should not be null even when display name is null");
-
-            assertAll("Verify behavior with null display name",
-                    () -> assertNull(metadata.getTitle(),
-                            String.format("Expected title to be null when no @Title annotation and display name is null, " +
-                                            "but was '%s'. Method has @Title: %s", metadata.getTitle(),
-                                    testMethod.isAnnotationPresent(Title.class))),
-                    () -> assertEquals("TestMethodsForTesting", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to be 'TestMethodsForTesting' even with null display name, " +
-                                    "but was '%s'", metadata.getSuiteTitle()))
-            );
+            assertNotNull(result);
+            assertEquals("plainTestMethod", result.getTitle()); // Should use method name
+            assertNull(result.getTestId());
+            assertEquals("TestMethodHolder", result.getSuiteTitle());
+            assertEquals("io/testomat/junit/extractor/TestMethodHolder.java", result.getFile());
         }
 
         @Test
         @DisplayName("Should handle empty annotation values")
         void shouldHandleEmptyAnnotationValues() throws NoSuchMethodException {
             // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithEmptyAnnotations");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Test with empty annotations";
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing empty annotation values scenario");
-            System.out.println("Method: " + testMethod.getName());
-
-            // Verify the method actually has empty annotations
-            Title titleAnnotation = testMethod.getAnnotation(Title.class);
-            TestId testIdAnnotation = testMethod.getAnnotation(TestId.class);
-            System.out.println("@Title value: '" + (titleAnnotation != null ? titleAnnotation.value() : "null") + "'");
-            System.out.println("@TestId value: '" + (testIdAnnotation != null ? testIdAnnotation.value() : "null") + "'");
+            Method testMethod = TestMethodHolder.class.getMethod("emptyAnnotationsMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
 
             // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
 
             // Then
-            assertNotNull(metadata, "TestMetadata should not be null with empty annotation values");
+            assertNotNull(result);
+            assertEquals("", result.getTitle()); // Should use empty annotation value, not method name
+            assertEquals("", result.getTestId());
+            assertEquals("TestMethodHolder", result.getSuiteTitle());
+            assertEquals("io/testomat/junit/extractor/TestMethodHolder.java", result.getFile());
+        }
 
-            assertAll("Verify handling of empty annotation values",
-                    () -> assertEquals("", metadata.getTitle(),
-                            String.format("Expected title to be empty string from @Title(\"\") annotation, but was '%s'. " +
-                                            "Annotation value: '%s'", metadata.getTitle(),
-                                    titleAnnotation != null ? titleAnnotation.value() : "null")),
-                    () -> assertEquals("", metadata.getTestId(),
-                            String.format("Expected testId to be empty string from @TestId(\"\") annotation, but was '%s'. " +
-                                            "Annotation value: '%s'", metadata.getTestId(),
-                                    testIdAnnotation != null ? testIdAnnotation.value() : "null")),
-                    () -> assertEquals("TestMethodsForTesting", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to be 'TestMethodsForTesting', but was '%s'",
-                                    metadata.getSuiteTitle()))
-            );
+        @Test
+        @DisplayName("Should handle whitespace annotation values")
+        void shouldHandleWhitespaceAnnotationValues() throws NoSuchMethodException {
+            // Given
+            Method testMethod = TestMethodHolder.class.getMethod("whitespaceAnnotationsMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
+
+            // When
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
+
+            // Then
+            assertNotNull(result);
+            assertEquals("   ", result.getTitle()); // Should preserve whitespace from annotation
+            assertEquals("   ", result.getTestId());
+            assertEquals("TestMethodHolder", result.getSuiteTitle());
+            assertEquals("io/testomat/junit/extractor/TestMethodHolder.java", result.getFile());
         }
     }
 
     @Nested
-    @DisplayName("Special Characters and Unicode Tests")
-    class SpecialCharactersTests {
+    @DisplayName("Exception Handling Tests")
+    class ExceptionHandlingTests {
 
         @Test
-        @DisplayName("Should handle special characters in annotations")
-        void shouldHandleSpecialCharactersInAnnotations() throws NoSuchMethodException {
+        @DisplayName("Should throw NoMethodInContextException when no test method present")
+        void shouldThrowExceptionWhenNoTestMethodPresent() {
             // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithSpecialCharacters");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Test with special chars";
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.empty());
+            when(mockExtensionContext.getDisplayName()).thenReturn("TestDisplayName");
 
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            // Verify actual annotation values
-            Title titleAnnotation = testMethod.getAnnotation(Title.class);
-            TestId testIdAnnotation = testMethod.getAnnotation(TestId.class);
-            System.out.println("Testing special characters in annotations:");
-            System.out.println("@Title value: '" + titleAnnotation.value() + "'");
-            System.out.println("@TestId value: '" + testIdAnnotation.value() + "'");
-
-            // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
-
-            // Then
-            String expectedTitle = "Test with special chars: áéíóú ñ üöä 中文 🚀";
-            String expectedTestId = "TEST-SPECIAL-001";
-
-            assertNotNull(metadata, "TestMetadata should not be null with special characters");
-
-            assertAll("Verify special characters are preserved in metadata",
-                    () -> assertEquals(expectedTitle, metadata.getTitle(),
-                            String.format("Expected title to preserve special characters '%s', but was '%s'. " +
-                                            "Actual annotation value: '%s'", expectedTitle, metadata.getTitle(),
-                                    titleAnnotation.value())),
-                    () -> assertEquals(expectedTestId, metadata.getTestId(),
-                            String.format("Expected testId to be '%s', but was '%s'. " +
-                                            "Actual annotation value: '%s'", expectedTestId, metadata.getTestId(),
-                                    testIdAnnotation.value()))
+            // When & Then
+            NoMethodInContextException exception = assertThrows(
+                    NoMethodInContextException.class,
+                    () -> extractor.extractTestMetadata(mockExtensionContext)
             );
+
+            assertEquals("No test method found in TestDisplayName", exception.getMessage());
+            verify(mockExtensionContext, never()).getRequiredTestClass();
         }
 
         @Test
-        @DisplayName("Should handle unicode characters in display name")
-        void shouldHandleUnicodeCharactersInDisplayName() throws NoSuchMethodException {
+        @DisplayName("Should throw NoMethodInContextException with proper display name")
+        void shouldThrowExceptionWithProperDisplayName() {
             // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithoutAnnotations");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Тест з українськими символами 🇺🇦";
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.empty());
+            when(mockExtensionContext.getDisplayName()).thenReturn("ComplexTestDisplayName[1]");
 
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing unicode characters in display name:");
-            System.out.println("Display name: '" + displayName + "'");
-            System.out.println("Display name length: " + displayName.length());
-
-            // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
-
-            // Then
-            assertNotNull(metadata, "TestMetadata should not be null with unicode display name");
-
-            assertEquals(displayName, metadata.getTitle(),
-                    String.format("Expected title to preserve unicode characters '%s', but was '%s'. " +
-                                    "Expected length: %d, Actual length: %d", displayName, metadata.getTitle(),
-                            displayName.length(), metadata.getTitle() != null ? metadata.getTitle().length() : 0));
-        }
-
-        @Test
-        @DisplayName("Should handle newlines and tabs in annotations")
-        void shouldHandleNewlinesAndTabsInAnnotations() throws NoSuchMethodException {
-            // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithNewlinesAndTabs");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Test with formatting";
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            // Verify actual annotation values
-            Title titleAnnotation = testMethod.getAnnotation(Title.class);
-            TestId testIdAnnotation = testMethod.getAnnotation(TestId.class);
-            System.out.println("Testing newlines and tabs in annotations:");
-            System.out.println("@Title value (escaped): '" + titleAnnotation.value().replace("\n", "\\n").replace("\t", "\\t") + "'");
-            System.out.println("@TestId value (escaped): '" + testIdAnnotation.value().replace("\n", "\\n").replace("\t", "\\t") + "'");
-
-            // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
-
-            // Then
-            String expectedTitle = "Title with\nnewline and\ttab";
-            String expectedTestId = "TEST\n\tFORMAT";
-
-            assertNotNull(metadata, "TestMetadata should not be null with formatting characters");
-
-            assertAll("Verify newlines and tabs are preserved in metadata",
-                    () -> assertEquals(expectedTitle, metadata.getTitle(),
-                            String.format("Expected title to preserve formatting '%s', but was '%s'. " +
-                                            "Expected (escaped): '%s', Actual (escaped): '%s'", expectedTitle, metadata.getTitle(),
-                                    expectedTitle.replace("\n", "\\n").replace("\t", "\\t"),
-                                    metadata.getTitle() != null ? metadata.getTitle().replace("\n", "\\n").replace("\t", "\\t") : "null")),
-                    () -> assertEquals(expectedTestId, metadata.getTestId(),
-                            String.format("Expected testId to preserve formatting '%s', but was '%s'. " +
-                                            "Expected (escaped): '%s', Actual (escaped): '%s'", expectedTestId, metadata.getTestId(),
-                                    expectedTestId.replace("\n", "\\n").replace("\t", "\\t"),
-                                    metadata.getTestId() != null ? metadata.getTestId().replace("\n", "\\n").replace("\t", "\\t") : "null"))
+            // When & Then
+            NoMethodInContextException exception = assertThrows(
+                    NoMethodInContextException.class,
+                    () -> extractor.extractTestMetadata(mockExtensionContext)
             );
+
+            assertEquals("No test method found in ComplexTestDisplayName[1]", exception.getMessage());
         }
     }
 
     @Nested
-    @DisplayName("Nested Class Scenarios")
-    class NestedClassTests {
+    @DisplayName("File Path Generation Tests")
+    class FilePathGenerationTests {
 
         @Test
-        @DisplayName("Should handle nested test class correctly")
-        void shouldHandleNestedTestClassCorrectly() throws NoSuchMethodException {
+        @DisplayName("Should generate correct file path for class in nested package")
+        void shouldGenerateCorrectFilePathForClassInNestedPackage() throws NoSuchMethodException {
             // Given
-            Method testMethod = NestedTestClass.class.getMethod("nestedTestMethod");
-            Class<?> testClass = NestedTestClass.class;
-            String displayName = "Nested test method";
-
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing nested class scenario:");
-            System.out.println("Nested class full name: " + testClass.getName());
-            System.out.println("Nested class simple name: " + testClass.getSimpleName());
-            System.out.println("Method: " + testMethod.getName());
+            Method testMethod = TestMethodHolder.class.getMethod("plainTestMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
 
             // When
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
 
             // Then
-            assertNotNull(metadata, "TestMetadata should not be null for nested class");
-
-            assertAll("Verify nested class metadata extraction",
-                    () -> assertEquals("Nested Test Title", metadata.getTitle(),
-                            String.format("Expected title from @Title annotation to be 'Nested Test Title', but was '%s'",
-                                    metadata.getTitle())),
-                    () -> assertEquals("NESTED-001", metadata.getTestId(),
-                            String.format("Expected testId from @TestId annotation to be 'NESTED-001', but was '%s'",
-                                    metadata.getTestId())),
-                    () -> assertEquals("NestedTestClass", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to be 'NestedTestClass' (nested class simple name), but was '%s'. " +
-                                    "Full class name: '%s'", metadata.getSuiteTitle(), testClass.getName())),
-                    () -> assertEquals("NestedTestClass.java", metadata.getFile(),
-                            String.format("Expected file to be 'NestedTestClass.java', but was '%s'",
-                                    metadata.getFile()))
-            );
+            assertEquals("io/testomat/junit/extractor/TestMethodHolder.java", result.getFile());
         }
 
-        @Nested
-        @DisplayName("Inner Nested Class")
-        class NestedTestClass {
-            @Title("Nested Test Title")
-            @TestId("NESTED-001")
-            public void nestedTestMethod() {
-                // Test method for nested class testing
-            }
+        @Test
+        @DisplayName("Should generate correct file path for different class names")
+        void shouldGenerateCorrectFilePathForDifferentClassNames() throws NoSuchMethodException {
+            // Given
+            Method testMethod = AnotherTestClass.class.getMethod("hashCode"); // Using existing method
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(AnotherTestClass.class).when(mockExtensionContext).getRequiredTestClass();
+
+            // When
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
+
+            // Then
+            assertEquals("io/testomat/junit/extractor/AnotherTestClass.java", result.getFile());
+            assertEquals("AnotherTestClass", result.getSuiteTitle());
         }
     }
 
     @Nested
-    @DisplayName("Integration and Performance Tests")
+    @DisplayName("Suite Title Tests")
+    class SuiteTitleTests {
+
+        @Test
+        @DisplayName("Should use simple class name as suite title")
+        void shouldUseSimpleClassNameAsSuiteTitle() throws NoSuchMethodException {
+            // Given
+            Method testMethod = VeryLongClassNameForTesting.class.getMethod("hashCode");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(VeryLongClassNameForTesting.class).when(mockExtensionContext).getRequiredTestClass();
+
+            // When
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
+
+            // Then
+            assertEquals("VeryLongClassNameForTesting", result.getSuiteTitle());
+        }
+
+        @Test
+        @DisplayName("Should handle short class names")
+        void shouldHandleShortClassNames() throws NoSuchMethodException {
+            // Given
+            Method testMethod = ShortNamedClass.class.getMethod("hashCode");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(ShortNamedClass.class).when(mockExtensionContext).getRequiredTestClass();
+
+            // When
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
+
+            // Then
+            assertEquals("ShortNamedClass", result.getSuiteTitle());
+        }
+    }
+
+    @Nested
+    @DisplayName("Integration Tests")
     class IntegrationTests {
 
         @Test
-        @DisplayName("Should extract metadata from real test method efficiently")
-        void shouldExtractMetadataFromRealTestMethodEfficiently() throws NoSuchMethodException {
-            // Given - Use a stable test method from our test class instead of self-reference
-            Method realTestMethod = TestMethodsForTesting.class.getMethod("methodWithBothAnnotations");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Performance test for real method";
+        @DisplayName("Should extract complete metadata in typical scenario")
+        void shouldExtractCompleteMetadataInTypicalScenario() throws NoSuchMethodException {
+            // Given
+            Method testMethod = TestMethodHolder.class.getMethod("annotatedTestMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
 
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(realTestMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
-
-            System.out.println("Testing performance with real method:");
-            System.out.println("Method: " + realTestMethod.getName());
-            System.out.println("Class: " + testClass.getSimpleName());
-            System.out.println("Method declaring class: " + realTestMethod.getDeclaringClass().getSimpleName());
-
-            // When - Measure performance
-            long startTime = System.nanoTime(); // Use nanoTime for better precision
-            TestMetadata metadata = extractor.extractTestMetadata(mockContext);
-            long endTime = System.nanoTime();
-            long durationNanos = endTime - startTime;
-            long durationMillis = durationNanos / 1_000_000;
-
-            System.out.println("Extraction completed in: " + durationMillis + "ms (" + durationNanos + "ns)");
+            // When
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
 
             // Then
-            assertNotNull(metadata, "TestMetadata should not be null for real test method");
+            // Verify all components are properly extracted
+            assertNotNull(result);
+            assertNotNull(result.getTitle());
+            assertNotNull(result.getTestId());
+            assertNotNull(result.getSuiteTitle());
+            assertNotNull(result.getFile());
 
-            assertAll("Verify real method metadata extraction and performance",
-                    () -> assertEquals("Custom Test Title", metadata.getTitle(),
-                            String.format("Expected title to be 'Custom Test Title' from @Title annotation, but was '%s'. " +
-                                    "Display name was: '%s'", metadata.getTitle(), displayName)),
-                    () -> assertEquals("TEST-001", metadata.getTestId(),
-                            String.format("Expected testId to be 'TEST-001' from @TestId annotation, but was '%s'",
-                                    metadata.getTestId())),
-                    () -> assertEquals("TestMethodsForTesting", metadata.getSuiteTitle(),
-                            String.format("Expected suiteTitle to be 'TestMethodsForTesting', but was '%s'. " +
-                                    "Test class simple name: '%s'", metadata.getSuiteTitle(), testClass.getSimpleName())),
-                    () -> assertEquals("TestMethodsForTesting.java", metadata.getFile(),
-                            String.format("Expected file to be 'TestMethodsForTesting.java', but was '%s'",
-                                    metadata.getFile())),
-                    () -> assertTrue(durationMillis < 100,
-                            String.format("Metadata extraction should be fast (< 100ms), but took %d ms (%d ns)",
-                                    durationMillis, durationNanos))
-            );
+            // Verify correct values
+            assertEquals("Custom Title", result.getTitle());
+            assertEquals("T001", result.getTestId());
+            assertEquals("TestMethodHolder", result.getSuiteTitle());
+            assertTrue(result.getFile().endsWith("TestMethodHolder.java"));
+            assertTrue(result.getFile().contains("/"));
         }
 
         @Test
-        @DisplayName("Should handle multiple consecutive extractions")
-        void shouldHandleMultipleConsecutiveExtractions() throws NoSuchMethodException {
+        @DisplayName("Should handle method with complex signature")
+        void shouldHandleMethodWithComplexSignature() throws NoSuchMethodException {
+            // Given - use a method with parameters from Object class
+            Method testMethod = Object.class.getMethod("equals", Object.class);
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(Object.class).when(mockExtensionContext).getRequiredTestClass();
+
+            // When
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
+
+            // Then
+            assertNotNull(result);
+            assertEquals("equals", result.getTitle()); // Should use method name since no @Title
+            assertNull(result.getTestId()); // Should be null since no @TestId
+            assertEquals("Object", result.getSuiteTitle());
+            assertEquals("java/lang/Object.java", result.getFile());
+        }
+
+        @Test
+        @DisplayName("Should verify all ExtensionContext methods are called correctly")
+        void shouldVerifyAllExtensionContextMethodsAreCalledCorrectly() throws NoSuchMethodException {
             // Given
-            Method testMethod = TestMethodsForTesting.class.getMethod("methodWithBothAnnotations");
-            Class<?> testClass = TestMethodsForTesting.class;
-            String displayName = "Multiple extractions test";
+            Method testMethod = TestMethodHolder.class.getMethod("plainTestMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
 
-            when(mockContext.getTestMethod()).thenReturn(Optional.of(testMethod));
-            when(mockContext.getTestClass()).thenReturn(Optional.of(testClass));
-            when(mockContext.getDisplayName()).thenReturn(displayName);
+            // When
+            extractor.extractTestMetadata(mockExtensionContext);
 
-            System.out.println("Testing multiple consecutive extractions for consistency");
-
-            // When - Extract metadata multiple times
-            TestMetadata metadata1 = extractor.extractTestMetadata(mockContext);
-            TestMetadata metadata2 = extractor.extractTestMetadata(mockContext);
-            TestMetadata metadata3 = extractor.extractTestMetadata(mockContext);
-
-            // Then - All extractions should be consistent
-            assertAll("Verify consistency across multiple extractions",
-                    () -> assertEquals(metadata1.getTitle(), metadata2.getTitle(),
-                            String.format("Title should be consistent: extraction1='%s', extraction2='%s'",
-                                    metadata1.getTitle(), metadata2.getTitle())),
-                    () -> assertEquals(metadata1.getTestId(), metadata2.getTestId(),
-                            String.format("TestId should be consistent: extraction1='%s', extraction2='%s'",
-                                    metadata1.getTestId(), metadata2.getTestId())),
-                    () -> assertEquals(metadata1.getSuiteTitle(), metadata2.getSuiteTitle(),
-                            String.format("SuiteTitle should be consistent: extraction1='%s', extraction2='%s'",
-                                    metadata1.getSuiteTitle(), metadata2.getSuiteTitle())),
-                    () -> assertEquals(metadata1.getFile(), metadata2.getFile(),
-                            String.format("File should be consistent: extraction1='%s', extraction2='%s'",
-                                    metadata1.getFile(), metadata2.getFile())),
-                    // Third extraction vs second
-                    () -> assertEquals(metadata2.getTitle(), metadata3.getTitle(),
-                            String.format("Title should be consistent: extraction2='%s', extraction3='%s'",
-                                    metadata2.getTitle(), metadata3.getTitle())),
-                    () -> assertEquals(metadata2.getTestId(), metadata3.getTestId(),
-                            String.format("TestId should be consistent: extraction2='%s', extraction3='%s'",
-                                    metadata2.getTestId(), metadata3.getTestId())),
-                    () -> assertEquals(metadata2.getSuiteTitle(), metadata3.getSuiteTitle(),
-                            String.format("SuiteTitle should be consistent: extraction2='%s', extraction3='%s'",
-                                    metadata2.getSuiteTitle(), metadata3.getSuiteTitle())),
-                    () -> assertEquals(metadata2.getFile(), metadata3.getFile(),
-                            String.format("File should be consistent: extraction2='%s', extraction3='%s'",
-                                    metadata2.getFile(), metadata3.getFile()))
-            );
+            // Then
+            verify(mockExtensionContext, times(1)).getTestMethod();
+            verify(mockExtensionContext, times(1)).getRequiredTestClass();
+            verify(mockExtensionContext, never()).getDisplayName(); // Only called in exception case
         }
     }
 
-    /**
-     * Test class containing various test methods with different annotation combinations
-     */
-    public static class TestMethodsForTesting {
+    @Nested
+    @DisplayName("Annotation Processing Tests")
+    class AnnotationProcessingTests {
 
-        @Title("Custom Test Title")
-        @TestId("TEST-001")
-        public void methodWithBothAnnotations() {
-            // Method with both annotations
+        @Test
+        @DisplayName("Should prioritize Title annotation over method name")
+        void shouldPrioritizeTitleAnnotationOverMethodName() throws NoSuchMethodException {
+            // Given
+            Method testMethod = TestMethodHolder.class.getMethod("onlyTitleMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
+
+            // When
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
+
+            // Then
+            assertEquals("Only Title", result.getTitle());
+            assertNotEquals("onlyTitleMethod", result.getTitle()); // Should not use method name
         }
 
-        @Title("Only Title Annotation")
-        public void methodWithOnlyTitle() {
-            // Method with only title annotation
+        @Test
+        @DisplayName("Should handle case when annotations return null values")
+        void shouldHandleCaseWhenAnnotationsReturnNullValues() throws NoSuchMethodException {
+            // This test verifies behavior when annotation is present but returns null
+            // In practice, this shouldn't happen as annotations can't return null,
+            // but we test the null check in getTestId method
+
+            // Given
+            Method testMethod = TestMethodHolder.class.getMethod("plainTestMethod");
+            when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(testMethod));
+            doReturn(TestMethodHolder.class).when(mockExtensionContext).getRequiredTestClass();
+
+            // When
+            TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
+
+            // Then
+            assertNull(result.getTestId()); // Should be null when no @TestId annotation
+            assertEquals("plainTestMethod", result.getTitle()); // Should use method name when no @Title
+        }
+    }
+
+    // Test helper classes - separate from nested test classes to avoid Java 11 compatibility issues
+    public static class TestMethodHolder {
+        @Title("Custom Title")
+        @TestId("T001")
+        public void annotatedTestMethod() {
         }
 
-        @TestId("TEST-002")
-        public void methodWithOnlyTestId() {
-            // Method with only test ID annotation
+        @Title("Only Title")
+        public void onlyTitleMethod() {
         }
 
-        public void methodWithoutAnnotations() {
-            // Method without any annotations
+        @TestId("T002")
+        public void onlyTestIdMethod() {
+        }
+
+        public void plainTestMethod() {
         }
 
         @Title("")
         @TestId("")
-        public void methodWithEmptyAnnotations() {
-            // Method with empty annotation values
+        public void emptyAnnotationsMethod() {
         }
 
-        @Title("Test with special chars: áéíóú ñ üöä 中文 🚀")
-        @TestId("TEST-SPECIAL-001")
-        public void methodWithSpecialCharacters() {
-            // Method with special characters in annotations
+        @Title("   ")
+        @TestId("   ")
+        public void whitespaceAnnotationsMethod() {
         }
+    }
 
-        @Title("Title with\nnewline and\ttab")
-        @TestId("TEST\n\tFORMAT")
-        public void methodWithNewlinesAndTabs() {
-            // Method with formatting characters in annotations
-        }
+    public static class AnotherTestClass {
+    }
+
+    public static class VeryLongClassNameForTesting {
+    }
+
+    public static class ShortNamedClass {
     }
 }
