@@ -54,6 +54,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     @Override
     public void beforeAll(ExtensionContext context) {
+        log.debug("Before All -> {}", context.getTestClass().orElse(null));
         runManager.incrementSuiteCounter();
     }
 

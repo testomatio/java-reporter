@@ -4,7 +4,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import io.testomat.junit.exception.ExtractionException;
 import io.testomat.junit.exception.MethodExporterException;
-import io.testomat.junit.methodexporter.patfinder.FileFinder;
+import io.testomat.junit.methodexporter.filefinder.FileFinder;
 import io.testomat.junit.model.ExporterTestCase;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +33,9 @@ public class MethodCaseExtractor {
         this.fileFinder = fileFinder;
     }
 
+    /**
+     * Extracts ExporterTestCases from compilationUint
+     */
     public List<ExporterTestCase> extractTestCases(CompilationUnit cu, String filepath) {
         List<MethodDeclaration> allMethods = cu.findAll(MethodDeclaration.class);
 
@@ -77,23 +80,12 @@ public class MethodCaseExtractor {
         try {
             ExporterTestCase testCase = new ExporterTestCase();
 
-            String testName = methodInfoExtractor.getTestName(method);
-            testCase.setName(testName);
-
-            String methodCode = methodInfoExtractor.getMethodCode(method);
-            testCase.setCode(methodCode);
-
-            boolean isSkipped = methodInfoExtractor.isTestSkipped(method);
-            testCase.setSkipped(isSkipped);
-
-            List<String> suites = methodInfoExtractor.extractSuites(method);
-            testCase.setSuites(suites);
-
-            List<String> labels = labelExtractor.extractLabels(method);
-            testCase.setLabels(labels);
-
-            String relativeFilePath = fileFinder.extractRelativeFilePath(filepath);
-            testCase.setFile(relativeFilePath);
+            testCase.setName(methodInfoExtractor.getTestName(method));
+            testCase.setCode(methodInfoExtractor.getMethodCode(method));
+            testCase.setSkipped(methodInfoExtractor.isTestSkipped(method));
+            testCase.setSuites(methodInfoExtractor.extractSuites(method));
+            testCase.setLabels(labelExtractor.extractLabels(method));
+            testCase.setFile(fileFinder.extractRelativeFilePath(filepath));
 
             return testCase;
         } catch (Exception e) {

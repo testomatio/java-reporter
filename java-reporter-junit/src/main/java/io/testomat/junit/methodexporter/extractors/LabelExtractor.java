@@ -68,7 +68,7 @@ public class LabelExtractor {
                     }
                     break;
                 default:
-                    if (annName.endsWith("Test") && !annName.equals("Test")) {
+                    if (annName.endsWith("Test")) {
                         labels.add(annName.toLowerCase().replace("test", ""));
                     }
                     break;
