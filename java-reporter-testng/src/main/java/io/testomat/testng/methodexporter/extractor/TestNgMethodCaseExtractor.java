@@ -66,7 +66,8 @@ public class TestNgMethodCaseExtractor {
                 cases.add(testCase);
                 log.debug("Successfully converted method: {}", method.getNameAsString());
             } catch (Exception e) {
-                log.error("Failed to convert method {}: {}", method.getNameAsString(), e.getMessage(), e);
+                log.error("Failed to convert method {}: {}",
+                        method.getNameAsString(), e.getMessage(), e);
                 throw new MethodExporterException(
                         "Failed to convert List<MethodDeclaration> to List<TestNgExporterTestCase>",
                         e);
@@ -91,7 +92,8 @@ public class TestNgMethodCaseExtractor {
 
             return isTest;
         } catch (Exception e) {
-            log.error("Error checking if method {} is test method: {}", method.getNameAsString(), e.getMessage());
+            log.error("Error checking if method {} is test method: {}",
+                    method.getNameAsString(), e.getMessage());
             return false;
         }
     }

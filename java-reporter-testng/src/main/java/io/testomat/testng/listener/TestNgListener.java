@@ -31,7 +31,6 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
     private final TestNgTestResultReporter reporter;
     private final TestNgMethodExportManager methodExportManager;
 
-    // Track processed test classes to avoid duplicate exports
     private final Set<String> processedClasses;
 
     public TestNgListener() {
@@ -64,20 +63,19 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
     public void onFinish(ISuite suite) {
         log.debug("Suite finished: {}", suite.getName());
         runManager.decrementSuiteCounter();
-        // Don't export here - suite results are not ready yet
     }
 
-    // Export after each test context finishes (when all tests in the context are done)
     @Override
     public void onFinish(ITestContext context) {
         log.debug("Test context finished: {}", context.getName());
 
-        // Process each test class in this context
-        for (Class<?> testClass : context.getAllTestMethods()[0].getTestClass().getRealClass().getClasses()) {
+        for (Class<?> testClass : context.getAllTestMethods()[0]
+                .getTestClass()
+                .getRealClass()
+                .getClasses()) {
             exportTestClassIfNotProcessed(testClass);
         }
 
-        // Also process the main test class
         if (context.getAllTestMethods().length > 0) {
             Class<?> mainTestClass = context.getAllTestMethods()[0].getTestClass().getRealClass();
             exportTestClassIfNotProcessed(mainTestClass);
