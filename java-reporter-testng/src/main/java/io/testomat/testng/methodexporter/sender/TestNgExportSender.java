@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 public class TestNgExportSender {
     private static final Logger log = LoggerFactory.getLogger(TestNgExportSender.class);
 
-    private static final String LOAD_URL = "https://beta.testomat.io/api/load?api_key=";
+    private static final String LOAD_URL = "https://app.testomat.io/api/load?api_key=";
     private static final int RETRY_TIMEOUT_MILLISECONDS = 1500;
     private static final int RETRY_MAX_ATTEMPTS = 2;
     private final PropertyProvider provider;
@@ -57,7 +57,9 @@ public class TestNgExportSender {
             log.info("API key found: {}", apiKey != null ? "YES" : "NO");
             if (apiKey != null) {
                 log.info("API key length: {}", apiKey.length());
-                log.info("API key starts with: {}", apiKey.length() > 0 ? apiKey.substring(0, Math.min(8, apiKey.length())) + "..." : "empty");
+                log.info("API key starts with: {}", apiKey.length() > 0
+                        ? apiKey.substring(0, Math.min(8, apiKey.length())) + "..."
+                        : "empty");
             }
         } catch (Exception e) {
             log.error("Error getting API key: {}", e.getMessage(), e);
@@ -92,7 +94,8 @@ public class TestNgExportSender {
                 boolean isLastAttempt = attempt == RETRY_MAX_ATTEMPTS;
 
                 if (!is422Error || isLastAttempt) {
-                    log.error("Not retrying - is422Error: {}, isLastAttempt: {}", is422Error, isLastAttempt);
+                    log.error("Not retrying - is422Error: {}, isLastAttempt: {}",
+                            is422Error, isLastAttempt);
                     e.printStackTrace();
                     break;
                 } else {

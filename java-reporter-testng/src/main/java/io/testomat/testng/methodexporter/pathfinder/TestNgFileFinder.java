@@ -54,27 +54,22 @@ public class TestNgFileFinder {
     }
 
     private String convertClassPathToJavaFile(String classPath, Class<?> testClass) {
-        try {
-            String className = testClass.getName();
-            String packagePath = className.replace(".", FILE_SEPARATOR);
+        String className = testClass.getName();
+        String packagePath = className.replace(".", FILE_SEPARATOR);
 
-            if (classPath.contains("target" + FILE_SEPARATOR + "test-classes")) {
-                String projectRoot = classPath.substring(0, classPath.indexOf("target"
-                        + FILE_SEPARATOR + "test-classes"));
-                String javaFilePath = projectRoot + "src" + FILE_SEPARATOR + "test"
-                        + FILE_SEPARATOR + "java" + FILE_SEPARATOR + packagePath + ".java";
+        if (classPath.contains("target" + FILE_SEPARATOR + "test-classes")) {
+            String projectRoot = classPath.substring(0, classPath.indexOf("target"
+                    + FILE_SEPARATOR + "test-classes"));
+            String javaFilePath = projectRoot + "src" + FILE_SEPARATOR + "test"
+                    + FILE_SEPARATOR + "java" + FILE_SEPARATOR + packagePath + ".java";
 
-                return normalizer.normalizePath(javaFilePath);
-            }
-
-            if (classPath.endsWith(".class")) {
-                String withoutExtension = classPath.substring(0, classPath.length() - 6);
-                return withoutExtension + ".java";
-            }
-
-        } catch (Exception e) {
+            return normalizer.normalizePath(javaFilePath);
         }
 
+        if (classPath.endsWith(".class")) {
+            String withoutExtension = classPath.substring(0, classPath.length() - 6);
+            return withoutExtension + ".java";
+        }
         return null;
     }
 
@@ -179,7 +174,8 @@ public class TestNgFileFinder {
                 }
             }
 
-            if (!normalizedPath.contains("/") || normalizedPath.matches("^[a-zA-Z0-9._/]+\\.java$")) {
+            if (!normalizedPath.contains("/")
+                    || normalizedPath.matches("^[a-zA-Z0-9._/]+\\.java$")) {
                 return normalizedPath;
             }
 
