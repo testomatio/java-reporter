@@ -174,10 +174,8 @@ public class MethodExportManager {
     private boolean isInitializeExportRequired() {
         try {
             String propertyValue = provider.getProperty(EXPORT_REQUIRED_PROPERTY_NAME);
-            log.debug("Property {} value: {}", EXPORT_REQUIRED_PROPERTY_NAME, propertyValue);
             return propertyValue != null;
         } catch (Exception e) {
-            log.error("Error checking export required property: {}", e.getMessage(), e);
             return false;
         }
     }
