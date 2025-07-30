@@ -123,6 +123,30 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "✅ Release version: $VERSION"
 
+      - name: Set project version from release tag
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          echo "🔧 Setting project version to: $VERSION"
+          
+          # Set version in all modules (quiet mode)
+          if ! mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -B -q; then
+            echo "❌ Failed to set version"
+            exit 1
+          fi
+          
+          # Quick verification (safe file counting)
+          UPDATED_FILES=$(find . -name "pom.xml" -exec grep -l "<version>$VERSION</version>" {} \; 2>/dev/null)
+          UPDATED_COUNT=$(echo "$UPDATED_FILES" | grep -c . || echo "0")
+          echo "✅ Updated $UPDATED_COUNT pom.xml files"
+          
+          # Verify one module to confirm (with better error handling)
+          CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -B 2>/dev/null | grep -v "^\\\[" | head -1 | tr -d '[:space:]')
+          if [ "$CURRENT_VERSION" = "$VERSION" ]; then
+            echo "✅ Project version confirmed: $CURRENT_VERSION"
+          else
+            echo "⚠️ Version mismatch - Expected: $VERSION, Got: $CURRENT_VERSION"
+          fi
+
       - name: Setup GPG
         run: |
           echo "🔐 Setting up GPG..."
@@ -182,12 +206,11 @@ jobs:
           MODULE="java-reporter-core"
           GROUP_PATH=$(echo "${{ env.GROUP_ID }}" | tr '.' '/')
           
-          # Enhanced availability check with multiple endpoints
           check_availability() {
-            local module=$1
-            local version=$2
-            local group_path=$3
-            local group_id=$4
+            local module="$1"
+            local version="$2"
+            local group_path="$3"
+            local group_id="$4"
           
             local endpoints=(
               "${{ env.MAVEN_CENTRAL_BASE }}/$group_path/$module/$version/$module-$version.pom"
@@ -344,10 +367,10 @@ jobs:
           
           # Enhanced availability check
           check_availability() {
-            local module=$1
-            local version=$2
-            local group_path=$3
-            local group_id=$4
+            local module="$1"
+            local version="$2"
+            local group_path="$3"
+            local group_id="$4"
           
             local endpoints=(
               "${{ env.MAVEN_CENTRAL_BASE }}/$group_path/$module/$version/$module-$version.pom"
@@ -601,10 +624,14 @@ jobs:
           else
             git commit -m "docs: update CHANGELOG.md for release v${{ steps.version.outputs.version }}"
           
-            for i in {1..5}; do
+            # Get current branch name safely
+            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+            echo "Current branch: $BRANCH_NAME"
+          
+            for i in $(seq 1 5); do
               echo "Push attempt $i/5..."
           
-              if git push origin ${{ github.ref_name }}; then
+              if git push origin "$BRANCH_NAME"; then
                 echo "✅ CHANGELOG.md pushed successfully"
                 break
               fi
@@ -616,8 +643,8 @@ jobs:
               fi
           
               echo "Push failed, attempt $i/5. Retrying after rebase..."
-              git fetch origin ${{ github.ref_name }}
-              git rebase origin/${{ github.ref_name }}
+              git fetch origin "$BRANCH_NAME" || git fetch origin main
+              git rebase origin/"$BRANCH_NAME" || git rebase origin/main
               sleep 10
             done
           fi
@@ -628,14 +655,19 @@ jobs:
         if: always()
         run: |
           echo "🧹 Cleaning up GPG keys..."
-          KEY_IDS=$(gpg --list-secret-keys --keyid-format LONG 2>/dev/null | grep sec | awk '{print $2}' | cut -d'/' -f2 2>/dev/null || echo "")
-          if [ -n "$KEY_IDS" ]; then
-            for key_id in $KEY_IDS; do
-              gpg --batch --yes --delete-secret-keys "$key_id" 2>/dev/null || true
-            done
-            echo "✅ GPG keys cleaned up successfully"
+          # More robust GPG cleanup
+          if command -v gpg >/dev/null 2>&1; then
+            KEY_IDS=$(gpg --list-secret-keys --keyid-format LONG 2>/dev/null | grep sec | awk '{print $2}' | cut -d'/' -f2 2>/dev/null || true)
+            if [ -n "$KEY_IDS" ]; then
+              for key_id in $KEY_IDS; do
+                gpg --batch --yes --delete-secret-keys "$key_id" 2>/dev/null || true
+              done
+              echo "✅ GPG keys cleaned up successfully"
+            else
+              echo "No GPG keys found to cleanup"
+            fi
           else
-            echo "No GPG keys found to cleanup"
+            echo "GPG not found, skipping cleanup"
           fi
 
       - name: Notify on success
