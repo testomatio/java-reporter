@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-distribution</artifactId>
-    <version>0.6.462</version>
+    <version>0.6.5</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter Distribution</name>
@@ -48,22 +48,22 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.6.5</version>
+            <version>0.6.462</version>
         </dependency>
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-junit</artifactId>
-            <version>0.6.5</version>
+            <version>0.6.462</version>
         </dependency>
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-testng</artifactId>
-            <version>0.6.5</version>
+            <version>0.6.462</version>
         </dependency>
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-cucumber</artifactId>
-            <version>0.6.5</version>
+            <version>0.6.462</version>
         </dependency>
     </dependencies>
 
