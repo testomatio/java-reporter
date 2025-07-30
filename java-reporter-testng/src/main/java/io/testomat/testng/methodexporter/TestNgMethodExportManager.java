@@ -1,47 +1,46 @@
-package io.testomat.junit.methodexporter;
+package io.testomat.testng.methodexporter;
 
 import com.github.javaparser.ast.CompilationUnit;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
-import io.testomat.junit.methodexporter.extractors.MethodCaseExtractor;
-import io.testomat.junit.methodexporter.filefinder.FileFinder;
-import io.testomat.junit.methodexporter.parser.FileParser;
-import io.testomat.junit.methodexporter.sender.ExportSender;
-import io.testomat.junit.model.ExporterTestCase;
+import io.testomat.testng.methodexporter.extractor.TestNgMethodCaseExtractor;
+import io.testomat.testng.methodexporter.model.TestNgExporterTestCase;
+import io.testomat.testng.methodexporter.parser.TestNgFileParser;
+import io.testomat.testng.methodexporter.pathfinder.TestNgFileFinder;
+import io.testomat.testng.methodexporter.sender.TestNgExportSender;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MethodExportManager {
+public class TestNgMethodExportManager {
     public static final String EXPORT_REQUIRED_PROPERTY_NAME = "testomatio.export.required";
 
-    private static final Logger log = LoggerFactory.getLogger(MethodExportManager.class);
+    private static final Logger log = LoggerFactory.getLogger(TestNgMethodExportManager.class);
     private static final ConcurrentHashMap<String, Boolean> processedClasses =
             new ConcurrentHashMap<>();
 
     private final PropertyProvider provider;
-    private final FileFinder fileFinder;
-    private final ExportSender exportSender;
-    private final FileParser fileParser;
-    private final MethodCaseExtractor methodCaseExtractor;
+    private final TestNgFileFinder fileFinder;
+    private final TestNgExportSender exportSender;
+    private final TestNgFileParser fileParser;
+    private final TestNgMethodCaseExtractor methodCaseExtractor;
 
-    public MethodExportManager() {
+    public TestNgMethodExportManager() {
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
-        this.fileFinder = new FileFinder();
-        this.fileParser = new FileParser();
-        this.exportSender = new ExportSender();
-        this.methodCaseExtractor = new MethodCaseExtractor();
+        this.fileFinder = new TestNgFileFinder();
+        this.fileParser = new TestNgFileParser();
+        this.exportSender = new TestNgExportSender();
+        this.methodCaseExtractor = new TestNgMethodCaseExtractor();
     }
 
     /**
      * Constructor for testing
      */
-    public MethodExportManager(PropertyProvider provider, FileFinder fileFinder,
-                               ExportSender exportSender, FileParser fileParser,
-                               MethodCaseExtractor methodCaseExtractor) {
+    public TestNgMethodExportManager(PropertyProvider provider, TestNgFileFinder fileFinder,
+                                     TestNgExportSender exportSender, TestNgFileParser fileParser,
+                                     TestNgMethodCaseExtractor methodCaseExtractor) {
         this.provider = provider;
         this.fileFinder = fileFinder;
         this.exportSender = exportSender;
@@ -64,6 +63,11 @@ public class MethodExportManager {
 
             log.debug("Export is required - proceeding with test body loading");
 
+            if (testClass == null) {
+                log.error("Test class is null");
+                throw new IllegalArgumentException("testClass is null");
+            }
+
             String className = testClass.getName();
             log.debug("Processing class: {}", className);
 
@@ -82,7 +86,7 @@ public class MethodExportManager {
             }
 
             log.debug("About to parse file: {}", filepath);
-            CompilationUnit cu;
+            CompilationUnit cu = null;
             try {
                 cu = fileParser.parseFile(filepath);
                 log.debug("File parsing completed. CompilationUnit is null: {}", cu == null);
@@ -99,7 +103,7 @@ public class MethodExportManager {
             log.debug("Successfully parsed file: {}", filepath);
 
             log.debug("About to extract test cases from CompilationUnit");
-            List<ExporterTestCase> testCases;
+            List<TestNgExporterTestCase> testCases = null;
             try {
                 testCases = methodCaseExtractor.extractTestCases(cu, filepath);
                 log.debug("Test case extraction completed. Extracted {} test cases",
@@ -138,44 +142,13 @@ public class MethodExportManager {
         }
     }
 
-    public void loadTestBodyIfRequired(final ExtensionContext extensionContext) {
-        if (!isInitializeExportRequired()) {
-            return;
-        }
-
-        if (extensionContext == null) {
-            throw new IllegalArgumentException("extensionContext is null");
-        }
-
-        String className = extensionContext.getRequiredTestClass().getName();
-        if (processedClasses.putIfAbsent(className, true) != null) {
-            return;
-        }
-
-        String filepath = fileFinder.getTestClassFilePath(extensionContext.getRequiredTestClass());
-        if (filepath == null) {
-            return;
-        }
-
-        CompilationUnit cu = fileParser.parseFile(filepath);
-        if (cu == null) {
-            return;
-        }
-
-        List<ExporterTestCase> testCases = methodCaseExtractor.extractTestCases(cu, filepath);
-
-        if (testCases.isEmpty()) {
-            return;
-        }
-
-        exportSender.sendTestCases(testCases);
-    }
-
     private boolean isInitializeExportRequired() {
         try {
             String propertyValue = provider.getProperty(EXPORT_REQUIRED_PROPERTY_NAME);
+            log.debug("Property {} value: {}", EXPORT_REQUIRED_PROPERTY_NAME, propertyValue);
             return propertyValue != null;
         } catch (Exception e) {
+            log.error("Error checking export required property: {}", e.getMessage(), e);
             return false;
         }
     }

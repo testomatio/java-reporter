@@ -1,4 +1,4 @@
-package io.testomat.junit.methodexporter.patfinder;
+package io.testomat.junit.methodexporter.filefinder;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,6 +10,9 @@ public class PathNormalizer {
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase()
             .contains("win");
 
+    /**
+     * Normalizes file path for cross-platform compatibility.
+     */
     public String normalizePath(String path) {
         if (path == null || path.isEmpty()) {
             return path;

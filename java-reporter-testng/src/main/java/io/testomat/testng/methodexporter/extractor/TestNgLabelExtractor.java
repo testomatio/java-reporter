@@ -1,17 +1,20 @@
-package io.testomat.junit.methodexporter.extractors;
+package io.testomat.testng.methodexporter.extractor;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
-import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class LabelExtractor {
+public class TestNgLabelExtractor {
     private static final String COMMENT_LABEL_PATTERN = "@(\\w+)(?::(\\w+))?|#(\\w+)";
-    
+
+    /**
+     * Extracts labels from test method annotations, comments and name patterns.
+     */
     public List<String> extractLabels(MethodDeclaration testMethod) {
         try {
             List<String> labels = new ArrayList<>();
@@ -31,48 +34,76 @@ public class LabelExtractor {
             switch (annName) {
                 case "Test":
                     labels.add("unit");
+                    extractTestAnnotationAttributes(annotation, labels);
                     break;
-                case "IntegrationTest":
-                case "SpringBootTest":
-                    labels.add("integration");
+                case "DataProvider":
+                    labels.add("data-provider");
                     break;
-                case "ParameterizedTest":
+                case "Factory":
+                    labels.add("factory");
+                    break;
+                case "BeforeMethod":
+                case "AfterMethod":
+                case "BeforeClass":
+                case "AfterClass":
+                case "BeforeSuite":
+                case "AfterSuite":
+                case "BeforeTest":
+                case "AfterTest":
+                    labels.add("setup");
+                    break;
+                case "Parameters":
                     labels.add("parameterized");
                     break;
-                case "RepeatedTest":
-                    labels.add("repeated");
-                    break;
-                case "TestFactory":
-                    labels.add("dynamic");
-                    break;
-                case "Disabled":
                 case "Ignore":
                     labels.add("disabled");
                     break;
-                case "Timeout":
-                    labels.add("timeout");
-                    break;
-                case "WebMvcTest":
-                    labels.add("web");
-                    break;
-                case "DataJpaTest":
-                    labels.add("jpa");
-                    break;
-                case "JsonTest":
-                    labels.add("json");
-                    break;
-                case "Tag":
-                    String tagValue = getAnnotationValue(annotation);
-                    if (tagValue != null) {
-                        labels.add(tagValue);
-                    }
-                    break;
                 default:
-                    if (annName.endsWith("Test")) {
+                    if (annName.endsWith("Test") && !annName.equals("Test")) {
                         labels.add(annName.toLowerCase().replace("test", ""));
                     }
                     break;
             }
+        }
+    }
+
+    private void extractTestAnnotationAttributes(AnnotationExpr annotation, List<String> labels) {
+        if (annotation instanceof NormalAnnotationExpr) {
+            NormalAnnotationExpr normalAnnotation = (NormalAnnotationExpr) annotation;
+            normalAnnotation.getPairs().forEach(pair -> {
+                String name = pair.getNameAsString();
+                switch (name) {
+                    case "groups":
+                        String groupsValue = pair.getValue().toString();
+                        extractGroupsFromValue(groupsValue, labels);
+                        break;
+                    case "priority":
+                        labels.add("priority");
+                        break;
+                    case "enabled":
+                        String enabledValue = pair.getValue().toString();
+                        if ("false".equals(enabledValue)) {
+                            labels.add("disabled");
+                        }
+                        break;
+                    case "dependsOnMethods":
+                        labels.add("dependent");
+                        break;
+                    case "timeOut":
+                        labels.add("timeout");
+                        break;
+                    default:
+                        break;
+                }
+            });
+        }
+    }
+
+    private void extractGroupsFromValue(String groupsValue, List<String> labels) {
+        String cleaned = groupsValue.replaceAll("[\"{}\\s]", "");
+        if (!cleaned.isEmpty()) {
+            Arrays.stream(cleaned.split(","))
+                    .forEach(group -> labels.add("group:" + group));
         }
     }
 
@@ -105,22 +136,8 @@ public class LabelExtractor {
         if (methodName.contains("performance")) {
             labels.add("performance");
         }
-    }
-
-    public String getAnnotationValue(AnnotationExpr annotation) {
-        if (annotation instanceof SingleMemberAnnotationExpr) {
-            return ((SingleMemberAnnotationExpr) annotation)
-                    .getMemberValue()
-                    .asStringLiteralExpr()
-                    .getValue();
-        } else if (annotation instanceof NormalAnnotationExpr) {
-            return ((NormalAnnotationExpr) annotation)
-                    .getPairs().stream()
-                    .filter(pair -> "value".equals(pair.getNameAsString()))
-                    .findFirst()
-                    .map(pair -> pair.getValue().asStringLiteralExpr().getValue())
-                    .orElse(null);
+        if (methodName.contains("regression")) {
+            labels.add("regression");
         }
-        return null;
     }
 }

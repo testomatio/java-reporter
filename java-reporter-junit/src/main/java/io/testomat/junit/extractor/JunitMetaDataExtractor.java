@@ -11,24 +11,33 @@ public class JunitMetaDataExtractor {
 
     public TestMetadata extractTestMetadata(ExtensionContext context) {
         Method testMethod = getTestMethod(context);
-        String title = getJUnitTestTitle(context);
-        String suiteTitle = context
-                .getTestClass()
-                .map(Class::getSimpleName)
-                .orElse("Unknown");
-        String file = suiteTitle + ".java";
+        String title = getTestTitle(testMethod);
+        Class<?> testClass = context.getRequiredTestClass();
+        String suiteTitle = testClass.getSimpleName();
+        String file = getFilePath(testClass);
         String testId = getTestId(testMethod);
 
         return new TestMetadata(title, testId, suiteTitle, file);
     }
 
     /**
+     * Gets the file path for the test class.
+     *
+     * @param testClass the test class
+     * @return path to the java file
+     */
+    private String getFilePath(Class<?> testClass) {
+        String packagePath = testClass.getPackage().getName().replace('.', '/');
+        String className = testClass.getSimpleName() + ".java";
+        return packagePath + "/" + className;
+    }
+
+    /**
      * Gets test title from @Title annotation or JUnit display name.
      */
-    private String getJUnitTestTitle(ExtensionContext context) {
-        Title titleAnnotation = getTestMethod(context).getAnnotation(Title.class);
-
-        return titleAnnotation != null ? titleAnnotation.value() : context.getDisplayName();
+    private String getTestTitle(Method method) {
+        Title titleAnnotation = method.getAnnotation(Title.class);
+        return titleAnnotation != null ? titleAnnotation.value() : method.getName();
     }
 
     private String getTestId(Method method) {
