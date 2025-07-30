@@ -39,19 +39,19 @@ public class TestNgMethodCaseExtractor {
      * Extracts test cases from compilation unit and file path.
      */
     public List<TestNgExporterTestCase> extractTestCases(CompilationUnit cu, String filepath) {
-        log.info("Extracting test cases from file: {}", filepath);
+        log.debug("Extracting test cases from file: {}", filepath);
 
         List<MethodDeclaration> allMethods = cu.findAll(MethodDeclaration.class);
-        log.info("Found {} total methods in file", allMethods.size());
+        log.debug("Found {} total methods in file", allMethods.size());
 
         List<MethodDeclaration> testMethods = allMethods.stream()
                 .filter(this::isTestMethod)
                 .collect(Collectors.toList());
 
-        log.info("Found {} test methods after filtering", testMethods.size());
+        log.debug("Found {} test methods after filtering", testMethods.size());
 
         List<TestNgExporterTestCase> result = convertDeclarationsToTestCases(testMethods, filepath);
-        log.info("Converted to {} test cases", result.size());
+        log.debug("Converted to {} test cases", result.size());
 
         return result;
     }

@@ -52,16 +52,16 @@ public class TestNgMethodExportManager {
      * Loads and exports test method bodies for the specified test class.
      */
     public void loadTestBodyForClass(Class<?> testClass) {
-        log.info("loadTestBodyForClass called for class: {}", testClass.getName());
+        log.debug("loadTestBodyForClass called for class: {}", testClass.getName());
 
         try {
             if (!isInitializeExportRequired()) {
-                log.info("Export not required - property {} not set",
+                log.debug("Export not required - property {} not set",
                         EXPORT_REQUIRED_PROPERTY_NAME);
                 return;
             }
 
-            log.info("Export is required - proceeding with test body loading");
+            log.debug("Export is required - proceeding with test body loading");
 
             if (testClass == null) {
                 log.error("Test class is null");
@@ -69,27 +69,27 @@ public class TestNgMethodExportManager {
             }
 
             String className = testClass.getName();
-            log.info("Processing class: {}", className);
+            log.debug("Processing class: {}", className);
 
             if (processedClasses.putIfAbsent(className, true) != null) {
-                log.info("Class {} already processed, skipping", className);
+                log.debug("Class {} already processed, skipping", className);
                 return;
             }
 
-            log.info("Getting file path for class: {}", className);
+            log.debug("Getting file path for class: {}", className);
             String filepath = fileFinder.getTestClassFilePath(testClass);
-            log.info("Found filepath: {}", filepath);
+            log.debug("Found filepath: {}", filepath);
 
             if (filepath == null) {
                 log.warn("Filepath is null for class: {}", className);
                 return;
             }
 
-            log.info("About to parse file: {}", filepath);
+            log.debug("About to parse file: {}", filepath);
             CompilationUnit cu = null;
             try {
                 cu = fileParser.parseFile(filepath);
-                log.info("File parsing completed. CompilationUnit is null: {}", cu == null);
+                log.debug("File parsing completed. CompilationUnit is null: {}", cu == null);
             } catch (Exception e) {
                 log.error("Exception during file parsing: {}", e.getMessage(), e);
                 return;
@@ -100,13 +100,13 @@ public class TestNgMethodExportManager {
                 return;
             }
 
-            log.info("Successfully parsed file: {}", filepath);
+            log.debug("Successfully parsed file: {}", filepath);
 
-            log.info("About to extract test cases from CompilationUnit");
+            log.debug("About to extract test cases from CompilationUnit");
             List<TestNgExporterTestCase> testCases = null;
             try {
                 testCases = methodCaseExtractor.extractTestCases(cu, filepath);
-                log.info("Test case extraction completed. Extracted {} test cases",
+                log.debug("Test case extraction completed. Extracted {} test cases",
                         testCases != null ? testCases.size() : 0);
             } catch (Exception e) {
                 log.error("Exception during test case extraction: {}", e.getMessage(), e);
@@ -118,23 +118,23 @@ public class TestNgMethodExportManager {
                 return;
             }
 
-            log.info("Extracted {} test cases from file: {}", testCases.size(), filepath);
+            log.debug("Extracted {} test cases from file: {}", testCases.size(), filepath);
 
             if (testCases.isEmpty()) {
                 log.warn("No test cases extracted from file: {}", filepath);
                 return;
             }
 
-            log.info("About to send {} test cases to server", testCases.size());
+            log.debug("About to send {} test cases to server", testCases.size());
             try {
                 exportSender.sendTestCases(testCases);
-                log.info("Successfully sent test cases for class: {}", className);
+                log.debug("Successfully sent test cases for class: {}", className);
             } catch (Exception e) {
                 log.error("Exception during sending test cases: {}", e.getMessage(), e);
                 return;
             }
 
-            log.info("Finished processing class: {}", className);
+            log.debug("Finished processing class: {}", className);
 
         } catch (Exception e) {
             log.error("Unexpected exception in loadTestBodyForClass for class {}: {}",

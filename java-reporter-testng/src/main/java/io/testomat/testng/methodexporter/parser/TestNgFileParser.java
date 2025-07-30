@@ -16,7 +16,7 @@ public class TestNgFileParser {
      * Parses Java source file and returns compilation unit.
      */
     public CompilationUnit parseFile(String filepath) {
-        log.info("parseFile called with filepath: {}", filepath);
+        log.debug("parseFile called with filepath: {}", filepath);
 
         try {
             if (filepath == null || filepath.isEmpty()) {
@@ -25,20 +25,20 @@ public class TestNgFileParser {
             }
 
             Path filePath = Paths.get(filepath);
-            log.info("Created Path object: {}", filePath);
+            log.debug("Created Path object: {}", filePath);
 
             boolean exists = filePath.toFile().exists();
-            log.info("File exists: {}", exists);
+            log.debug("File exists: {}", exists);
 
             if (!exists) {
                 log.warn("File does not exist: {}", filepath);
                 return null;
             }
 
-            log.info("About to parse file with StaticJavaParser");
+            log.debug("About to parse file with StaticJavaParser");
             synchronized (lock) {
                 CompilationUnit result = StaticJavaParser.parse(filePath);
-                log.info("StaticJavaParser.parse completed successfully");
+                log.debug("StaticJavaParser.parse completed successfully");
                 return result;
             }
         } catch (Exception e) {
