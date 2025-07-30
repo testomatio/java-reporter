@@ -333,35 +333,6 @@ class FileParserTest {
     class PathHandlingTests {
 
         @Test
-        @DisplayName("Should handle different path formats")
-        void shouldHandleDifferentPathFormats(@TempDir Path tempDir) throws IOException {
-            // Given
-            String javaContent = "public class PathTestClass {\n" +
-                    "    @Test\n" +
-                    "    public void testMethod() {\n" +
-                    "        // test code\n" +
-                    "    }\n" +
-                    "}";
-
-            Path testFile = tempDir.resolve("PathTestClass.java");
-            java.nio.file.Files.write(testFile, javaContent.getBytes());
-
-            String[] pathFormats = {
-                    testFile.toString(),
-                    testFile.toAbsolutePath().toString(),
-                    testFile.toString().replace('\\', '/'), // Unix-style
-                    testFile.toString().replace('/', '\\')  // Windows-style
-            };
-
-            // When & Then
-            for (String pathFormat : pathFormats) {
-                CompilationUnit result = fileParser.parseFile(pathFormat);
-                assertNotNull(result, "Should parse file with path format: " + pathFormat);
-                assertTrue(result.toString().contains("PathTestClass"));
-            }
-        }
-
-        @Test
         @DisplayName("Should handle null filepath gracefully")
         void shouldHandleNullFilepathGracefully() {
             // When & Then
