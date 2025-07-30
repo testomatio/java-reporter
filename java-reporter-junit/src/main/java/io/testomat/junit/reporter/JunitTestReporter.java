@@ -7,8 +7,11 @@ import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.constructor.JUnitTestResultConstructor;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JunitTestReporter {
+    private static final Logger log = LoggerFactory.getLogger(JunitTestReporter.class);
     private final JUnitTestResultConstructor resultConstructor;
     private final JunitMetaDataExtractor metaDataExtractor;
     private final GlobalRunManager runManager;
@@ -40,6 +43,7 @@ public class JunitTestReporter {
      */
     public void reportTestResult(ExtensionContext context, String status, String message) {
         if (!runManager.isActive()) {
+            log.debug("Skipping test because the run manager is not active");
             return;
         }
 
@@ -50,6 +54,7 @@ public class JunitTestReporter {
             TestResult result = resultConstructor.constructTestRunResult(
                     metadata, message, status, context);
 
+            log.debug(result.toString());
             runManager.reportTest(result);
 
         } catch (Exception e) {

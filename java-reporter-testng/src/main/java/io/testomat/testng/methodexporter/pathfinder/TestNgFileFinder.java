@@ -1,6 +1,5 @@
-package io.testomat.junit.methodexporter.patfinder;
+package io.testomat.testng.methodexporter.pathfinder;
 
-import io.testomat.junit.exception.MethodExporterException;
 import java.io.File;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -9,37 +8,39 @@ import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FileFinder {
-    private static final Logger log = LoggerFactory.getLogger(FileFinder.class);
+public class TestNgFileFinder {
+    private static final Logger log = LoggerFactory.getLogger(TestNgFileFinder.class);
     private static final String FILE_SEPARATOR = FileSystems.getDefault().getSeparator();
-    private final PathNormalizer normalizer;
+    private final TestNgPathNormalizer normalizer;
 
-    public FileFinder() {
-        normalizer = new PathNormalizer();
+    public TestNgFileFinder() {
+        normalizer = new TestNgPathNormalizer();
     }
 
     /**
      * Constructor for testing
      */
-    public FileFinder(final PathNormalizer normalizer) {
+    public TestNgFileFinder(final TestNgPathNormalizer normalizer) {
         this.normalizer = normalizer;
     }
 
-    public String getTestClassFilePath(ExtensionContext extensionContext) {
-        String foundFile = findTestFileByClassName(extensionContext);
-        if (foundFile != null && !foundFile.equals(getDefaultPath(extensionContext))) {
+    /**
+     * Finds the source file path for the specified test class.
+     */
+    public String getTestClassFilePath(Class<?> testClass) {
+        String foundFile = findTestFileByClassName(testClass);
+        if (foundFile != null && !foundFile.equals(getDefaultPath(testClass))) {
             return foundFile;
         }
 
         try {
-            String path = getPath(extensionContext);
+            String path = getPath(testClass);
 
             if (path != null) {
-                String javaFilePath = convertClassPathToJavaFile(path, extensionContext);
+                String javaFilePath = convertClassPathToJavaFile(path, testClass);
 
                 if (javaFilePath != null && Paths.get(javaFilePath).toFile().exists()) {
                     return javaFilePath;
@@ -52,38 +53,31 @@ public class FileFinder {
         return foundFile;
     }
 
-    private String convertClassPathToJavaFile(String classPath, ExtensionContext extensionContext) {
-        try {
-            Class<?> testClass = extensionContext.getRequiredTestClass();
-            String className = testClass.getName();
-            String packagePath = className.replace(".", FILE_SEPARATOR);
+    private String convertClassPathToJavaFile(String classPath, Class<?> testClass) {
+        String className = testClass.getName();
+        String packagePath = className.replace(".", FILE_SEPARATOR);
 
-            if (classPath.contains("target" + FILE_SEPARATOR + "test-classes")) {
-                String projectRoot = classPath.substring(0, classPath.indexOf("target"
-                        + FILE_SEPARATOR + "test-classes"));
-                String javaFilePath = projectRoot + "src" + FILE_SEPARATOR + "test"
-                        + FILE_SEPARATOR + "java" + FILE_SEPARATOR + packagePath + ".java";
+        if (classPath.contains("target" + FILE_SEPARATOR + "test-classes")) {
+            String projectRoot = classPath.substring(0, classPath.indexOf("target"
+                    + FILE_SEPARATOR + "test-classes"));
+            String javaFilePath = projectRoot + "src" + FILE_SEPARATOR + "test"
+                    + FILE_SEPARATOR + "java" + FILE_SEPARATOR + packagePath + ".java";
 
-                return normalizer.normalizePath(javaFilePath);
-            }
-
-            if (classPath.endsWith(".class")) {
-                String withoutExtension = classPath.substring(0, classPath.length() - 6);
-                return withoutExtension + ".java";
-            }
-
-        } catch (Exception e) {
-            // Exception handled silently
+            return normalizer.normalizePath(javaFilePath);
         }
 
+        if (classPath.endsWith(".class")) {
+            String withoutExtension = classPath.substring(0, classPath.length() - 6);
+            return withoutExtension + ".java";
+        }
         return null;
     }
 
-    public String getPath(ExtensionContext context) {
+    /**
+     * Gets the location path from the test class.
+     */
+    public String getPath(Class<?> testClass) {
         try {
-            Class<?> testClass = context.getTestClass().orElseThrow(
-                    () -> new MethodExporterException("No test class found"));
-
             URI uri = testClass.getProtectionDomain()
                     .getCodeSource()
                     .getLocation()
@@ -91,14 +85,13 @@ public class FileFinder {
 
             return URLDecoder.decode(uri.getPath(), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            log.debug("Error getting path from context: {}", e.getMessage(), e);
+            log.debug("Error getting path from test class: {}", e.getMessage(), e);
             return null;
         }
     }
 
-    private String findTestFileByClassName(ExtensionContext extensionContext) {
+    private String findTestFileByClassName(Class<?> testClass) {
         try {
-            Class<?> testClass = extensionContext.getRequiredTestClass();
             String className = testClass.getName();
             String relativePath = className.replace(".", FILE_SEPARATOR) + ".java";
 
@@ -135,16 +128,15 @@ public class FileFinder {
                 }
             }
 
-            return getDefaultPath(extensionContext);
+            return getDefaultPath(testClass);
         } catch (Exception e) {
             log.debug("Error finding test file by class name: {}", e.getMessage(), e);
-            return getDefaultPath(extensionContext);
+            return getDefaultPath(testClass);
         }
     }
 
-    private String getDefaultPath(ExtensionContext extensionContext) {
+    private String getDefaultPath(Class<?> testClass) {
         try {
-            Class<?> testClass = extensionContext.getRequiredTestClass();
             String relativePath = testClass.getName().replace(".", FILE_SEPARATOR) + ".java";
             return "src" + FILE_SEPARATOR + "test" + FILE_SEPARATOR + "java"
                     + FILE_SEPARATOR + relativePath;
@@ -154,24 +146,43 @@ public class FileFinder {
         }
     }
 
+    /**
+     * Extracts package-relative file path from full file path.
+     */
     public String extractRelativeFilePath(String filepath) {
         try {
             if (filepath == null || filepath.isEmpty()) {
-                return "src/test/java/UnknownFile.java";
+                return "UnknownFile.java";
             }
 
             String normalizedPath = normalizer.normalizePath(filepath);
 
-            int srcIndex = normalizedPath.indexOf("src/");
+            if (normalizedPath.contains("src/test/java/")) {
+                int index = normalizedPath.indexOf("src/test/java/");
+                return normalizedPath.substring(index + "src/test/java/".length());
+            }
 
-            if (srcIndex != -1) {
-                return normalizedPath.substring(srcIndex);
+            if (normalizedPath.contains("src/main/java/")) {
+                int index = normalizedPath.indexOf("src/main/java/");
+                return normalizedPath.substring(index + "src/main/java/".length());
+            }
+
+            if (normalizedPath.contains("src/") && normalizedPath.contains("/java/")) {
+                int javaIndex = normalizedPath.lastIndexOf("/java/");
+                if (javaIndex != -1) {
+                    return normalizedPath.substring(javaIndex + "/java/".length());
+                }
+            }
+
+            if (!normalizedPath.contains("/")
+                    || normalizedPath.matches("^[a-zA-Z0-9._/]+\\.java$")) {
+                return normalizedPath;
             }
 
             return normalizedPath;
         } catch (Exception e) {
             log.debug("Error extracting relative file path: {}", e.getMessage(), e);
-            return "src/test/java/UnknownFile.java";
+            return "UnknownFile.java";
         }
     }
 }
