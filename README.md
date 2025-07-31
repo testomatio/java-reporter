@@ -10,7 +10,7 @@
    <dependency>
        <groupId>io.testomat</groupId>
        <artifactId>java-reporter-distribution</artifactId>
-       <version>0.6.1</version>
+       <version>0.6.53</version>
        <classifier>junit</classifier>
    </dependency>
    ```
@@ -26,6 +26,7 @@
    ```bash
    export testomatio.api.key=tstmt_your_key_here
    ```
+   **Or create the `testomatio.properties file` and set it there.
 
 4. **Run your tests** - that's it! 🎉
 
@@ -37,9 +38,8 @@ This is the **official Java reporter** for [Testomat.io](https://testomat.io/) -
 
 ### 🌟 Why you'll love it
 
-- ✅ **Zero configuration** for most projects
+- ✅ **Zero configuration** for the beginning
 - ✅ **Works with your existing tests** (JUnit, TestNG, Cucumber)
-- ✅ **Real-time reporting** as tests run
 - ✅ **Team collaboration** with shared reports
 - ✅ **Historical tracking** of test trends
 - ✅ **Public shareable reports** for stakeholders
@@ -49,18 +49,21 @@ This is the **official Java reporter** for [Testomat.io](https://testomat.io/) -
 > 🚧 **Actively developed** - New features added regularly!
 
 #### ✅ Ready to Use (Current Features)
-- ✅ **Complete framework integration** - JUnit5, TestNG, and Cucumber support
-- ✅ **Automatic test discovery** - Zero-config test detection and reporting
-- ✅ **Customizable run parameters** - Full control over test run configuration
-- ✅ **Async test processing** - High-performance parallel result processing
-- ✅ **Advanced customization** - Override core classes for custom behavior
-- ✅ **Test run grouping** - Organize and merge related test runs
-- ✅ **Team collaboration** - Shared runs and real-time reporting
+- ✅ **Complete framework integration** - JUnit5, TestNG, and Cucumber support.
+- ✅ **Automatic test discovery** - Zero-config test detection and reporting.
+- ✅ **Customizable run parameters** - Full control over test run configuration.
+- ✅ **Async test processing** - High-performance parallel result processing.
+- ✅ **Advanced customization** - Override core classes for custom behavior.
+- ✅ **Test run grouping** - Organize and merge related test runs.
+- ✅ **Team collaboration** - Shared runs and real-time reporting.
+- ✅ **Enhanced error reporting** - Stack traces and failure analysis.
+- ✅ **Method body export** - See test method body in UI for much convenient analysis.
+
 
 #### 🚀 Coming Soon (Planned Features)
+- ⏳ **Test ID importing** - Ability to annotate your tests with IDs right in test classes
 - ⏳ **Test artifacts support** - Screenshots, logs, and file attachments
 - ⏳ **Step-by-step reporting** - Detailed test step execution tracking
-- ⏳ **Enhanced error reporting** - Stack traces and failure analysis
 - ⏳ **Integration hooks** - Pre/post test execution callbacks
 - ⏳ **Advanced filtering** - Custom test selection and reporting rules
 
@@ -73,6 +76,13 @@ This is the **official Java reporter** for [Testomat.io](https://testomat.io/) -
 | 🧪 **TestNG** | 7.x | 7.7.1 |
 | 🥒 **Cucumber** | 7.x | 7.14.0 |
 
+## 🔗 Dependencies:
+   - **jackson-annotations** 2.16.0
+   - **jackson-core** 2.16.0
+   - **jackson-databind** 2.16.0
+   - **javaparser-core** 3.27.0
+   - **slf4j-api** 2.0.9
+
 ## 📦 Installation
 
 ### Maven
@@ -80,22 +90,23 @@ This is the **official Java reporter** for [Testomat.io](https://testomat.io/) -
 <dependency>
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-distribution</artifactId>
-    <version>0.6.0</version>
+    <version>0.6.53</version>
     <classifier>xxx</classifier>
 </dependency>
 ```
-
-> 💡 **Heads up!** This library includes `jackson-databind 2.15.2` - no conflicts expected with modern projects.
-
 ---
 
 ## ⚡ Setup Guide
 
-> **Choose your adventure!** Most people should start with **Simple Setup** 👇
+> For Junit and TestNG - in the `main/resources` in the file `testomatio.properties` add line:  
+> ```properties
+> testomatio.listening=true
+>  ```
+> delete `true` or the whole property to disable listening.
 
-### 🎯 Simple Setup (Recommended for 99% of users)
+### 🎯 Simple Setup 
 
-This gets you running in under 2 minutes with zero custom code.
+This gets you running in under 2 minutes.
 
 #### 🧪 For JUnit 5 Projects
 
@@ -146,8 +157,6 @@ public class TestRunner {
 ```bash
 mvn test -Dtestomatio.api.key=tstmt_your_key_here
 ```
-
-No extra configuration needed! 🎉
 
 ---
 
@@ -224,12 +233,6 @@ Make your test runs exactly how you want them:
 |**`testomatio.run.group`** | Group related runs together | _(none)_ | `"sprint-23"` |
 |**`testomatio.publish`** | Make results publicly shareable | _(private)_ | `1` |
 
-### ⚙️ Performance Tuning
-
-| Setting | What it does | Default | Min Value |
-|---------|-------------|---------|-----------|
-|**`testomatio.batch.size`** | How many test results to send at once | `5` | `5` |
-| **`testomatio.batch.flush.interval`** | How often to send results (seconds) | `5` | `5` |
 
 ### 🔗 Advanced Integration
 
@@ -354,6 +357,14 @@ And the dashboard - something like this:
 
 
 ---
+
+## 📤Method exporting 
+   > You can turn on the method exporting from your code to the Testomat.io platform by adding
+   >```properties
+   >testomatio.export.required=true
+   >```
+   >![export img](img/export.png)
+
 
 ## 🆘 Troubleshooting
 
