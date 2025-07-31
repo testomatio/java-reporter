@@ -1,13 +1,10 @@
 package io.testomat.core.batch;
 
-import static io.testomat.core.constants.PropertyNameConstants.BATCH_FLUSH_INTERVAL_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_BATCH_SIZE;
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_FLUSH_INTERVAL_SECONDS;
 
 import io.testomat.core.client.ApiInterface;
 import io.testomat.core.model.TestResult;
-import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
-import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
