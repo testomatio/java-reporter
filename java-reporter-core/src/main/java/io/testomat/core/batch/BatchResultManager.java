@@ -109,7 +109,7 @@ public class BatchResultManager {
                 log.debug("Reported single test: {}", results.get(0).getTitle());
             } else {
                 apiClient.reportTests(runUid, results);
-                log.debug("Reported batch of %d tests{}", results.size());
+                log.debug("Reported batch of {} tests", results.size());
             }
         } catch (IOException e) {
             log.error("Failed to report batch (attempt {}/{}): {}", attempt,

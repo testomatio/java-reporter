@@ -89,14 +89,14 @@ public class NativeApiClient implements ApiInterface {
                 return;
             }
 
-            log.debug("Reporting batch of %d test results" + results.size());
+            log.debug("Reporting batch of {} test results", results.size());
 
             String url = urlBuilder.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildBatchTestReportBody(results, apiKey);
 
             client.post(url, requestBody, null);
         } catch (Exception e) {
-            log.error("Failed to report batch test /n" + e.getMessage());
+            log.error("Failed to report batch test /n{}", e.getMessage());
             throw new ReportingFailedException("Failed to report batch /n" + e.getMessage());
         }
     }
@@ -120,16 +120,11 @@ public class NativeApiClient implements ApiInterface {
         String publicUrl = responseBody.get("public_url");
 
         log.info("[TESTOMATIO] Testomat.io java core reporter version: [{}]", REPORTER_VERSION);
-        System.out.println(String.format(
-                "[TESTOMATIO] Testomat.io java core reporter version: [%s]", REPORTER_VERSION));
 
         if (publicUrl != null) {
-            System.out.println(String.format("[TESTOMATIO] Public url: %s", publicUrl));
             log.info("[TESTOMATIO] Public url: {}", publicUrl);
         }
 
         log.info("[TESTOMATIO] See run aggregation at: {}", responseBody.get("url"));
-        System.out.println(String.format(
-                "[TESTOMATIO] See run aggregation at: %s", responseBody.get("url")));
     }
 }
