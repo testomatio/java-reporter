@@ -27,49 +27,30 @@ jobs:
 
       - name: Validate project structure
         run: |
-          echo "🔍 Validating project structure..."
+          set -e
           REQUIRED_DIRS=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
-          
           for dir in "${REQUIRED_DIRS[@]}"; do
-            if [ ! -d "$dir" ]; then
-              echo "❌ Directory $dir not found"
+            if [[ ! -d "$dir" ]] || [[ ! -f "$dir/pom.xml" ]]; then
+              echo "❌ Missing: $dir"
               exit 1
             fi
-            if [ ! -f "$dir/pom.xml" ]; then
-              echo "❌ pom.xml not found in $dir"
-              exit 1
-            fi
-            echo "✅ $dir - OK"
           done
-          echo "✅ Project structure validation passed"
+          echo "✅ Project structure OK"
 
       - name: Validate required secrets
         run: |
-          echo "🔍 Validating required secrets..."
+          set -e
           MISSING_SECRETS=()
+          [[ -z "${{ secrets.GPG_PRIVATE_KEY }}" ]] && MISSING_SECRETS+=("GPG_PRIVATE_KEY")
+          [[ -z "${{ secrets.CENTRAL_USERNAME }}" ]] && MISSING_SECRETS+=("CENTRAL_USERNAME")
+          [[ -z "${{ secrets.CENTRAL_PASSWORD }}" ]] && MISSING_SECRETS+=("CENTRAL_PASSWORD")
+          [[ -z "${{ secrets.GPG_PASSPHRASE }}" ]] && MISSING_SECRETS+=("GPG_PASSPHRASE")
           
-          if [ -z "${{ secrets.GPG_PRIVATE_KEY }}" ]; then
-            MISSING_SECRETS+=("GPG_PRIVATE_KEY")
-          fi
-          if [ -z "${{ secrets.CENTRAL_USERNAME }}" ]; then
-            MISSING_SECRETS+=("CENTRAL_USERNAME")
-          fi
-          if [ -z "${{ secrets.CENTRAL_PASSWORD }}" ]; then
-            MISSING_SECRETS+=("CENTRAL_PASSWORD")
-          fi
-          if [ -z "${{ secrets.GPG_PASSPHRASE }}" ]; then
-            MISSING_SECRETS+=("GPG_PASSPHRASE")
-          fi
-          
-          if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
-            echo "❌ Missing required secrets:"
-            for secret in "${MISSING_SECRETS[@]}"; do
-              echo "  - $secret"
-            done
+          if [[ ${#MISSING_SECRETS[@]} -gt 0 ]]; then
+            echo "❌ Missing secrets: ${MISSING_SECRETS[*]}"
             exit 1
           fi
-          
-          echo "✅ All required secrets are present"
+          echo "✅ Secrets OK"
 
       - name: Set up JDK 11
         uses: actions/setup-java@v4
@@ -86,7 +67,7 @@ jobs:
 
       - name: Configure Maven settings
         run: |
-          echo "⚙️ Configuring Maven settings..."
+          set -e
           mkdir -p ~/.m2
           cat > ~/.m2/settings.xml << 'EOF'
           <settings>
@@ -104,162 +85,93 @@ jobs:
       - name: Get version from release tag
         id: version
         run: |
+          set -e
           TAG_NAME="${{ github.event.release.tag_name }}"
-          if [ -z "$TAG_NAME" ]; then
-            echo "❌ No tag name found in release event"
+          if [[ -z "$TAG_NAME" ]]; then
+            echo "❌ No tag name"
             exit 1
           fi
           
-          # Remove 'v' prefix if present
           VERSION=${TAG_NAME#v}
-          
-          # Validate version format (basic semver check)
           if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$'; then
-            echo "❌ Invalid version format: $VERSION"
-            echo "Expected format: X.Y.Z or X.Y.Z-suffix"
+            echo "❌ Invalid version: $VERSION"
             exit 1
           fi
           
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "✅ Release version: $VERSION"
+          echo "✅ Version: $VERSION"
 
-      - name: Set project version from release tag
+      - name: Set project version
         run: |
+          set -e
           VERSION=${{ steps.version.outputs.version }}
-          echo "🔧 Setting project version to: $VERSION"
-          
-          # Set version in all modules (quiet mode)
-          if ! mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false -B -q; then
+          if ! mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -B; then
             echo "❌ Failed to set version"
             exit 1
           fi
-          
-          # Quick verification (safe file counting)
-          UPDATED_FILES=$(find . -name "pom.xml" -exec grep -l "<version>$VERSION</version>" {} \; 2>/dev/null)
-          UPDATED_COUNT=$(echo "$UPDATED_FILES" | grep -c . || echo "0")
-          echo "✅ Updated $UPDATED_COUNT pom.xml files"
-          
-          # Verify one module to confirm (with better error handling)
-          CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -B 2>/dev/null | grep -v "^\\\[" | head -1 | tr -d '[:space:]')
-          if [ "$CURRENT_VERSION" = "$VERSION" ]; then
-            echo "✅ Project version confirmed: $CURRENT_VERSION"
-          else
-            echo "⚠️ Version mismatch - Expected: $VERSION, Got: $CURRENT_VERSION"
-          fi
+          echo "✅ Project version set to $VERSION"
 
       - name: Setup GPG
         run: |
-          echo "🔐 Setting up GPG..."
+          set -e
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode | gpg --batch --import
-          gpg --list-secret-keys --keyid-format LONG
-          echo "✅ GPG setup completed"
+          echo "✅ GPG configured"
 
       - name: Deploy Core module
         run: |
-          echo "🚀 Deploying Core module..."
-          cd java-reporter-core || { echo "❌ Failed to enter java-reporter-core directory"; exit 1; }
+          set -e
+          echo "🚀 Deploying Core..."
           
-          # Function to retry Maven deploy with controlled logging
-          retry_deploy() {
-            local attempts=$1
-            local delay=$2
-            local module=$3
+          cd java-reporter-core || { echo "❌ Cannot enter core directory"; exit 1; }
           
-            for i in $(seq 1 $attempts); do
-              echo "Deployment attempt $i/$attempts for $module..."
-          
-              # Use less verbose logging to avoid log truncation
-              if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -B; then
-                echo "✅ $module deployed successfully on attempt $i"
-                return 0
-              fi
-          
-              echo "❌ Deployment attempt $i failed for $module"
-              if [ $i -lt $attempts ]; then
-                echo "Retrying in ${delay}s..."
-                sleep $delay
-              else
-                echo "❌ All deployment attempts failed for $module"
-                # Only show debug logs on final failure
-                echo "Re-running with debug output for troubleshooting..."
-                timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -X || true
-                return 1
-              fi
-            done
-          }
-          
-          if ! retry_deploy ${{ env.MAX_RETRY_ATTEMPTS }} ${{ env.RETRY_DELAY }} "java-reporter-core"; then
-            echo "❌ Failed to deploy core module after ${{ env.MAX_RETRY_ATTEMPTS }} attempts"
-            exit 1
-          fi
-          
-          cd .. || { echo "❌ Failed to return to root directory"; exit 1; }
-          echo "✅ Core module deployed successfully"
+          for i in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
+            echo "Core deployment attempt $i..."
+            if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -B; then
+              echo "✅ Core deployed successfully"
+              cd .. || exit 1
+              break
+            elif [[ $i -eq ${{ env.MAX_RETRY_ATTEMPTS }} ]]; then
+              echo "❌ Core deployment failed after ${{ env.MAX_RETRY_ATTEMPTS }} attempts"
+              cd .. || exit 1
+              exit 1
+            else
+              echo "Retrying in ${{ env.RETRY_DELAY }}s..."
+              sleep ${{ env.RETRY_DELAY }}
+            fi
+          done
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Wait for Core availability on Maven Central
+      - name: Wait for Core availability
         run: |
+          set -e
           VERSION=${{ steps.version.outputs.version }}
           MODULE="java-reporter-core"
           GROUP_PATH=$(echo "${{ env.GROUP_ID }}" | tr '.' '/')
           
-          check_availability() {
-            local module="$1"
-            local version="$2"
-            local group_path="$3"
-            local group_id="$4"
-          
-            local endpoints=(
-              "${{ env.MAVEN_CENTRAL_BASE }}/$group_path/$module/$version/$module-$version.pom"
-              "${{ env.MAVEN_SEARCH_BASE }}?filepath=$group_path/$module/$version/$module-$version.pom"
-              "${{ env.MAVEN_SEARCH_API }}?q=g:$group_id+AND+a:$module+AND+v:$version&rows=1&wt=json"
-            )
-          
-            for endpoint in "${endpoints[@]}"; do
-              echo "Checking endpoint: $endpoint"
-              if curl -s -f --max-time 30 "$endpoint" > /dev/null 2>&1; then
-                echo "✅ $module v$version found at: $endpoint"
-                return 0
-              fi
-            done
-          
-            # Additional check via Maven dependency resolution
-            echo "Trying Maven dependency resolution..."
-            if timeout 60 mvn dependency:get -Dartifact="$group_id:$module:$version" -q 2>/dev/null; then
-              echo "✅ $module v$version available via Maven dependency resolution"
-              return 0
-            fi
-            return 1
-          }
-          
-          echo "⏳ Waiting for Core module availability on Maven Central..."
-          WAIT_ITERATIONS=$((MAVEN_CENTRAL_WAIT_TIMEOUT / 120))  # 2 minute intervals
+          echo "⏳ Waiting for Core availability..."
+          WAIT_ITERATIONS=$((MAVEN_CENTRAL_WAIT_TIMEOUT / 120))
           
           for i in $(seq 1 $WAIT_ITERATIONS); do
-            echo "Attempt $i/$WAIT_ITERATIONS: Checking if core module is available..."
+            echo "Checking availability attempt $i/$WAIT_ITERATIONS..."
           
-            if check_availability "$MODULE" "$VERSION" "$GROUP_PATH" "${{ env.GROUP_ID }}"; then
-              echo "✅ Core module is available on Maven Central!"
+            # Check Maven Central directly
+            if curl -s -f --max-time 30 "${{ env.MAVEN_CENTRAL_BASE }}/$GROUP_PATH/$MODULE/$VERSION/$MODULE-$VERSION.pom" >/dev/null 2>&1; then
+              echo "✅ Core available on Maven Central"
               break
             fi
           
-            if [ $i -eq $WAIT_ITERATIONS ]; then
-              echo "⚠️ Core module not available after $((WAIT_ITERATIONS * 2)) minutes"
-              echo "This might cause dependency resolution issues for framework modules."
-              echo "Checking if deployment actually succeeded..."
-          
-              # Final verification attempt
-              sleep 300  # Wait 5 more minutes
-              if check_availability "$MODULE" "$VERSION" "$GROUP_PATH" "${{ env.GROUP_ID }}"; then
-                echo "✅ Core module became available after extended wait!"
-              else
-                echo "❌ Core module still not available. Proceeding anyway..."
-                echo "Framework modules deployment may fail due to dependency resolution issues."
-              fi
+            # Try dependency resolution
+            if timeout 60 mvn dependency:get -Dartifact="${{ env.GROUP_ID }}:$MODULE:$VERSION" -B >/dev/null 2>&1; then
+              echo "✅ Core available via Maven dependency resolution"
               break
+            fi
+          
+            if [[ $i -eq $WAIT_ITERATIONS ]]; then
+              echo "❌ Core not available after waiting"
+              exit 1
             fi
           
             echo "Core not yet available, waiting 2 minutes..."
@@ -268,310 +180,240 @@ jobs:
 
       - name: Deploy Framework modules
         run: |
-          echo "🚀 Deploying Framework modules in parallel..."
+          set -e
+          VERSION=${{ steps.version.outputs.version }}
+          echo "🚀 Deploying Framework modules..."
           
-          # Enhanced deploy function with better error handling
-          deploy_module() {
-            local module=$1
-            local log_file="deploy_${module}.log"
+          # Create temporary directory for logs
+          mkdir -p /tmp/deploy_logs
           
-            echo "Starting deployment of $module..."
-            cd "$module" || { 
-              echo "❌ Failed to enter $module directory" | tee "$log_file"
-              return 1
-            }
+          deploy_framework_module() {
+            local module="$1"
+            local log_file="/tmp/deploy_logs/${module}.log"
           
-            # Retry deployment with controlled logging
-            for attempt in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
-              echo "Deployment attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }} for $module" | tee -a "$log_file"
+            {
+              echo "Deploying $module..."
+              cd "$module" || exit 1
           
-              # Use less verbose logging first, debug only on final failure
-              if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -B 2>&1 | tee -a "$log_file"; then
-                echo "✅ $module deployed successfully on attempt $attempt" | tee -a "$log_file"
-                cd .. || { echo "❌ Failed to return to root directory"; return 1; }
-                return 0
+              # Update core dependency
+              if ! mvn versions:use-dep-version \
+                -Dincludes="${{ env.GROUP_ID }}:java-reporter-core" \
+                -DdepVersion="$VERSION" \
+                -DforceVersion=true \
+                -DgenerateBackupPoms=false \
+                -B; then
+                echo "Failed to update core dependency in $module"
+                exit 1
               fi
           
-              if [ $attempt -lt ${{ env.MAX_RETRY_ATTEMPTS }} ]; then
-                echo "Attempt $attempt failed for $module, retrying in ${{ env.RETRY_DELAY }}s..." | tee -a "$log_file"
-                sleep ${{ env.RETRY_DELAY }}
-              else
-                echo "❌ Final attempt failed, running with debug output..." | tee -a "$log_file"
-                timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -X 2>&1 | tail -100 | tee -a "$log_file" || true
-              fi
-            done
-          
-            echo "❌ Failed to deploy $module after ${{ env.MAX_RETRY_ATTEMPTS }} attempts" | tee -a "$log_file"
-            cd .. || { echo "❌ Failed to return to root directory"; return 1; }
-            return 1
+              # Deploy module
+              for i in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
+                echo "Deployment attempt $i for $module"
+                if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -B; then
+                  echo "$module deployed successfully"
+                  cd .. || exit 1
+                  exit 0
+                elif [[ $i -eq ${{ env.MAX_RETRY_ATTEMPTS }} ]]; then
+                  echo "$module deployment failed after ${{ env.MAX_RETRY_ATTEMPTS }} attempts"
+                  exit 1
+                else
+                  sleep ${{ env.RETRY_DELAY }}
+                fi
+              done
+            } > "$log_file" 2>&1
           }
           
-          # Deploy modules in parallel with process tracking
-          deploy_module "java-reporter-junit" &
+          # Export function and variables for subshells
+          export -f deploy_framework_module
+          export VERSION
+          export MAVEN_TIMEOUT=${{ env.MAVEN_TIMEOUT }}
+          export MAX_RETRY_ATTEMPTS=${{ env.MAX_RETRY_ATTEMPTS }}
+          export RETRY_DELAY=${{ env.RETRY_DELAY }}
+          
+          # Deploy modules in parallel
+          deploy_framework_module "java-reporter-junit" &
           JUNIT_PID=$!
-          
-          deploy_module "java-reporter-testng" &
+          deploy_framework_module "java-reporter-testng" &
           TESTNG_PID=$!
-          
-          deploy_module "java-reporter-cucumber" &
+          deploy_framework_module "java-reporter-cucumber" &
           CUCUMBER_PID=$!
           
-          echo "Waiting for framework modules to complete..."
-          
-          JUNIT_SUCCESS=true
-          TESTNG_SUCCESS=true
-          CUCUMBER_SUCCESS=true
+          # Wait for all modules and collect results
+          FAILED_MODULES=()
           
           if ! wait $JUNIT_PID; then
-            echo "❌ JUnit module deployment failed"
-            JUNIT_SUCCESS=false
-            echo "JUnit deployment logs:"
-            cat deploy_java-reporter-junit.log 2>/dev/null || echo "No log file found"
+            FAILED_MODULES+=("junit")
+            echo "❌ JUnit deployment failed"
+            cat /tmp/deploy_logs/java-reporter-junit.log
+          else
+            echo "✅ JUnit deployed"
           fi
           
           if ! wait $TESTNG_PID; then
-            echo "❌ TestNG module deployment failed"
-            TESTNG_SUCCESS=false
-            echo "TestNG deployment logs:"
-            cat deploy_java-reporter-testng.log 2>/dev/null || echo "No log file found"
+            FAILED_MODULES+=("testng")
+            echo "❌ TestNG deployment failed"
+            cat /tmp/deploy_logs/java-reporter-testng.log
+          else
+            echo "✅ TestNG deployed"
           fi
           
           if ! wait $CUCUMBER_PID; then
-            echo "❌ Cucumber module deployment failed"
-            CUCUMBER_SUCCESS=false
-            echo "Cucumber deployment logs:"
-            cat deploy_java-reporter-cucumber.log 2>/dev/null || echo "No log file found"
+            FAILED_MODULES+=("cucumber")
+            echo "❌ Cucumber deployment failed"
+            cat /tmp/deploy_logs/java-reporter-cucumber.log
+          else
+            echo "✅ Cucumber deployed"
           fi
           
-          rm -f deploy_*.log
+          # Cleanup logs
+          rm -rf /tmp/deploy_logs
           
-          if [ "$JUNIT_SUCCESS" = true ] && [ "$TESTNG_SUCCESS" = true ] && [ "$CUCUMBER_SUCCESS" = true ]; then
-            echo "✅ All framework modules deployed successfully"
-          else
-            echo "❌ One or more framework module deployments failed"
-            echo "Failed modules:"
-            [ "$JUNIT_SUCCESS" = false ] && echo "  - java-reporter-junit"
-            [ "$TESTNG_SUCCESS" = false ] && echo "  - java-reporter-testng"
-            [ "$CUCUMBER_SUCCESS" = false ] && echo "  - java-reporter-cucumber"
+          if [[ ${#FAILED_MODULES[@]} -gt 0 ]]; then
+            echo "❌ Failed modules: ${FAILED_MODULES[*]}"
             exit 1
           fi
+          
+          echo "✅ All Framework modules deployed successfully"
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Wait for Framework modules availability
+      - name: Wait for Framework availability
         run: |
+          set -e
           VERSION=${{ steps.version.outputs.version }}
           GROUP_PATH=$(echo "${{ env.GROUP_ID }}" | tr '.' '/')
           
-          # Enhanced availability check
-          check_availability() {
-            local module="$1"
-            local version="$2"
-            local group_path="$3"
-            local group_id="$4"
-          
-            local endpoints=(
-              "${{ env.MAVEN_CENTRAL_BASE }}/$group_path/$module/$version/$module-$version.pom"
-              "${{ env.MAVEN_SEARCH_BASE }}?filepath=$group_path/$module/$version/$module-$version.pom"
-              "${{ env.MAVEN_SEARCH_API }}?q=g:$group_id+AND+a:$module+AND+v:$version&rows=1&wt=json"
-            )
-          
-            for endpoint in "${endpoints[@]}"; do
-              if curl -s -f --max-time 30 "$endpoint" > /dev/null 2>&1; then
-                echo "✅ $module v$version found at: $endpoint"
-                return 0
-              fi
-            done
-          
-            # Maven dependency check
-            if timeout 60 mvn dependency:get -Dartifact="$group_id:$module:$version" -q 2>/dev/null; then
-              echo "✅ $module v$version available via Maven"
-              return 0
-            fi
-            return 1
-          }
-          
           modules=("java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber")
+          echo "⏳ Waiting for Framework modules availability..."
           
-          echo "⏳ Waiting for Framework modules availability on Maven Central..."
+          WAIT_ITERATIONS=$((MAVEN_CENTRAL_WAIT_TIMEOUT / 120 / 3))
           
           for module in "${modules[@]}"; do
-            echo "Checking $module..."
-            WAIT_ITERATIONS=$((MAVEN_CENTRAL_WAIT_TIMEOUT / 120 / 2))  # Shorter wait per module
+            echo "Checking $module availability..."
           
             for i in $(seq 1 $WAIT_ITERATIONS); do
-              if check_availability "$module" "$VERSION" "$GROUP_PATH" "${{ env.GROUP_ID }}"; then
-                echo "✅ $module is available!"
+              # Check Maven Central
+              if curl -s -f --max-time 30 "${{ env.MAVEN_CENTRAL_BASE }}/$GROUP_PATH/$module/$VERSION/$module-$VERSION.pom" >/dev/null 2>&1; then
+                echo "✅ $module available"
                 break
               fi
           
-              if [ $i -eq $WAIT_ITERATIONS ]; then
-                echo "⚠️ $module not available after $((WAIT_ITERATIONS * 2)) minutes. Continuing..."
+              # Try dependency resolution
+              if timeout 60 mvn dependency:get -Dartifact="${{ env.GROUP_ID }}:$module:$VERSION" -B >/dev/null 2>&1; then
+                echo "✅ $module available"
                 break
               fi
           
-              echo "Attempt $i/$WAIT_ITERATIONS: $module not yet available, waiting 2 minutes..."
+              if [[ $i -eq $WAIT_ITERATIONS ]]; then
+                echo "❌ $module not available after waiting"
+                exit 1
+              fi
+          
               sleep 120
             done
           done
+          
+          echo "✅ All Framework modules available"
 
       - name: Deploy Distribution module
         run: |
-          echo "🚀 Deploying Distribution module..."
-          cd distribution || { echo "❌ Failed to enter distribution directory"; exit 1; }
+          set -e
+          VERSION=${{ steps.version.outputs.version }}
+          echo "🚀 Deploying Distribution..."
           
-          for attempt in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
-            echo "Distribution deployment attempt $attempt/${{ env.MAX_RETRY_ATTEMPTS }}..."
+          cd distribution || { echo "❌ Cannot enter distribution directory"; exit 1; }
           
-            # Force maven-compiler-plugin version and use less verbose logging
-            if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -B \
-               -Dmaven-compiler-plugin.version=3.11.0 \
-               -Dmaven.compiler.plugin.version=3.11.0; then
-              echo "✅ Distribution module deployed successfully on attempt $attempt"
-              cd .. || { echo "❌ Failed to return to root directory"; exit 1; }
-              break
-            fi
-          
-            if [ $attempt -eq ${{ env.MAX_RETRY_ATTEMPTS }} ]; then
-              echo "❌ Failed to deploy distribution module after ${{ env.MAX_RETRY_ATTEMPTS }} attempts"
-              echo "Running final attempt with debug output..."
-              timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -X \
-                 -Dmaven-compiler-plugin.version=3.11.0 \
-                 -Dmaven.compiler.plugin.version=3.11.0 || true
-              cd .. || { echo "❌ Failed to return to root directory"; exit 1; }
+          # Update all internal dependencies
+          DEPENDENCIES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber")
+          for dep in "${DEPENDENCIES[@]}"; do
+            echo "Updating $dep dependency to v$VERSION..."
+            if ! mvn versions:use-dep-version \
+              -Dincludes="${{ env.GROUP_ID }}:$dep" \
+              -DdepVersion="$VERSION" \
+              -DforceVersion=true \
+              -DgenerateBackupPoms=false \
+              -B; then
+              echo "❌ Failed to update $dep dependency"
               exit 1
             fi
-          
-            echo "Attempt $attempt failed, retrying in ${{ env.RETRY_DELAY }}s..."
-            sleep ${{ env.RETRY_DELAY }}
           done
-
-          echo "✅ Distribution module deployed successfully"
+          
+          # Deploy Distribution
+          for i in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
+            echo "Distribution deployment attempt $i..."
+            if timeout ${{ env.MAVEN_TIMEOUT }} mvn clean deploy -P release -DskipTests -B \
+               -Dmaven-compiler-plugin.version=3.11.0; then
+              echo "✅ Distribution deployed successfully"
+              cd .. || exit 1
+              break
+            elif [[ $i -eq ${{ env.MAX_RETRY_ATTEMPTS }} ]]; then
+              echo "❌ Distribution deployment failed after ${{ env.MAX_RETRY_ATTEMPTS }} attempts"
+              cd .. || exit 1
+              exit 1
+            else
+              echo "Retrying in ${{ env.RETRY_DELAY }}s..."
+              sleep ${{ env.RETRY_DELAY }}
+            fi
+          done
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Verify deployment success
+      - name: Verify deployment
         run: |
-          echo "🔍 Verifying all modules are accessible on Maven Central..."
+          set -e
           VERSION=${{ steps.version.outputs.version }}
-          GROUP_ID="${{ env.GROUP_ID }}"
-          
           modules=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-distribution")
           
-          # Wait a bit for final propagation
-          echo "Waiting 5 minutes for final propagation..."
+          echo "🔍 Verifying deployment..."
+          echo "Waiting 5 minutes for Maven Central propagation..."
           sleep 300
           
           failed_modules=()
-          
           for module in "${modules[@]}"; do
             echo "Verifying $module..."
-          
-            # Try to download the artifact
-            if timeout 120 mvn dependency:get -Dartifact="$GROUP_ID:$module:$VERSION" -q; then
-              echo "✅ $module v$VERSION is accessible"
+            if timeout 120 mvn dependency:get -Dartifact="${{ env.GROUP_ID }}:$module:$VERSION" -B >/dev/null 2>&1; then
+              echo "✅ $module verified"
             else
-              echo "⚠️ $module v$VERSION verification failed"
+              echo "⚠️ $module verification failed"
               failed_modules+=("$module")
             fi
           done
           
-          if [ ${#failed_modules[@]} -gt 0 ]; then
-            echo "⚠️ Some modules failed verification:"
-            for module in "${failed_modules[@]}"; do
-              echo "  - $module"
-            done
+          if [[ ${#failed_modules[@]} -gt 0 ]]; then
+            echo "⚠️ Verification failed for: ${failed_modules[*]}"
             echo "This might be due to Maven Central propagation delays."
-            echo "Modules were deployed successfully, but may take additional time to be fully available."
           else
-            echo "✅ All modules verified successfully!"
+            echo "✅ All modules verified successfully"
           fi
 
       - name: Cleanup GPG
         if: always()
         run: |
-          echo "🧹 Cleaning up GPG keys..."
-          # More robust GPG cleanup
           if command -v gpg >/dev/null 2>&1; then
             KEY_IDS=$(gpg --list-secret-keys --keyid-format LONG 2>/dev/null | grep sec | awk '{print $2}' | cut -d'/' -f2 2>/dev/null || true)
-            if [ -n "$KEY_IDS" ]; then
+            if [[ -n "$KEY_IDS" ]]; then
               for key_id in $KEY_IDS; do
                 gpg --batch --yes --delete-secret-keys "$key_id" 2>/dev/null || true
               done
-              echo "✅ GPG keys cleaned up successfully"
-            else
-              echo "No GPG keys found to cleanup"
+              echo "✅ GPG keys cleaned up"
             fi
-          else
-            echo "GPG not found, skipping cleanup"
           fi
 
-      - name: Notify on success
-        if: success()
-        run: |
-          echo "🎉 Release Success Notification"
-          echo "============================="
-          echo "✅ Release v${{ steps.version.outputs.version }} completed successfully!"
-          echo ""
-          echo "All modules have been deployed to Maven Central:"
-          echo "- java-reporter-core"
-          echo "- java-reporter-junit"
-          echo "- java-reporter-testng" 
-          echo "- java-reporter-cucumber"
-          echo "- java-reporter-distribution"
-          echo ""
-          echo "🔗 Release URL: ${{ github.event.release.html_url }}"
-          echo ""
-          echo "⏰ Note: It may take up to 2 hours for modules to be fully available on Maven Central"
-
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "💥 Release Failure Notification"
-          echo "=============================="
-          echo "❌ Release v${{ steps.version.outputs.version }} failed!"
-          echo ""
-          echo "🔗 Check the workflow logs for details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          echo ""
-          echo "Common failure causes:"
-          echo "- Maven Central connectivity issues"
-          echo "- GPG signing problems"
-          echo "- Dependencies not yet available"
-          echo "- Network timeouts"
-          echo ""
-          echo "💡 You can re-trigger the release by:"
-          echo "1. Fixing any issues"
-          echo "2. Re-running the failed workflow"
-          echo "3. Or creating a new release with the same tag"
-
-      - name: Release Summary
+      - name: Release notification
         if: always()
         run: |
-          echo "📋 Release Summary"
-          echo "=================="
-          echo "Version: ${{ steps.version.outputs.version }}"
-          echo "Tag: ${{ github.event.release.tag_name }}"
-          echo "Release URL: ${{ github.event.release.html_url }}"
-          echo "Workflow Status: ${{ job.status }}"
-          echo ""
-          echo "Targeted modules for deployment:"
-          echo "- java-reporter-core"
-          echo "- java-reporter-junit" 
-          echo "- java-reporter-testng"
-          echo "- java-reporter-cucumber"
-          echo "- distribution"
-          echo ""
-          echo "Maven Central URLs:"
-          GROUP_PATH=$(echo "${{ env.GROUP_ID }}" | tr '.' '/')
-          echo "- Core: ${{ env.MAVEN_CENTRAL_BASE }}/$GROUP_PATH/java-reporter-core/${{ steps.version.outputs.version }}/"
-          echo "- Distribution: ${{ env.MAVEN_CENTRAL_BASE }}/$GROUP_PATH/java-reporter-distribution/${{ steps.version.outputs.version }}/"
-          echo ""
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "✅ Release completed successfully!"
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "🎉 Release v${{ steps.version.outputs.version }} completed successfully!"
+            echo ""
+            echo "Deployed modules with correct dependency chain:"
+            echo "• Core v${{ steps.version.outputs.version }}"
+            echo "• Framework modules v${{ steps.version.outputs.version }} (depend on Core v${{ steps.version.outputs.version }})"
+            echo "• Distribution v${{ steps.version.outputs.version }} (depends on all 4 modules v${{ steps.version.outputs.version }})"
           else
-            echo "❌ Release failed - check logs above for details"
+            echo "❌ Release v${{ steps.version.outputs.version }} failed!"
+            echo "Check the workflow logs for detailed error information."
           fi
