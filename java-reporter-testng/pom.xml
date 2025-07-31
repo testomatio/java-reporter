@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-testng</artifactId>
-    <version>0.6.52</version>
+    <version>0.6.53</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter TestNG</name>
