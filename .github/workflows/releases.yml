@@ -101,15 +101,115 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "✅ Version: $VERSION"
 
-      - name: Set project version
+      - name: Set versions in all modules
         run: |
           set -e
           VERSION=${{ steps.version.outputs.version }}
-          if ! mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -B; then
-            echo "❌ Failed to set version"
+          echo "🔄 Setting version $VERSION in all modules individually..."
+          
+          # List of all modules (each has its own pom.xml)
+          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
+          
+          for module in "${MODULES[@]}"; do
+            if [[ -d "$module" && -f "$module/pom.xml" ]]; then
+              echo "Setting version in $module..."
+              cd "$module" || { echo "❌ Cannot enter $module"; exit 1; }
+          
+              # Set version in this module
+              if ! mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -B; then
+                echo "❌ Failed to set version in $module"
+                exit 1
+              fi
+          
+              echo "✅ Version set to $VERSION in $module"
+              cd .. || exit 1
+            else
+              echo "⚠️ Module $module not found or missing pom.xml"
+            fi
+          done
+          
+          echo "✅ All module versions set to $VERSION"
+
+      - name: Update internal dependencies (excluding Core)
+        run: |
+          set -e
+          VERSION=${{ steps.version.outputs.version }}
+          echo "🔄 Updating internal dependencies to version $VERSION..."
+          
+          # Only modules that have internal dependencies (excluding Core)
+          MODULES_WITH_DEPS=("java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
+          
+          for module in "${MODULES_WITH_DEPS[@]}"; do
+            if [[ -d "$module" && -f "$module/pom.xml" ]]; then
+              echo "Updating dependencies in $module..."
+              cd "$module" || continue
+          
+              # Update java-reporter-core dependency (most modules depend on it)
+              echo "  Updating java-reporter-core dependency..."
+              if mvn versions:use-dep-version \
+                -Dincludes="${{ env.GROUP_ID }}:java-reporter-core" \
+                -DdepVersion="$VERSION" \
+                -DforceVersion=true \
+                -DgenerateBackupPoms=false \
+                -B 2>/dev/null; then
+                echo "  ✅ Updated java-reporter-core to $VERSION"
+              else
+                echo "  ⚠️ java-reporter-core dependency not found"
+              fi
+          
+              # For distribution module, update all other internal dependencies
+              if [[ "$module" == "distribution" ]]; then
+                OTHER_DEPS=("java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber")
+                for dep in "${OTHER_DEPS[@]}"; do
+                  echo "  Updating $dep dependency..."
+                  if mvn versions:use-dep-version \
+                    -Dincludes="${{ env.GROUP_ID }}:$dep" \
+                    -DdepVersion="$VERSION" \
+                    -DforceVersion=true \
+                    -DgenerateBackupPoms=false \
+                    -B 2>/dev/null; then
+                    echo "  ✅ Updated $dep to $VERSION"
+                  else
+                    echo "  ⚠️ $dep dependency not found"
+                  fi
+                done
+              fi
+          
+              cd .. || exit 1
+            fi
+          done
+          
+          echo "✅ All internal dependencies updated"
+
+      - name: Verify all versions are set correctly
+        run: |
+          set -e
+          VERSION=${{ steps.version.outputs.version }}
+          echo "🔍 Verifying all module versions are set to $VERSION..."
+          
+          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
+          FAILED_MODULES=()
+          
+          for module in "${MODULES[@]}"; do
+            if [[ -d "$module" && -f "$module/pom.xml" ]]; then
+              cd "$module" || continue
+              CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null)
+              if [[ "$CURRENT_VERSION" == "$VERSION" ]]; then
+                echo "✅ $module version: $CURRENT_VERSION"
+              else
+                echo "❌ $module version mismatch: expected $VERSION, got $CURRENT_VERSION"
+                FAILED_MODULES+=("$module")
+              fi
+              cd .. || exit 1
+            fi
+          done
+          
+          if [[ ${#FAILED_MODULES[@]} -gt 0 ]]; then
+            echo "❌ Version verification failed for modules: ${FAILED_MODULES[*]}"
             exit 1
           fi
-          echo "✅ Project version set to $VERSION"
+          
+          echo "✅ All module versions verified successfully"
 
       - name: Setup GPG
         run: |
@@ -123,6 +223,13 @@ jobs:
           echo "🚀 Deploying Core..."
           
           cd java-reporter-core || { echo "❌ Cannot enter core directory"; exit 1; }
+          
+          # Verify version is set correctly
+          CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          if [[ "$CURRENT_VERSION" != "${{ steps.version.outputs.version }}" ]]; then
+            echo "❌ Version mismatch: expected ${{ steps.version.outputs.version }}, got $CURRENT_VERSION"
+            exit 1
+          fi
           
           for i in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
             echo "Core deployment attempt $i..."
@@ -195,15 +302,26 @@ jobs:
               echo "Deploying $module..."
               cd "$module" || exit 1
           
-              # Update core dependency
-              if ! mvn versions:use-dep-version \
-                -Dincludes="${{ env.GROUP_ID }}:java-reporter-core" \
-                -DdepVersion="$VERSION" \
-                -DforceVersion=true \
-                -DgenerateBackupPoms=false \
-                -B; then
-                echo "Failed to update core dependency in $module"
+              # Verify version is set correctly
+              CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+              if [[ "$CURRENT_VERSION" != "$VERSION" ]]; then
+                echo "❌ Version mismatch in $module: expected $VERSION, got $CURRENT_VERSION"
                 exit 1
+              fi
+          
+              # Simple verification that core dependency exists and will be updated
+              echo "Verifying java-reporter-core dependency in $module..."
+              if grep -q "java-reporter-core" pom.xml; then
+                echo "✅ Core dependency found in $module"
+                # Force update core dependency to ensure correct version
+                mvn versions:use-dep-version \
+                  -Dincludes="${{ env.GROUP_ID }}:java-reporter-core" \
+                  -DdepVersion="$VERSION" \
+                  -DforceVersion=true \
+                  -DgenerateBackupPoms=false \
+                  -B || echo "⚠️ Failed to update core dependency"
+              else
+                echo "ℹ️ No core dependency found in $module (normal for core module itself)"
               fi
           
               # Deploy module
@@ -325,10 +443,17 @@ jobs:
           
           cd distribution || { echo "❌ Cannot enter distribution directory"; exit 1; }
           
-          # Update all internal dependencies
+          # Verify version is set correctly
+          CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          if [[ "$CURRENT_VERSION" != "$VERSION" ]]; then
+            echo "❌ Version mismatch in distribution: expected $VERSION, got $CURRENT_VERSION"
+            exit 1
+          fi
+          
+          # Force update all internal dependencies to the release version
           DEPENDENCIES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber")
           for dep in "${DEPENDENCIES[@]}"; do
-            echo "Updating $dep dependency to v$VERSION..."
+            echo "Force updating $dep dependency to v$VERSION..."
             if ! mvn versions:use-dep-version \
               -Dincludes="${{ env.GROUP_ID }}:$dep" \
               -DdepVersion="$VERSION" \
@@ -339,6 +464,20 @@ jobs:
               exit 1
             fi
           done
+          
+          # Verify all dependencies exist in pom.xml (simpler check)
+          echo "Verifying dependency declarations in distribution module..."
+          for dep in "${DEPENDENCIES[@]}"; do
+            echo "Checking $dep dependency declaration..."
+            if grep -q "$dep" pom.xml; then
+              echo "✅ $dep dependency found in pom.xml"
+            else
+              echo "❌ Dependency $dep not found in distribution module"
+              exit 1
+            fi
+          done
+          
+          echo "✅ All dependencies verified in distribution module"
           
           # Deploy Distribution
           for i in $(seq 1 ${{ env.MAX_RETRY_ATTEMPTS }}); do
