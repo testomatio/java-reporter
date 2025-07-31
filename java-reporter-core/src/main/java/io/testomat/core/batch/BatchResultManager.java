@@ -1,14 +1,10 @@
 package io.testomat.core.batch;
 
-import static io.testomat.core.constants.PropertyNameConstants.BATCH_FLUSH_INTERVAL_PROPERTY_NAME;
-import static io.testomat.core.constants.PropertyNameConstants.BATCH_SIZE_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_BATCH_SIZE;
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_FLUSH_INTERVAL_SECONDS;
 
 import io.testomat.core.client.ApiInterface;
 import io.testomat.core.model.TestResult;
-import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
-import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +28,6 @@ public class BatchResultManager {
 
     private final List<TestResult> pendingResults = new ArrayList<>();
     private final List<TestResult> failedResults = new ArrayList<>();
-    private final int batchSize;
     private final ApiInterface apiClient;
     private final String runUid;
     private final ScheduledExecutorService scheduler;
@@ -51,19 +46,6 @@ public class BatchResultManager {
         this.apiClient = apiClient;
         this.runUid = runUid;
 
-        PropertyProvider propertyProvider =
-                PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
-        this.batchSize = Integer.parseInt(
-                propertyProvider.getProperty(BATCH_SIZE_PROPERTY_NAME) != null
-                        ? propertyProvider.getProperty(BATCH_SIZE_PROPERTY_NAME)
-                        : String.valueOf(DEFAULT_BATCH_SIZE)
-        );
-        int flushInterval = Integer.parseInt(
-                propertyProvider.getProperty(BATCH_FLUSH_INTERVAL_PROPERTY_NAME) != null
-                        ? propertyProvider.getProperty(BATCH_FLUSH_INTERVAL_PROPERTY_NAME)
-                        : String.valueOf(DEFAULT_FLUSH_INTERVAL_SECONDS)
-        );
-
         this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "TestomatBatchFlush");
             t.setDaemon(true);
@@ -71,10 +53,12 @@ public class BatchResultManager {
         });
 
         scheduler.scheduleAtFixedRate(this::flushPendingResults,
-                flushInterval, flushInterval, TimeUnit.SECONDS);
+                DEFAULT_FLUSH_INTERVAL_SECONDS,
+                DEFAULT_FLUSH_INTERVAL_SECONDS,
+                TimeUnit.SECONDS);
 
         log.debug("BatchResultManager initialized: batchSize= {}, flushInterval= {} sec",
-                batchSize, flushInterval);
+                DEFAULT_BATCH_SIZE, DEFAULT_FLUSH_INTERVAL_SECONDS);
     }
 
     /**
@@ -93,7 +77,7 @@ public class BatchResultManager {
         pendingResults.add(result);
         log.debug("Added test result: {} (pending: {})", result.getTitle(), pendingResults.size());
 
-        if (pendingResults.size() >= batchSize) {
+        if (pendingResults.size() >= DEFAULT_BATCH_SIZE) {
             flushPendingResults();
         }
     }
@@ -125,7 +109,7 @@ public class BatchResultManager {
                 log.debug("Reported single test: {}", results.get(0).getTitle());
             } else {
                 apiClient.reportTests(runUid, results);
-                log.debug("Reported batch of %d tests{}", results.size());
+                log.debug("Reported batch of {} tests", results.size());
             }
         } catch (IOException e) {
             log.error("Failed to report batch (attempt {}/{}): {}", attempt,

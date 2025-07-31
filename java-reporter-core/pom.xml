@@ -7,7 +7,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.6.53</version>
+    <version>0.6.55</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>
@@ -146,7 +146,6 @@
                 </executions>
             </plugin>
 
-            <!-- Deploy plugin для snapshot версій -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
@@ -156,7 +155,6 @@
     </build>
 
     <profiles>
-        <!-- Профіль для релізних версій -->
         <profile>
             <id>release</id>
             <build>
@@ -199,7 +197,6 @@
             </build>
         </profile>
 
-        <!-- Профіль для snapshot версій - просто використовуємо стандартний deploy -->
         <profile>
             <id>snapshot</id>
         </profile>
