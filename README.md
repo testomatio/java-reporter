@@ -15,22 +15,35 @@ and team collaboration features.
 
 > 🚧 **Actively developed** - New features added regularly!
 
-#### ✅ Ready to Use (Current Features)
-- ✅ **Complete framework integration** - JUnit5, TestNG, and Cucumber support
-- ✅ **Autostart
-- ✅ **Customizable run parameters** - Full control over test run configuration
-- ✅ **Advanced customization** - Override core classes for custom behavior
-- ✅ **Test run grouping** - Organize and merge related test runs
-- ✅ **Team collaboration** - Shared runs and real-time reporting
+## Features
 
-#### 🚀 Coming Soon (Planned Features)
-- ⏳ **Test artifacts support** - Screenshots, logs, and file attachments
-- ⏳ **Step-by-step reporting** - Detailed test step execution tracking
-- ⏳ **Enhanced error reporting** - Stack traces and failure analysis
-- ⏳ **Integration hooks** - Pre/post test execution callbacks
-- ⏳ **Advanced filtering** - Custom test selection and reporting rules
+| Feature                            | Description                                 | JUnit | TestNG | Cucumber |
+|------------------------------------|---------------------------------------------|:-----:|:------:|:--------:|
+| **Complete framework integration** | Full framework support and compatibility    |   ✅   |   ✅    |    ✅     |
+| **Autostart on tests run**         | Automatic integration with test execution   |   ✅   |   ✅    |    ✅     |
+| **Shared run**                     | Collaborative test execution sharing        |   ✅   |   ✅    |    ✅     |
+| **Test runs grouping**             | Organize and categorize test executions     |   ✅   |   ✅    |    ✅     |
+| **Public sharable link**           | Generate public URLs for test run results   |   ✅   |   ✅    |    ✅     |
+| **Test code export**               | Export test code from codebase to platform  |   ✅   |   ✅    |    ✅     |
+| **Advanced error reporting**       | Detailed test failure/skip descriptions     |   ✅   |   ✅    |    ✅     |
+| **TestId import**                  | Import test IDs from platform into codebase |   ⏳   |   ⏳    |    ⏳     |
+| **Parametrized tests support**     | Enhanced support for parameterized testing  |   ⏳   |   ⏳    |    ⏳     |
+| **Test artifacts support**         | Screenshots, logs, and file attachments     |   ⏳   |   ⏳    |    ⏳     |
+| **Step-by-step reporting**         | Detailed test step execution tracking       |   ⏳   |   ⏳    |    ⏳     |
+| **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)   |       |        |          |
 
-> - Supported frameworks at this moment: JUnit5, TestNG, Cucumber  
+
+
+
+
+## 🖥️ Supported test frameworks versions
+
+| What you need | Version | We tested with |
+|---------------|:-------:|:--------------:|
+| **JUnit**     |   5.x   |     5.9.2      |
+| **TestNG**    |   7.x   |     7.7.1      |
+| **Cucumber**  |   7.x   |     7.14.0     |
+
 > - Supported Java 11+
 ---
 
@@ -42,43 +55,64 @@ and team collaboration features.
    <dependency>
        <groupId>io.testomat</groupId>
        <artifactId>java-reporter-distribution</artifactId>
-       <version>x.x.x</version>
+       <version>0.6.7</version>
    </dependency>
+   ``` 
+2. create the `testomatio.properties` file in your `resources` folder and add into it:
+   ```properties
+   testomatio.listening=true
    ```
-   - **Actual by now is 0.6.7, but it might be not shown in the Maven Central by default (change version manually)**
-   
-
-2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
-3. **Set your API key** as environment variable:
+3. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
+4. **Set your API key** as environment variable:
    ```bash
    export testomatio.api.key=tstmt_your_key_here
    ```
-   - Or create the `testomatio.properties` file in your `resources` folder and add into it:
+   - Or add to the `testomatio.properties` :
    ```properties
    testomatio.api.key=tstmt_your_key_here
    ```
    
-4. Also provide run title in the `testomatio.run.title` property.
-5. Run your tests.
+5. Also provide run title in the `testomatio.run.title` property otherwise runs will have name "Default Test Run".
 ---
 
-## JUNIT
+## Framework specific setup
+
+### JUnit
 > - Supported versions: 5.x
 > - Tested on 5.9.2
 
+**Step 1:** Create file `src/main/resources/junit-platform.properties`
+
+**Step 2:** Add this single line:
+   ```properties
+   junit.jupiter.extensions.autodetection.enabled = true
+   ```
+
+### TestNG
+No additional actions needed as TestNG handles the extension implicitly.
+
+### Cucumber
+
+**Add our listener to your test runner:**
+
+```java
+   @RunWith(Cucumber.class)
+   @CucumberOptions(
+           features = "src/test/resources/features",
+           glue = {"steps"},
+           plugin = {
+                   "pretty",
+                   "json:target/cucumber-reports/",
+                   "html:target/cucumber-reports/",
+                   "io.testomat.cucumber.listener.CucumberListener"  // 👈 Add this line
+           }
+   )
+   public class TestRunner {
+   }
+```
 
 
 
-
-
-## 🖥️ System Requirements
-
-| What you need | Version | We tested with |
-|--------------|---------|----------------|
-| ☕ **Java** | 11 or newer | All versions |
-| 🧪 **JUnit** | 5.x | 5.9.2 |
-| 🧪 **TestNG** | 7.x | 7.7.1 |
-| 🥒 **Cucumber** | 7.x | 7.14.0 |
 
 ## 📦 Installation
 
