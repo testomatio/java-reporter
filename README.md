@@ -1,42 +1,15 @@
-# 🚀 Testomat.io Java Reporter
+#  Testomat.io Java Reporter
 
-> **Transform your test reporting experience - realtime + easy analytics!**   
-> Connect your Java tests directly to Testomat.io with minimal setup and maximum insight.
-
-## 🎯 Quick Start 
-
-1. **Add dependency** to your `pom.xml`:
-   ```xml
-   <dependency>
-       <groupId>io.testomat</groupId>
-       <artifactId>java-reporter</artifactId>
-       <version>0.x.0</version>
-   </dependency>
-   ```
-
-2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
-
-3. **Set your API key** as environment variable:
-   ```bash
-   export testomatio.api.key=tstmt_your_key_here
-   ```
-
-4. **Run your tests** - that's it! 🎉
-
+ **Transform your test reporting experience - realtime + easy analytics!  
+ Connect your Java tests directly to Testomat.io with minimal setup and maximum insight.**
 ---
 
 ## 📖 What is this?
 
-This is the **official Java reporter** for [Testomat.io](https://testomat.io/) - a powerful test management platform. It automatically sends your test results to the cloud, giving you beautiful reports, analytics, and team collaboration features.
+This is the **official Java reporter** for [Testomat.io](https://testomat.io/) - a powerful test management platform.  
+It automatically sends your test results to the platform, giving you comprehensive reports, analytics,  
+and team collaboration features.
 
-### 🌟 Why you'll love it
-
-- ✅ **Zero configuration** for most projects
-- ✅ **Works with your existing tests** (JUnit, TestNG, Cucumber)
-- ✅ **Real-time reporting** as tests run
-- ✅ **Team collaboration** with shared reports
-- ✅ **Historical tracking** of test trends
-- ✅ **Public shareable reports** for stakeholders
 
 ### 🔄 Current Status & Roadmap
 
@@ -44,9 +17,8 @@ This is the **official Java reporter** for [Testomat.io](https://testomat.io/) -
 
 #### ✅ Ready to Use (Current Features)
 - ✅ **Complete framework integration** - JUnit5, TestNG, and Cucumber support
-- ✅ **Automatic test discovery** - Zero-config test detection and reporting
+- ✅ **Autostart
 - ✅ **Customizable run parameters** - Full control over test run configuration
-- ✅ **Async test processing** - High-performance parallel result processing
 - ✅ **Advanced customization** - Override core classes for custom behavior
 - ✅ **Test run grouping** - Organize and merge related test runs
 - ✅ **Team collaboration** - Shared runs and real-time reporting
@@ -57,6 +29,47 @@ This is the **official Java reporter** for [Testomat.io](https://testomat.io/) -
 - ⏳ **Enhanced error reporting** - Stack traces and failure analysis
 - ⏳ **Integration hooks** - Pre/post test execution callbacks
 - ⏳ **Advanced filtering** - Custom test selection and reporting rules
+
+> - Supported frameworks at this moment: JUnit5, TestNG, Cucumber  
+> - Supported Java 11+
+---
+
+## Common setup for all frameworks:
+
+1. **Add dependency** to your `pom.xml`:
+
+   ```xml
+   <dependency>
+       <groupId>io.testomat</groupId>
+       <artifactId>java-reporter-distribution</artifactId>
+       <version>x.x.x</version>
+   </dependency>
+   ```
+   - **Actual by now is 0.6.7, but it might be not shown in the Maven Central by default (change version manually)**
+   
+
+2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
+3. **Set your API key** as environment variable:
+   ```bash
+   export testomatio.api.key=tstmt_your_key_here
+   ```
+   - Or create the `testomatio.properties` file in your `resources` folder and add into it:
+   ```properties
+   testomatio.api.key=tstmt_your_key_here
+   ```
+   
+4. Also provide run title in the `testomatio.run.title` property.
+5. Run your tests.
+---
+
+## JUNIT
+> - Supported versions: 5.x
+> - Tested on 5.9.2
+
+
+
+
+
 
 ## 🖥️ System Requirements
 
