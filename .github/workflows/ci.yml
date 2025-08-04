@@ -3,7 +3,7 @@ name: Java CI
 on:
   push:
   pull_request:
-    branches: [ 1.x ]
+    branches: [ main, master, 1.x, develop ]
 
 jobs:
   test:
@@ -18,5 +18,68 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
-      - name: Run tests
-        run: mvn clean test
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build and install modules in dependency order
+        run: |
+          echo "🏗️ Building and installing modules in dependency order..."
+          echo "This ensures all internal dependencies are available locally before testing"
+          
+          # Module build order (based on dependencies)
+          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
+          
+          for module in "${MODULES[@]}"; do
+            if [ -d "$module" ]; then
+              echo "📦 Building and installing $module..."
+              cd "$module"
+          
+              # Show what version we're building
+              VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+              echo "   Building version: $VERSION"
+          
+              # Install locally (this makes it available for other modules)
+              if mvn clean install -DskipTests -B; then
+                echo "✅ $module v$VERSION built and installed successfully"
+              else
+                echo "❌ Failed to build $module"
+                exit 1
+              fi
+              cd ..
+            else
+              echo "❌ Module $module not found!"
+              exit 1
+            fi
+          done
+          
+          echo "✅ All modules built and installed locally"
+          echo "🔍 Checking what's in local Maven repository:"
+          ls -la ~/.m2/repository/io/testomat/ || echo "Nothing found yet"
+
+      - name: Run tests for all modules
+        run: |
+          echo "🧪 Running tests for all modules..."
+          
+          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
+          
+          for module in "${MODULES[@]}"; do
+            if [ -d "$module" ]; then
+              echo "🧪 Testing $module..."
+              cd "$module"
+              mvn test -B
+              if [ $? -ne 0 ]; then
+                echo "❌ Tests failed for $module"
+                exit 1
+              fi
+              cd ..
+              echo "✅ Tests passed for $module"
+            else
+              echo "⚠️ Module $module not found, skipping tests..."
+            fi
+          done
+          
+          echo "✅ All tests completed successfully"

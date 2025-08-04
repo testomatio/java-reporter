@@ -1,5 +1,6 @@
 #  Testomat.io Java Reporter
 
+
  **Transform your test reporting experience - realtime + easy analytics!  
  Connect your Java tests directly to Testomat.io with minimal setup and maximum insight.**
 ---
@@ -36,6 +37,8 @@ and team collaboration features.
 
 
 
+
+
 ## 🖥️ Supported test frameworks versions
 
 | What you need | Version | We tested with |
@@ -49,6 +52,7 @@ and team collaboration features.
 ## The reporter depends on:
    - `jackson-databind 2.15.2`
    - `javaparser-core 3.27.0`
+
 
 ---
 
@@ -95,6 +99,7 @@ and team collaboration features.
 
 ### TestNG
 No additional actions needed as TestNG handles the extension implicitly.
+
 
 ### Cucumber
 
@@ -158,6 +163,7 @@ This lets you customize how the reporter works by overriding core classes:
 **Step 5:** For Cucumber, update your TestRunner to use your custom class instead of ours.
 
 #### Example Custom Listener:
+
    ```java
       public class CustomCucumberListener extends CucumberListener {
           @Override
@@ -168,6 +174,7 @@ This lets you customize how the reporter works by overriding core classes:
           }
       }
    ```
+
 
 ---
 
@@ -202,6 +209,7 @@ Make your test runs exactly how you want them:
 | **`testomatio.shared.run`**         | Shared run name for team collaboration   | `"team-integration-tests"` |
 | **`testomatio.shared.run.timeout`** | How long to wait for shared run          | `3600`                     |
 | **`testomatio.export.required`**    | Exports your tests code to Testomat.io   | `true`                     |
+
 
 
 
@@ -318,6 +326,14 @@ And the dashboard - something like this:
 
 
 ---
+
+## 📤Method exporting 
+   > You can turn on the method exporting from your code to the Testomat.io platform by adding
+   >```properties
+   >testomatio.export.required=true
+   >```
+   >![export img](img/export.png)
+
 
 ## 🆘 Troubleshooting
 
