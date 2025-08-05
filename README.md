@@ -3,6 +3,7 @@
 
  **Transform your test reporting experience - realtime + easy analytics!  
  Connect your Java tests directly to Testomat.io with minimal setup and maximum insight.**
+
 ---
 
 ## 📖 What is this?
