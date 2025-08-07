@@ -19,20 +19,20 @@ and team collaboration features.
 
 ## Features
 
-| Feature                            | Description                                 | JUnit | TestNG | Cucumber |
-|------------------------------------|---------------------------------------------|:-----:|:------:|:--------:|
-| **Complete framework integration** | Full framework support and compatibility    |   ✅   |   ✅    |    ✅     |
-| **Autostart on tests run**         | Automatic integration with test execution   |   ✅   |   ✅    |    ✅     |
-| **Shared run**                     | Collaborative test execution sharing        |   ✅   |   ✅    |    ✅     |
-| **Test runs grouping**             | Organize and categorize test executions     |   ✅   |   ✅    |    ✅     |
-| **Public sharable link**           | Generate public URLs for test run results   |   ✅   |   ✅    |    ✅     |
-| **Test code export**               | Export test code from codebase to platform  |   ✅   |   ✅    |    ✅     |
-| **Advanced error reporting**       | Detailed test failure/skip descriptions     |   ✅   |   ✅    |    ✅     |
-| **TestId import**                  | Import test IDs from platform into codebase |   ⏳   |   ⏳    |    ⏳     |
-| **Parametrized tests support**     | Enhanced support for parameterized testing  |   ⏳   |   ⏳    |    ⏳     |
-| **Test artifacts support**         | Screenshots, logs, and file attachments     |   ⏳   |   ⏳    |    ⏳     |
-| **Step-by-step reporting**         | Detailed test step execution tracking       |   ⏳   |   ⏳    |    ⏳     |
-| **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)   |       |        |          |
+| Feature                            | Description                                        | JUnit | TestNG | Cucumber |
+|------------------------------------|----------------------------------------------------|:-----:|:------:|:--------:|
+| **Complete framework integration** | Full framework support and compatibility           |   ✅   |   ✅    |    ✅     |
+| **Autostart on tests run**         | Automatic integration with test execution          |   ✅   |   ✅    |    ✅     |
+| **Shared run**                     | Collaborative test execution sharing               |   ✅   |   ✅    |    ✅     |
+| **Test runs grouping**             | Organize and categorize test executions            |   ✅   |   ✅    |    ✅     |
+| **Public sharable link**           | Generate public URLs for test run results          |   ✅   |   ✅    |    ✅     |
+| **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅     |
+| **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅     |
+| **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅     |
+| **Parametrized tests support**     | Enhanced support for parameterized testing         |   ⏳   |   ⏳    |    ⏳     |
+| **Test artifacts support**         | Screenshots, logs, and file attachments            |   ⏳   |   ⏳    |    ⏳     |
+| **Step-by-step reporting**         | Detailed test step execution tracking              |   ⏳   |   ⏳    |    ⏳     |
+| **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |       |        |          |
 
 
 
@@ -280,6 +280,22 @@ Feature: User Authentication
 
 
 **Result:** Your Testomat.io dashboard shows exactly which tests ran, with clear titles and perfect traceability! 🎯
+
+## Test ids import
+You can either add @TestId() annotations manually or import them from the testomat.io using the **Java-Chek-Tests** CLI.  
+Use these oneliners to **download jar and update** ids in one move  
+
+>- UNIX, MACOS:  
+   `export TESTOMATIO_URL=... && \export TESTOMATIO=... && curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar && java -jar java-check-tests.jar update-ids`
+
+>- WINDOWS cdm:  
+   `set TESTOMATIO_URL=...&& set TESTOMATIO=...&& curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar&& java -jar java-check-tests.jar update-ids`
+
+**Where TESTOMATIO_URL is server url and TESTOMATIO is your porject api key.**  
+**Be patient to the whitespaces in the Windows command.**
+
+> For more details please read the description of full CLI functionality here:  
+> https://github.com/testomatio/java-check-tests
 
 ---
 
