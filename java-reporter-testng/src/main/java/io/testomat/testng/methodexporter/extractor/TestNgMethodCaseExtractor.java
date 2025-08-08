@@ -81,13 +81,14 @@ public class TestNgMethodCaseExtractor {
             boolean isTest = method.getAnnotations().stream()
                     .anyMatch(ann -> {
                         String name = ann.getNameAsString();
-                        return "Test".equals(name)
-                                || "DataProvider".equals(name)
-                                || "Factory".equals(name);
+                        return "Test".equals(name);
                     });
 
             if (isTest) {
                 log.debug("Method {} is a test method", method.getNameAsString());
+            } else {
+                log.debug("Method {} is NOT a test method - skipping export",
+                        method.getNameAsString());
             }
 
             return isTest;
