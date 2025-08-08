@@ -87,7 +87,8 @@ public class TestNgMethodCaseExtractor {
             if (isTest) {
                 log.debug("Method {} is a test method", method.getNameAsString());
             } else {
-                log.debug("Method {} is NOT a test method - skipping export", method.getNameAsString());
+                log.debug("Method {} is NOT a test method - skipping export",
+                        method.getNameAsString());
             }
 
             return isTest;
