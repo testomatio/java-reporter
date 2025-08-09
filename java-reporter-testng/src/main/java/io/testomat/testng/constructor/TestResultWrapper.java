@@ -13,6 +13,8 @@ public class TestResultWrapper {
     private final ITestResult testResult;
     private final String message;
     private final String reason;
+    private final Object example;  // Додано для параметризованих тестів
+    private final String rid;      // Додано для параметризованих тестів
 
     private TestResultWrapper(Builder builder) {
         this.testMetadata = builder.testMetadata;
@@ -20,6 +22,8 @@ public class TestResultWrapper {
         this.testResult = builder.testResult;
         this.message = builder.message;
         this.reason = builder.reason;
+        this.example = builder.example;
+        this.rid = builder.rid;
     }
 
     /**
@@ -38,6 +42,8 @@ public class TestResultWrapper {
         private ITestResult testResult;
         private String message;
         private String reason;
+        private Object example;
+        private String rid;
 
         public Builder withTestMetadata(TestMetadata testMetadata) {
             this.testMetadata = testMetadata;
@@ -64,11 +70,22 @@ public class TestResultWrapper {
             return this;
         }
 
+        public Builder withExample(Object example) {
+            this.example = example;
+            return this;
+        }
+
+        public Builder withRid(String rid) {
+            this.rid = rid;
+            return this;
+        }
+
         public TestResultWrapper build() {
             return new TestResultWrapper(this);
         }
     }
 
+    // Існуючі геттери
     public TestMetadata getTestMetadata() {
         return testMetadata;
     }
@@ -87,5 +104,14 @@ public class TestResultWrapper {
 
     public String getReason() {
         return reason;
+    }
+
+    // Нові геттери для параметрів
+    public Object getExample() {
+        return example;
+    }
+
+    public String getRid() {
+        return rid;
     }
 }

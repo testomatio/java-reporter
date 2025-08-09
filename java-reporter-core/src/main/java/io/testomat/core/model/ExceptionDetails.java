@@ -1,9 +1,10 @@
 package io.testomat.core.model;
 
 /**
- * Immutable container for exception message and stack trace.
+ * Container for exception details extracted from test failures.
+ * Holds message and stack trace information for reporting.
  */
-public final class ExceptionDetails {
+public class ExceptionDetails {
     private final String message;
     private final String stack;
 
@@ -13,7 +14,9 @@ public final class ExceptionDetails {
     }
 
     /**
-     * Creates empty exception details with null message and stack.
+     * Creates empty exception details for tests without exceptions.
+     *
+     * @return ExceptionDetails with null message and stack
      */
     public static ExceptionDetails empty() {
         return new ExceptionDetails(null, null);
