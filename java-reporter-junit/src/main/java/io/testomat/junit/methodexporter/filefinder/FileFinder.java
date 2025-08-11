@@ -75,6 +75,7 @@ public class FileFinder {
             }
 
         } catch (Exception e) {
+            throw new MethodExporterException("Failed to convert class path to java file", e);
         }
 
         return null;
