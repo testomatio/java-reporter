@@ -8,13 +8,16 @@ public class TestResult {
     private String status;
     private String message;
     private String stack;
+    private Object example;
+    private String rid;
 
     public TestResult() {
     }
 
     public TestResult(String title, String testId,
                       String suiteTitle, String file,
-                      String status, String message, String stack) {
+                      String status, String message, String stack,
+                      Object example, String rid) {
         this.title = title;
         this.testId = testId;
         this.suiteTitle = suiteTitle;
@@ -22,6 +25,8 @@ public class TestResult {
         this.status = status;
         this.message = message;
         this.stack = stack;
+        this.example = example;
+        this.rid = rid;
     }
 
     public static class Builder {
@@ -32,6 +37,8 @@ public class TestResult {
         private String status;
         private String message;
         private String stack;
+        private Object example;
+        private String rid;
 
         public Builder withTitle(String title) {
             this.title = title;
@@ -68,8 +75,18 @@ public class TestResult {
             return this;
         }
 
+        public Builder withExample(Object example) {
+            this.example = example;
+            return this;
+        }
+
+        public Builder withRid(String rid) {
+            this.rid = rid;
+            return this;
+        }
+
         public TestResult build() {
-            return new TestResult(title, testId, suiteTitle, file, status, message, stack);
+            return new TestResult(title, testId, suiteTitle, file, status, message, stack, example, rid);
         }
     }
 
@@ -131,5 +148,21 @@ public class TestResult {
 
     public void setStack(String stack) {
         this.stack = stack;
+    }
+
+    public Object getExample() {
+        return example;
+    }
+
+    public void setExample(Object example) {
+        this.example = example;
+    }
+
+    public String getRid() {
+        return rid;
+    }
+
+    public void setRid(String rid) {
+        this.rid = rid;
     }
 }

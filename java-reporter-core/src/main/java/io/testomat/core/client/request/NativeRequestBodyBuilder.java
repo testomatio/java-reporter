@@ -1,6 +1,5 @@
 package io.testomat.core.client.request;
 
-
 import static io.testomat.core.constants.CommonConstants.API_KEY_STRING;
 import static io.testomat.core.constants.CommonConstants.TESTS_STRING;
 import static io.testomat.core.constants.PropertyNameConstants.CREATE_TEST_PROPERTY_NAME;
@@ -25,6 +24,7 @@ import java.util.Map;
 /**
  * JSON request body builder for Testomat.io API operations.
  * Handles serialization and structure creation for all API endpoints.
+ * Enhanced to support parameterized tests with example data and RID.
  */
 public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     private final String createParam;
@@ -107,6 +107,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
     /**
      * Converts test result to map for JSON serialization.
+     * Enhanced to include parameterized test fields (example and RID).
      */
     private Map<String, Object> buildTestResultMap(TestResult result) {
         Map<String, Object> body = new HashMap<>();
@@ -127,9 +128,19 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         if (result.getStack() != null) {
             body.put(ApiRequestFields.STACK, result.getStack());
         }
+
+        if (result.getExample() != null) {
+            body.put("example", result.getExample());
+        }
+
+        if (result.getRid() != null) {
+            body.put("rid", result.getRid());
+        }
+
         if (this.createParam != null) {
             body.put("create", "true");
         }
+
         return body;
     }
 

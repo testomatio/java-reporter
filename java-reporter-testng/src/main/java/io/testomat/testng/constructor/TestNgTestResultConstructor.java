@@ -10,6 +10,7 @@ import org.testng.ITestResult;
 /**
  * Constructs test case results from TestNG test results.
  * Supports custom messages/reasons and extracts exception details from test results.
+ * Enhanced to support parameterized tests with example data and RID.
  */
 public class TestNgTestResultConstructor {
 
@@ -51,6 +52,7 @@ public class TestNgTestResultConstructor {
 
     /**
      * Builds test result with provided message and stack trace.
+     * Enhanced to include parameterized test data (example and RID).
      */
     private TestResult buildTestResult(TestResultWrapper wrapper, String message, String stack) {
         var metadata = wrapper.getTestMetadata();
@@ -62,6 +64,8 @@ public class TestNgTestResultConstructor {
                 .withStatus(wrapper.getStatus())
                 .withMessage(message)
                 .withStack(stack)
+                .withExample(wrapper.getExample())
+                .withRid(wrapper.getRid())
                 .build();
     }
 

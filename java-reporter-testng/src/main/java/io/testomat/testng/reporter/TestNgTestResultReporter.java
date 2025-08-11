@@ -10,6 +10,7 @@ import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.testng.constructor.TestNgTestResultConstructor;
 import io.testomat.testng.constructor.TestResultWrapper;
 import io.testomat.testng.extractor.TestNgMetaDataExtractor;
+import io.testomat.testng.extractor.TestNgParameterExtractor;
 import io.testomat.testng.extractor.TestNgTestWrapper;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -23,12 +24,14 @@ public class TestNgTestResultReporter {
 
     private final TestNgTestResultConstructor resultConstructor;
     private final TestNgMetaDataExtractor metaDataExtractor;
+    private final TestNgParameterExtractor parameterExtractor;
     private final GlobalRunManager runManager;
     private final Set<String> processedTests;
 
     public TestNgTestResultReporter() {
         this.resultConstructor = new TestNgTestResultConstructor();
         this.metaDataExtractor = new TestNgMetaDataExtractor();
+        this.parameterExtractor = new TestNgParameterExtractor();
         this.runManager = GlobalRunManager.getInstance();
         this.processedTests = new HashSet<>();
     }
@@ -38,20 +41,31 @@ public class TestNgTestResultReporter {
      */
     public TestNgTestResultReporter(TestNgTestResultConstructor resultConstructor,
                                     TestNgMetaDataExtractor metaDataExtractor,
+                                    TestNgParameterExtractor parameterExtractor,
                                     GlobalRunManager runManager) {
         this.resultConstructor = resultConstructor;
         this.metaDataExtractor = metaDataExtractor;
+        this.parameterExtractor = parameterExtractor;
         this.runManager = runManager;
         this.processedTests = new HashSet<>();
     }
 
     /**
      * Reports test result for regular TestNG execution.
+     * Enhanced to support parameterized tests with unique identification.
      */
     public void reportTestResult(ITestResult result, String status) {
-        String methodKey = result.getTestClass().getName()
+        if (result == null || result.getMethod() == null || result.getTestClass() == null) {
+            return;
+        }
+
+        String baseKey = result.getTestClass().getName()
                 + "."
                 + result.getMethod().getMethodName();
+
+        String rid = parameterExtractor.generateRid(result);
+        String methodKey = rid != null ? baseKey + "-" + rid : baseKey;
+
         if (processedTests.contains(methodKey)) {
             return;
         }
@@ -59,7 +73,10 @@ public class TestNgTestResultReporter {
         processedTests.add(methodKey);
         TestNgTestWrapper wrapper = TestNgTestWrapper.forRegularTest(result);
         TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);
-        reportTestResult(metadata, status, null, result);
+
+        Object example = parameterExtractor.extractExample(result);
+
+        reportTestResultWithParameters(metadata, status, null, result, example, rid);
     }
 
     /**
@@ -95,8 +112,21 @@ public class TestNgTestResultReporter {
         });
     }
 
+    /**
+     * Legacy method for backward compatibility - delegates to enhanced method.
+     */
     private void reportTestResult(TestMetadata metadata, String status,
                                   String message, Object frameworkSpecificData) {
+        reportTestResultWithParameters(metadata, status, message,
+                frameworkSpecificData, null, null);
+    }
+
+    /**
+     * Enhanced method to report test results with parameterized test support.
+     */
+    private void reportTestResultWithParameters(TestMetadata metadata, String status,
+                                                String message, Object frameworkSpecificData,
+                                                Object example, String rid) {
         if (!runManager.isActive()) {
             return;
         }
@@ -104,7 +134,9 @@ public class TestNgTestResultReporter {
         try {
             TestResultWrapper.Builder builder = TestResultWrapper.builder()
                     .withTestMetadata(metadata)
-                    .withStatus(status);
+                    .withStatus(status)
+                    .withExample(example)
+                    .withRid(rid);
 
             if (message != null) {
                 builder.withMessage(message);
