@@ -129,7 +129,6 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put(ApiRequestFields.STACK, result.getStack());
         }
 
-        // Додано підтримку параметризованих тестів
         if (result.getExample() != null) {
             body.put("example", result.getExample());
         }

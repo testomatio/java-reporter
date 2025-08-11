@@ -64,8 +64,8 @@ public class TestNgTestResultConstructor {
                 .withStatus(wrapper.getStatus())
                 .withMessage(message)
                 .withStack(stack)
-                .withExample(wrapper.getExample())    // Додано підтримку параметрів
-                .withRid(wrapper.getRid())            // Додано підтримку RID
+                .withExample(wrapper.getExample())
+                .withRid(wrapper.getRid())
                 .build();
     }
 

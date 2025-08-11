@@ -75,7 +75,6 @@ public class FileFinder {
             }
 
         } catch (Exception e) {
-            // Exception handled silently
         }
 
         return null;
