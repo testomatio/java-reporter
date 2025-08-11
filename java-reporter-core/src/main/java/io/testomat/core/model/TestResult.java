@@ -8,25 +8,12 @@ public class TestResult {
     private String status;
     private String message;
     private String stack;
-    private Object example;  // Додано для параметризованих тестів
-    private String rid;      // Додано для параметризованих тестів
+    private Object example;
+    private String rid;
 
     public TestResult() {
     }
 
-    public TestResult(String title, String testId,
-                      String suiteTitle, String file,
-                      String status, String message, String stack) {
-        this.title = title;
-        this.testId = testId;
-        this.suiteTitle = suiteTitle;
-        this.file = file;
-        this.status = status;
-        this.message = message;
-        this.stack = stack;
-    }
-
-    // Новий конструктор з підтримкою параметрів
     public TestResult(String title, String testId,
                       String suiteTitle, String file,
                       String status, String message, String stack,
@@ -107,7 +94,6 @@ public class TestResult {
         return new Builder();
     }
 
-    // Існуючі геттери/сеттери
     public String getTitle() {
         return title;
     }
@@ -164,7 +150,6 @@ public class TestResult {
         this.stack = stack;
     }
 
-    // Нові геттери/сеттери для параметрів
     public Object getExample() {
         return example;
     }

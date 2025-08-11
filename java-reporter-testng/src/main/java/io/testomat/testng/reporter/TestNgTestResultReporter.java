@@ -24,14 +24,14 @@ public class TestNgTestResultReporter {
 
     private final TestNgTestResultConstructor resultConstructor;
     private final TestNgMetaDataExtractor metaDataExtractor;
-    private final TestNgParameterExtractor parameterExtractor;  // Додано
+    private final TestNgParameterExtractor parameterExtractor;
     private final GlobalRunManager runManager;
     private final Set<String> processedTests;
 
     public TestNgTestResultReporter() {
         this.resultConstructor = new TestNgTestResultConstructor();
         this.metaDataExtractor = new TestNgMetaDataExtractor();
-        this.parameterExtractor = new TestNgParameterExtractor();  // Додано
+        this.parameterExtractor = new TestNgParameterExtractor();
         this.runManager = GlobalRunManager.getInstance();
         this.processedTests = new HashSet<>();
     }
@@ -59,7 +59,6 @@ public class TestNgTestResultReporter {
             return;
         }
 
-        // Генеруємо унікальний ключ з урахуванням параметрів
         String baseKey = result.getTestClass().getName()
                 + "."
                 + result.getMethod().getMethodName();
@@ -75,7 +74,6 @@ public class TestNgTestResultReporter {
         TestNgTestWrapper wrapper = TestNgTestWrapper.forRegularTest(result);
         TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);
 
-        // Витягуємо параметри для параметризованих тестів
         Object example = parameterExtractor.extractExample(result);
 
         reportTestResultWithParameters(metadata, status, null, result, example, rid);
@@ -115,6 +113,15 @@ public class TestNgTestResultReporter {
     }
 
     /**
+     * Legacy method for backward compatibility - delegates to enhanced method.
+     */
+    private void reportTestResult(TestMetadata metadata, String status,
+                                  String message, Object frameworkSpecificData) {
+        reportTestResultWithParameters(metadata, status, message,
+                frameworkSpecificData, null, null);
+    }
+
+    /**
      * Enhanced method to report test results with parameterized test support.
      */
     private void reportTestResultWithParameters(TestMetadata metadata, String status,
@@ -128,8 +135,8 @@ public class TestNgTestResultReporter {
             TestResultWrapper.Builder builder = TestResultWrapper.builder()
                     .withTestMetadata(metadata)
                     .withStatus(status)
-                    .withExample(example)      // Додано підтримку параметрів
-                    .withRid(rid);             // Додано підтримку RID
+                    .withExample(example)
+                    .withRid(rid);
 
             if (message != null) {
                 builder.withMessage(message);
@@ -147,14 +154,6 @@ public class TestNgTestResultReporter {
             String testName = metadata != null ? metadata.getTitle() : "Unknown Test";
             throw new ReportTestResultException("Failed to report test result for: " + testName, e);
         }
-    }
-
-    /**
-     * Legacy method for backward compatibility - delegates to enhanced method.
-     */
-    private void reportTestResult(TestMetadata metadata, String status,
-                                  String message, Object frameworkSpecificData) {
-        reportTestResultWithParameters(metadata, status, message, frameworkSpecificData, null, null);
     }
 
     private void reportDisabledTest(Method method, Class<?> testClass) {

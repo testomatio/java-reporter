@@ -13,8 +13,8 @@ public class TestResultWrapper {
     private final ITestResult testResult;
     private final String message;
     private final String reason;
-    private final Object example;  // Додано для параметризованих тестів
-    private final String rid;      // Додано для параметризованих тестів
+    private final Object example;
+    private final String rid;
 
     private TestResultWrapper(Builder builder) {
         this.testMetadata = builder.testMetadata;
@@ -85,7 +85,6 @@ public class TestResultWrapper {
         }
     }
 
-    // Існуючі геттери
     public TestMetadata getTestMetadata() {
         return testMetadata;
     }
@@ -106,7 +105,6 @@ public class TestResultWrapper {
         return reason;
     }
 
-    // Нові геттери для параметрів
     public Object getExample() {
         return example;
     }
