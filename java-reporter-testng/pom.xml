@@ -46,7 +46,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.6.462</version>
+            <version>0.6.8</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
