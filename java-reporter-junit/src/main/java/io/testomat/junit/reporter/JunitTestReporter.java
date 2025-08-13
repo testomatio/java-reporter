@@ -77,12 +77,22 @@ public class JunitTestReporter {
         }
     }
 
+    /**
+     * Generates lock key that ensures uniqueness even when context.getUniqueId()
+     * is the same for retries (which happens when @ParameterizedTest has no name parameter).
+     */
     private String generateLockKey(ExtensionContext context) {
         String uniqueId = context.getUniqueId();
-        if (uniqueId != null) {
-            return uniqueId;
-        }
 
-        return context.getRequiredTestMethod().getName() + "-" + context.getDisplayName();
+        // Add timestamp and thread info to ensure uniqueness for each execution
+        // This fixes the issue where retries have the same uniqueId when no name parameter is specified
+        long timestamp = System.nanoTime();
+        long threadId = Thread.currentThread().getId();
+
+        String enhancedKey = uniqueId + "-t" + threadId + "-n" + timestamp;
+
+        log.trace("Generated lock key: {} for uniqueId: {}", enhancedKey, uniqueId);
+
+        return enhancedKey;
     }
 }
