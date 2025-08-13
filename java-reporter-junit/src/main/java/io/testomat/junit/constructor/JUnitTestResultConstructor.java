@@ -6,13 +6,15 @@ import io.testomat.core.model.TestResult;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.opentest4j.TestAbortedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JUnitTestResultConstructor {
 
+    private static final Logger log = LoggerFactory.getLogger(JUnitTestResultConstructor.class);
     private final JunitMetaDataExtractor metaDataExtractor;
 
     public JUnitTestResultConstructor() {
@@ -23,6 +25,10 @@ public class JUnitTestResultConstructor {
         this.metaDataExtractor = metaDataExtractor;
     }
 
+    /**
+     * Constructs test result with enhanced parameterized test support.
+     * Follows testomat.io documentation for example field format.
+     */
     public TestResult constructTestRunResult(TestMetadata metadata, String message,
                                              String status, ExtensionContext context) {
         if (metadata == null) {
@@ -33,14 +39,16 @@ public class JUnitTestResultConstructor {
         Object example = null;
         String rid = null;
 
+        // Handle parameterized tests
         if (metaDataExtractor.isParameterizedTest(context)) {
-            Map<String, Object> parameters = metaDataExtractor.extractTestParameters(context);
-            if (!parameters.isEmpty()) {
-                example = parameters;
-                rid = metaDataExtractor.generateRid(context, parameters);
+            example = metaDataExtractor.extractTestParameters(context);
+            if (example != null) {
+                rid = context.getUniqueId();
+                log.debug("Parameterized test detected: example={}, rid={}", example, rid);
             }
         }
 
+        // Handle exception details
         if (message != null) {
             stack = extractStackTrace(context);
         } else {
@@ -52,6 +60,9 @@ public class JUnitTestResultConstructor {
         return createTestResult(metadata, message, status, stack, example, rid);
     }
 
+    /**
+     * Creates TestResult with conditional example and rid fields.
+     */
     private TestResult createTestResult(TestMetadata metadata, String message, String status,
                                         String stack, Object example, String rid) {
         TestResult.Builder builder = TestResult.builder()
@@ -63,12 +74,15 @@ public class JUnitTestResultConstructor {
                 .withStatus(status)
                 .withStack(stack);
 
+        // Only add example and rid for parameterized tests
         if (example != null) {
             builder.withExample(example);
+            log.trace("Added example to test result: {}", example);
         }
 
         if (rid != null) {
             builder.withRid(rid);
+            log.trace("Added RID to test result: {}", rid);
         }
 
         return builder.build();

@@ -21,7 +21,7 @@ public class JunitMetaDataExtractor {
 
     public TestMetadata extractTestMetadata(ExtensionContext context) {
         Method testMethod = getTestMethod(context);
-        String title = getTestTitle(testMethod);
+        String title = getTestTitle(context);
         Class<?> testClass = context.getRequiredTestClass();
         String suiteTitle = testClass.getSimpleName();
         String file = getFilePath(testClass);
@@ -30,26 +30,83 @@ public class JunitMetaDataExtractor {
         return new TestMetadata(title, testId, suiteTitle, file);
     }
 
-    public Map<String, Object> extractTestParameters(ExtensionContext context) {
+    /**
+     * Extracts test parameters for parameterized tests.
+     * Returns single parameter directly or Map for multiple parameters.
+     *
+     * @param context JUnit extension context
+     * @return parameter object(s) or null if not parameterized
+     */
+    public Object extractTestParameters(ExtensionContext context) {
         if (!isParameterizedTest(context)) {
-            return new HashMap<>();
+            return null;
         }
 
         Method testMethod = getTestMethod(context);
         Parameter[] parameters = testMethod.getParameters();
         Object[] parameterValues = getParameterValues(context);
 
-        Map<String, Object> parameterMap = new HashMap<>();
+        if (parameterValues == null || parameterValues.length == 0) {
+            log.debug("No parameter values found for parameterized test: {}",
+                    testMethod.getName());
+            return null;
+        }
 
-        if (parameterValues != null && parameterValues.length == parameters.length) {
-            for (int i = 0; i < parameters.length; i++) {
-                String paramName = parameters[i].getName();
-                Object paramValue = parameterValues[i];
-                parameterMap.put(paramName, paramValue);
-            }
+        // Single parameter - return directly (as per testomat.io documentation)
+        if (parameterValues.length == 1) {
+            return parameterValues[0];
+        }
+
+        // Multiple parameters - return as Map with parameter names
+        Map<String, Object> parameterMap = new HashMap<>();
+        String[] parameterNames = extractParameterNames(testMethod, parameterValues.length);
+
+        for (int i = 0; i < parameterValues.length; i++) {
+            String paramName = i < parameterNames.length ? parameterNames[i] : "param" + i;
+            parameterMap.put(paramName, parameterValues[i]);
         }
 
         return parameterMap;
+    }
+
+    /**
+     * Extracts parameter names using multiple strategies.
+     */
+    private String[] extractParameterNames(Method method, int paramCount) {
+        String[] names = new String[paramCount];
+        Parameter[] methodParameters = method.getParameters();
+        boolean hasRealNames = false;
+
+        for (int i = 0; i < Math.min(paramCount, methodParameters.length); i++) {
+            Parameter param = methodParameters[i];
+            if (param.isNamePresent()) {
+                String name = param.getName();
+                // Check if it's a real name (not synthetic like arg0, arg1)
+                if (!name.matches("arg\\d+")) {
+                    names[i] = name;
+                    hasRealNames = true;
+                } else {
+                    names[i] = "param" + i;
+                }
+            } else {
+                names[i] = "param" + i;
+            }
+        }
+
+        if (hasRealNames) {
+            log.debug("Using parameter names from method signature: {}",
+                    String.join(", ", names));
+        } else {
+            log.debug("Using fallback parameter names (compile with -parameters flag for real names): {}",
+                    String.join(", ", names));
+        }
+
+        // Fill remaining positions with default names
+        for (int i = methodParameters.length; i < paramCount; i++) {
+            names[i] = "param" + i;
+        }
+
+        return names;
     }
 
     public boolean isParameterizedTest(ExtensionContext context) {
@@ -62,105 +119,191 @@ public class JunitMetaDataExtractor {
         }
     }
 
-    public synchronized String generateRid(ExtensionContext context,
-                                           Map<String, Object> parameters) {
-        if (!isParameterizedTest(context)) {
-            return null;
-        }
-
-        Method testMethod = getTestMethod(context);
-        String methodName = testMethod.getName();
-
-        String uniqueId = context.getUniqueId();
-        if (uniqueId != null && uniqueId.contains("[")) {
-            String ridSuffix = extractRidFromUniqueId(uniqueId);
-            return methodName + "-" + ridSuffix;
-        }
-
-        if (!parameters.isEmpty()) {
-            String parameterBasedRid = generateRidFromParameters(methodName, parameters);
-            if (parameterBasedRid != null) {
-                return parameterBasedRid;
-            }
-        }
-
-        long counter = ridCounter.incrementAndGet();
-        return methodName + "-" + counter;
-    }
-
-    private String generateRidFromParameters(String methodName, Map<String, Object> parameters) {
+    /**
+     * Enhanced parameter extraction using JUnit's extension context.
+     * More reliable than parsing display names.
+     */
+    private Object[] getParameterValues(ExtensionContext context) {
         try {
-            StringBuilder ridBuilder = new StringBuilder(methodName);
-            ridBuilder.append("-");
-
-            parameters.values().forEach(value -> {
-                String paramStr = value != null ? value.toString() : "null";
-                String cleanParam = sanitizeParameterForRid(paramStr);
-                ridBuilder.append(cleanParam).append("-");
-            });
-
-            if (ridBuilder.length() > 0 && ridBuilder.charAt(ridBuilder.length() - 1) == '-') {
-                ridBuilder.setLength(ridBuilder.length() - 1);
+            // Strategy 1: Try to get from context store (if available)
+            Object[] storedParams = tryGetParametersFromStore(context);
+            if (storedParams != null && storedParams.length > 0) {
+                return storedParams;
             }
 
-            String result = ridBuilder.toString();
-
-            if (result.length() > 50) {
-                result = result.substring(0, 47) + "...";
-            }
-
-            return result;
+            // Strategy 2: Parse from display name (fallback)
+            return parseParametersFromDisplayName(context);
 
         } catch (Exception e) {
-            log.debug("Failed to generate RID from parameters: {}", parameters, e);
+            log.debug("Failed to extract parameter values for test: {}",
+                    context.getDisplayName(), e);
+            return new Object[0];
+        }
+    }
+
+    /**
+     * Attempts to retrieve parameters from JUnit's context store.
+     */
+    private Object[] tryGetParametersFromStore(ExtensionContext context) {
+        try {
+            // Try to get parameters from different store scopes
+            ExtensionContext.Store store = null;
+            Object[] parameters = null;
+            
+            // Strategy 1: Try current context store
+            store = context.getStore(ExtensionContext.Namespace.GLOBAL);
+            parameters = getParametersFromStore(store, context);
+            if (parameters != null) {
+                return parameters;
+            }
+            
+            // Strategy 2: Try parent context store (for parameterized tests)
+            if (context.getParent().isPresent()) {
+                store = context.getParent().get().getStore(ExtensionContext.Namespace.GLOBAL);
+                parameters = getParametersFromStore(store, context);
+                if (parameters != null) {
+                    return parameters;
+                }
+            }
+            
+            // Strategy 3: Try root context store
+            store = context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL);
+            parameters = getParametersFromStore(store, context);
+            if (parameters != null) {
+                return parameters;
+            }
+            
+            // Strategy 4: Try to access JUnit internal parameter storage using reflection
+            return tryReflectiveParameterAccess(context);
+            
+        } catch (Exception e) {
+            log.trace("Could not access JUnit context store", e);
             return null;
         }
     }
-
-    private String sanitizeParameterForRid(String paramValue) {
-        if (paramValue == null || paramValue.isEmpty()) {
-            return "empty";
-        }
-
-        String sanitized = paramValue.replaceAll("[^a-zA-Z0-9]", "");
-
-        if (sanitized.isEmpty()) {
-            return "special";
-        }
-
-        if (sanitized.length() > 15) {
-            sanitized = sanitized.substring(0, 15);
-        }
-
-        return sanitized.toLowerCase();
-    }
-
-    private String extractRidFromUniqueId(String uniqueId) {
+    
+    private Object[] getParametersFromStore(ExtensionContext.Store store, ExtensionContext context) {
+        if (store == null) return null;
+        
         try {
-            if (uniqueId.contains("[test-template-invocation:#")) {
-                String invocation = uniqueId.substring(
-                        uniqueId.lastIndexOf("[test-template-invocation:#") + 27,
-                        uniqueId.lastIndexOf("]")
-                );
-                return invocation;
+            // Try common parameter storage keys
+            String testKey = context.getUniqueId() + ".parameters";
+            Object stored = store.get(testKey);
+            if (stored instanceof Object[]) {
+                return (Object[]) stored;
             }
-
-            if (uniqueId.contains("[") && uniqueId.contains("]")) {
-                String lastBracket = uniqueId.substring(uniqueId.lastIndexOf("[") + 1);
-                if (lastBracket.contains("]")) {
-                    lastBracket = lastBracket.substring(0, lastBracket.indexOf("]"));
-                    if (lastBracket.matches("\\d+")) {
-                        return lastBracket;
+            
+            // Try alternative key patterns
+            String methodKey = context.getDisplayName() + ".args";
+            stored = store.get(methodKey);
+            if (stored instanceof Object[]) {
+                return (Object[]) stored;
+            }
+            
+            // Try generic parameter key
+            stored = store.get("test.parameters");
+            if (stored instanceof Object[]) {
+                return (Object[]) stored;
+            }
+            
+        } catch (Exception e) {
+            log.trace("Error accessing store with context {}: {}", context.getUniqueId(), e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    private Object[] tryReflectiveParameterAccess(ExtensionContext context) {
+        try {
+            // Attempt to access JUnit's internal ParameterizedTestExtensionContext
+            // This is a fallback for when parameters are not stored in the public store
+            Class<?> contextClass = context.getClass();
+            
+            // Look for fields that might contain parameter information
+            java.lang.reflect.Field[] fields = contextClass.getDeclaredFields();
+            for (java.lang.reflect.Field field : fields) {
+                if (field.getName().toLowerCase().contains("parameter") || 
+                    field.getName().toLowerCase().contains("argument")) {
+                    
+                    field.setAccessible(true);
+                    Object value = field.get(context);
+                    
+                    if (value instanceof Object[]) {
+                        log.debug("Found parameters via reflection in field: {}", field.getName());
+                        return (Object[]) value;
                     }
                 }
             }
-
-            return String.valueOf(ridCounter.incrementAndGet());
+            
+            // Try parent class fields if available
+            Class<?> superClass = contextClass.getSuperclass();
+            if (superClass != null) {
+                java.lang.reflect.Field[] superFields = superClass.getDeclaredFields();
+                for (java.lang.reflect.Field field : superFields) {
+                    if (field.getName().toLowerCase().contains("parameter") || 
+                        field.getName().toLowerCase().contains("argument")) {
+                        
+                        field.setAccessible(true);
+                        Object value = field.get(context);
+                        
+                        if (value instanceof Object[]) {
+                            log.debug("Found parameters via reflection in superclass field: {}", field.getName());
+                            return (Object[]) value;
+                        }
+                    }
+                }
+            }
+            
         } catch (Exception e) {
-            log.debug("Failed to extract RID from unique ID: {}, using counter instead",
-                    uniqueId, e);
-            return String.valueOf(ridCounter.incrementAndGet());
+            log.trace("Reflective parameter access failed: {}", e.getMessage());
         }
+        
+        return null;
+    }
+
+    /**
+     * Fallback method to parse parameters from display name.
+     */
+    private Object[] parseParametersFromDisplayName(ExtensionContext context) {
+        String displayName = context.getDisplayName();
+        log.trace("Parsing parameters from display name: {}", displayName);
+
+        if (displayName.contains("[") && displayName.contains("]")) {
+            // Try different display name formats
+            String paramPart = null;
+
+            // Format 1: "methodName[1] argument1, argument2"
+            if (displayName.contains("] ")) {
+                paramPart = displayName.substring(displayName.indexOf("] ") + 2).trim();
+            }
+            // Format 2: "methodName [argument1, argument2]"
+            else if (displayName.contains(" [") && displayName.endsWith("]")) {
+                int start = displayName.indexOf(" [") + 2;
+                int end = displayName.lastIndexOf("]");
+                paramPart = displayName.substring(start, end).trim();
+            }
+
+            if (paramPart != null && !paramPart.isEmpty()) {
+                return parseParameterString(paramPart);
+            }
+        }
+
+        return new Object[0];
+    }
+
+    /**
+     * Parses parameter string into individual parameter values.
+     */
+    private Object[] parseParameterString(String paramString) {
+        // Simple comma-based splitting (can be enhanced for complex cases)
+        String[] params = paramString.split(",");
+        Object[] result = new Object[params.length];
+
+        for (int i = 0; i < params.length; i++) {
+            result[i] = parseParameterValue(params[i].trim());
+        }
+
+        return result;
     }
 
     private String getFilePath(Class<?> testClass) {
@@ -174,6 +317,47 @@ public class JunitMetaDataExtractor {
         return titleAnnotation != null ? titleAnnotation.value() : method.getName();
     }
 
+    private String getTestTitle(ExtensionContext extensionContext) {
+        String baseTitle = extensionContext.getDisplayName();
+        System.out.println("baseTitle: " + baseTitle);
+        
+        try {
+            // Check if this is a parameterized test with a custom name
+            Method testMethod = getTestMethod(extensionContext);
+            System.out.println("actual method name: " + testMethod.getName());
+            ParameterizedTest parameterizedTest = testMethod.getAnnotation(ParameterizedTest.class);
+            
+            if (parameterizedTest != null) {
+                System.out.println("parameterizedTest not null");
+                String parameterizedTestName = parameterizedTest.name();
+                System.out.println("parameterizedTestName is " + parameterizedTestName);
+                
+                // Check if name property is present and not default/empty
+                if (parameterizedTestName != null && !parameterizedTestName.trim().isEmpty() 
+                    && !parameterizedTestName.equals("{default_display_name}")) {
+                    
+                    // Use actual method name as base title, not the display name which might be the custom name
+                    String actualMethodName = testMethod.getName();
+                    String enhancedTitle = actualMethodName + " |>" + parameterizedTestName;
+                    log.info("Enhanced parameterized test title: {}", enhancedTitle);
+                    System.out.println("Final enhanced title: " + enhancedTitle);
+                    return enhancedTitle;
+                } else {
+                    // No custom name property - return actual method name for parameterized tests
+                    String actualMethodName = testMethod.getName();
+                    log.info("Parameterized test title (no custom name): {}", actualMethodName);
+                    System.out.println("Parameterized test using method name: " + actualMethodName);
+                    return actualMethodName;
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Failed to check parameterized test name: {}", e.getMessage());
+        }
+        
+        log.info("Test title: {}", baseTitle);
+        return baseTitle;
+    }
+
     private String getTestId(Method method) {
         TestId testIdAnnotation = method.getAnnotation(TestId.class);
         return testIdAnnotation != null ? testIdAnnotation.value() : null;
@@ -185,33 +369,15 @@ public class JunitMetaDataExtractor {
                         "No test method found in " + context.getDisplayName()));
     }
 
-    private Object[] getParameterValues(ExtensionContext context) {
-        try {
-            String displayName = context.getDisplayName();
-
-            if (displayName.contains("[") && displayName.contains("]")) {
-                String paramPart = displayName.substring(displayName.indexOf(']') + 1).trim();
-                if (!paramPart.isEmpty()) {
-                    String[] params = paramPart.split(",");
-                    Object[] result = new Object[params.length];
-                    for (int i = 0; i < params.length; i++) {
-                        result[i] = parseParameterValue(params[i].trim());
-                    }
-                    return result;
-                }
-            }
-
-            return new Object[0];
-        } catch (Exception e) {
-            log.debug("Failed to extract parameter values from display name: {}",
-                    context.getDisplayName(), e);
-            return new Object[0];
-        }
-    }
-
     private Object parseParameterValue(String value) {
         if (value == null || value.isEmpty()) {
             return value;
+        }
+
+        // Remove quotes if present
+        if ((value.startsWith("\"") && value.endsWith("\"")) ||
+                (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.substring(1, value.length() - 1);
         }
 
         if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
@@ -221,13 +387,13 @@ public class JunitMetaDataExtractor {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException ignored) {
-            log.debug("Failed to parse integer: {}", value);
+            // Not an integer
         }
 
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException ignored) {
-            log.debug("Failed to parse double: {}", value);
+            // Not a double
         }
 
         return value;
