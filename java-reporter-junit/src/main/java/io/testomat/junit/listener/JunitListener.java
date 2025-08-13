@@ -7,6 +7,7 @@ import static io.testomat.core.constants.CommonConstants.SKIPPED;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.junit.extractor.ParameterCaptureExtension;
 import io.testomat.junit.methodexporter.MethodExportManager;
 import io.testomat.junit.reporter.JunitTestReporter;
 import java.util.Optional;
@@ -91,6 +92,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
         reporter.reportTestResult(context, SKIPPED, reason.orElse("Test disabled"));
         exportTestClassIfNotProcessed(context);
+        
+        // Clean up captured parameters to prevent memory leaks
+        ParameterCaptureExtension.cleanupParameters(context);
     }
 
     @Override
@@ -101,6 +105,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
         reporter.reportTestResult(context, PASSED, null);
         exportTestClassIfNotProcessed(context);
+        
+        // Clean up captured parameters to prevent memory leaks
+        ParameterCaptureExtension.cleanupParameters(context);
     }
 
     @Override
@@ -111,6 +118,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
         reporter.reportTestResult(context, SKIPPED, cause.getMessage());
         exportTestClassIfNotProcessed(context);
+        
+        // Clean up captured parameters to prevent memory leaks
+        ParameterCaptureExtension.cleanupParameters(context);
     }
 
     @Override
@@ -121,6 +131,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
         reporter.reportTestResult(context, FAILED, cause.getMessage());
         exportTestClassIfNotProcessed(context);
+        
+        // Clean up captured parameters to prevent memory leaks
+        ParameterCaptureExtension.cleanupParameters(context);
     }
 
     private void exportTestClassIfNotProcessed(ExtensionContext context) {
