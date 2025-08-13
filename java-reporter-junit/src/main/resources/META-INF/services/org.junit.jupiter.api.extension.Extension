@@ -1,1 +1,2 @@
 io.testomat.junit.listener.JunitListener
+io.testomat.junit.extractor.ParameterCaptureExtension

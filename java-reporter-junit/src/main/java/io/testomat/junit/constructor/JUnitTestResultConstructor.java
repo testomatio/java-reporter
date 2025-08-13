@@ -40,13 +40,23 @@ public class JUnitTestResultConstructor {
         String rid = null;
 
         // Handle parameterized tests
+        log.info("=== PARAMETER HANDLING IN CONSTRUCTOR ===");
+        log.info("Checking if test is parameterized for context: {}", context.getUniqueId());
+        
         if (metaDataExtractor.isParameterizedTest(context)) {
+            log.info("Test is parameterized, extracting parameters...");
             example = metaDataExtractor.extractTestParameters(context);
             if (example != null) {
                 rid = context.getUniqueId();
-                log.debug("Parameterized test detected: example={}, rid={}", example, rid);
+                log.info("SUCCESS: Parameterized test detected: example={}, rid={}", example, rid);
+                log.info("Example type: {}", example.getClass().getSimpleName());
+            } else {
+                log.warn("Test is parameterized but no parameters extracted");
             }
+        } else {
+            log.info("Test is not parameterized");
         }
+        log.info("=== PARAMETER HANDLING COMPLETE ===");
 
         // Handle exception details
         if (message != null) {
@@ -75,17 +85,25 @@ public class JUnitTestResultConstructor {
                 .withStack(stack);
 
         // Only add example and rid for parameterized tests
+        log.info("=== BUILDING TEST RESULT ===");
         if (example != null) {
             builder.withExample(example);
-            log.trace("Added example to test result: {}", example);
+            log.info("Added example to test result: {} (type: {})", example, example.getClass().getSimpleName());
+        } else {
+            log.info("No example to add to test result");
         }
 
         if (rid != null) {
             builder.withRid(rid);
-            log.trace("Added RID to test result: {}", rid);
+            log.info("Added RID to test result: {}", rid);
+        } else {
+            log.info("No RID to add to test result");
         }
 
-        return builder.build();
+        TestResult result = builder.build();
+        log.info("Built test result - example field: {}, rid field: {}", result.getExample(), result.getRid());
+        log.info("=== TEST RESULT BUILDING COMPLETE ===");
+        return result;
     }
 
     private ExceptionDetails extractExceptionDetails(ExtensionContext context) {

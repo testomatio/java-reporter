@@ -38,35 +38,9 @@ public class JunitMetaDataExtractor {
      * @return parameter object(s) or null if not parameterized
      */
     public Object extractTestParameters(ExtensionContext context) {
-        if (!isParameterizedTest(context)) {
-            return null;
-        }
-
-        Method testMethod = getTestMethod(context);
-        Parameter[] parameters = testMethod.getParameters();
-        Object[] parameterValues = getParameterValues(context);
-
-        if (parameterValues == null || parameterValues.length == 0) {
-            log.debug("No parameter values found for parameterized test: {}",
-                    testMethod.getName());
-            return null;
-        }
-
-        // Single parameter - return directly (as per testomat.io documentation)
-        if (parameterValues.length == 1) {
-            return parameterValues[0];
-        }
-
-        // Multiple parameters - return as Map with parameter names
-        Map<String, Object> parameterMap = new HashMap<>();
-        String[] parameterNames = extractParameterNames(testMethod, parameterValues.length);
-
-        for (int i = 0; i < parameterValues.length; i++) {
-            String paramName = i < parameterNames.length ? parameterNames[i] : "param" + i;
-            parameterMap.put(paramName, parameterValues[i]);
-        }
-
-        return parameterMap;
+        // Use the improved parameter extractor
+        ImprovedParameterExtractor extractor = new ImprovedParameterExtractor();
+        return extractor.extractTestParameters(context);
     }
 
     /**
@@ -110,29 +84,40 @@ public class JunitMetaDataExtractor {
     }
 
     public boolean isParameterizedTest(ExtensionContext context) {
-        try {
-            Method testMethod = getTestMethod(context);
-            return testMethod.isAnnotationPresent(ParameterizedTest.class);
-        } catch (Exception e) {
-            log.debug("Failed to check if test is parameterized: {}", e.getMessage());
-            return false;
-        }
+        // Use the improved parameter extractor for consistency
+        ImprovedParameterExtractor extractor = new ImprovedParameterExtractor();
+        return extractor.isParameterizedTest(context);
     }
 
     /**
-     * Enhanced parameter extraction using JUnit's extension context.
-     * More reliable than parsing display names.
+     * Enhanced parameter extraction using multiple strategies.
+     * Uses the ParameterCaptureExtension for reliable parameter access.
      */
     private Object[] getParameterValues(ExtensionContext context) {
         try {
-            // Strategy 1: Try to get from context store (if available)
+            // Strategy 1: Use ParameterCaptureExtension (most reliable)
+            Object[] capturedParams = ParameterCaptureExtension.getCapturedParameters(context);
+            if (capturedParams != null && capturedParams.length > 0) {
+                log.debug("Retrieved {} parameters from ParameterCaptureExtension", capturedParams.length);
+                return capturedParams;
+            }
+
+            // Strategy 2: Try to get from context store (legacy fallback)
             Object[] storedParams = tryGetParametersFromStore(context);
             if (storedParams != null && storedParams.length > 0) {
+                log.debug("Retrieved {} parameters from context store", storedParams.length);
                 return storedParams;
             }
 
-            // Strategy 2: Parse from display name (fallback)
-            return parseParametersFromDisplayName(context);
+            // Strategy 3: Parse from display name (last resort)
+            Object[] parsedParams = parseParametersFromDisplayName(context);
+            if (parsedParams != null && parsedParams.length > 0) {
+                log.debug("Parsed {} parameters from display name", parsedParams.length);
+                return parsedParams;
+            }
+
+            log.debug("No parameters found for test: {}", context.getDisplayName());
+            return new Object[0];
 
         } catch (Exception e) {
             log.debug("Failed to extract parameter values for test: {}",

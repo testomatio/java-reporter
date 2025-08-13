@@ -64,10 +64,19 @@ public class JunitTestReporter {
                     metadata, message, status, context);
 
             String uniqueId = context.getUniqueId();
-            log.debug("Reporting test: {} [{}] with status: {}",
-                    result.getTitle(), uniqueId, status);
+            log.info("=== REPORTING TEST RESULT ===");
+            log.info("Test: {} [{}] with status: {}", result.getTitle(), uniqueId, status);
+            log.info("Test result example field: {}", result.getExample());
+            log.info("Test result rid field: {}", result.getRid());
+            
+            if (result.getExample() != null) {
+                log.info("SENDING PARAMETERS: {} (type: {})", result.getExample(), result.getExample().getClass().getSimpleName());
+            } else {
+                log.info("NO PARAMETERS TO SEND");
+            }
 
             runManager.reportTest(result);
+            log.info("=== TEST RESULT REPORTED ===");
 
         } catch (Exception e) {
             String testName = metadata != null ? metadata.getTitle() : "Unknown Test";
