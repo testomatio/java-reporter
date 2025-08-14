@@ -59,7 +59,15 @@ public class JunitTestReporter {
     private void doReportTestResult(ExtensionContext context, String status, String message) {
         TestMetadata metadata = null;
         try {
+            System.out.println("\n═══════════════════════════════════════════════════════════════");
+            System.out.println("🚀 REPORTER: Processing test result for API submission");
+            
             metadata = metaDataExtractor.extractTestMetadata(context);
+            System.out.println("  📋 Extracted metadata: " + metadata.getTitle());
+            System.out.println("  🔍 Test method: " + context.getTestMethod().map(m -> m.getName()).orElse("unknown"));
+            System.out.println("  🏷️  Display name: " + context.getDisplayName());
+            System.out.println("  🆔 Unique ID: " + context.getUniqueId());
+            
             TestResult result = resultConstructor.constructTestRunResult(
                     metadata, message, status, context);
 
@@ -69,19 +77,47 @@ public class JunitTestReporter {
             log.info("Test result example field: {}", result.getExample());
             log.info("Test result rid field: {}", result.getRid());
             
+            System.out.println("  📝 Final test title: " + result.getTitle());
+            System.out.println("  📊 Status: " + status);
+            System.out.println("  🆔 RID: " + result.getRid());
+            
             if (result.getExample() != null) {
                 log.info("SENDING PARAMETERS: {} (type: {})", result.getExample(), result.getExample().getClass().getSimpleName());
+                System.out.println("  ✅ PARAMETERS EXTRACTED:");
+                System.out.println("     💎 Raw parameter object: " + result.getExample());
+                System.out.println("     📊 Parameter type: " + result.getExample().getClass().getSimpleName());
+                System.out.println("     📋 Formatted for API: " + formatExampleForConsole(result.getExample()));
+                
+                // Additional detailed parameter analysis
+                if (result.getExample() instanceof java.util.Map) {
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> paramMap = (java.util.Map<String, Object>) result.getExample();
+                    System.out.println("     🗺️  Parameter map contains " + paramMap.size() + " entries:");
+                    for (java.util.Map.Entry<String, Object> entry : paramMap.entrySet()) {
+                        System.out.println("       " + entry.getKey() + " = " + formatExampleForConsole(entry.getValue()));
+                    }
+                } else {
+                    System.out.println("     🔢 Single parameter value: " + formatExampleForConsole(result.getExample()));
+                }
+                
             } else {
                 log.info("NO PARAMETERS TO SEND");
+                System.out.println("  ❌ NO PARAMETERS EXTRACTED - sending test without example field");
+                System.out.println("     ⚠️  This test will appear without parameters in the UI");
             }
 
+            System.out.println("  🌐 Sending to testomat.io API...");
             runManager.reportTest(result);
             log.info("=== TEST RESULT REPORTED ===");
+            System.out.println("✅ REPORTER: Test result successfully sent to testomat.io API!");
+            System.out.println("═══════════════════════════════════════════════════════════════\n");
 
         } catch (Exception e) {
             String testName = metadata != null ? metadata.getTitle() : "Unknown Test";
             String uniqueId = context.getUniqueId();
             log.error("Failed to report test result for: {} [{}]", testName, uniqueId, e);
+            System.out.println("❌ REPORTER ERROR: Failed to send test result - " + e.getMessage());
+            System.out.println("═══════════════════════════════════════════════════════════════\n");
             throw new ReportTestResultException("Failed to report test result for: " + testName, e);
         }
     }
@@ -103,5 +139,51 @@ public class JunitTestReporter {
         log.trace("Generated lock key: {} for uniqueId: {}", enhancedKey, uniqueId);
 
         return enhancedKey;
+    }
+
+    /**
+     * Formats the example parameter for console display, handling special cases.
+     */
+    private String formatExampleForConsole(Object example) {
+        if (example == null) {
+            return "NULL";
+        }
+        
+        if (example instanceof String) {
+            String str = (String) example;
+            if (str.isEmpty()) {
+                return "EMPTY_STRING (\"\")";
+            }
+            
+            // Replace invisible characters with visible representations
+            String display = str
+                .replace(" ", "·")        // space -> middle dot
+                .replace("\t", "→")       // tab -> arrow
+                .replace("\n", "↵")       // newline -> return symbol
+                .replace("\r", "⤶");      // carriage return -> symbol
+            
+            if (str.isBlank()) {
+                return "WHITESPACE (\"" + display + "\") [length=" + str.length() + "]";
+            }
+            
+            return "\"" + display + "\"";
+        }
+        
+        if (example instanceof java.util.Map) {
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> map = (java.util.Map<String, Object>) example;
+            StringBuilder sb = new StringBuilder("{");
+            boolean first = true;
+            for (java.util.Map.Entry<String, Object> entry : map.entrySet()) {
+                if (!first) sb.append(", ");
+                sb.append(entry.getKey()).append(": ");
+                sb.append(formatExampleForConsole(entry.getValue()));
+                first = false;
+            }
+            sb.append("}");
+            return sb.toString();
+        }
+        
+        return example.toString() + " (" + example.getClass().getSimpleName() + ")";
     }
 }

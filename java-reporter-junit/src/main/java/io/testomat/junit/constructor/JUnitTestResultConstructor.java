@@ -45,16 +45,24 @@ public class JUnitTestResultConstructor {
         
         if (metaDataExtractor.isParameterizedTest(context)) {
             log.info("Test is parameterized, extracting parameters...");
+            System.out.println("🔧 TEST CONSTRUCTOR: Extracting parameters for parameterized test");
+            
             example = metaDataExtractor.extractTestParameters(context);
             if (example != null) {
                 rid = context.getUniqueId();
                 log.info("SUCCESS: Parameterized test detected: example={}, rid={}", example, rid);
                 log.info("Example type: {}", example.getClass().getSimpleName());
+                
+                System.out.println("✅ TEST CONSTRUCTOR: Successfully extracted parameters!");
+                System.out.println("  📦 Example: " + formatExampleForConsole(example));
+                System.out.println("  🆔 RID: " + rid);
             } else {
                 log.warn("Test is parameterized but no parameters extracted");
+                System.out.println("❌ TEST CONSTRUCTOR: Test is parameterized but no parameters were extracted");
             }
         } else {
             log.info("Test is not parameterized");
+            System.out.println("ℹ️  TEST CONSTRUCTOR: Test is not parameterized, skipping parameter extraction");
         }
         log.info("=== PARAMETER HANDLING COMPLETE ===");
 
@@ -137,5 +145,51 @@ public class JUnitTestResultConstructor {
 
     private boolean isReportableException(Throwable throwable) {
         return !(throwable instanceof TestAbortedException);
+    }
+
+    /**
+     * Formats the example parameter for console display, handling special cases.
+     */
+    private String formatExampleForConsole(Object example) {
+        if (example == null) {
+            return "NULL";
+        }
+        
+        if (example instanceof String) {
+            String str = (String) example;
+            if (str.isEmpty()) {
+                return "EMPTY_STRING (\"\")";
+            }
+            
+            // Replace invisible characters with visible representations
+            String display = str
+                .replace(" ", "·")        // space -> middle dot
+                .replace("\t", "→")       // tab -> arrow
+                .replace("\n", "↵")       // newline -> return symbol
+                .replace("\r", "⤶");      // carriage return -> symbol
+            
+            if (str.isBlank()) {
+                return "WHITESPACE (\"" + display + "\") [length=" + str.length() + "]";
+            }
+            
+            return "\"" + display + "\"";
+        }
+        
+        if (example instanceof java.util.Map) {
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> map = (java.util.Map<String, Object>) example;
+            StringBuilder sb = new StringBuilder("{");
+            boolean first = true;
+            for (java.util.Map.Entry<String, Object> entry : map.entrySet()) {
+                if (!first) sb.append(", ");
+                sb.append(entry.getKey()).append(": ");
+                sb.append(formatExampleForConsole(entry.getValue()));
+                first = false;
+            }
+            sb.append("}");
+            return sb.toString();
+        }
+        
+        return example.toString() + " (" + example.getClass().getSimpleName() + ")";
     }
 }
