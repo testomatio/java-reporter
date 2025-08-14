@@ -45,8 +45,11 @@ public class ImprovedParameterExtractor {
         
         
         if (!isParameterizedTest(context)) {
+            log.info("Test is not parameterized: {}", uniqueId);
             return null;
         }
+        
+        log.info("Parameterized test detected: {}", uniqueId);
 
 
         try {
@@ -58,32 +61,45 @@ public class ImprovedParameterExtractor {
 
             // Strategy 1: Use TestMethodParameterExtractor (method invocation interception)
             Object[] parameters = TestMethodParameterExtractor.getCapturedParameters(context);
+            log.info("Strategy 1 - TestMethodParameterExtractor: {} parameters found", 
+                    parameters != null ? parameters.length : 0);
             if (parameters != null && parameters.length > 0) {
                 Object result = formatParameters(parameters, testMethod);
+                log.info("Strategy 1 SUCCESS: {}", result);
                 return result;
             }
 
             // Strategy 2: Use ParameterInterceptorExtension (context-based reflection)
             parameters = ParameterInterceptorExtension.getCapturedParameters(context);
+            log.info("Strategy 2 - ParameterInterceptorExtension: {} parameters found", 
+                    parameters != null ? parameters.length : 0);
             if (parameters != null && parameters.length > 0) {
                 Object result = formatParameters(parameters, testMethod);
+                log.info("Strategy 2 SUCCESS: {}", result);
                 return result;
             }
 
             // Strategy 3: Legacy reflection approach
             parameters = tryExtractParametersFromJUnitContext(context);
+            log.info("Strategy 3 - Legacy reflection: {} parameters found", 
+                    parameters != null ? parameters.length : 0);
             if (parameters != null && parameters.length > 0) {
                 Object result = formatParameters(parameters, testMethod);
+                log.info("Strategy 3 SUCCESS: {}", result);
                 return result;
             }
 
             // Strategy 4: Enhanced display name parsing (fallback)
             parameters = parseParametersFromDisplayName(context.getDisplayName());
+            log.info("Strategy 4 - Display name parsing: {} parameters found from '{}'", 
+                    parameters != null ? parameters.length : 0, context.getDisplayName());
             if (parameters != null && parameters.length > 0) {
                 Object result = formatParameters(parameters, testMethod);
+                log.info("Strategy 4 SUCCESS: {}", result);
                 return result;
             }
 
+            log.info("All parameter extraction strategies failed for: {}", uniqueId);
             return null;
 
         } catch (Exception e) {
@@ -209,7 +225,7 @@ public class ImprovedParameterExtractor {
      * Enhanced display name parsing with multiple pattern matching.
      */
     private Object[] parseParametersFromDisplayName(String displayName) {
-        if (displayName == null || displayName.trim().isEmpty()) {
+        if (displayName == null) {
             return null;
         }
 
@@ -237,14 +253,14 @@ public class ImprovedParameterExtractor {
      * Parses a parameter string into individual values with better type detection.
      */
     private Object[] parseParameterString(String paramString) {
-        if (paramString == null || paramString.trim().isEmpty()) {
+        if (paramString == null) {
             return null;
         }
 
         try {
-            // Handle single parameter case
+            // Handle single parameter case (don't trim - preserve whitespace parameters)
             if (!paramString.contains(",")) {
-                Object parsed = parseValue(paramString.trim());
+                Object parsed = parseValue(paramString);
                 return new Object[]{parsed};
             }
 
@@ -253,7 +269,7 @@ public class ImprovedParameterExtractor {
             Object[] result = new Object[parts.length];
 
             for (int i = 0; i < parts.length; i++) {
-                result[i] = parseValue(parts[i].trim());
+                result[i] = parseValue(parts[i]);
             }
 
             return result;
@@ -310,28 +326,31 @@ public class ImprovedParameterExtractor {
     private Object parseValue(String value) {
         if (value == null) return null;
         
-        value = value.trim();
-        if (value.isEmpty()) return "";
+        // Don't trim - preserve whitespace parameters as-is
+        String trimmed = value.trim();
+        
+        // If the value is empty after trimming, return the original (could be whitespace)
+        if (trimmed.isEmpty()) return value;
 
-        // Handle quoted strings
-        if ((value.startsWith("\"") && value.endsWith("\"")) ||
-            (value.startsWith("'") && value.endsWith("'"))) {
-            return value.substring(1, value.length() - 1);
+        // Handle quoted strings (use trimmed for quote detection)
+        if ((trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+            (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+            return trimmed.substring(1, trimmed.length() - 1);
         }
 
-        // Handle null
-        if ("null".equalsIgnoreCase(value)) return null;
+        // Handle null (use trimmed for comparison)
+        if ("null".equalsIgnoreCase(trimmed)) return null;
 
-        // Handle booleans
-        if ("true".equalsIgnoreCase(value)) return true;
-        if ("false".equalsIgnoreCase(value)) return false;
+        // Handle booleans (use trimmed for comparison)
+        if ("true".equalsIgnoreCase(trimmed)) return true;
+        if ("false".equalsIgnoreCase(trimmed)) return false;
 
-        // Handle numbers
+        // Handle numbers (use trimmed for parsing)
         try {
-            if (value.contains(".")) {
-                return Double.parseDouble(value);
+            if (trimmed.contains(".")) {
+                return Double.parseDouble(trimmed);
             } else {
-                long longVal = Long.parseLong(value);
+                long longVal = Long.parseLong(trimmed);
                 return (longVal >= Integer.MIN_VALUE && longVal <= Integer.MAX_VALUE) ? 
                        (int) longVal : longVal;
             }
@@ -339,33 +358,51 @@ public class ImprovedParameterExtractor {
             // Not a number
         }
 
-        return value; // Return as string
+        return value; // Return original value (preserving whitespace)
     }
 
     /**
      * Formats parameters for reporting based on count and method signature.
      */
     private Object formatParameters(Object[] parameters, Method testMethod) {
-        if (parameters == null || parameters.length == 0) {
-            return null;
-        }
-
         // Always return parameters as map with parameter names for consistency
         Map<String, Object> paramMap = new HashMap<>();
         Parameter[] methodParams = testMethod.getParameters();
         
-        for (int i = 0; i < parameters.length; i++) {
-            String paramName;
-            if (i < methodParams.length && methodParams[i].isNamePresent()) {
-                paramName = methodParams[i].getName();
-                // Check if it's a real name or synthetic
-                if (paramName.matches("arg\\d+")) {
-                    paramName = "param" + i;
+        // If no parameters captured but method expects them, create null entries
+        if (parameters == null || parameters.length == 0) {
+            if (methodParams.length > 0) {
+                for (int i = 0; i < methodParams.length; i++) {
+                    String paramName;
+                    if (methodParams[i].isNamePresent()) {
+                        paramName = methodParams[i].getName();
+                        // Check if it's a real name or synthetic
+                        if (paramName.matches("arg\\d+")) {
+                            paramName = "param" + i;
+                        }
+                    } else {
+                        paramName = "param" + i;
+                    }
+                    paramMap.put(paramName, null);
                 }
             } else {
-                paramName = "param" + i;
+                return null; // Not a parameterized test
             }
-            paramMap.put(paramName, parameters[i]);
+        } else {
+            // Use captured parameters
+            for (int i = 0; i < parameters.length; i++) {
+                String paramName;
+                if (i < methodParams.length && methodParams[i].isNamePresent()) {
+                    paramName = methodParams[i].getName();
+                    // Check if it's a real name or synthetic
+                    if (paramName.matches("arg\\d+")) {
+                        paramName = "param" + i;
+                    }
+                } else {
+                    paramName = "param" + i;
+                }
+                paramMap.put(paramName, parameters[i]);
+            }
         }
 
         return paramMap;
