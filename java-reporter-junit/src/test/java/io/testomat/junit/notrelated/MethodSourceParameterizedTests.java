@@ -1,14 +1,17 @@
-package io.testomat.junit;
+package io.testomat.junit.notrelated;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.testomat.junit.extractor.TestMethodParameterExtractor;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@ExtendWith(TestMethodParameterExtractor.class)
 public class MethodSourceParameterizedTests {
 
     static Stream<String> provideStringValues() {
