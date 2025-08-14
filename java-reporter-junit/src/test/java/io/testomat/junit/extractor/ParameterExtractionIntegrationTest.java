@@ -39,8 +39,8 @@ class ParameterExtractionIntegrationTest {
         
         // In real scenarios, the parameter extraction would happen in the JunitListener
         // This test verifies the parameterized test execution works
-        System.out.println("Parameter: " + param);
-        System.out.println("Display name: " + testInfo.getDisplayName());
+//         System.out.println("Parameter: " + param);
+        // System.out.println("Display name: " + testInfo.getDisplayName());
     }
 
     @ParameterizedTest
@@ -55,8 +55,8 @@ class ParameterExtractionIntegrationTest {
         assertTrue(number > 0);
         
         // Log the display name to see how JUnit formats it
-        System.out.println("Parameters: " + text + ", " + number + ", " + flag);
-        System.out.println("Display name: " + testInfo.getDisplayName());
+//         System.out.println("Parameters: " + text + ", " + number + ", " + flag);
+        // System.out.println("Display name: " + testInfo.getDisplayName());
         
         // Test that demonstrates the display name contains parameter info
         String displayName = testInfo.getDisplayName();
@@ -73,8 +73,8 @@ class ParameterExtractionIntegrationTest {
         assertNotNull(name);
         assertTrue(value > 0);
         
-        System.out.println("Parameters: " + name + ", " + value);
-        System.out.println("Display name: " + testInfo.getDisplayName());
+//         System.out.println("Parameters: " + name + ", " + value);
+        // System.out.println("Display name: " + testInfo.getDisplayName());
         
         // Verify the custom name format is used
         String displayName = testInfo.getDisplayName();
@@ -95,7 +95,7 @@ class ParameterExtractionIntegrationTest {
 
     private void testDisplayNameFormat(ImprovedParameterExtractor extractor, String displayName, Object[] expected) {
         // This is a unit test for the display name parsing logic
-        System.out.println("Testing display name: " + displayName);
+//         System.out.println("Testing display name: " + displayName);
         
         // We'd need to create a mock ExtensionContext for full testing
         // For now, this demonstrates the approach

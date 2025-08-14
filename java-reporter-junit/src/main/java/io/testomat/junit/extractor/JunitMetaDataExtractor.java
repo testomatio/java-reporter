@@ -68,11 +68,7 @@ public class JunitMetaDataExtractor {
         }
 
         if (hasRealNames) {
-            log.debug("Using parameter names from method signature: {}",
-                    String.join(", ", names));
         } else {
-            log.debug("Using fallback parameter names (compile with -parameters flag for real names): {}",
-                    String.join(", ", names));
         }
 
         // Fill remaining positions with default names
@@ -98,30 +94,24 @@ public class JunitMetaDataExtractor {
             // Strategy 1: Use ParameterCaptureExtension (most reliable)
             Object[] capturedParams = ParameterCaptureExtension.getCapturedParameters(context);
             if (capturedParams != null && capturedParams.length > 0) {
-                log.debug("Retrieved {} parameters from ParameterCaptureExtension", capturedParams.length);
                 return capturedParams;
             }
 
             // Strategy 2: Try to get from context store (legacy fallback)
             Object[] storedParams = tryGetParametersFromStore(context);
             if (storedParams != null && storedParams.length > 0) {
-                log.debug("Retrieved {} parameters from context store", storedParams.length);
                 return storedParams;
             }
 
             // Strategy 3: Parse from display name (last resort)
             Object[] parsedParams = parseParametersFromDisplayName(context);
             if (parsedParams != null && parsedParams.length > 0) {
-                log.debug("Parsed {} parameters from display name", parsedParams.length);
                 return parsedParams;
             }
 
-            log.debug("No parameters found for test: {}", context.getDisplayName());
             return new Object[0];
 
         } catch (Exception e) {
-            log.debug("Failed to extract parameter values for test: {}",
-                    context.getDisplayName(), e);
             return new Object[0];
         }
     }
@@ -162,7 +152,6 @@ public class JunitMetaDataExtractor {
             return tryReflectiveParameterAccess(context);
             
         } catch (Exception e) {
-            log.trace("Could not access JUnit context store", e);
             return null;
         }
     }
@@ -192,7 +181,6 @@ public class JunitMetaDataExtractor {
             }
             
         } catch (Exception e) {
-            log.trace("Error accessing store with context {}: {}", context.getUniqueId(), e.getMessage());
         }
         
         return null;
@@ -214,7 +202,6 @@ public class JunitMetaDataExtractor {
                     Object value = field.get(context);
                     
                     if (value instanceof Object[]) {
-                        log.debug("Found parameters via reflection in field: {}", field.getName());
                         return (Object[]) value;
                     }
                 }
@@ -232,7 +219,6 @@ public class JunitMetaDataExtractor {
                         Object value = field.get(context);
                         
                         if (value instanceof Object[]) {
-                            log.debug("Found parameters via reflection in superclass field: {}", field.getName());
                             return (Object[]) value;
                         }
                     }
@@ -240,7 +226,6 @@ public class JunitMetaDataExtractor {
             }
             
         } catch (Exception e) {
-            log.trace("Reflective parameter access failed: {}", e.getMessage());
         }
         
         return null;
@@ -251,7 +236,6 @@ public class JunitMetaDataExtractor {
      */
     private Object[] parseParametersFromDisplayName(ExtensionContext context) {
         String displayName = context.getDisplayName();
-        log.trace("Parsing parameters from display name: {}", displayName);
 
         if (displayName.contains("[") && displayName.contains("]")) {
             // Try different display name formats
@@ -304,18 +288,14 @@ public class JunitMetaDataExtractor {
 
     private String getTestTitle(ExtensionContext extensionContext) {
         String baseTitle = extensionContext.getDisplayName();
-        System.out.println("baseTitle: " + baseTitle);
         
         try {
             // Check if this is a parameterized test with a custom name
             Method testMethod = getTestMethod(extensionContext);
-            System.out.println("actual method name: " + testMethod.getName());
             ParameterizedTest parameterizedTest = testMethod.getAnnotation(ParameterizedTest.class);
             
             if (parameterizedTest != null) {
-                System.out.println("parameterizedTest not null");
                 String parameterizedTestName = parameterizedTest.name();
-                System.out.println("parameterizedTestName is " + parameterizedTestName);
                 
                 // Check if name property is present and not default/empty
                 if (parameterizedTestName != null && !parameterizedTestName.trim().isEmpty() 
@@ -324,22 +304,16 @@ public class JunitMetaDataExtractor {
                     // Use actual method name as base title, not the display name which might be the custom name
                     String actualMethodName = testMethod.getName();
                     String enhancedTitle = actualMethodName + " |>" + parameterizedTestName;
-                    log.info("Enhanced parameterized test title: {}", enhancedTitle);
-                    System.out.println("Final enhanced title: " + enhancedTitle);
                     return enhancedTitle;
                 } else {
                     // No custom name property - return actual method name for parameterized tests
                     String actualMethodName = testMethod.getName();
-                    log.info("Parameterized test title (no custom name): {}", actualMethodName);
-                    System.out.println("Parameterized test using method name: " + actualMethodName);
                     return actualMethodName;
                 }
             }
         } catch (Exception e) {
-            log.debug("Failed to check parameterized test name: {}", e.getMessage());
         }
         
-        log.info("Test title: {}", baseTitle);
         return baseTitle;
     }
 

@@ -43,114 +43,50 @@ public class ImprovedParameterExtractor {
         String uniqueId = context.getUniqueId();
         String displayName = context.getDisplayName();
         
-        log.info("=== PARAMETER EXTRACTION START ===");
-        log.info("Test ID: {}", uniqueId);
-        log.info("Display Name: {}", displayName);
-        
-        System.out.println("\n🔍 PARAMETER EXTRACTION START");
-        System.out.println("  🆔 Test ID: " + uniqueId);
-        System.out.println("  🏷️  Display Name: " + displayName);
         
         if (!isParameterizedTest(context)) {
-            log.info("Test is not parameterized, skipping parameter extraction");
-            System.out.println("  ℹ️  Test is not parameterized, skipping parameter extraction");
             return null;
         }
 
-        log.info("Confirmed: Test is parameterized");
-        System.out.println("  ✅ Confirmed: Test is parameterized");
 
         try {
             Method testMethod = context.getTestMethod().orElse(null);
             if (testMethod == null) {
-                log.warn("No test method found in context");
                 return null;
             }
 
-            log.info("Test method: {}", testMethod.getName());
-            log.info("Method parameter count: {}", testMethod.getParameterCount());
-            
-            System.out.println("  📋 Test method: " + testMethod.getName());
-            System.out.println("  🔢 Method parameter count: " + testMethod.getParameterCount());
 
             // Strategy 1: Use TestMethodParameterExtractor (method invocation interception)
-            log.info("--- Strategy 1: Method Invocation Interception ---");
-            System.out.println("  🎯 Strategy 1: Method Invocation Interception");
             Object[] parameters = TestMethodParameterExtractor.getCapturedParameters(context);
             if (parameters != null && parameters.length > 0) {
-                log.info("SUCCESS: Retrieved {} parameters from method invocation interception", parameters.length);
-                System.out.println("  ✅ SUCCESS: Retrieved " + parameters.length + " parameters from method invocation");
-                for (int i = 0; i < parameters.length; i++) {
-                    log.info("  Parameter {}: {} (type: {})", i, parameters[i], 
-                            parameters[i] != null ? parameters[i].getClass().getSimpleName() : "null");
-                    System.out.println("    📋 Parameter " + i + ": " + parameters[i] + " (type: " + 
-                            (parameters[i] != null ? parameters[i].getClass().getSimpleName() : "null") + ")");
-                }
                 Object result = formatParameters(parameters, testMethod);
-                log.info("Formatted result: {}", result);
-                log.info("=== PARAMETER EXTRACTION END (SUCCESS) ===");
-                System.out.println("  📦 Formatted result: " + result);
-                System.out.println("🔍 PARAMETER EXTRACTION END (SUCCESS)\n");
                 return result;
             }
 
             // Strategy 2: Use ParameterInterceptorExtension (context-based reflection)
-            log.info("--- Strategy 2: Parameter Interceptor Extension ---");
             parameters = ParameterInterceptorExtension.getCapturedParameters(context);
             if (parameters != null && parameters.length > 0) {
-                log.info("SUCCESS: Retrieved {} parameters from parameter interceptor", parameters.length);
-                for (int i = 0; i < parameters.length; i++) {
-                    log.info("  Parameter {}: {} (type: {})", i, parameters[i], 
-                            parameters[i] != null ? parameters[i].getClass().getSimpleName() : "null");
-                }
                 Object result = formatParameters(parameters, testMethod);
-                log.info("Formatted result: {}", result);
-                log.info("=== PARAMETER EXTRACTION END (SUCCESS) ===");
                 return result;
             }
 
             // Strategy 3: Legacy reflection approach
-            log.info("--- Strategy 3: Legacy JUnit Internal Context ---");
             parameters = tryExtractParametersFromJUnitContext(context);
             if (parameters != null && parameters.length > 0) {
-                log.info("SUCCESS: Extracted {} parameters from JUnit internal context", parameters.length);
-                for (int i = 0; i < parameters.length; i++) {
-                    log.info("  Parameter {}: {} (type: {})", i, parameters[i], 
-                            parameters[i] != null ? parameters[i].getClass().getSimpleName() : "null");
-                }
                 Object result = formatParameters(parameters, testMethod);
-                log.info("Formatted result: {}", result);
-                log.info("=== PARAMETER EXTRACTION END (SUCCESS) ===");
                 return result;
             }
 
             // Strategy 4: Enhanced display name parsing (fallback)
-            log.info("--- Strategy 4: Display Name Parsing (Fallback) ---");
             parameters = parseParametersFromDisplayName(context.getDisplayName());
             if (parameters != null && parameters.length > 0) {
-                log.info("SUCCESS: Parsed {} parameters from display name: {}", parameters.length, context.getDisplayName());
-                for (int i = 0; i < parameters.length; i++) {
-                    log.info("  Parameter {}: {} (type: {})", i, parameters[i], 
-                            parameters[i] != null ? parameters[i].getClass().getSimpleName() : "null");
-                }
                 Object result = formatParameters(parameters, testMethod);
-                log.info("Formatted result: {}", result);
-                log.info("=== PARAMETER EXTRACTION END (SUCCESS) ===");
                 return result;
             }
 
-            log.warn("FAILURE: No parameters found for test: {}", context.getDisplayName());
-            log.info("=== PARAMETER EXTRACTION END (FAILURE) ===");
-            System.out.println("  ❌ FAILURE: No parameters found for test: " + context.getDisplayName());
-            System.out.println("🔍 PARAMETER EXTRACTION END (FAILURE)\n");
             return null;
 
         } catch (Exception e) {
-            log.error("EXCEPTION: Failed to extract parameters for test: {}", context.getDisplayName(), e);
-            log.info("=== PARAMETER EXTRACTION END (EXCEPTION) ===");
-            System.out.println("  ❌ EXCEPTION: Failed to extract parameters for test: " + context.getDisplayName());
-            System.out.println("  💥 Error: " + e.getMessage());
-            System.out.println("🔍 PARAMETER EXTRACTION END (EXCEPTION)\n");
             return null;
         }
     }
@@ -163,7 +99,6 @@ public class ImprovedParameterExtractor {
             Method testMethod = context.getTestMethod().orElse(null);
             return testMethod != null && testMethod.isAnnotationPresent(ParameterizedTest.class);
         } catch (Exception e) {
-            log.trace("Failed to check if test is parameterized: {}", e.getMessage());
             return false;
         }
     }
@@ -175,47 +110,35 @@ public class ImprovedParameterExtractor {
     private Object[] tryExtractParametersFromJUnitContext(ExtensionContext context) {
         try {
             Class<?> contextClass = context.getClass();
-            log.info("Context class: {}", contextClass.getName());
-            
             // Look for fields that might contain parameter information
             java.lang.reflect.Field[] allFields = getAllFields(contextClass);
-            log.info("Total fields to examine: {}", allFields.length);
             
             for (java.lang.reflect.Field field : allFields) {
                 String fieldName = field.getName().toLowerCase();
-                log.debug("Examining field: {} (type: {})", field.getName(), field.getType().getSimpleName());
                 
                 // Look for fields that likely contain the test arguments
                 if (fieldName.contains("argument") || fieldName.contains("parameter") || 
                     fieldName.equals("args") || fieldName.equals("arguments")) {
                     
-                    log.info("Found potential parameter field: {}", field.getName());
                     field.setAccessible(true);
                     Object value = field.get(context);
                     
-                    log.info("Field '{}' value: {} (type: {})", field.getName(), value, 
-                            value != null ? value.getClass().getSimpleName() : "null");
                     
                     if (value instanceof Object[]) {
                         Object[] params = (Object[]) value;
                         if (params.length > 0) {
-                            log.info("SUCCESS: Found parameters in field '{}': {}", fieldName, java.util.Arrays.toString(params));
                             return params;
                         } else {
-                            log.info("Field '{}' is empty array", fieldName);
                         }
                     } else if (value != null) {
-                        log.info("Field '{}' is not an Object array", fieldName);
                     }
                 }
             }
 
-            log.info("No parameter fields found, trying test descriptor approach");
             // Try to find parameters in the test descriptor or invocation context
             return tryExtractFromTestDescriptor(context);
 
         } catch (Exception e) {
-            log.warn("Reflection-based parameter extraction failed", e);
             return null;
         }
     }
@@ -251,7 +174,6 @@ public class ImprovedParameterExtractor {
                 }
             }
         } catch (Exception e) {
-            log.trace("Failed to extract from test descriptor", e);
         }
         
         return null;
@@ -278,7 +200,6 @@ public class ImprovedParameterExtractor {
                 }
             }
         } catch (Exception e) {
-            log.trace("Failed to extract parameters from test descriptor", e);
         }
         
         return null;
@@ -289,34 +210,26 @@ public class ImprovedParameterExtractor {
      */
     private Object[] parseParametersFromDisplayName(String displayName) {
         if (displayName == null || displayName.trim().isEmpty()) {
-            log.info("Display name is null or empty");
             return null;
         }
 
-        log.info("Trying to parse display name: '{}'", displayName);
 
         for (int i = 0; i < DISPLAY_NAME_PATTERNS.length; i++) {
             Pattern pattern = DISPLAY_NAME_PATTERNS[i];
-            log.debug("Trying pattern {}: {}", i, pattern.pattern());
             
             Matcher matcher = pattern.matcher(displayName.trim());
             if (matcher.matches()) {
                 String paramPart = matcher.group(1).trim();
-                log.info("SUCCESS: Matched pattern {} with parameters: '{}'", pattern.pattern(), paramPart);
                 
                 Object[] parsed = parseParameterString(paramPart);
                 if (parsed != null && parsed.length > 0) {
-                    log.info("Successfully parsed {} parameters from string", parsed.length);
                     return parsed;
                 } else {
-                    log.warn("Pattern matched but failed to parse parameters from: '{}'", paramPart);
                 }
             } else {
-                log.debug("Pattern {} did not match", pattern.pattern());
             }
         }
 
-        log.warn("No pattern matched for display name: '{}'", displayName);
         return null;
     }
 
@@ -346,7 +259,6 @@ public class ImprovedParameterExtractor {
             return result;
 
         } catch (Exception e) {
-            log.trace("Failed to parse parameter string: {}", paramString, e);
             return null;
         }
     }
@@ -438,12 +350,7 @@ public class ImprovedParameterExtractor {
             return null;
         }
 
-        // Single parameter - return directly
-        if (parameters.length == 1) {
-            return parameters[0];
-        }
-
-        // Multiple parameters - return as map with parameter names
+        // Always return parameters as map with parameter names for consistency
         Map<String, Object> paramMap = new HashMap<>();
         Parameter[] methodParams = testMethod.getParameters();
         

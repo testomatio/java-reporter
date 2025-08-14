@@ -1,4 +1,4 @@
+io.testomat.junit.extractor.TestMethodParameterExtractor
 io.testomat.junit.listener.JunitListener
 io.testomat.junit.extractor.ParameterCaptureExtension
 io.testomat.junit.extractor.ParameterInterceptorExtension
-io.testomat.junit.extractor.TestMethodParameterExtractor
