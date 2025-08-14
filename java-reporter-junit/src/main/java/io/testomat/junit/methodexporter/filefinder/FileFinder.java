@@ -93,7 +93,7 @@ public class FileFinder {
 
             return URLDecoder.decode(uri.getPath(), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            log.debug("Error getting path from context: {}", e.getMessage(), e);
+//             log.debug("Error getting path from context: {}", e.getMessage(), e);
             return null;
         }
     }
@@ -139,7 +139,7 @@ public class FileFinder {
 
             return getDefaultPath(extensionContext);
         } catch (Exception e) {
-            log.debug("Error finding test file by class name: {}", e.getMessage(), e);
+//             log.debug("Error finding test file by class name: {}", e.getMessage(), e);
             return getDefaultPath(extensionContext);
         }
     }
@@ -192,7 +192,7 @@ public class FileFinder {
 
             return normalizedPath;
         } catch (Exception e) {
-            log.debug("Error extracting relative file path: {}", e.getMessage(), e);
+//             log.debug("Error extracting relative file path: {}", e.getMessage(), e);
             return "UnknownFile.java";
         }
     }

@@ -36,10 +36,8 @@ public class ParameterCaptureExtension implements BeforeEachCallback, AfterEachC
                 String uniqueId = context.getUniqueId();
                 parameterStorage.put(uniqueId, parameters);
                 currentParameters.set(parameters);
-                log.debug("Captured {} parameters for test: {}", parameters.length, uniqueId);
             }
         } catch (Exception e) {
-            log.trace("Could not capture parameters for test: {}", context.getUniqueId(), e);
         }
     }
 
@@ -66,14 +64,12 @@ public class ParameterCaptureExtension implements BeforeEachCallback, AfterEachC
         Object[] parameters = parameterStorage.get(uniqueId);
         
         if (parameters != null) {
-            log.trace("Retrieved {} captured parameters for test: {}", parameters.length, uniqueId);
             return parameters;
         }
         
         // Try thread-local as fallback
         parameters = currentParameters.get();
         if (parameters != null) {
-            log.trace("Retrieved {} thread-local parameters for test: {}", parameters.length, uniqueId);
             return parameters;
         }
         
@@ -92,7 +88,6 @@ public class ParameterCaptureExtension implements BeforeEachCallback, AfterEachC
             String uniqueId = context.getUniqueId();
             parameterStorage.put(uniqueId, parameters);
             currentParameters.set(parameters);
-            log.debug("Manually stored {} parameters for test: {}", parameters.length, uniqueId);
         }
     }
 
@@ -106,7 +101,6 @@ public class ParameterCaptureExtension implements BeforeEachCallback, AfterEachC
             String uniqueId = context.getUniqueId();
             Object[] removed = parameterStorage.remove(uniqueId);
             if (removed != null) {
-                log.trace("Cleaned up {} parameters for test: {}", removed.length, uniqueId);
             }
         }
     }
@@ -129,7 +123,6 @@ public class ParameterCaptureExtension implements BeforeEachCallback, AfterEachC
             }
 
         } catch (Exception e) {
-            log.trace("Failed to extract parameters from context: {}", context.getUniqueId(), e);
         }
         
         return null;
@@ -176,7 +169,6 @@ public class ParameterCaptureExtension implements BeforeEachCallback, AfterEachC
                 }
             }
         } catch (Exception e) {
-            log.trace("Reflective parameter extraction failed", e);
         }
         
         return null;
@@ -187,7 +179,6 @@ public class ParameterCaptureExtension implements BeforeEachCallback, AfterEachC
      */
     private Object[] parseParametersFromDisplayName(ExtensionContext context) {
         String displayName = context.getDisplayName();
-        log.trace("Parsing parameters from display name: {}", displayName);
 
         if (displayName == null || displayName.trim().isEmpty()) {
             return null;
@@ -217,7 +208,6 @@ public class ParameterCaptureExtension implements BeforeEachCallback, AfterEachC
             }
             
         } catch (Exception e) {
-            log.trace("Failed to parse parameters from display name: {}", displayName, e);
         }
 
         return null;
@@ -248,7 +238,6 @@ public class ParameterCaptureExtension implements BeforeEachCallback, AfterEachC
 
             return result;
         } catch (Exception e) {
-            log.trace("Failed to parse parameter string: {}", paramString, e);
             return null;
         }
     }

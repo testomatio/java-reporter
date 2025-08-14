@@ -68,7 +68,6 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         if (!isListeningRequired()) {
             return;
         }
-        log.debug("Before All -> {}", context.getTestClass().orElse(null));
         runManager.incrementSuiteCounter();
     }
 
@@ -160,10 +159,8 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         String className = clazz.getName();
 
         if (processedClasses.add(className)) {
-            log.debug("Exporting test class: {}", className);
             methodExportManager.loadTestBodyForClass(clazz);
         } else {
-            log.debug("Test class {} already processed", className);
         }
     }
 
