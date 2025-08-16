@@ -1,6 +1,8 @@
 package io.testomat.junit.extractor;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -11,8 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Advanced parameter extractor that intercepts test method invocations to capture
+ * Parameter extractor that intercepts test method invocations to capture
  * the actual parameters passed to parameterized test methods.
+ * This is the most reliable approach for JUnit 5 parameter extraction.
  */
 public class TestMethodParameterExtractor implements InvocationInterceptor {
 
@@ -29,26 +32,17 @@ public class TestMethodParameterExtractor implements InvocationInterceptor {
         String uniqueId = extensionContext.getUniqueId();
         Method testMethod = invocationContext.getExecutable();
         
-        
-        
         // Check if this is a parameterized test
         if (testMethod.isAnnotationPresent(ParameterizedTest.class)) {
-            
             // Get the actual arguments passed to the test method
             java.util.List<Object> arguments = invocationContext.getArguments();
             if (arguments != null && !arguments.isEmpty()) {
                 Object[] params = arguments.toArray();
                 
-                
-                for (int i = 0; i < params.length; i++) {
-                }
-                
                 // Store the parameters
                 parameterStorage.put(uniqueId, params);
-                
-            } else {
+                log.debug("Captured {} parameters for test: {}", params.length, uniqueId);
             }
-        } else {
         }
         
         // Continue with the actual test execution
@@ -64,24 +58,48 @@ public class TestMethodParameterExtractor implements InvocationInterceptor {
         }
         
         String uniqueId = context.getUniqueId();
-        
-        Object[] parameters = parameterStorage.get(uniqueId);
-        
-        if (parameters != null) {
-        } else {
-        }
-        
-        return parameters;
+        return parameterStorage.get(uniqueId);
     }
 
     /**
-     * Cleans up stored parameters for a test to prevent memory leaks.
+     * Extracts parameters and formats them for reporting.
+     * Returns single parameter directly or Map for multiple parameters.
      */
-    public static void cleanupParameters(ExtensionContext context) {
-        if (context != null) {
-            String uniqueId = context.getUniqueId();
-            parameterStorage.remove(uniqueId);
+    public static Object extractFormattedParameters(ExtensionContext context) {
+        Object[] parameters = getCapturedParameters(context);
+        if (parameters == null || parameters.length == 0) {
+            return null;
         }
+
+        // Single parameter - return directly
+        if (parameters.length == 1) {
+            return parameters[0];
+        }
+
+        // Multiple parameters - return as map with parameter names
+        Method testMethod = context.getTestMethod().orElse(null);
+        if (testMethod == null) {
+            return parameters;
+        }
+
+        Map<String, Object> paramMap = new HashMap<>();
+        Parameter[] methodParams = testMethod.getParameters();
+        
+        for (int i = 0; i < parameters.length; i++) {
+            String paramName;
+            if (i < methodParams.length && methodParams[i].isNamePresent()) {
+                paramName = methodParams[i].getName();
+                // Check if it's a real name or synthetic
+                if (paramName.matches("arg\\d+")) {
+                    paramName = "param" + i;
+                }
+            } else {
+                paramName = "param" + i;
+            }
+            paramMap.put(paramName, parameters[i]);
+        }
+
+        return paramMap;
     }
 
     /**
@@ -97,33 +115,24 @@ public class TestMethodParameterExtractor implements InvocationInterceptor {
     }
 
     /**
-     * Formats a parameter for console display, making invisible characters visible.
+     * Checks if the test method is a parameterized test.
      */
-    private static String formatParameterForConsole(Object param) {
-        if (param == null) {
-            return "NULL";
+    public static boolean isParameterizedTest(ExtensionContext context) {
+        try {
+            Method testMethod = context.getTestMethod().orElse(null);
+            return testMethod != null && testMethod.isAnnotationPresent(ParameterizedTest.class);
+        } catch (Exception e) {
+            return false;
         }
-        
-        if (param instanceof String) {
-            String str = (String) param;
-            if (str.isEmpty()) {
-                return "EMPTY_STRING (\"\")";
-            }
-            
-            // Replace invisible characters with visible representations
-            String display = str
-                .replace(" ", "·")        // space -> middle dot
-                .replace("\t", "→")       // tab -> arrow
-                .replace("\n", "↵")       // newline -> return symbol
-                .replace("\r", "⤶");      // carriage return -> symbol
-            
-            if (str.isBlank()) {
-                return "WHITESPACE (\"" + display + "\") [length=" + str.length() + "]";
-            }
-            
-            return "\"" + display + "\"";
+    }
+
+    /**
+     * Cleans up stored parameters for a test to prevent memory leaks.
+     */
+    public static void cleanupParameters(ExtensionContext context) {
+        if (context != null) {
+            String uniqueId = context.getUniqueId();
+            parameterStorage.remove(uniqueId);
         }
-        
-        return param.toString() + " (" + param.getClass().getSimpleName() + ")";
     }
 }

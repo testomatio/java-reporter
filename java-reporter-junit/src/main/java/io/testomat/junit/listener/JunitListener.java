@@ -8,7 +8,6 @@ import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.extractor.ParameterCaptureExtension;
-import io.testomat.junit.extractor.ParameterInterceptorExtension;
 import io.testomat.junit.extractor.TestMethodParameterExtractor;
 import io.testomat.junit.methodexporter.MethodExportManager;
 import io.testomat.junit.reporter.JunitTestReporter;
@@ -96,7 +95,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         
         // Clean up captured parameters to prevent memory leaks
         ParameterCaptureExtension.cleanupParameters(context);
-        ParameterInterceptorExtension.cleanupParameters(context);
+        TestMethodParameterExtractor.cleanupParameters(context);
         TestMethodParameterExtractor.cleanupParameters(context);
     }
 
@@ -111,7 +110,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         
         // Clean up captured parameters to prevent memory leaks
         ParameterCaptureExtension.cleanupParameters(context);
-        ParameterInterceptorExtension.cleanupParameters(context);
+        TestMethodParameterExtractor.cleanupParameters(context);
         TestMethodParameterExtractor.cleanupParameters(context);
     }
 
@@ -126,7 +125,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         
         // Clean up captured parameters to prevent memory leaks
         ParameterCaptureExtension.cleanupParameters(context);
-        ParameterInterceptorExtension.cleanupParameters(context);
+        TestMethodParameterExtractor.cleanupParameters(context);
         TestMethodParameterExtractor.cleanupParameters(context);
     }
 
@@ -141,7 +140,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         
         // Clean up captured parameters to prevent memory leaks
         ParameterCaptureExtension.cleanupParameters(context);
-        ParameterInterceptorExtension.cleanupParameters(context);
+        TestMethodParameterExtractor.cleanupParameters(context);
         TestMethodParameterExtractor.cleanupParameters(context);
     }
 
