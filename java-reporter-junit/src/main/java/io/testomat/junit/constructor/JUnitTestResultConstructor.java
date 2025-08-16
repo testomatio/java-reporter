@@ -88,6 +88,13 @@ public class JUnitTestResultConstructor {
             } else {
                 log.debug("the method {} is parametrized, but the example is null",
                         context.getDisplayName());
+                // FIX: Only create fallback for tests that should have parameters but extraction failed
+                if (shouldCreateFallbackExample(context)) {
+                    example = createFallbackExample(context);
+                    rid = context.getUniqueId();
+                    log.debug("Created fallback example for parameterized test: {}", example);
+                }
+                // For tests marked as parameterized but with no actual parameters, leave example and rid as null
             }
         }
 
@@ -242,5 +249,79 @@ public class JUnitTestResultConstructor {
      */
     private boolean isReportableException(Throwable throwable) {
         return !(Objects.requireNonNull(throwable) instanceof TestAbortedException);
+    }
+
+    /**
+     * Determines if a fallback example should be created for a parameterized test.
+     * This helps distinguish between parameterized tests that actually have parameters
+     * vs. those that are just marked with @ParameterizedTest but have no real parameters.
+     *
+     * @param context the extension context
+     * @return true if a fallback example should be created
+     */
+    private boolean shouldCreateFallbackExample(ExtensionContext context) {
+        try {
+            // Check if the test method has parameters
+            java.lang.reflect.Method testMethod = context.getTestMethod().orElse(null);
+            if (testMethod != null) {
+                java.lang.reflect.Parameter[] parameters = testMethod.getParameters();
+                if (parameters.length > 0) {
+                    // Has parameters, so it's a real parameterized test
+                    return true;
+                }
+            }
+            
+            // Check if display name suggests parameterization (contains brackets, etc.)
+            String displayName = context.getDisplayName();
+            if (displayName != null && 
+                (displayName.contains("[") || displayName.contains("(") || displayName.contains(","))) {
+                return true;
+            }
+            
+            return false;
+        } catch (Exception e) {
+            // If we can't determine, err on the side of not creating fallback
+            return false;
+        }
+    }
+
+    /**
+     * Creates a fallback example for parameterized tests when parameter extraction fails.
+     * This ensures that parameterized tests always have an example in the report,
+     * improving consistency in test reporting.
+     *
+     * @param context the extension context
+     * @return a fallback example object containing basic test information
+     */
+    private Object createFallbackExample(ExtensionContext context) {
+        java.util.Map<String, Object> fallbackExample = new java.util.HashMap<>();
+        
+        // Try to extract basic information from display name
+        String displayName = context.getDisplayName();
+        fallbackExample.put("displayName", displayName);
+        
+        // Extract test method parameter count for more meaningful fallback
+        try {
+            java.lang.reflect.Method testMethod = context.getTestMethod().orElse(null);
+            if (testMethod != null) {
+                java.lang.reflect.Parameter[] parameters = testMethod.getParameters();
+                fallbackExample.put("parameterCount", parameters.length);
+                
+                // Add parameter names if available
+                for (int i = 0; i < parameters.length; i++) {
+                    String paramName = parameters[i].isNamePresent() ? 
+                        parameters[i].getName() : "param" + i;
+                    fallbackExample.put(paramName, "UNKNOWN_VALUE");
+                }
+            }
+        } catch (Exception e) {
+            // If we can't get method info, just use basic info
+            fallbackExample.put("error", "Parameter extraction failed");
+        }
+        
+        // Add unique identifier components
+        fallbackExample.put("uniqueId", context.getUniqueId());
+        
+        return fallbackExample;
     }
 }

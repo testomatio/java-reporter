@@ -2,6 +2,7 @@ package io.testomat.junit.constructor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.when;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
+import java.lang.reflect.Method;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -148,11 +150,15 @@ class JUnitTestResultConstructorTest {
 
     @Test
     @DisplayName("Should handle parameterized test without parameters - should not set rid")
-    void shouldHandleParameterizedTestWithoutParameters() {
+    void shouldHandleParameterizedTestWithoutParameters() throws Exception {
         // Given
+        Method mockMethod = mock(Method.class);
+        when(mockMethod.getParameters()).thenReturn(new java.lang.reflect.Parameter[0]); // No parameters
+        
         when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(true);
         when(mockExtractor.extractTestParameters(mockContext)).thenReturn(null);
         when(mockContext.getDisplayName()).thenReturn("testMethod");
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(mockMethod));
         when(mockContext.getExecutionException()).thenReturn(Optional.empty());
         setupBasicMetadata();
 
