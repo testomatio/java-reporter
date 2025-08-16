@@ -80,33 +80,31 @@ public class JunitMetaDataExtractor {
     }
 
     public boolean isParameterizedTest(ExtensionContext context) {
-        // Use the improved parameter extractor for consistency
-        ImprovedParameterExtractor extractor = new ImprovedParameterExtractor();
-        return extractor.isParameterizedTest(context);
+        return BaseParameterExtractor.isParameterizedTest(context);
     }
 
     /**
      * Enhanced parameter extraction using multiple strategies.
-     * Uses the ParameterCaptureExtension for reliable parameter access.
+     * Uses the TestMethodParameterExtractor for reliable parameter access.
      */
     private Object[] getParameterValues(ExtensionContext context) {
         try {
-            // Strategy 1: Use ParameterCaptureExtension (most reliable)
-            Object[] capturedParams = ParameterCaptureExtension.getCapturedParameters(context);
+            // Strategy 1: Use TestMethodParameterExtractor (most reliable)
+            Object[] capturedParams = TestMethodParameterExtractor.getCapturedParameters(context);
             if (capturedParams != null && capturedParams.length > 0) {
                 return capturedParams;
             }
 
-            // Strategy 2: Try to get from context store (legacy fallback)
+            // Strategy 2: Use ParameterCaptureExtension (fallback)
+            capturedParams = ParameterCaptureExtension.getCapturedParameters(context);
+            if (capturedParams != null && capturedParams.length > 0) {
+                return capturedParams;
+            }
+
+            // Strategy 3: Try to get from context store (legacy fallback)
             Object[] storedParams = tryGetParametersFromStore(context);
             if (storedParams != null && storedParams.length > 0) {
                 return storedParams;
-            }
-
-            // Strategy 3: Parse from display name (last resort)
-            Object[] parsedParams = parseParametersFromDisplayName(context);
-            if (parsedParams != null && parsedParams.length > 0) {
-                return parsedParams;
             }
 
             return new Object[0];
@@ -231,49 +229,6 @@ public class JunitMetaDataExtractor {
         return null;
     }
 
-    /**
-     * Fallback method to parse parameters from display name.
-     */
-    private Object[] parseParametersFromDisplayName(ExtensionContext context) {
-        String displayName = context.getDisplayName();
-
-        if (displayName.contains("[") && displayName.contains("]")) {
-            // Try different display name formats
-            String paramPart = null;
-
-            // Format 1: "methodName[1] argument1, argument2"
-            if (displayName.contains("] ")) {
-                paramPart = displayName.substring(displayName.indexOf("] ") + 2).trim();
-            }
-            // Format 2: "methodName [argument1, argument2]"
-            else if (displayName.contains(" [") && displayName.endsWith("]")) {
-                int start = displayName.indexOf(" [") + 2;
-                int end = displayName.lastIndexOf("]");
-                paramPart = displayName.substring(start, end).trim();
-            }
-
-            if (paramPart != null && !paramPart.isEmpty()) {
-                return parseParameterString(paramPart);
-            }
-        }
-
-        return new Object[0];
-    }
-
-    /**
-     * Parses parameter string into individual parameter values.
-     */
-    private Object[] parseParameterString(String paramString) {
-        // Simple comma-based splitting (can be enhanced for complex cases)
-        String[] params = paramString.split(",");
-        Object[] result = new Object[params.length];
-
-        for (int i = 0; i < params.length; i++) {
-            result[i] = parseParameterValue(params[i].trim());
-        }
-
-        return result;
-    }
 
     private String getFilePath(Class<?> testClass) {
         String packagePath = testClass.getPackage().getName().replace('.', '/');
