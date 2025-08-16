@@ -9,11 +9,22 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Extracts and formats test parameters from parameterized tests using multiple strategies.
+ * Combines invocation interception, context parsing, and display name analysis
+ * to reliably capture test parameters for reporting purposes.
+ */
 public class ParameterExtractor {
 
     private static final Logger logger = LoggerFactory.getLogger(ParameterExtractor.class);
     private static final ParameterParser parser = new ParameterParser();
 
+    /**
+     * Extracts parameters from a parameterized test using multiple fallback strategies.
+     *
+     * @param context the JUnit extension context
+     * @return formatted parameter object (single value or Map for multiple parameters)
+     */
     public static Object extractTestParameters(ExtensionContext context) {
         if (!isParameterizedTest(context)) {
             return null;
@@ -34,6 +45,12 @@ public class ParameterExtractor {
         }
     }
 
+    /**
+     * Determines if a test method is parameterized.
+     *
+     * @param context the JUnit extension context
+     * @return true if the test method has @ParameterizedTest annotation
+     */
     public static boolean isParameterizedTest(ExtensionContext context) {
         try {
             Method method = context.getTestMethod().orElse(null);

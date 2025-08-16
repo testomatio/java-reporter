@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Utility class for parsing test parameters from JUnit display names.
+ * Handles complex parsing scenarios including quoted strings, nested structures,
+ * and automatic type detection for extracted parameter values.
+ */
 public class ParameterParser {
 
     private static final Pattern[] PATTERNS = {
@@ -16,6 +21,12 @@ public class ParameterParser {
         Pattern.compile("^.+?\\s+([^\\s\\[\\(].+)$")
     };
 
+    /**
+     * Parses parameters from a JUnit test display name using multiple patterns.
+     *
+     * @param displayName the test display name to parse
+     * @return array of parsed parameter objects or null if no parameters found
+     */
     public Object[] parseParametersFromDisplayName(String displayName) {
         if (displayName == null) {
             return null;
