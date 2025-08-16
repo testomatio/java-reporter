@@ -7,8 +7,8 @@ import static io.testomat.core.constants.CommonConstants.SKIPPED;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
-import io.testomat.junit.extractor.ParameterCaptureExtension;
-import io.testomat.junit.extractor.TestMethodParameterExtractor;
+import io.testomat.junit.extractor.ParameterCapture;
+import io.testomat.junit.extractor.InvocationInterceptor;
 import io.testomat.junit.methodexporter.MethodExportManager;
 import io.testomat.junit.reporter.JunitTestReporter;
 import java.util.Optional;
@@ -94,9 +94,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         exportTestClassIfNotProcessed(context);
         
         // Clean up captured parameters to prevent memory leaks
-        ParameterCaptureExtension.cleanupParameters(context);
-        TestMethodParameterExtractor.cleanupParameters(context);
-        TestMethodParameterExtractor.cleanupParameters(context);
+        ParameterCapture.cleanupParameters(context);
+        InvocationInterceptor.cleanupParameters(context);
+        InvocationInterceptor.cleanupParameters(context);
     }
 
     @Override
@@ -109,9 +109,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         exportTestClassIfNotProcessed(context);
         
         // Clean up captured parameters to prevent memory leaks
-        ParameterCaptureExtension.cleanupParameters(context);
-        TestMethodParameterExtractor.cleanupParameters(context);
-        TestMethodParameterExtractor.cleanupParameters(context);
+        ParameterCapture.cleanupParameters(context);
+        InvocationInterceptor.cleanupParameters(context);
+        InvocationInterceptor.cleanupParameters(context);
     }
 
     @Override
@@ -124,9 +124,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         exportTestClassIfNotProcessed(context);
         
         // Clean up captured parameters to prevent memory leaks
-        ParameterCaptureExtension.cleanupParameters(context);
-        TestMethodParameterExtractor.cleanupParameters(context);
-        TestMethodParameterExtractor.cleanupParameters(context);
+        ParameterCapture.cleanupParameters(context);
+        InvocationInterceptor.cleanupParameters(context);
+        InvocationInterceptor.cleanupParameters(context);
     }
 
     @Override
@@ -139,9 +139,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         exportTestClassIfNotProcessed(context);
         
         // Clean up captured parameters to prevent memory leaks
-        ParameterCaptureExtension.cleanupParameters(context);
-        TestMethodParameterExtractor.cleanupParameters(context);
-        TestMethodParameterExtractor.cleanupParameters(context);
+        ParameterCapture.cleanupParameters(context);
+        InvocationInterceptor.cleanupParameters(context);
+        InvocationInterceptor.cleanupParameters(context);
     }
 
     private void exportTestClassIfNotProcessed(ExtensionContext context) {

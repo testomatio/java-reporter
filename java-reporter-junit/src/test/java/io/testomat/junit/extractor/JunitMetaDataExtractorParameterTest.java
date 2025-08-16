@@ -21,7 +21,7 @@ import org.mockito.MockitoAnnotations;
 
 /**
  * Tests specifically for parameter extraction functionality in JunitMetaDataExtractor.
- * This tests the integration between ParameterCaptureExtension and JunitMetaDataExtractor.
+ * This tests the integration between ParameterCapture and JunitMetaDataExtractor.
  */
 @DisplayName("JunitMetaDataExtractor Parameter Extraction Tests")
 class JunitMetaDataExtractorParameterTest {
@@ -59,9 +59,9 @@ class JunitMetaDataExtractorParameterTest {
         when(mockExtensionContext.getTestMethod()).thenReturn(Optional.of(parameterizedMethod));
         when(mockExtensionContext.getUniqueId()).thenReturn("test-unique-id");
 
-        // Manually store parameters as the ParameterCaptureExtension would
+        // Manually store parameters as the ParameterCapture would
         Object[] testParameters = {"testValue"};
-        ParameterCaptureExtension.storeParameters(mockExtensionContext, testParameters);
+        ParameterCapture.storeParameters(mockExtensionContext, testParameters);
 
         // When
         Object extractedParameters = extractor.extractTestParameters(mockExtensionContext);
@@ -71,7 +71,7 @@ class JunitMetaDataExtractorParameterTest {
         assertEquals("testValue", extractedParameters);
 
         // Cleanup
-        ParameterCaptureExtension.cleanupParameters(mockExtensionContext);
+        ParameterCapture.cleanupParameters(mockExtensionContext);
     }
 
     @Test
@@ -84,7 +84,7 @@ class JunitMetaDataExtractorParameterTest {
 
         // Manually store multiple parameters
         Object[] testParameters = {"testValue", 42};
-        ParameterCaptureExtension.storeParameters(mockExtensionContext, testParameters);
+        ParameterCapture.storeParameters(mockExtensionContext, testParameters);
 
         // When
         Object extractedParameters = extractor.extractTestParameters(mockExtensionContext);
@@ -99,7 +99,7 @@ class JunitMetaDataExtractorParameterTest {
         assertEquals(42, paramMap.get("param1"));
 
         // Cleanup
-        ParameterCaptureExtension.cleanupParameters(mockExtensionContext);
+        ParameterCapture.cleanupParameters(mockExtensionContext);
     }
 
     @Test
