@@ -287,41 +287,18 @@ public class JUnitTestResultConstructor {
 
     /**
      * Creates a fallback example for parameterized tests when parameter extraction fails.
-     * This ensures that parameterized tests always have an example in the report,
-     * improving consistency in test reporting.
+     * Returns null to avoid sending excessive metadata to testomat.io API.
+     * According to testomat.io documentation, example should only contain actual parameter values.
      *
      * @param context the extension context
-     * @return a fallback example object containing basic test information
+     * @return null to indicate no parameters should be reported
      */
     private Object createFallbackExample(ExtensionContext context) {
-        java.util.Map<String, Object> fallbackExample = new java.util.HashMap<>();
-        
-        // Try to extract basic information from display name
-        String displayName = context.getDisplayName();
-        fallbackExample.put("displayName", displayName);
-        
-        // Extract test method parameter count for more meaningful fallback
-        try {
-            java.lang.reflect.Method testMethod = context.getTestMethod().orElse(null);
-            if (testMethod != null) {
-                java.lang.reflect.Parameter[] parameters = testMethod.getParameters();
-                fallbackExample.put("parameterCount", parameters.length);
-                
-                // Add parameter names if available
-                for (int i = 0; i < parameters.length; i++) {
-                    String paramName = parameters[i].isNamePresent() ? 
-                        parameters[i].getName() : "param" + i;
-                    fallbackExample.put(paramName, "UNKNOWN_VALUE");
-                }
-            }
-        } catch (Exception e) {
-            // If we can't get method info, just use basic info
-            fallbackExample.put("error", "Parameter extraction failed");
-        }
-        
-        // Add unique identifier components
-        fallbackExample.put("uniqueId", context.getUniqueId());
-        
-        return fallbackExample;
+        // According to par.md documentation, the example field should only contain
+        // actual test parameter values. When parameter extraction fails, it's better
+        // to return null rather than internal JUnit metadata that adds no value
+        // to test reporting and makes the API payload unnecessarily large.
+        log.debug("Parameter extraction failed for parameterized test: {}", context.getDisplayName());
+        return null;
     }
 }
