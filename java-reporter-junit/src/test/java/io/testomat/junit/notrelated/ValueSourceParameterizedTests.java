@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.testomat.junit.extractor.TestMethodParameterExtractor;
+import io.testomat.junit.extractor.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@ExtendWith(TestMethodParameterExtractor.class)
+@ExtendWith(InvocationInterceptor.class)
 public class ValueSourceParameterizedTests {
 
     @ParameterizedTest

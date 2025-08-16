@@ -15,14 +15,14 @@ import org.junit.jupiter.params.provider.ValueSource;
  * Integration test to verify that parameter extraction works correctly
  * with actual JUnit 5 parameterized tests.
  */
-@ExtendWith(ParameterCaptureExtension.class)
+@ExtendWith(ParameterCapture.class)
 @DisplayName("Parameter Extraction Integration Test")
 class ParameterExtractionIntegrationTest {
 
     @Test
     @DisplayName("Regular test should not have parameters")
     void regularTestShouldNotHaveParameters(TestInfo testInfo) {
-        ImprovedParameterExtractor extractor = new ImprovedParameterExtractor();
+        ParameterExtractor extractor = new ParameterExtractor();
         
         // Create a mock context from TestInfo (this is a simplified test)
         // In real execution, the JunitListener would have access to proper ExtensionContext
@@ -84,7 +84,7 @@ class ParameterExtractionIntegrationTest {
     @Test
     @DisplayName("Test display name parsing directly")
     void testDisplayNameParsingDirectly() {
-        ImprovedParameterExtractor extractor = new ImprovedParameterExtractor();
+        ParameterExtractor extractor = new ParameterExtractor();
         
         // Test various display name formats
         testDisplayNameFormat(extractor, "testMethod[1] arg1, arg2", new Object[]{"arg1", "arg2"});
@@ -93,7 +93,7 @@ class ParameterExtractionIntegrationTest {
         testDisplayNameFormat(extractor, "testMethod(param1, param2)", new Object[]{"param1", "param2"});
     }
 
-    private void testDisplayNameFormat(ImprovedParameterExtractor extractor, String displayName, Object[] expected) {
+    private void testDisplayNameFormat(ParameterExtractor extractor, String displayName, Object[] expected) {
         // This is a unit test for the display name parsing logic
 //         System.out.println("Testing display name: " + displayName);
         
