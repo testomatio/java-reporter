@@ -8,8 +8,20 @@ import java.lang.reflect.Method;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 
+/**
+ * Extracts metadata and parameters from JUnit test methods.
+ * Provides comprehensive test information including titles, IDs, suite names,
+ * file paths, and parameter extraction for parameterized tests.
+ */
 public class JunitMetaDataExtractor {
 
+    /**
+     * Extracts complete metadata for a test method.
+     *
+     * @param context the JUnit extension context
+     * @return TestMetadata containing title, ID, suite name, and file path
+     * @throws NoMethodInContextException if no test method is found
+     */
     public TestMetadata extractTestMetadata(ExtensionContext context) {
         Method method = getTestMethod(context);
         Class<?> testClass = context.getRequiredTestClass();
@@ -22,10 +34,22 @@ public class JunitMetaDataExtractor {
         );
     }
 
+    /**
+     * Extracts parameters from parameterized tests.
+     *
+     * @param context the JUnit extension context
+     * @return single parameter value for one parameter, Map for multiple parameters, or null for non-parameterized tests
+     */
     public Object extractTestParameters(ExtensionContext context) {
         return ParameterExtractor.extractTestParameters(context);
     }
 
+    /**
+     * Checks if the test method is a parameterized test.
+     *
+     * @param context the JUnit extension context
+     * @return true if the test method is annotated with @ParameterizedTest
+     */
     public boolean isParameterizedTest(ExtensionContext context) {
         return ParameterExtractor.isParameterizedTest(context);
     }
