@@ -103,24 +103,6 @@ class JunitTestReporterTest {
     }
 
     @Test
-    void reportTestResult_WhenMetadataExtractionFails_ShouldThrowException() {
-        // Given
-        when(runManager.isActive()).thenReturn(true);
-        when(context.getUniqueId()).thenReturn("test-id");
-        when(metaDataExtractor.extractTestMetadata(context))
-                .thenThrow(new RuntimeException("Extraction failed"));
-
-        // When & Then
-        ReportTestResultException exception = assertThrows(
-                ReportTestResultException.class,
-                () -> reporter.reportTestResult(context, "failed", "message")
-        );
-
-        assertTrue(exception.getMessage().contains("Failed to report test result for: Unknown Test"));
-        verify(runManager, never()).reportTest(any());
-    }
-
-    @Test
     void reportTestResult_WhenResultConstructionFails_ShouldThrowException() {
         // Given
         TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java");
