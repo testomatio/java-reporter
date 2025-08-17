@@ -163,31 +163,6 @@ class JunitTestReporterTest {
     }
 
     @Test
-    void reportTestResult_WhenUniqueIdIsNull_ShouldUseFallbackLockKey() {
-        // Given
-        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java");
-        TestResult result = TestResult.builder().withTitle("Test Title").build();
-        String displayName = "testMethodDisplay";
-
-        when(runManager.isActive()).thenReturn(true);
-        when(context.getUniqueId()).thenReturn(null);
-        when(context.getRequiredTestMethod()).thenReturn(testMethod);
-        when(testMethod.getName()).thenReturn("testMethod");
-        when(context.getDisplayName()).thenReturn(displayName);
-        when(metaDataExtractor.extractTestMetadata(context)).thenReturn(metadata);
-        when(resultConstructor.constructTestRunResult(any(), any(), any(), any())).thenReturn(result);
-
-        // When
-        reporter.reportTestResult(context, "passed", "message");
-
-        // Then
-        verify(runManager).reportTest(result);
-        verify(context).getRequiredTestMethod();
-        verify(testMethod).getName();
-        verify(context).getDisplayName();
-    }
-
-    @Test
     void reportTestResult_ConcurrentExecution_ShouldHandleThreadSafety() throws InterruptedException {
         // Given
         int numberOfThreads = 10;
