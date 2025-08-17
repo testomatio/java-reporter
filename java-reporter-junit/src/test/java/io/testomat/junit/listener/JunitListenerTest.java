@@ -56,6 +56,10 @@ class JunitListenerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        
+        // Setup mock context with a valid unique ID to avoid NPE in cleanup methods
+        when(mockExtensionContext.getUniqueId()).thenReturn("test-unique-id-123");
+        
         junitListener = new JunitListener(
                 mockMethodExportManager,
                 mockRunManager,
@@ -458,7 +462,9 @@ class JunitListenerTest {
 
             when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
             when(contextA.getTestClass()).thenReturn(Optional.of(TestClassA.class));
+            when(contextA.getUniqueId()).thenReturn("test-context-A");
             when(contextB.getTestClass()).thenReturn(Optional.of(TestClassB.class));
+            when(contextB.getUniqueId()).thenReturn("test-context-B");
 
             // When
             junitListener.testSuccessful(contextA);
