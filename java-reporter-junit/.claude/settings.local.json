@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn test:*)",
+      "Bash(mvn clean:*)",
+      "Bash(mvn checkstyle:*)",
+      "Bash(touch:*)",
+      "Bash(mvn surefire:test:*)",
+      "Bash(rm:*)",
+      "Bash(mvn:*)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": [],
+    "additionalDirectories": [
+      "C:\\c\\Users\\vlase\\Desktop\\reporter\\java-reporter"
+    ]
+  }
+}

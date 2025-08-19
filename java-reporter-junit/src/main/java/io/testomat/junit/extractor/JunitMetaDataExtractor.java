@@ -4,6 +4,7 @@ import io.testomat.core.annotation.TestId;
 import io.testomat.core.annotation.Title;
 import io.testomat.core.exception.NoMethodInContextException;
 import io.testomat.core.model.TestMetadata;
+import io.testomat.junit.extractor.strategy.ParameterExtractorService;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,6 +15,19 @@ import org.junit.jupiter.params.ParameterizedTest;
  * file paths, and parameter extraction for parameterized tests.
  */
 public class JunitMetaDataExtractor {
+
+    private final ParameterExtractorService parameterExtractorService;
+
+    public JunitMetaDataExtractor() {
+        this.parameterExtractorService = new ParameterExtractorService();
+    }
+
+    /**
+     * Constructor for testing with custom parameter extractor service.
+     */
+    public JunitMetaDataExtractor(ParameterExtractorService parameterExtractorService) {
+        this.parameterExtractorService = parameterExtractorService;
+    }
 
     /**
      * Extracts complete metadata for a test method.
@@ -41,7 +55,7 @@ public class JunitMetaDataExtractor {
      * @return parameter object (single value for simple params, Map for multiple/complex params), or null for non-parameterized tests
      */
     public Object extractTestParameters(ExtensionContext context) {
-        return RobustParameterExtractor.extractParameters(context);
+        return parameterExtractorService.extractParameters(context);
     }
 
     /**
@@ -51,7 +65,12 @@ public class JunitMetaDataExtractor {
      * @return true if the test method is annotated with @ParameterizedTest
      */
     public boolean isParameterizedTest(ExtensionContext context) {
-        return RobustParameterExtractor.isParameterizedTest(context);
+        try {
+            Method method = context.getTestMethod().orElse(null);
+            return method != null && method.isAnnotationPresent(ParameterizedTest.class);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private String buildTestTitle(Method method, ExtensionContext context) {

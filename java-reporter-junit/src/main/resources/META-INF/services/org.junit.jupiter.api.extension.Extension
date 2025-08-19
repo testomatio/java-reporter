@@ -1,3 +1,1 @@
-io.testomat.junit.extractor.InvocationInterceptor
 io.testomat.junit.listener.JunitListener
-io.testomat.junit.extractor.ParameterCapture
