@@ -94,7 +94,7 @@ public class JunitMetaDataExtractor {
     private String buildParameterizedTitle(Method method, ParameterizedTest parameterized) {
         String customName = parameterized.name();
         if (isCustomNameProvided(customName)) {
-            return method.getName() + " |>" + customName;
+            return method.getName();
         }
         return method.getName();
     }

@@ -345,20 +345,11 @@ public class CsvFileSourceExtractionStrategy implements ParameterExtractionStrat
         // Create parameter map with proper names
         Map<String, Object> parameterMap = new LinkedHashMap<>();
         for (int i = 0; i < values.length; i++) {
-            String parameterName = getParameterName(parameters, i);
+            String parameterName = context.getParameterName(i);
             parameterMap.put(parameterName, values[i]);
         }
 
         return parameterMap;
     }
 
-    private String getParameterName(Parameter[] parameters, int index) {
-        if (index < parameters.length) {
-            Parameter param = parameters[index];
-            if (param.isNamePresent() && !param.getName().matches("arg\\d+")) {
-                return param.getName();
-            }
-        }
-        return "param" + index;
-    }
 }

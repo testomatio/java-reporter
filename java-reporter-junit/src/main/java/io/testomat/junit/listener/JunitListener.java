@@ -62,7 +62,6 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        System.out.println("===UPDATE1");
         if (!isListeningRequired()) {
             return;
         }
