@@ -145,6 +145,16 @@ public class RobustParameterExtractor implements InvocationInterceptor {
         return "param" + index;
     }
     
+    private static String getParameterNameStatic(Parameter[] parameters, int index) {
+        if (index < parameters.length) {
+            Parameter param = parameters[index];
+            if (param.isNamePresent() && !param.getName().matches("arg\\d+")) {
+                return param.getName();
+            }
+        }
+        return "param" + index;
+    }
+    
     private boolean isSimpleType(Object value) {
         if (value == null) {
             return true;
@@ -189,15 +199,18 @@ public class RobustParameterExtractor implements InvocationInterceptor {
                 
                 Object parsedValue = parseValue(valueStr.trim());
                 
-                // For single parameter, return the value directly
+                // Always create parameter name-value pairs as requested
                 Method method = context.getTestMethod().orElse(null);
-                if (method != null && method.getParameters().length == 1) {
-                    return parsedValue;
+                Map<String, Object> paramMap = new LinkedHashMap<>();
+                
+                if (method != null && method.getParameters().length >= 1) {
+                    Parameter[] parameters = method.getParameters();
+                    String paramName = getParameterNameStatic(parameters, 0);
+                    paramMap.put(paramName, parsedValue);
+                } else {
+                    paramMap.put("param0", parsedValue);
                 }
                 
-                // For multiple parameters, create a map (though single param is most common)
-                Map<String, Object> paramMap = new LinkedHashMap<>();
-                paramMap.put("param0", parsedValue);
                 return paramMap;
             }
             
