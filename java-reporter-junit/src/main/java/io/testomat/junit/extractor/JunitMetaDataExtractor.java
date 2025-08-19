@@ -38,10 +38,10 @@ public class JunitMetaDataExtractor {
      * Extracts parameters from parameterized tests.
      *
      * @param context the JUnit extension context
-     * @return single parameter value for one parameter, Map for multiple parameters, or null for non-parameterized tests
+     * @return parameter object (single value for simple params, Map for multiple/complex params), or null for non-parameterized tests
      */
     public Object extractTestParameters(ExtensionContext context) {
-        return ParameterExtractor.extractTestParameters(context);
+        return RobustParameterExtractor.extractParameters(context);
     }
 
     /**
@@ -51,7 +51,7 @@ public class JunitMetaDataExtractor {
      * @return true if the test method is annotated with @ParameterizedTest
      */
     public boolean isParameterizedTest(ExtensionContext context) {
-        return ParameterExtractor.isParameterizedTest(context);
+        return RobustParameterExtractor.isParameterizedTest(context);
     }
 
     private String buildTestTitle(Method method, ExtensionContext context) {

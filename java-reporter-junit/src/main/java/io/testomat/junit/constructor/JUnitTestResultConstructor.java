@@ -83,19 +83,8 @@ public class JUnitTestResultConstructor {
 
         if (metaDataExtractor.isParameterizedTest(context)) {
             example = metaDataExtractor.extractTestParameters(context);
-            if (example != null) {
-                rid = context.getUniqueId();
-            } else {
-                log.debug("the method {} is parametrized, but the example is null",
-                        context.getDisplayName());
-                // FIX: Only create fallback for tests that should have parameters but extraction failed
-                if (shouldCreateFallbackExample(context)) {
-                    example = createFallbackExample(context);
-                    rid = context.getUniqueId();
-                    log.debug("Created fallback example for parameterized test: {}", example);
-                }
-                // For tests marked as parameterized but with no actual parameters, leave example and rid as null
-            }
+            rid = context.getUniqueId();
+            log.debug("Parameterized test - example: {}, rid: {}", example, rid);
         }
 
         if (message != null) {
@@ -251,54 +240,4 @@ public class JUnitTestResultConstructor {
         return !(Objects.requireNonNull(throwable) instanceof TestAbortedException);
     }
 
-    /**
-     * Determines if a fallback example should be created for a parameterized test.
-     * This helps distinguish between parameterized tests that actually have parameters
-     * vs. those that are just marked with @ParameterizedTest but have no real parameters.
-     *
-     * @param context the extension context
-     * @return true if a fallback example should be created
-     */
-    private boolean shouldCreateFallbackExample(ExtensionContext context) {
-        try {
-            // Check if the test method has parameters
-            java.lang.reflect.Method testMethod = context.getTestMethod().orElse(null);
-            if (testMethod != null) {
-                java.lang.reflect.Parameter[] parameters = testMethod.getParameters();
-                if (parameters.length > 0) {
-                    // Has parameters, so it's a real parameterized test
-                    return true;
-                }
-            }
-            
-            // Check if display name suggests parameterization (contains brackets, etc.)
-            String displayName = context.getDisplayName();
-            if (displayName != null && 
-                (displayName.contains("[") || displayName.contains("(") || displayName.contains(","))) {
-                return true;
-            }
-            
-            return false;
-        } catch (Exception e) {
-            // If we can't determine, err on the side of not creating fallback
-            return false;
-        }
-    }
-
-    /**
-     * Creates a fallback example for parameterized tests when parameter extraction fails.
-     * Returns null to avoid sending excessive metadata to testomat.io API.
-     * According to testomat.io documentation, example should only contain actual parameter values.
-     *
-     * @param context the extension context
-     * @return null to indicate no parameters should be reported
-     */
-    private Object createFallbackExample(ExtensionContext context) {
-        // According to par.md documentation, the example field should only contain
-        // actual test parameter values. When parameter extraction fails, it's better
-        // to return null rather than internal JUnit metadata that adds no value
-        // to test reporting and makes the API payload unnecessarily large.
-        log.debug("Parameter extraction failed for parameterized test: {}", context.getDisplayName());
-        return null;
-    }
 }
