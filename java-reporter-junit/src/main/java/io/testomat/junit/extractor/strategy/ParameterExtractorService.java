@@ -91,6 +91,7 @@ public class ParameterExtractorService {
         strategies.add(new CsvFileSourceExtractionStrategy());
         strategies.add(new MethodSourceExtractionStrategy());
         strategies.add(new ArgumentsSourceExtractionStrategy());
+        strategies.add(new NullSourceExtractionStrategy());
         // TODO: Add other strategies as they are implemented
         // etc.
     }
