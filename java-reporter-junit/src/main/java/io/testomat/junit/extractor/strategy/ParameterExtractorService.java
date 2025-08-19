@@ -89,6 +89,8 @@ public class ParameterExtractorService {
         strategies.add(new EnumSourceExtractionStrategy());
         strategies.add(new CsvSourceExtractionStrategy());
         strategies.add(new CsvFileSourceExtractionStrategy());
+        strategies.add(new MethodSourceExtractionStrategy());
+        strategies.add(new ArgumentsSourceExtractionStrategy());
         // TODO: Add other strategies as they are implemented
         // etc.
     }
