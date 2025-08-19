@@ -164,19 +164,10 @@ public class EmptySourceExtractionStrategy implements ParameterExtractionStrateg
         // @EmptySource always provides exactly one parameter
         // Create parameter map with proper name
         Map<String, Object> parameterMap = new LinkedHashMap<>();
-        String parameterName = getParameterName(parameters, 0);
+        String parameterName = context.getParameterName(0);
         parameterMap.put(parameterName, value);
 
         return parameterMap;
     }
 
-    private String getParameterName(Parameter[] parameters, int index) {
-        if (index < parameters.length) {
-            Parameter param = parameters[index];
-            if (param.isNamePresent() && !param.getName().matches("arg\\d+")) {
-                return param.getName();
-            }
-        }
-        return "param" + index;
-    }
 }
