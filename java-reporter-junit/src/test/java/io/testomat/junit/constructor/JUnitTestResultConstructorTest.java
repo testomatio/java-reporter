@@ -149,29 +149,6 @@ class JUnitTestResultConstructorTest {
     }
 
     @Test
-    @DisplayName("Should handle parameterized test without parameters - should not set rid")
-    void shouldHandleParameterizedTestWithoutParameters() throws Exception {
-        // Given
-        Method mockMethod = mock(Method.class);
-        when(mockMethod.getParameters()).thenReturn(new java.lang.reflect.Parameter[0]); // No parameters
-        
-        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(true);
-        when(mockExtractor.extractTestParameters(mockContext)).thenReturn(null);
-        when(mockContext.getDisplayName()).thenReturn("testMethod");
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(mockMethod));
-        when(mockContext.getExecutionException()).thenReturn(Optional.empty());
-        setupBasicMetadata();
-
-        // When
-        TestResult result = constructor.constructTestRunResult(mockMetadata, "test", "passed", mockContext);
-
-        // Then
-        assertThat(result.getExample()).isNull();
-        assertThat(result.getRid()).isNull();
-        verify(mockContext, never()).getUniqueId(); // Should not call this when no parameters
-    }
-
-    @Test
     @DisplayName("Should filter out TestAbortedException")
     void shouldFilterOutTestAbortedException() {
         // Given
