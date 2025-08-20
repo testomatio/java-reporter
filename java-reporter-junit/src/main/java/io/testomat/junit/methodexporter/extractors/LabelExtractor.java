@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 public class LabelExtractor {
     private static final String COMMENT_LABEL_PATTERN = "@(\\w+)(?::(\\w+))?|#(\\w+)";
-    
+
     public List<String> extractLabels(MethodDeclaration testMethod) {
         try {
             List<String> labels = new ArrayList<>();

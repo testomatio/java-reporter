@@ -7,17 +7,13 @@ import org.junit.jupiter.params.provider.ValueSource;
  * Parameter extraction handler for @ValueSource annotated parameterized tests.
  * Supports extraction of various value types including strings, numeric types,
  * booleans, characters, and classes from @ValueSource annotations.
-
  */
 public class ValueSourceHandler extends AbstractParameterExtractionHandler {
-
-
 
     @Override
     public String getStrategyName() {
         return "ValueSourceExtractionStrategy";
     }
-
 
     @Override
     protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {
@@ -78,5 +74,4 @@ public class ValueSourceHandler extends AbstractParameterExtractionHandler {
 
         return parseTypedValue(value);
     }
-
 }

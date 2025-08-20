@@ -1,7 +1,6 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import org.junit.jupiter.params.provider.NullSource;
 
 /**
  * Parameter extraction handler for @NullSource annotated parameterized tests.
@@ -10,21 +9,18 @@ import org.junit.jupiter.params.provider.NullSource;
  */
 public class NullSourceHandler extends AbstractParameterExtractionHandler {
 
-
-
     @Override
     public String getStrategyName() {
         return "NullSourceExtractionStrategy";
     }
 
-
     @Override
     protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {
-        if ("null".equals(valueStr) || "NULL".equals(valueStr) 
-            || "<null>".equals(valueStr) || valueStr.isEmpty()) {
+        if ("null".equals(valueStr) || "NULL".equals(valueStr)
+                || "<null>".equals(valueStr) || valueStr.isEmpty()) {
             return null;
         }
-        
+
         throw new RuntimeException("Display name doesn't match null pattern");
     }
 
@@ -32,5 +28,4 @@ public class NullSourceHandler extends AbstractParameterExtractionHandler {
     protected Object extractFromAnnotation(ParameterExtractionContext context) {
         return null;
     }
-
 }

@@ -3,7 +3,6 @@ package io.testomat.junit.extractor.strategy.handlers;
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 /**
  * Parameter extraction handler for @NullAndEmptySource annotated parameterized tests.
@@ -11,7 +10,6 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
  * providing appropriate null/empty values based on the parameter type.
  */
 public class NullAndEmptySourceHandler extends AbstractParameterExtractionHandler {
-
 
     @Override
     public String getStrategyName() {
@@ -23,13 +21,13 @@ public class NullAndEmptySourceHandler extends AbstractParameterExtractionHandle
         if ("null".equals(valueStr) || "NULL".equals(valueStr) || "<null>".equals(valueStr)) {
             return null;
         }
-        
+
         if (valueStr.isEmpty() || "\"\"".equals(valueStr) || "''".equals(valueStr)
-            || "[]".equals(valueStr) || "{}".equals(valueStr) 
-            || "<empty>".equals(valueStr)) {
+                || "[]".equals(valueStr) || "{}".equals(valueStr)
+                || "<empty>".equals(valueStr)) {
             return determineEmptyValue(context);
         }
-        
+
         throw new RuntimeException("Display name doesn't match null or empty pattern");
     }
 
@@ -64,6 +62,4 @@ public class NullAndEmptySourceHandler extends AbstractParameterExtractionHandle
             return "";
         }
     }
-
-
 }

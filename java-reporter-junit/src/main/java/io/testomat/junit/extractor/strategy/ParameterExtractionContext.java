@@ -2,11 +2,11 @@ package io.testomat.junit.extractor.strategy;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.List;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
- * Context object containing all information needed for parameter extraction from parameterized tests.
+ * Context object containing all information needed for parameter extraction
+ * from parameterized tests.
  * This immutable value object is passed to parameter extraction strategies.
  * Includes centralized parameter name resolution using source code parsing.
  */
@@ -26,8 +26,8 @@ public class ParameterExtractionContext {
     /**
      * Constructor for testing with custom parameter name resolver.
      */
-    ParameterExtractionContext(ExtensionContext extensionContext, 
-                              SourceCodeParameterNameResolver parameterNameResolver) {
+    ParameterExtractionContext(ExtensionContext extensionContext,
+                               SourceCodeParameterNameResolver parameterNameResolver) {
         this.extensionContext = extensionContext;
         this.testMethod = extensionContext.getTestMethod().orElse(null);
         this.annotations = testMethod != null ? testMethod.getAnnotations() : new Annotation[0];
@@ -98,10 +98,9 @@ public class ParameterExtractionContext {
         return testMethod != null && extensionContext != null;
     }
 
-
     /**
      * Gets a specific parameter name by index.
-     * 
+     *
      * @param parameterIndex the index of the parameter (0-based)
      * @return the parameter name, or "param{index}" as fallback
      */

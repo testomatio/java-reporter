@@ -12,13 +12,10 @@ import org.junit.jupiter.params.provider.EnumSource;
  */
 public class EnumSourceHandler extends AbstractParameterExtractionHandler {
 
-
-
     @Override
     public String getStrategyName() {
         return "EnumSourceExtractionStrategy";
     }
-
 
     @Override
     protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {
@@ -33,11 +30,11 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
         }
         try {
             Class<? extends Enum<?>> enumClass = enumSource.value();
-            
+
             if (enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum")) {
                 enumClass = inferEnumClassFromMethod(context);
             }
-            
+
             if (enumClass == null) {
                 return null;
             }
@@ -53,7 +50,7 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
                     try {
                         return Enum.valueOf((Class) enumClass, name);
                     } catch (IllegalArgumentException e) {
-
+                        logger.warn("Could not find enum constant {}", name);
                     }
                 }
                 return null;
@@ -101,7 +98,7 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
         try {
             EnumSource enumSource = context.getAnnotation(EnumSource.class);
             Class<? extends Enum<?>> enumClass = enumSource.value();
-            
+
             if (enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum")) {
                 enumClass = inferEnumClassFromMethod(context);
             }

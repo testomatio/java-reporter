@@ -46,7 +46,6 @@ public class MethodCaseExtractor {
                 .filter(this::isTestMethod)
                 .collect(Collectors.toList());
 
-
         return convertDeclarationsToLoaderTestCases(testMethods, filepath);
     }
 
@@ -67,7 +66,8 @@ public class MethodCaseExtractor {
 
     private boolean isTestMethod(MethodDeclaration method) {
         try {
-            boolean isTest = method.getAnnotations().stream()
+
+            return method.getAnnotations().stream()
                     .anyMatch(ann -> {
                         String name = ann.getNameAsString();
                         return "Test".equals(name)
@@ -75,12 +75,6 @@ public class MethodCaseExtractor {
                                 || "RepeatedTest".equals(name)
                                 || "TestFactory".equals(name);
                     });
-
-            if (isTest) {
-            } else {
-            }
-
-            return isTest;
         } catch (Exception e) {
             return false;
         }
