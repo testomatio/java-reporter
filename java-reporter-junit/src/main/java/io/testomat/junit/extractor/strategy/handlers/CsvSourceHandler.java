@@ -1,7 +1,7 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import java.lang.annotation.Annotation;
+import io.testomat.junit.extractor.strategy.handlers.util.CsvParsingUtils;
 import org.junit.jupiter.params.provider.CsvSource;
 
 /**
@@ -12,20 +12,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 public class CsvSourceHandler extends AbstractParameterExtractionHandler {
 
 
-    @Override
-    public int getPriority() {
-        return 10;
-    }
 
     @Override
     public String getStrategyName() {
         return "CsvSourceExtractionStrategy";
     }
 
-    @Override
-    protected Class<? extends Annotation> getSupportedAnnotationType() {
-        return CsvSource.class;
-    }
 
     @Override
     protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {

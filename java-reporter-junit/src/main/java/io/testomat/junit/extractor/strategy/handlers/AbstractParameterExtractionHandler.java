@@ -2,8 +2,6 @@ package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.exception.ParameterExtractionException;
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import io.testomat.junit.extractor.strategy.ParameterExtractionHandler;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -53,7 +51,7 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
 
     @Override
     public final Object extractParameters(ParameterExtractionContext context) throws ParameterExtractionException {
-        if (!supports(context)) {
+        if (!context.isValid()) {
             return null;
         }
 
@@ -74,10 +72,6 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
         }
     }
 
-    @Override
-    public boolean supports(ParameterExtractionContext context) {
-        return context.isValid() && context.hasAnnotation(getSupportedAnnotationType());
-    }
 
     /**
      * Extracts parameter values from the test display name using regex pattern matching.
@@ -235,12 +229,6 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
         return value;
     }
 
-    /**
-     * Gets the annotation type that this handler supports.
-     *
-     * @return the supported annotation class
-     */
-    protected abstract Class<? extends Annotation> getSupportedAnnotationType();
 
     /**
      * Parses the value from the display name specific to this handler type.

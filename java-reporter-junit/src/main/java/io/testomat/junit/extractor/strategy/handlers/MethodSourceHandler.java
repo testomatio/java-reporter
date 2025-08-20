@@ -17,18 +17,8 @@ public class MethodSourceHandler extends AbstractParameterExtractionHandler {
 
 
     @Override
-    public int getPriority() {
-        return 15;
-    }
-
-    @Override
     public String getStrategyName() {
         return "MethodSourceExtractionStrategy";
-    }
-
-    @Override
-    protected Class<? extends Annotation> getSupportedAnnotationType() {
-        return MethodSource.class;
     }
 
     @Override

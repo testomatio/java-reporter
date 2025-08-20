@@ -2,14 +2,12 @@ package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
 import io.testomat.junit.exception.ParameterExtractionException;
-import io.testomat.junit.extractor.strategy.ParameterExtractionHandler;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,99 +19,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Strategy for extracting parameters from @CsvFileSource annotated parameterized tests.
+ * Parameter extraction handler for @CsvFileSource annotated parameterized tests.
  * Supports extraction of CSV values from files specified in @CsvFileSource annotations
  * with various configurations including custom delimiters, null representations, and encoding.
  */
-public class CsvFileSourceHandler implements ParameterExtractionHandler {
+public class CsvFileSourceHandler extends AbstractParameterExtractionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(CsvFileSourceHandler.class);
     private static final Pattern DISPLAY_NAME_PATTERN = Pattern.compile("^\\[\\d+\\]\\s*(.*)$");
 
-    @Override
-    public boolean supports(ParameterExtractionContext context) {
-        return context.isValid() && context.hasAnnotation(CsvFileSource.class);
-    }
-
-    @Override
-    public Object extractParameters(ParameterExtractionContext context) 
-            throws ParameterExtractionException {
-        if (!supports(context)) {
-            return null;
-        }
-
-        try {
-            CsvFileSource csvFileSource = context.getAnnotation(CsvFileSource.class);
-            if (csvFileSource == null) {
-                return null;
-            }
-
-            ParseResult parseResult = extractFromDisplayNameWithResult(context, csvFileSource);
-            if (parseResult.isSuccessful()) {
-                return formatParameters(parseResult.getValue(), context);
-            }
-
-            Object[] fileValues = extractFromFile(csvFileSource, context);
-            return formatParameters(fileValues, context);
-
-        } catch (Exception e) {
-            logger.debug("Failed to extract CsvFileSource parameters for: {}", 
-                        context.getDisplayName(), e);
-            throw new ParameterExtractionException("Failed to extract CsvFileSource parameters", e);
-        }
-    }
-
-    @Override
-    public int getPriority() {
-        return 10;
-    }
 
     @Override
     public String getStrategyName() {
         return "CsvFileSourceExtractionStrategy";
     }
 
-    private static class ParseResult {
-        private final boolean successful;
-        private final Object[] values;
-
-        private ParseResult(boolean successful, Object[] values) {
-            this.successful = successful;
-            this.values = values;
+    @Override
+    protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {
+        CsvFileSource csvFileSource = context.getAnnotation(CsvFileSource.class);
+        if (csvFileSource == null) {
+            return new Object[0];
         }
-
-        public static ParseResult success(Object[] values) {
-            return new ParseResult(true, values);
-        }
-
-        public static ParseResult failure() {
-            return new ParseResult(false, null);
-        }
-
-        public boolean isSuccessful() {
-            return successful;
-        }
-
-        public Object[] getValue() {
-            return values;
-        }
+        return parseCsvString(valueStr, csvFileSource);
     }
 
-    private ParseResult extractFromDisplayNameWithResult(ParameterExtractionContext context, 
-                                                         CsvFileSource csvFileSource) {
-        String displayName = context.getDisplayName();
-        if (displayName == null || displayName.trim().isEmpty()) {
-            return ParseResult.failure();
+    @Override
+    protected Object extractFromAnnotation(ParameterExtractionContext context) {
+        CsvFileSource csvFileSource = context.getAnnotation(CsvFileSource.class);
+        if (csvFileSource == null) {
+            return new Object[0];
         }
-
-        Matcher matcher = DISPLAY_NAME_PATTERN.matcher(displayName.trim());
-        if (matcher.matches()) {
-            String csvStr = matcher.group(1).trim();
-            Object[] parsedValues = parseCsvString(csvStr, csvFileSource);
-            return ParseResult.success(parsedValues);
-        }
-
-        return ParseResult.failure();
+        return extractFromFile(csvFileSource, context);
     }
 
     private Object[] extractFromFile(CsvFileSource csvFileSource,
@@ -267,59 +202,6 @@ public class CsvFileSourceHandler implements ParameterExtractionHandler {
         return parseTypedValue(trimmed);
     }
 
-    private Object parseTypedValue(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return value;
-        }
 
-        String trimmed = value.trim();
-
-        if ("true".equalsIgnoreCase(trimmed)) {
-            return true;
-        }
-        if ("false".equalsIgnoreCase(trimmed)) {
-            return false;
-        }
-
-        try {
-            if (trimmed.contains(".")) {
-                return Double.parseDouble(trimmed);
-            } else {
-                long longVal = Long.parseLong(trimmed);
-                if (longVal >= Integer.MIN_VALUE
-                    && longVal <= Integer.MAX_VALUE) {
-                    return (int) longVal;
-                }
-                return longVal;
-            }
-        } catch (NumberFormatException e) {
-        }
-
-        return value;
-    }
-
-    private Object formatParameters(Object[] values, 
-                                    ParameterExtractionContext context) {
-        if (values == null || values.length == 0) {
-            return new LinkedHashMap<String, Object>();
-        }
-
-        Method method = context.getTestMethod();
-        if (method == null) {
-            Map<String, Object> parameterMap = new LinkedHashMap<>();
-            for (int i = 0; i < values.length; i++) {
-                parameterMap.put("param" + i, values[i]);
-            }
-            return parameterMap;
-        }
-
-        Map<String, Object> parameterMap = new LinkedHashMap<>();
-        for (int i = 0; i < values.length; i++) {
-            String parameterName = context.getParameterName(i);
-            parameterMap.put(parameterName, values[i]);
-        }
-
-        return parameterMap;
-    }
 
 }

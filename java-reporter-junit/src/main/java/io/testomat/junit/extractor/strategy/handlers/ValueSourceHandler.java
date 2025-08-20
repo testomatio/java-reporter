@@ -1,7 +1,6 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import java.lang.annotation.Annotation;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -13,20 +12,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 public class ValueSourceHandler extends AbstractParameterExtractionHandler {
 
 
-    @Override
-    public int getPriority() {
-        return 10;
-    }
 
     @Override
     public String getStrategyName() {
         return "ValueSourceExtractionStrategy";
     }
 
-    @Override
-    protected Class<? extends Annotation> getSupportedAnnotationType() {
-        return ValueSource.class;
-    }
 
     @Override
     protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {

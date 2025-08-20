@@ -1,7 +1,6 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -14,20 +13,12 @@ import org.junit.jupiter.params.provider.EnumSource;
 public class EnumSourceHandler extends AbstractParameterExtractionHandler {
 
 
-    @Override
-    public int getPriority() {
-        return 10;
-    }
 
     @Override
     public String getStrategyName() {
         return "EnumSourceExtractionStrategy";
     }
 
-    @Override
-    protected Class<? extends Annotation> getSupportedAnnotationType() {
-        return EnumSource.class;
-    }
 
     @Override
     protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {
