@@ -29,21 +29,17 @@ public class SourceCodeParameterNameResolver {
 
     private static final Logger logger = LoggerFactory.getLogger(SourceCodeParameterNameResolver.class);
     
-    // Thread-safe cache: "ClassName.methodName(paramTypes)" -> List<String>
     private final Map<String, List<String>> parameterNameCache = new ConcurrentHashMap<>();
     
-    // Lazy initialization to avoid circular dependencies
     private volatile FileFinder fileFinder;
     private volatile FileParser fileParser;
     
-    // Singleton instance for global caching
     private static final SourceCodeParameterNameResolver INSTANCE = new SourceCodeParameterNameResolver();
     
     public static SourceCodeParameterNameResolver getInstance() {
         return INSTANCE;
     }
     
-    // Package-private constructor for testing
     SourceCodeParameterNameResolver() {
     }
     
@@ -69,14 +65,12 @@ public class SourceCodeParameterNameResolver {
         
         String cacheKey = createCacheKey(method);
         
-        // Check cache first (thread-safe)
         List<String> cachedNames = parameterNameCache.get(cacheKey);
         if (cachedNames != null) {
             logger.trace("Retrieved parameter names from cache for method: {}", cacheKey);
             return new ArrayList<>(cachedNames); // Return defensive copy
         }
         
-        // Attempt source code parsing
         List<String> sourceNames = parseParameterNamesFromSource(method);
         if (sourceNames != null && !sourceNames.isEmpty()) {
             logger.debug("Successfully parsed parameter names from source for method: {}", cacheKey);
@@ -84,7 +78,6 @@ public class SourceCodeParameterNameResolver {
             return new ArrayList<>(sourceNames); // Return defensive copy
         }
         
-        // Fallback to reflection-based names
         List<String> reflectionNames = getReflectionBasedNames(method);
         logger.debug("Using reflection-based parameter names for method: {}", cacheKey);
         parameterNameCache.put(cacheKey, reflectionNames);
@@ -105,8 +98,7 @@ public class SourceCodeParameterNameResolver {
             return names.get(parameterIndex);
         }
         
-        // Ultimate fallback
-        logger.warn("Parameter index {} out of bounds for method {}, using generic fallback", 
+        logger.warn("Parameter index {} out of bounds for method {}, using generic fallback",
                    parameterIndex, method != null ? method.getName() : "null");
         return "param" + parameterIndex;
     }
@@ -117,7 +109,6 @@ public class SourceCodeParameterNameResolver {
      */
     private List<String> parseParameterNamesFromSource(Method method) {
         try {
-            // Lazy initialization to avoid circular dependencies
             if (fileFinder == null) {
                 synchronized (this) {
                     if (fileFinder == null) {
@@ -141,7 +132,6 @@ public class SourceCodeParameterNameResolver {
                 return null;
             }
             
-            // Find the method in the parsed AST
             MethodDeclaration methodDeclaration = findMethodInCompilationUnit(
                 compilationUnit, declaringClass, method);
                 
@@ -150,7 +140,6 @@ public class SourceCodeParameterNameResolver {
                 return null;
             }
             
-            // Extract parameter names
             List<String> parameterNames = new ArrayList<>();
             for (Parameter param : methodDeclaration.getParameters()) {
                 parameterNames.add(param.getNameAsString());
@@ -174,10 +163,8 @@ public class SourceCodeParameterNameResolver {
     private MethodDeclaration findMethodInCompilationUnit(CompilationUnit compilationUnit, 
                                                          Class<?> declaringClass, Method targetMethod) {
         
-        // Get the simple class name (handle nested classes)
         String className = getSimpleClassName(declaringClass);
         
-        // Find all class declarations in the compilation unit
         return compilationUnit.findAll(ClassOrInterfaceDeclaration.class)
             .stream()
             .filter(classDecl -> className.equals(classDecl.getNameAsString()) || 
@@ -204,7 +191,6 @@ public class SourceCodeParameterNameResolver {
             Parameter astParam = methodDecl.getParameters().get(i);
             Class<?> reflectionParamType = reflectionParamTypes[i];
             
-            // Simple type matching by name
             String astTypeName = astParam.getTypeAsString();
             String reflectionTypeName = getSimpleTypeName(reflectionParamType);
             
@@ -221,12 +207,10 @@ public class SourceCodeParameterNameResolver {
      * Handles common variations like "String" vs "java.lang.String".
      */
     private boolean typesMatch(String astTypeName, String reflectionTypeName) {
-        // Exact match
         if (astTypeName.equals(reflectionTypeName)) {
             return true;
         }
         
-        // Handle fully qualified vs simple names
         String astSimple = getLastComponent(astTypeName);
         String reflectionSimple = getLastComponent(reflectionTypeName);
         
@@ -240,20 +224,9 @@ public class SourceCodeParameterNameResolver {
     private List<String> getReflectionBasedNames(Method method) {
         List<String> names = new ArrayList<>();
         java.lang.reflect.Parameter[] parameters = method.getParameters();
-        
-        for (int i = 0; i < parameters.length; i++) {
-            java.lang.reflect.Parameter param = parameters[i];
-            String name;
-            
-            // Use actual parameter name if available and not synthetic
-            if (param.isNamePresent() && !param.getName().matches("arg\\d+")) {
-                name = param.getName();
-            } else {
-                // Use Java's synthetic names instead of completely generic ones
-                name = param.getName(); // This will be arg0, arg1, etc. when -parameters is not used
-            }
-            
-            names.add(name);
+
+        for (java.lang.reflect.Parameter param : parameters) {
+            names.add(param.getName());
         }
         
         return names;

@@ -52,7 +52,8 @@ public class JunitMetaDataExtractor {
      * Extracts parameters from parameterized tests.
      *
      * @param context the JUnit extension context
-     * @return parameter object (single value for simple params, Map for multiple/complex params), or null for non-parameterized tests
+     * @return parameter object (single value for simple params, Map for multiple/complex params),
+     * or null for non-parameterized tests
      */
     public Object extractTestParameters(ExtensionContext context) {
         return parameterExtractorService.extractParameters(context);
