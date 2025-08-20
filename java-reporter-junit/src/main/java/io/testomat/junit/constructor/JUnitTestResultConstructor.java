@@ -1,9 +1,5 @@
 package io.testomat.junit.constructor;
 
-// FINAL REVIEW: Overall Rating: 9/10 - Excellent production-ready class
-// STRENGTHS: Security-conscious, comprehensive error handling, well-tested
-// AREAS ADDRESSED: Previous issues fixed, solid implementation patterns
-
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
@@ -30,11 +26,11 @@ public class JUnitTestResultConstructor {
     private static final Logger log = LoggerFactory.getLogger(JUnitTestResultConstructor.class);
 
     private static final Pattern TESTOMAT_API_KEY_PATTERN = Pattern.compile(
-        "\\btstmt_[a-zA-Z0-9_-]+", Pattern.CASE_INSENSITIVE);
+            "\\btstmt_[a-zA-Z0-9_-]+", Pattern.CASE_INSENSITIVE);
     private static final Pattern WINDOWS_PATH_PATTERN = Pattern.compile(
-        "[C-Z]:\\\\[^\\s]+\\\\([^\\\\\\s]+)");
+            "[C-Z]:\\\\[^\\s]+\\\\([^\\\\\\s]+)");
     private static final Pattern UNIX_PATH_PATTERN = Pattern.compile(
-        "/[^\\s]+/([^/\\s]+)");
+            "/[^\\s]+/([^/\\s]+)");
 
     private final JunitMetaDataExtractor metaDataExtractor;
 
@@ -67,7 +63,6 @@ public class JUnitTestResultConstructor {
      * @param status   the test execution status (e.g., "passed", "failed", "skipped")
      * @param context  the JUnit extension context containing execution details
      * @return a complete TestResult object with all available information
-     * @throws NullPointerException if metadata, status, or context is null
      */
     public TestResult constructTestRunResult(TestMetadata metadata,
                                              String message,
@@ -108,7 +103,6 @@ public class JUnitTestResultConstructor {
      * @param example  the test parameters for parameterized tests (if any)
      * @param rid      the unique identifier for parameterized test runs (if any)
      * @return a complete TestResult object
-     * @throws NullPointerException if metadata is null
      */
     private TestResult createTestResult(TestMetadata metadata,
                                         String message,
@@ -191,7 +185,7 @@ public class JUnitTestResultConstructor {
     /**
      * Sanitizes text content by removing sensitive information.
      * Specifically removes Testomat API keys and simplifies file paths.
-     * 
+     *
      * @param text the raw text to sanitize
      * @return sanitized text with sensitive information removed
      */
@@ -199,14 +193,14 @@ public class JUnitTestResultConstructor {
         if (text == null) {
             return null;
         }
-        
+
         String sanitized = text;
-        
+
         sanitized = TESTOMAT_API_KEY_PATTERN.matcher(sanitized).replaceAll("tstmt_***");
-        
+
         sanitized = WINDOWS_PATH_PATTERN.matcher(sanitized).replaceAll("$1");
         sanitized = UNIX_PATH_PATTERN.matcher(sanitized).replaceAll("$1");
-        
+
         return sanitized;
     }
 
@@ -219,7 +213,7 @@ public class JUnitTestResultConstructor {
      */
     private String getStackTrace(Throwable throwable) {
         try (StringWriter sw = new StringWriter();
-             PrintWriter pw = new PrintWriter(sw)) {
+                PrintWriter pw = new PrintWriter(sw)) {
             throwable.printStackTrace(pw);
             String rawStackTrace = sw.toString();
             return sanitizeSensitiveContent(rawStackTrace);
@@ -239,5 +233,4 @@ public class JUnitTestResultConstructor {
     private boolean isReportableException(Throwable throwable) {
         return !(Objects.requireNonNull(throwable) instanceof TestAbortedException);
     }
-
 }

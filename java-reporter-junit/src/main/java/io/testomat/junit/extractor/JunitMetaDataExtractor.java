@@ -39,12 +39,12 @@ public class JunitMetaDataExtractor {
     public TestMetadata extractTestMetadata(ExtensionContext context) {
         Method method = getTestMethod(context);
         Class<?> testClass = context.getRequiredTestClass();
-        
+
         return new TestMetadata(
-            buildTestTitle(method, context),
-            extractTestId(method),
-            testClass.getSimpleName(),
-            buildFilePath(testClass)
+                buildTestTitle(method, context),
+                extractTestId(method),
+                testClass.getSimpleName(),
+                buildFilePath(testClass)
         );
     }
 
@@ -80,12 +80,12 @@ public class JunitMetaDataExtractor {
             if (!titleFromAnnotation.equals(method.getName())) {
                 return titleFromAnnotation;
             }
-            
+
             ParameterizedTest parameterized = method.getAnnotation(ParameterizedTest.class);
             if (parameterized != null) {
                 return buildParameterizedTitle(method, parameterized);
             }
-            
+
             return method.getName();
         } catch (Exception e) {
             return context.getDisplayName();
@@ -101,9 +101,9 @@ public class JunitMetaDataExtractor {
     }
 
     private boolean isCustomNameProvided(String name) {
-        return name != null && 
-               !name.trim().isEmpty() && 
-               !name.equals("{default_display_name}");
+        return name != null
+                && !name.trim().isEmpty()
+                && !name.equals("{default_display_name}");
     }
 
     private String extractTitleFromAnnotation(Method method) {
@@ -122,8 +122,9 @@ public class JunitMetaDataExtractor {
     }
 
     private Method getTestMethod(ExtensionContext context) {
-        return context.getTestMethod().orElseThrow(() -> 
-            new NoMethodInContextException("No test method found in " + context.getDisplayName())
+        return context.getTestMethod().orElseThrow(() ->
+                new NoMethodInContextException("No test method found in "
+                        + context.getDisplayName())
         );
     }
 }

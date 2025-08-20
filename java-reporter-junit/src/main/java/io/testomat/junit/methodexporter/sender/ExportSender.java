@@ -37,7 +37,7 @@ public class ExportSender {
 
     public void sendTestCases(List<ExporterTestCase> exporterTestCases) {
         if (exporterTestCases.isEmpty()) {
-//             log.debug("No exporter test cases found");
+            log.debug("No exporter test cases found");
             return;
         }
 
@@ -50,7 +50,7 @@ public class ExportSender {
         log.info("Sending test case export to API: {} test cases", exporterTestCases.size());
         log.info("Export request body: {}", requestBody);
         for (int attempt = 1; attempt <= RETRY_MAX_ATTEMPTS; attempt++) {
-//             log.debug("Attempt {} of {}", attempt, exporterTestCases.size());
+            log.debug("Attempt {} of {}", attempt, exporterTestCases.size());
             try {
                 if (attempt > 1) {
                     Thread.sleep(RETRY_TIMEOUT_MILLISECONDS);

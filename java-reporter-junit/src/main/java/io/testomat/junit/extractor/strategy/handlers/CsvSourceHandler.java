@@ -11,13 +11,10 @@ import org.junit.jupiter.params.provider.CsvSource;
  */
 public class CsvSourceHandler extends AbstractParameterExtractionHandler {
 
-
-
     @Override
     public String getStrategyName() {
         return "CsvSourceExtractionStrategy";
     }
-
 
     @Override
     protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {
@@ -63,7 +60,8 @@ public class CsvSourceHandler extends AbstractParameterExtractionHandler {
                 delimiter = ",";
             }
 
-            return CsvParsingUtils.parseCsvString(csvString, delimiter, quoteCharacter, nullValuesArray);
+            return CsvParsingUtils.parseCsvString(csvString, delimiter,
+                    quoteCharacter, nullValuesArray);
 
         } catch (Exception e) {
             logger.debug("Failed to parse CSV string: {}", csvString, e);

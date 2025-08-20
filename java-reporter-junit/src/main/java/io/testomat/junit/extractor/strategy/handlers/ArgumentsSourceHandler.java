@@ -1,7 +1,6 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -16,7 +15,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
  * automatic instantiation and invocation.
  */
 public class ArgumentsSourceHandler extends AbstractParameterExtractionHandler {
-
 
     @Override
     public String getStrategyName() {
@@ -37,8 +35,8 @@ public class ArgumentsSourceHandler extends AbstractParameterExtractionHandler {
         return extractFromArgumentsProvider(argumentsSource, context);
     }
 
-    private Object[] extractFromArgumentsProvider(ArgumentsSource argumentsSource, 
-                                                 ParameterExtractionContext context) {
+    private Object[] extractFromArgumentsProvider(ArgumentsSource argumentsSource,
+                                                  ParameterExtractionContext context) {
         try {
             Class<? extends ArgumentsProvider> providerClass = argumentsSource.value();
             if (providerClass == null) {
@@ -55,7 +53,8 @@ public class ArgumentsSourceHandler extends AbstractParameterExtractionHandler {
                 return new Object[0];
             }
 
-            Stream<? extends Arguments> argumentsStream = provider.provideArguments(extensionContext);
+            Stream<? extends Arguments> argumentsStream =
+                    provider.provideArguments(extensionContext);
             if (argumentsStream == null) {
                 return new Object[0];
             }
@@ -73,43 +72,43 @@ public class ArgumentsSourceHandler extends AbstractParameterExtractionHandler {
         }
     }
 
-    private ArgumentsProvider instantiateProvider(Class<? extends ArgumentsProvider> providerClass) {
+    private ArgumentsProvider instantiateProvider(Class<? extends ArgumentsProvider> clazz) {
         try {
-            Constructor<? extends ArgumentsProvider> defaultConstructor = 
-                providerClass.getDeclaredConstructor();
+            Constructor<? extends ArgumentsProvider> defaultConstructor =
+                    clazz.getDeclaredConstructor();
             defaultConstructor.setAccessible(true);
             return defaultConstructor.newInstance();
-            
+
         } catch (Exception e) {
-            logger.debug("Failed to instantiate ArgumentsProvider with default constructor: {}", 
-                        providerClass.getName(), e);
-            
+            logger.debug("Failed to instantiate ArgumentsProvider with default constructor: {}",
+                    clazz.getName(), e);
+
             try {
-                Constructor<?>[] constructors = providerClass.getDeclaredConstructors();
+                Constructor<?>[] constructors = clazz.getDeclaredConstructors();
                 for (Constructor<?> constructor : constructors) {
                     if (constructor.getParameterCount() == 0) {
                         constructor.setAccessible(true);
                         return (ArgumentsProvider) constructor.newInstance();
                     }
                 }
-                
+
                 if (constructors.length > 0) {
                     Constructor<?> firstConstructor = constructors[0];
                     firstConstructor.setAccessible(true);
                     Object[] nullArgs = new Object[firstConstructor.getParameterCount()];
                     return (ArgumentsProvider) firstConstructor.newInstance(nullArgs);
                 }
-                
+
             } catch (Exception fallbackException) {
-                logger.debug("Failed to instantiate ArgumentsProvider with fallback approaches: {}", 
-                            providerClass.getName(), fallbackException);
+                logger.debug("Failed to instantiate ArgumentsProvider with fallback approaches: {}",
+                        clazz.getName(), fallbackException);
             }
         }
-        
+
         return null;
     }
 
-    private Object[] parseArgumentsSourceDisplayName(String displayValue, 
+    private Object[] parseArgumentsSourceDisplayName(String displayValue,
                                                      ParameterExtractionContext context) {
         if (displayValue == null || displayValue.trim().isEmpty()) {
             return new Object[0];
@@ -150,12 +149,12 @@ public class ArgumentsSourceHandler extends AbstractParameterExtractionHandler {
 
         String[] parts = content.split(",");
         Object[] result = new Object[parts.length];
-        
+
         for (int i = 0; i < parts.length; i++) {
             String part = parts[i].trim();
             result[i] = parseTypedValue(part);
         }
-        
+
         return result;
     }
 

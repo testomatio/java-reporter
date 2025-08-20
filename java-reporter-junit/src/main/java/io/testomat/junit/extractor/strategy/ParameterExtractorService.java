@@ -2,14 +2,14 @@ package io.testomat.junit.extractor.strategy;
 
 import io.testomat.junit.exception.ParameterExtractionException;
 import io.testomat.junit.extractor.strategy.handlers.ParameterExtractionHandler;
-import io.testomat.junit.extractor.strategy.ParameterHandlerRegistry;
 import java.util.Optional;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Service that orchestrates parameter extraction from parameterized tests using direct annotation mapping.
+ * Service that orchestrates parameter extraction from parameterized tests
+ * using direct annotation mapping.
  * Automatically selects the appropriate handler based on test method annotations.
  */
 public class ParameterExtractorService {
@@ -53,12 +53,12 @@ public class ParameterExtractorService {
         ParameterExtractionHandler strategy = handler.get();
         try {
             Object result = strategy.extractParameters(context);
-            logger.debug("Successfully extracted parameters using {}: {}", 
-                        strategy.getStrategyName(), context.getDisplayName());
+            logger.debug("Successfully extracted parameters using {}: {}",
+                    strategy.getStrategyName(), context.getDisplayName());
             return result;
         } catch (ParameterExtractionException e) {
-            logger.warn("Parameter extraction failed with {}: {}", 
-                       strategy.getStrategyName(), e.getMessage());
+            logger.warn("Parameter extraction failed with {}: {}",
+                    strategy.getStrategyName(), e.getMessage());
             return null;
         }
     }

@@ -3,7 +3,6 @@ package io.testomat.junit.extractor.strategy.handlers;
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.junit.jupiter.params.provider.EmptySource;
 
 /**
  * Parameter extraction handler for @EmptySource annotated parameterized tests.
@@ -13,22 +12,19 @@ import org.junit.jupiter.params.provider.EmptySource;
  */
 public class EmptySourceHandler extends AbstractParameterExtractionHandler {
 
-
-
     @Override
     public String getStrategyName() {
         return "EmptySourceExtractionStrategy";
     }
 
-
     @Override
     protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {
         if (valueStr.isEmpty() || "\"\"".equals(valueStr) || "''".equals(valueStr)
-            || "[]".equals(valueStr) || "{}".equals(valueStr) 
-            || "<empty>".equals(valueStr)) {
+                || "[]".equals(valueStr) || "{}".equals(valueStr)
+                || "<empty>".equals(valueStr)) {
             return determineEmptyValue(context);
         }
-        
+
         throw new RuntimeException("Display name doesn't match empty pattern");
     }
 

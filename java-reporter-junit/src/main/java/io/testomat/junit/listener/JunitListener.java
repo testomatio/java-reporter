@@ -82,7 +82,6 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
     public void beforeEach(ExtensionContext extensionContext) {
     }
 
-
     @Override
     public void testDisabled(ExtensionContext context, Optional<String> reason) {
         if (!isListeningRequired()) {

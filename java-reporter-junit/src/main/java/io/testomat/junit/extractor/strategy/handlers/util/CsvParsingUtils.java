@@ -22,20 +22,21 @@ public final class CsvParsingUtils {
     /**
      * Parses a CSV string into an array of objects with automatic type conversion.
      *
-     * @param csvString the CSV string to parse
-     * @param delimiter the delimiter character (default: comma)
-     * @param quoteCharacter the quote character (default: double quote)
+     * @param csvString       the CSV string to parse
+     * @param delimiter       the delimiter character (default: comma)
+     * @param quoteCharacter  the quote character (default: double quote)
      * @param nullValuesArray array of strings that should be treated as null
      * @return array of parsed and typed objects
      */
-    public static Object[] parseCsvString(String csvString, String delimiter, 
-                                        char quoteCharacter, String[] nullValuesArray) {
+    public static Object[] parseCsvString(String csvString, String delimiter,
+                                          char quoteCharacter, String[] nullValuesArray) {
         if (csvString == null || csvString.trim().isEmpty()) {
             return new Object[0];
         }
 
         try {
-            String actualDelimiter = (delimiter == null || delimiter.equals("\0")) ? "," : delimiter;
+            String actualDelimiter =
+                    (delimiter == null || delimiter.equals("\0")) ? "," : delimiter;
             List<String> values = smartCsvSplit(csvString, actualDelimiter, quoteCharacter);
             Object[] result = new Object[values.size()];
             for (int i = 0; i < values.size(); i++) {
@@ -63,20 +64,20 @@ public final class CsvParsingUtils {
 
         String[] parts = content.split(",");
         Object[] result = new Object[parts.length];
-        
+
         for (int i = 0; i < parts.length; i++) {
             String part = parts[i].trim();
             result[i] = parseTypedValue(part);
         }
-        
+
         return result;
     }
 
     /**
      * Intelligently splits a CSV string respecting quotes and custom delimiters.
      *
-     * @param input the CSV string to split
-     * @param delimiter the delimiter to use
+     * @param input          the CSV string to split
+     * @param delimiter      the delimiter to use
      * @param quoteCharacter the quote character to respect
      * @return list of parsed string values
      */
@@ -84,10 +85,10 @@ public final class CsvParsingUtils {
         List<String> result = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         boolean inQuotes = false;
-        
+
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
-            
+
             if (c == quoteCharacter) {
                 if (inQuotes && i + 1 < input.length() && input.charAt(i + 1) == quoteCharacter) {
                     current.append(quoteCharacter);
@@ -103,7 +104,7 @@ public final class CsvParsingUtils {
                 current.append(c);
             }
         }
-        
+
         result.add(current.toString().trim());
         return result;
     }
@@ -112,7 +113,7 @@ public final class CsvParsingUtils {
         if (position + delimiter.length() > input.length()) {
             return false;
         }
-        return input.substring(position, position + delimiter.length()).equals(delimiter);
+        return input.startsWith(delimiter, position);
     }
 
     private static Object processValue(String value, String[] nullValuesArray) {
@@ -122,9 +123,9 @@ public final class CsvParsingUtils {
 
         String trimmed = value.trim();
 
-        if (trimmed.length() >= 2 
-            && ((trimmed.startsWith("\"") && trimmed.endsWith("\"")) 
-            || (trimmed.startsWith("'") && trimmed.endsWith("'")))) {
+        if (trimmed.length() >= 2
+                && ((trimmed.startsWith("\"") && trimmed.endsWith("\""))
+                || (trimmed.startsWith("'") && trimmed.endsWith("'")))) {
             trimmed = trimmed.substring(1, trimmed.length() - 1);
         }
 
@@ -168,7 +169,7 @@ public final class CsvParsingUtils {
                 return longVal;
             }
         } catch (NumberFormatException e) {
-
+            logger.warn("Failed to parse double value: {}", value, e);
         }
 
         return value;

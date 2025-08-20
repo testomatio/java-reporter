@@ -51,7 +51,8 @@ public final class ParameterHandlerRegistry {
      *
      * @param customHandlers the custom handler mappings
      */
-    public ParameterHandlerRegistry(Map<Class<? extends Annotation>, ParameterExtractionHandler> customHandlers) {
+    public ParameterHandlerRegistry(Map<Class<? extends Annotation>,
+            ParameterExtractionHandler> customHandlers) {
         this.handlerMap = new HashMap<>(customHandlers);
     }
 
@@ -73,13 +74,13 @@ public final class ParameterHandlerRegistry {
         for (Annotation annotation : context.getAnnotations()) {
             Class<? extends Annotation> annotationType = annotation.annotationType();
             ParameterExtractionHandler handler = handlerMap.get(annotationType);
-            
+
             if (handler != null) {
                 if (foundHandler != null) {
                     throw new IllegalStateException(String.format(
-                        "Multiple parameter source annotations found on test method: @%s and @%s. " +
-                        "Only one parameter source annotation is allowed per test method.",
-                        foundAnnotation.getSimpleName(), annotationType.getSimpleName()
+                            "Multiple parameter source annotations found on method: @%s and @%s. "
+                                    + "Only one parameter source annotation is allowed method.",
+                            foundAnnotation.getSimpleName(), annotationType.getSimpleName()
                     ));
                 }
                 foundHandler = handler;
@@ -88,42 +89,6 @@ public final class ParameterHandlerRegistry {
         }
 
         return Optional.ofNullable(foundHandler);
-    }
-
-    /**
-     * Registers a handler for a specific annotation type.
-     *
-     * @param annotationType the annotation type
-     * @param handler the handler for that annotation
-     * @throws IllegalArgumentException if either parameter is null
-     */
-    public void registerHandler(Class<? extends Annotation> annotationType, ParameterExtractionHandler handler) {
-        if (annotationType == null) {
-            throw new IllegalArgumentException("Annotation type cannot be null");
-        }
-        if (handler == null) {
-            throw new IllegalArgumentException("Handler cannot be null");
-        }
-        handlerMap.put(annotationType, handler);
-    }
-
-    /**
-     * Gets the handler for a specific annotation type.
-     *
-     * @param annotationType the annotation type
-     * @return the handler, or empty if not found
-     */
-    public Optional<ParameterExtractionHandler> getHandler(Class<? extends Annotation> annotationType) {
-        return Optional.ofNullable(handlerMap.get(annotationType));
-    }
-
-    /**
-     * Gets all registered annotation types.
-     *
-     * @return set of registered annotation types
-     */
-    public java.util.Set<Class<? extends Annotation>> getSupportedAnnotations() {
-        return new java.util.HashSet<>(handlerMap.keySet());
     }
 
     private void registerDefaultHandlers() {

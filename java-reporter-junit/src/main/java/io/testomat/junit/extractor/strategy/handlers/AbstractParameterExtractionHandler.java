@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractParameterExtractionHandler implements ParameterExtractionHandler {
 
     private static final Pattern DISPLAY_NAME_PATTERN = Pattern.compile("^\\[\\d+\\]\\s*(.*)$");
-    
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected static class ParseResult {
@@ -50,7 +50,7 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
     }
 
     @Override
-    public final Object extractParameters(ParameterExtractionContext context) throws ParameterExtractionException {
+    public final Object extractParameters(ParameterExtractionContext context) {
         if (!context.isValid()) {
             return null;
         }
@@ -65,13 +65,12 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
             return formatParameters(annotationValue, context);
 
         } catch (Exception e) {
-            logger.debug("Failed to extract {} parameters for: {}", 
-                        getStrategyName(), context.getDisplayName(), e);
-            throw new ParameterExtractionException("Failed to extract " 
-                                                 + getStrategyName() + " parameters", e);
+            logger.debug("Failed to extract {} parameters for: {}",
+                    getStrategyName(), context.getDisplayName(), e);
+            throw new ParameterExtractionException("Failed to extract "
+                    + getStrategyName() + " parameters", e);
         }
     }
-
 
     /**
      * Extracts parameter values from the test display name using regex pattern matching.
@@ -102,7 +101,7 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
     /**
      * Formats the extracted parameter values into the final result format.
      *
-     * @param value the extracted values
+     * @param value   the extracted values
      * @param context the parameter extraction context
      * @return formatted parameter map with proper parameter names
      */
@@ -122,11 +121,12 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
     /**
      * Creates a parameter map for multiple parameter values.
      *
-     * @param values the parameter values
+     * @param values  the parameter values
      * @param context the parameter extraction context
      * @return parameter map with named parameters
      */
-    protected Map<String, Object> createMultiParameterMap(Object[] values, ParameterExtractionContext context) {
+    protected Map<String, Object> createMultiParameterMap(Object[] values,
+                                                          ParameterExtractionContext context) {
         Map<String, Object> parameterMap = new LinkedHashMap<>();
         for (int i = 0; i < values.length; i++) {
             String parameterName = context.getParameterName(i);
@@ -138,11 +138,12 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
     /**
      * Creates a parameter map for a single parameter value.
      *
-     * @param value the parameter value
+     * @param value   the parameter value
      * @param context the parameter extraction context
      * @return parameter map with named parameter
      */
-    protected Map<String, Object> createSingleParameterMap(Object value, ParameterExtractionContext context) {
+    protected Map<String, Object> createSingleParameterMap(Object value,
+                                                           ParameterExtractionContext context) {
         Map<String, Object> parameterMap = new LinkedHashMap<>();
         String parameterName = context.getParameterName(0);
         parameterMap.put(parameterName, value);
@@ -202,8 +203,8 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
                 }
                 return longVal;
             }
-        } catch (NumberFormatException ignored) {
-
+        } catch (NumberFormatException e) {
+            logger.warn("Failed to parse {} as a number", trimmed);
         }
 
         return value;
@@ -221,24 +222,24 @@ public abstract class AbstractParameterExtractionHandler implements ParameterExt
         }
 
         String trimmed = value.trim();
-        if ((trimmed.startsWith("\"") && trimmed.endsWith("\"")) 
-            || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+        if ((trimmed.startsWith("\"") && trimmed.endsWith("\""))
+                || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
             return trimmed.substring(1, trimmed.length() - 1);
         }
 
         return value;
     }
 
-
     /**
      * Parses the value from the display name specific to this handler type.
      *
      * @param valueStr the value string from the display name
-     * @param context the parameter extraction context
+     * @param context  the parameter extraction context
      * @return the parsed values
      * @throws RuntimeException if parsing fails and fallback to annotation is required
      */
-    protected abstract Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context);
+    protected abstract Object parseDisplayNameValue(String valueStr,
+                                                    ParameterExtractionContext context);
 
     /**
      * Extracts parameter values from the annotation as a fallback.

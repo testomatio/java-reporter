@@ -1,7 +1,6 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -14,7 +13,6 @@ import org.junit.jupiter.params.provider.MethodSource;
  * with automatic method name resolution and argument handling for various return types.
  */
 public class MethodSourceHandler extends AbstractParameterExtractionHandler {
-
 
     @Override
     public String getStrategyName() {
@@ -35,18 +33,18 @@ public class MethodSourceHandler extends AbstractParameterExtractionHandler {
         return extractFromMethodSource(methodSource, context);
     }
 
-    private Object[] extractFromMethodSource(MethodSource methodSource, 
-                                            ParameterExtractionContext context) {
+    private Object[] extractFromMethodSource(MethodSource methodSource,
+                                             ParameterExtractionContext context) {
         try {
             String[] methodNames = methodSource.value();
-            
+
             if (methodNames.length == 0) {
                 Method testMethod = context.getTestMethod();
                 if (testMethod != null) {
                     methodNames = new String[]{inferMethodName(testMethod.getName())};
                 }
             }
-            
+
             if (methodNames.length == 0) {
                 return new Object[0];
             }
@@ -82,12 +80,12 @@ public class MethodSourceHandler extends AbstractParameterExtractionHandler {
             }
 
             Class<?> testClass = testMethod.getDeclaringClass();
-            
+
             if (methodName.contains("#")) {
                 String[] parts = methodName.split("#", 2);
                 String className = parts[0];
                 String simpleMethodName = parts[1];
-                
+
                 try {
                     Class<?> sourceClass = Class.forName(className);
                     return findMethodByName(sourceClass, simpleMethodName);
@@ -107,14 +105,14 @@ public class MethodSourceHandler extends AbstractParameterExtractionHandler {
 
     private Method findMethodByName(Class<?> clazz, String methodName) {
         for (Method method : clazz.getDeclaredMethods()) {
-            if (method.getName().equals(methodName) 
-                && java.lang.reflect.Modifier.isStatic(method.getModifiers())
-                && method.getParameterCount() == 0) {
-                
+            if (method.getName().equals(methodName)
+                    && java.lang.reflect.Modifier.isStatic(method.getModifiers())
+                    && method.getParameterCount() == 0) {
+
                 Class<?> returnType = method.getReturnType();
-                if (Stream.class.isAssignableFrom(returnType) 
-                    || Iterator.class.isAssignableFrom(returnType)
-                    || returnType.isArray()) {
+                if (Stream.class.isAssignableFrom(returnType)
+                        || Iterator.class.isAssignableFrom(returnType)
+                        || returnType.isArray()) {
                     return method;
                 }
             }
@@ -155,7 +153,7 @@ public class MethodSourceHandler extends AbstractParameterExtractionHandler {
                 }
             }
 
-                return new Object[]{result};
+            return new Object[]{result};
 
         } catch (Exception e) {
             logger.debug("Failed to extract arguments from result", e);
@@ -174,11 +172,11 @@ public class MethodSourceHandler extends AbstractParameterExtractionHandler {
         } else if (element instanceof Object[]) {
             return (Object[]) element;
         } else {
-                return new Object[]{element};
+            return new Object[]{element};
         }
     }
 
-    private Object[] parseMethodSourceDisplayName(String displayValue, 
+    private Object[] parseMethodSourceDisplayName(String displayValue,
                                                   ParameterExtractionContext context) {
         if (displayValue == null || displayValue.trim().isEmpty()) {
             return new Object[0];
@@ -210,14 +208,12 @@ public class MethodSourceHandler extends AbstractParameterExtractionHandler {
 
         String[] parts = content.split(",");
         Object[] result = new Object[parts.length];
-        
+
         for (int i = 0; i < parts.length; i++) {
             String part = parts[i].trim();
             result[i] = parseTypedValue(part);
         }
-        
+
         return result;
     }
-
-
 }

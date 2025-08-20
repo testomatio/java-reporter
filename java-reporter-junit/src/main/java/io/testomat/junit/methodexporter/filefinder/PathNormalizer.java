@@ -30,7 +30,7 @@ public class PathNormalizer {
 
             return result;
         } catch (Exception e) {
-//             log.debug("Error normalizing path '{}': {}", path, e.getMessage(), e);
+            log.debug("Error normalizing path '{}': {}", path, e.getMessage(), e);
             return path.replace('\\', '/');
         }
     }

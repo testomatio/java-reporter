@@ -53,7 +53,7 @@ public class MethodExportManager {
      * Loads and exports test method bodies for the specified test class.
      */
     public void loadTestBodyForClass(Class<?> testClass) {
-//         log.debug("loadTestBodyForClass called for class: {}", testClass.getName());
+        log.debug("loadTestBodyForClass called for class: {}", testClass.getName());
 
         try {
             if (!isInitializeExportRequired()) {
@@ -61,77 +61,77 @@ public class MethodExportManager {
                 return;
             }
 
-//             log.debug("Export is required - proceeding with test body loading");
+            log.debug("Export is required - proceeding with test body loading");
 
             String className = testClass.getName();
-//             log.debug("Processing class: {}", className);
+            log.debug("Processing class: {}", className);
 
             if (processedClasses.putIfAbsent(className, true) != null) {
-//                 log.debug("Class {} already processed, skipping", className);
+                log.debug("Class {} already processed, skipping", className);
                 return;
             }
 
-//             log.debug("Getting file path for class: {}", className);
+            log.debug("Getting file path for class: {}", className);
             String filepath = fileFinder.getTestClassFilePath(testClass);
-//             log.debug("Found filepath: {}", filepath);
+            log.debug("Found filepath: {}", filepath);
 
             if (filepath == null) {
-//                 log.warn("Filepath is null for class: {}", className);
+                log.warn("Filepath is null for class: {}", className);
                 return;
             }
 
-//             log.debug("About to parse file: {}", filepath);
+            log.debug("About to parse file: {}", filepath);
             CompilationUnit cu;
             try {
                 cu = fileParser.parseFile(filepath);
-//                 log.debug("File parsing completed. CompilationUnit is null: {}", cu == null);
+                log.debug("File parsing completed. CompilationUnit is null: {}", cu == null);
             } catch (Exception e) {
-//                 log.error("Exception during file parsing: {}", e.getMessage(), e);
+                log.error("Exception during file parsing: {}", e.getMessage(), e);
                 return;
             }
 
             if (cu == null) {
-//                 log.warn("CompilationUnit is null for file: {}", filepath);
+                log.warn("CompilationUnit is null for file: {}", filepath);
                 return;
             }
 
-//             log.debug("Successfully parsed file: {}", filepath);
+            log.debug("Successfully parsed file: {}", filepath);
 
-//             log.debug("About to extract test cases from CompilationUnit");
+            log.debug("About to extract test cases from CompilationUnit");
             List<ExporterTestCase> testCases;
             try {
                 testCases = methodCaseExtractor.extractTestCases(cu, filepath);
 
             } catch (Exception e) {
-//                 log.error("Exception during test case extraction: {}", e.getMessage(), e);
+                log.error("Exception during test case extraction: {}", e.getMessage(), e);
                 return;
             }
 
             if (testCases == null) {
-//                 log.warn("Test cases list is null for file: {}", filepath);
+                log.warn("Test cases list is null for file: {}", filepath);
                 return;
             }
 
-//             log.debug("Extracted {} test cases from file: {}", testCases.size(), filepath);
+            log.debug("Extracted {} test cases from file: {}", testCases.size(), filepath);
 
             if (testCases.isEmpty()) {
-//                 log.warn("No test cases extracted from file: {}", filepath);
+                log.warn("No test cases extracted from file: {}", filepath);
                 return;
             }
 
-//             log.debug("About to send {} test cases to server", testCases.size());
+            log.debug("About to send {} test cases to server", testCases.size());
             try {
                 exportSender.sendTestCases(testCases);
-//                 log.debug("Successfully sent test cases for class: {}", className);
+                log.debug("Successfully sent test cases for class: {}", className);
             } catch (Exception e) {
-//                 log.error("Exception during sending test cases: {}", e.getMessage(), e);
+                log.error("Exception during sending test cases: {}", e.getMessage(), e);
                 return;
             }
 
-//             log.debug("Finished processing class: {}", className);
+            log.debug("Finished processing class: {}", className);
 
         } catch (Exception e) {
-
+            log.warn("Exception during processing class: {}", e.getMessage(), e);
         }
     }
 

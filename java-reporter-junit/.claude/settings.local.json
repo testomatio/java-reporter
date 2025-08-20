@@ -10,7 +10,9 @@
       "Bash(mvn:*)",
       "WebSearch",
       "Bash(find:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(javac:*)",
+      "Bash(java:*)"
     ],
     "deny": [],
     "ask": [],
