@@ -27,7 +27,7 @@ and team collaboration features.
 | **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅     |
 | **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅     |
 | **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅     |
-| **Parametrized tests support**     | Enhanced support for parameterized testing         |   ⏳   |   ✅    |    ⏳     |
+| **Parametrized tests support**     | Enhanced support for parameterized testing         |    ✅   |   ✅    |    ⏳     |
 | **Test artifacts support**         | Screenshots, logs, and file attachments            |   ⏳   |   ⏳    |    ⏳     |
 | **Step-by-step reporting**         | Detailed test step execution tracking              |   ⏳   |   ⏳    |    ⏳     |
 | **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |       |        |          |
