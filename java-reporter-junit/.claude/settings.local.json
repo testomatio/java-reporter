@@ -8,7 +8,9 @@
       "Bash(mvn surefire:test:*)",
       "Bash(rm:*)",
       "Bash(mvn:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(find:*)",
+      "Bash(true)"
     ],
     "deny": [],
     "ask": [],

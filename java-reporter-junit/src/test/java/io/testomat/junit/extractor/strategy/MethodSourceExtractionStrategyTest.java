@@ -92,8 +92,8 @@ class MethodSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals(42, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -116,10 +116,10 @@ class MethodSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test", paramMap.get("param0"));
-        assertEquals(100, paramMap.get("param1"));
-        assertEquals(true, paramMap.get("param2"));
-        assertEquals(3.14, paramMap.get("param3"));
+        assertEquals("test", paramMap.get(context.getParameterName(0)));
+        assertEquals(100, paramMap.get(context.getParameterName(1)));
+        assertEquals(true, paramMap.get(context.getParameterName(2)));
+        assertEquals(3.14, paramMap.get(context.getParameterName(3)));
     }
 
     @Test
@@ -142,8 +142,8 @@ class MethodSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals(42, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -166,9 +166,9 @@ class MethodSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("world", paramMap.get("param0"));
-        assertEquals(84, paramMap.get("param1"));
-        assertEquals(false, paramMap.get("param2"));
+        assertEquals("world", paramMap.get(context.getParameterName(0)));
+        assertEquals(84, paramMap.get(context.getParameterName(1)));
+        assertEquals(false, paramMap.get(context.getParameterName(2)));
     }
 
     @Test
@@ -191,9 +191,9 @@ class MethodSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertNull(paramMap.get("param1"));
-        assertEquals("world", paramMap.get("param2"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(1)));
+        assertEquals("world", paramMap.get(context.getParameterName(2)));
     }
 
     @Test
@@ -216,7 +216,7 @@ class MethodSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -264,9 +264,9 @@ class MethodSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("first value", paramMap.get("param0"));
-        assertEquals("second value", paramMap.get("param1"));
-        assertEquals(42, paramMap.get("param2"));
+        assertEquals("first value", paramMap.get(context.getParameterName(0)));
+        assertEquals("second value", paramMap.get(context.getParameterName(1)));
+        assertEquals(42, paramMap.get(context.getParameterName(2)));
     }
 
     @Test

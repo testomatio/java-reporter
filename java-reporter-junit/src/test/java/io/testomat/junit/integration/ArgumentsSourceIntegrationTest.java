@@ -42,9 +42,9 @@ public class ArgumentsSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
-        assertEquals(true, paramMap.get("param2"));
+        assertEquals("hello", paramMap.get("productName"));
+        assertEquals(42, paramMap.get("quantity"));
+        assertEquals(true, paramMap.get("available"));
     }
 
     @Test
@@ -67,8 +67,8 @@ public class ArgumentsSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals("world", paramMap.get("param1"));
+        assertEquals("hello", paramMap.get("firstName"));
+        assertEquals("world", paramMap.get("lastName"));
     }
 
     @Test
@@ -91,8 +91,8 @@ public class ArgumentsSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test", paramMap.get("param0"));
-        assertEquals(123, paramMap.get("param1"));
+        assertEquals("test", paramMap.get("itemName"));
+        assertEquals(123, paramMap.get("itemId"));
     }
 
     @Test
@@ -115,8 +115,8 @@ public class ArgumentsSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertNull(paramMap.get("param1"));
+        assertEquals("hello", paramMap.get("message"));
+        assertNull(paramMap.get("description"));
     }
 
     @Test
@@ -139,8 +139,8 @@ public class ArgumentsSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello world", paramMap.get("param0"));
-        assertEquals("test value", paramMap.get("param1"));
+        assertEquals("hello world", paramMap.get("phrase"));
+        assertEquals("test value", paramMap.get("testData"));
     }
 
     @Test
@@ -166,8 +166,8 @@ public class ArgumentsSourceIntegrationTest {
         // Should have parameters from actual ArgumentsProvider invocation
         if (!paramMap.isEmpty()) {
             // If ArgumentsProvider invocation worked, verify the data
-            assertTrue(paramMap.containsKey("param0"));
-            assertTrue(paramMap.containsKey("param1"));
+            assertTrue(paramMap.containsKey("serviceName"));
+            assertTrue(paramMap.containsKey("serviceId"));
         }
         // At minimum, we should get a valid map structure
         assertNotNull(paramMap);
@@ -239,37 +239,37 @@ public class ArgumentsSourceIntegrationTest {
 
         @ParameterizedTest
         @ArgumentsSource(MixedDataProvider.class)
-        public void mixedArgumentsSourceTest(String text, int number, boolean flag) {
+        public void mixedArgumentsSourceTest(String productName, int quantity, boolean available) {
             // Real parameterized test method
         }
 
         @ParameterizedTest
         @ArgumentsSource(BasicDataProvider.class)
-        public void argumentsFormatTest(String first, String second) {
+        public void argumentsFormatTest(String firstName, String lastName) {
             // Real parameterized test method with Arguments format
         }
 
         @ParameterizedTest
         @ArgumentsSource(CustomDataProvider.class)
-        public void customObjectTest(String text, int number) {
+        public void customObjectTest(String itemName, int itemId) {
             // Real parameterized test method with custom object format
         }
 
         @ParameterizedTest
         @ArgumentsSource(NullDataProvider.class)
-        public void nullValueTest(String first, String second) {
+        public void nullValueTest(String message, String description) {
             // Real parameterized test method with null values
         }
 
         @ParameterizedTest
         @ArgumentsSource(QuotedDataProvider.class)
-        public void quotedValuesTest(String first, String second) {
+        public void quotedValuesTest(String phrase, String testData) {
             // Real parameterized test method with quoted values
         }
 
         @ParameterizedTest
         @ArgumentsSource(FallbackDataProvider.class)
-        public void argumentsProviderFallbackTest(String text, int number) {
+        public void argumentsProviderFallbackTest(String serviceName, int serviceId) {
             // Real parameterized test method that should work with ArgumentsProvider fallback
         }
     }

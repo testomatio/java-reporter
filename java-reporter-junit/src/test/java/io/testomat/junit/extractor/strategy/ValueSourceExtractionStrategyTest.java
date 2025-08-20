@@ -90,7 +90,8 @@ class ValueSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
+        String expectedParamName = context.getParameterName(0);
+        assertEquals("hello", paramMap.get(expectedParamName));
     }
 
     @Test
@@ -113,7 +114,8 @@ class ValueSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(42, paramMap.get("param0"));
+        String expectedParamName = context.getParameterName(0);
+        assertEquals(42, paramMap.get(expectedParamName));
     }
 
     @Test
@@ -136,7 +138,8 @@ class ValueSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(true, paramMap.get("param0"));
+        String expectedParamName = context.getParameterName(0);
+        assertEquals(true, paramMap.get(expectedParamName));
     }
 
     @Test
@@ -159,7 +162,8 @@ class ValueSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(3.14, paramMap.get("param0"));
+        String expectedParamName = context.getParameterName(0);
+        assertEquals(3.14, paramMap.get(expectedParamName));
     }
 
     @Test
@@ -182,7 +186,8 @@ class ValueSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertNull(paramMap.get("param0"));
+        String expectedParamName = context.getParameterName(0);
+        assertNull(paramMap.get(expectedParamName));
     }
 
     @Test
@@ -205,7 +210,8 @@ class ValueSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
+        String expectedParamName = context.getParameterName(0);
+        assertEquals("hello", paramMap.get(expectedParamName));
     }
 
     @Test
@@ -228,7 +234,8 @@ class ValueSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test1", paramMap.get("param0")); // Should get first value from annotation
+        String expectedParamName = context.getParameterName(0);
+        assertEquals("test1", paramMap.get(expectedParamName)); // Should get first value from annotation
     }
 
     @Test
@@ -251,7 +258,8 @@ class ValueSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test1", paramMap.get("param0")); // Should fallback to annotation
+        String expectedParamName = context.getParameterName(0);
+        assertEquals("test1", paramMap.get(expectedParamName)); // Should fallback to annotation
     }
 
     @Test
@@ -293,25 +301,25 @@ class ValueSourceExtractionStrategyTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"test1", "test2", "test3"})
-        public void stringValueSourceTest(String param) {
+        public void stringValueSourceTest(String inputValue) {
             // Test method for reflection
         }
 
         @ParameterizedTest
         @ValueSource(ints = {1, 2, 3})
-        public void intValueSourceTest(int param) {
+        public void intValueSourceTest(int count) {
             // Test method for reflection
         }
 
         @ParameterizedTest
         @ValueSource(booleans = {true, false})
-        public void booleanValueSourceTest(boolean param) {
+        public void booleanValueSourceTest(boolean enabled) {
             // Test method for reflection
         }
 
         @ParameterizedTest
         @ValueSource(doubles = {1.1, 2.2, 3.3})
-        public void doubleValueSourceTest(double param) {
+        public void doubleValueSourceTest(double price) {
             // Test method for reflection
         }
 
@@ -321,11 +329,11 @@ class ValueSourceExtractionStrategyTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"test1", "test2"})
-        public void multipleParameterWithValueSourceTest(String param1, int param2) {
+        public void multipleParameterWithValueSourceTest(String productName, int maxCount) {
             // Method with multiple parameters and @ValueSource (for testing parameter map creation)
         }
 
-        public void multipleParameterTest(String param1, int param2) {
+        public void multipleParameterTest(String productName, int maxCount) {
             // Method with multiple parameters (for testing parameter map creation)
         }
     }

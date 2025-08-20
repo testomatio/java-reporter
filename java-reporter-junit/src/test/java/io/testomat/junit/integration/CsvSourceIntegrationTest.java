@@ -39,9 +39,9 @@ public class CsvSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
-        assertEquals(true, paramMap.get("param2"));
+        assertEquals("hello", paramMap.get("productName"));
+        assertEquals(42, paramMap.get("price"));
+        assertEquals(true, paramMap.get("inStock"));
     }
 
     @Test
@@ -64,8 +64,8 @@ public class CsvSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello, world", paramMap.get("param0"));
-        assertEquals("test value", paramMap.get("param1"));
+        assertEquals("hello, world", paramMap.get("title"));
+        assertEquals("test value", paramMap.get("content"));
     }
 
     @Test
@@ -88,8 +88,8 @@ public class CsvSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        assertEquals("hello", paramMap.get("label"));
+        assertEquals(42, paramMap.get("value"));
     }
 
     // Test class with actual parameterized methods
@@ -97,19 +97,19 @@ public class CsvSourceIntegrationTest {
 
         @ParameterizedTest
         @CsvSource({"hello, 42, true", "world, 100, false", "test, 0, true"})
-        public void mixedCsvTest(String text, int number, boolean flag) {
+        public void mixedCsvTest(String productName, int price, boolean inStock) {
             // Real parameterized test method
         }
 
         @ParameterizedTest
         @CsvSource({"\"hello, world\", \"test value\"", "\"another\", \"value\""})
-        public void quotedCsvTest(String first, String second) {
+        public void quotedCsvTest(String title, String content) {
             // Real parameterized test method with quoted values
         }
 
         @ParameterizedTest
         @CsvSource(value = {"hello; 42", "world; 84"}, delimiter = ';')
-        public void customDelimiterCsvTest(String text, int number) {
+        public void customDelimiterCsvTest(String label, int value) {
             // Real parameterized test method with custom delimiter
         }
     }

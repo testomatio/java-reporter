@@ -41,8 +41,8 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputText"));
+        assertEquals("", paramMap.get("inputText"));
     }
 
     @Test
@@ -65,8 +65,8 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("[]", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("items"));
+        assertEquals("[]", paramMap.get("items"));
     }
 
     @Test
@@ -89,8 +89,8 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("[]", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("items"));
+        assertEquals("[]", paramMap.get("items"));
     }
 
     @Test
@@ -113,8 +113,8 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("[]", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("items"));
+        assertEquals("[]", paramMap.get("items"));
     }
 
     @Test
@@ -137,8 +137,8 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("{}", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("dataMap"));
+        assertEquals("{}", paramMap.get("dataMap"));
     }
 
     @Test
@@ -161,8 +161,8 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputText"));
+        assertEquals("", paramMap.get("inputText"));
     }
 
     @Test
@@ -185,8 +185,8 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputText"));
+        assertEquals("", paramMap.get("inputText"));
     }
 
     @Test
@@ -209,9 +209,9 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey("inputText"));
         // @EmptySource always provides empty values, regardless of display name parsing issues
-        assertEquals("", paramMap.get("param0"));
+        assertEquals("", paramMap.get("inputText"));
     }
 
     @Test
@@ -234,9 +234,9 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey("inputText"));
         // @EmptySource always provides empty values, even if display name shows something else
-        assertEquals("", paramMap.get("param0"));
+        assertEquals("", paramMap.get("inputText"));
     }
 
     @Test
@@ -259,9 +259,9 @@ public class EmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey("items"));
         // Should determine appropriate empty value based on array type
-        assertEquals("[]", paramMap.get("param0"));
+        assertEquals("[]", paramMap.get("items"));
     }
 
     // Test class with actual parameterized methods
@@ -269,31 +269,31 @@ public class EmptySourceIntegrationTest {
 
         @ParameterizedTest
         @EmptySource
-        public void stringEmptySourceTest(String value) {
+        public void stringEmptySourceTest(String inputText) {
             // Real parameterized test method with String parameter
         }
 
         @ParameterizedTest
         @EmptySource
-        public void arrayEmptySourceTest(String[] values) {
+        public void arrayEmptySourceTest(String[] items) {
             // Real parameterized test method with array parameter
         }
 
         @ParameterizedTest
         @EmptySource
-        public void listEmptySourceTest(List<String> values) {
+        public void listEmptySourceTest(List<String> items) {
             // Real parameterized test method with List parameter
         }
 
         @ParameterizedTest
         @EmptySource
-        public void setEmptySourceTest(Set<String> values) {
+        public void setEmptySourceTest(Set<String> items) {
             // Real parameterized test method with Set parameter
         }
 
         @ParameterizedTest
         @EmptySource
-        public void mapEmptySourceTest(Map<String, String> values) {
+        public void mapEmptySourceTest(Map<String, String> dataMap) {
             // Real parameterized test method with Map parameter
         }
     }

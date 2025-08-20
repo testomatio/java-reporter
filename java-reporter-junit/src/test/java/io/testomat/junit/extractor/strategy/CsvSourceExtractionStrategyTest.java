@@ -89,8 +89,10 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        String param0Name = context.getParameterName(0);
+        String param1Name = context.getParameterName(1);
+        assertEquals("hello", paramMap.get(param0Name));
+        assertEquals(42, paramMap.get(param1Name));
     }
 
     @Test
@@ -113,10 +115,14 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test", paramMap.get("param0"));
-        assertEquals(100, paramMap.get("param1"));
-        assertEquals(true, paramMap.get("param2"));
-        assertEquals(3.14, paramMap.get("param3"));
+        String param0Name = context.getParameterName(0);
+        String param1Name = context.getParameterName(1);
+        String param2Name = context.getParameterName(2);
+        String param3Name = context.getParameterName(3);
+        assertEquals("test", paramMap.get(param0Name));
+        assertEquals(100, paramMap.get(param1Name));
+        assertEquals(true, paramMap.get(param2Name));
+        assertEquals(3.14, paramMap.get(param3Name));
     }
 
     @Test
@@ -139,8 +145,10 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello, world", paramMap.get("param0"));
-        assertEquals("test value", paramMap.get("param1"));
+        String param0Name = context.getParameterName(0);
+        String param1Name = context.getParameterName(1);
+        assertEquals("hello, world", paramMap.get(param0Name));
+        assertEquals("test value", paramMap.get(param1Name));
     }
 
     @Test
@@ -163,9 +171,12 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertNull(paramMap.get("param1"));
-        assertEquals("world", paramMap.get("param2"));
+        String param0Name = context.getParameterName(0);
+        String param1Name = context.getParameterName(1);
+        String param2Name = context.getParameterName(2);
+        assertEquals("hello", paramMap.get(param0Name));
+        assertNull(paramMap.get(param1Name));
+        assertEquals("world", paramMap.get(param2Name));
     }
 
     @Test
@@ -188,8 +199,8 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals(42, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -212,9 +223,9 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals("", paramMap.get("param1"));
-        assertEquals("world", paramMap.get("param2"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals("", paramMap.get(context.getParameterName(1)));
+        assertEquals("world", paramMap.get(context.getParameterName(2)));
     }
 
     @Test
@@ -237,7 +248,7 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -260,8 +271,8 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test1", paramMap.get("param0")); // Should get first value from annotation
-        assertEquals(100, paramMap.get("param1"));
+        assertEquals("test1", paramMap.get(context.getParameterName(0))); // Should get first value from annotation
+        assertEquals(100, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -284,9 +295,9 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("first, value", paramMap.get("param0"));
-        assertEquals("second value", paramMap.get("param1"));
-        assertEquals(42, paramMap.get("param2"));
+        assertEquals("first, value", paramMap.get(context.getParameterName(0)));
+        assertEquals("second value", paramMap.get(context.getParameterName(1)));
+        assertEquals(42, paramMap.get(context.getParameterName(2)));
     }
 
     @Test
@@ -309,8 +320,8 @@ class CsvSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test1", paramMap.get("param0")); // Should fallback to annotation
-        assertEquals(100, paramMap.get("param1"));
+        assertEquals("test1", paramMap.get(context.getParameterName(0))); // Should fallback to annotation
+        assertEquals(100, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -352,49 +363,49 @@ class CsvSourceExtractionStrategyTest {
 
         @ParameterizedTest
         @CsvSource({"test1, 100", "test2, 200", "test3, 300"})
-        public void basicCsvTest(String text, int number) {
+        public void basicCsvTest(String productName, int maxCount) {
             // Test method for reflection
         }
 
         @ParameterizedTest
         @CsvSource({"test, 100, true, 3.14", "another, 200, false, 2.71"})
-        public void mixedTypeCsvTest(String text, int number, boolean flag, double decimal) {
+        public void mixedTypeCsvTest(String description, int quantity, boolean enabled, double price) {
             // Test method for reflection with mixed types
         }
 
         @ParameterizedTest
         @CsvSource({"\"hello, world\", \"test value\"", "\"another\", \"value\""})
-        public void quotedCsvTest(String first, String second) {
+        public void quotedCsvTest(String message, String tag) {
             // Test method for reflection with quoted values
         }
 
         @ParameterizedTest
         @CsvSource({"hello, null, world", "test, , value"})
-        public void nullValueCsvTest(String first, String second, String third) {
+        public void nullValueCsvTest(String prefix, String middle, String suffix) {
             // Test method for reflection with null values
         }
 
         @ParameterizedTest
         @CsvSource(value = {"hello; 42", "world; 84"}, delimiter = ';')
-        public void customDelimiterCsvTest(String text, int number) {
+        public void customDelimiterCsvTest(String label, int value) {
             // Test method for reflection with custom delimiter
         }
 
         @ParameterizedTest
         @CsvSource({"hello, , world", "test, , value"})
-        public void emptyValueCsvTest(String first, String second, String third) {
+        public void emptyValueCsvTest(String start, String empty, String end) {
             // Test method for reflection with empty values
         }
 
         @ParameterizedTest
         @CsvSource({"hello", "world", "test"})
-        public void singleCsvTest(String value) {
+        public void singleCsvTest(String inputText) {
             // Test method for reflection with single CSV values
         }
 
         @ParameterizedTest
         @CsvSource({"\"first, value\", second value, 42", "\"another, test\", third value, 84"})
-        public void complexCsvTest(String first, String second, int third) {
+        public void complexCsvTest(String complexField, String simpleField, int numericField) {
             // Test method for reflection with complex CSV
         }
 

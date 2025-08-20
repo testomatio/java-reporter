@@ -42,14 +42,10 @@ public class SourceCodeParameterNamingIntegrationTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
         
-        // The key difference: should use actual parameter name 'inputValue' from source
-        // instead of generic 'param0' or synthetic 'arg0'
-        assertTrue(paramMap.containsKey("inputValue") || 
-                  paramMap.containsKey("arg0")); // Fallback when source parsing fails
-        
-        // Verify the value is correct regardless of parameter name
-        Object value = paramMap.values().iterator().next();
-        assertEquals("hello", value);
+        // Should use actual parameter name 'inputValue' from source code
+        assertTrue(paramMap.containsKey("inputValue"), 
+                  "Should use actual parameter name 'inputValue'. Actual keys: " + paramMap.keySet());
+        assertEquals("hello", paramMap.get("inputValue"));
     }
 
     @Test
@@ -75,22 +71,18 @@ public class SourceCodeParameterNamingIntegrationTest {
         
         assertEquals(3, paramMap.size());
         
-        // Should use actual parameter names from source code when available
-        // or fall back to reflection-based names
-        boolean hasSourceNames = paramMap.containsKey("productName") && 
-                                paramMap.containsKey("price") && 
-                                paramMap.containsKey("inStock");
-        boolean hasFallbackNames = paramMap.containsKey("arg0") && 
-                                  paramMap.containsKey("arg1") && 
-                                  paramMap.containsKey("arg2");
+        // Should use actual parameter names from source code
+        assertTrue(paramMap.containsKey("productName"), 
+                  "Should have 'productName' parameter. Actual keys: " + paramMap.keySet());
+        assertTrue(paramMap.containsKey("price"), 
+                  "Should have 'price' parameter. Actual keys: " + paramMap.keySet());
+        assertTrue(paramMap.containsKey("inStock"), 
+                  "Should have 'inStock' parameter. Actual keys: " + paramMap.keySet());
         
-        assertTrue(hasSourceNames || hasFallbackNames, 
-                  "Should have either source-based names or fallback names. Actual keys: " + paramMap.keySet());
-        
-        // Verify values are correct regardless of parameter names
-        assertTrue(paramMap.containsValue("product"));
-        assertTrue(paramMap.containsValue(100));
-        assertTrue(paramMap.containsValue(true));
+        // Verify values are correct
+        assertEquals("product", paramMap.get("productName"));
+        assertEquals(100, paramMap.get("price"));
+        assertEquals(true, paramMap.get("inStock"));
     }
 
     @Test
@@ -148,15 +140,17 @@ public class SourceCodeParameterNamingIntegrationTest {
         assertEquals(3, paramMap.size());
         
         // Should handle parameter types with meaningful names
-        boolean hasSourceNames = paramMap.containsKey("productName") && 
-                                paramMap.containsKey("price") && 
-                                paramMap.containsKey("inStock");
-        boolean hasFallbackNames = paramMap.containsKey("arg0") && 
-                                  paramMap.containsKey("arg1") && 
-                                  paramMap.containsKey("arg2");
+        assertTrue(paramMap.containsKey("productName"), 
+                  "Should have 'productName' parameter. Actual keys: " + paramMap.keySet());
+        assertTrue(paramMap.containsKey("price"), 
+                  "Should have 'price' parameter. Actual keys: " + paramMap.keySet());
+        assertTrue(paramMap.containsKey("inStock"), 
+                  "Should have 'inStock' parameter. Actual keys: " + paramMap.keySet());
         
-        assertTrue(hasSourceNames || hasFallbackNames,
-                  "Should have meaningful parameter names. Actual keys: " + paramMap.keySet());
+        // Verify values are correct
+        assertEquals("product", paramMap.get("productName"));
+        assertEquals(100, paramMap.get("price"));
+        assertEquals(true, paramMap.get("inStock"));
     }
 
     // Test class with parameterized methods for testing
