@@ -1,10 +1,8 @@
-package io.testomat.junit.extractor.strategy;
+package io.testomat.junit.extractor.strategy.handlers;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
+import io.testomat.junit.exception.ParameterExtractionException;
+import io.testomat.junit.extractor.strategy.ParameterExtractionHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -13,23 +11,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.junit.jupiter.params.provider.CsvFileSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Strategy for extracting parameters from @CsvFileSource annotated parameterized tests.
- * Supports extraction of CSV values from files specified in @CsvFileSource annotations
- * with various configurations including custom delimiters, null representations, and encoding.
+ * Strategy for extracting parameters from @CsvSource annotated parameterized tests.
+ * Supports extraction of CSV values from @CsvSource annotations with various configurations
+ * including custom delimiters, null representations, and quote characters.
  */
-public class CsvFileSourceExtractionStrategy implements ParameterExtractionStrategy {
+public class CsvSourceHandler implements ParameterExtractionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(CsvFileSourceExtractionStrategy.class);
+    private static final Logger logger = LoggerFactory.getLogger(CsvSourceHandler.class);
     private static final Pattern DISPLAY_NAME_PATTERN = Pattern.compile("^\\[\\d+\\]\\s*(.*)$");
 
     @Override
     public boolean supports(ParameterExtractionContext context) {
-        return context.isValid() && context.hasAnnotation(CsvFileSource.class);
+        return context.isValid() && context.hasAnnotation(CsvSource.class);
     }
 
     @Override
@@ -40,27 +38,27 @@ public class CsvFileSourceExtractionStrategy implements ParameterExtractionStrat
         }
 
         try {
-            CsvFileSource csvFileSource = context.getAnnotation(CsvFileSource.class);
-            if (csvFileSource == null) {
+            CsvSource csvSource = context.getAnnotation(CsvSource.class);
+            if (csvSource == null) {
                 return null;
             }
 
             // Try to extract from display name first 
             // (most reliable for getting actual parameter values)
-            ParseResult parseResult = extractFromDisplayNameWithResult(context, csvFileSource);
+            ParseResult parseResult = extractFromDisplayNameWithResult(context, csvSource);
             if (parseResult.isSuccessful()) {
                 return formatParameters(parseResult.getValue(), context);
             }
 
-            // Fallback: extract from file 
+            // Fallback: extract from annotation 
             // (won't give us the specific values for this invocation)
-            Object[] fileValues = extractFromFile(csvFileSource, context);
-            return formatParameters(fileValues, context);
+            Object[] annotationValues = extractFromAnnotation(csvSource, context);
+            return formatParameters(annotationValues, context);
 
         } catch (Exception e) {
-            logger.debug("Failed to extract CsvFileSource parameters for: {}", 
+            logger.debug("Failed to extract CsvSource parameters for: {}", 
                         context.getDisplayName(), e);
-            throw new ParameterExtractionException("Failed to extract CsvFileSource parameters", e);
+            throw new ParameterExtractionException("Failed to extract CsvSource parameters", e);
         }
     }
 
@@ -71,7 +69,7 @@ public class CsvFileSourceExtractionStrategy implements ParameterExtractionStrat
 
     @Override
     public String getStrategyName() {
-        return "CsvFileSourceExtractionStrategy";
+        return "CsvSourceExtractionStrategy";
     }
 
     private static class ParseResult {
@@ -101,7 +99,7 @@ public class CsvFileSourceExtractionStrategy implements ParameterExtractionStrat
     }
 
     private ParseResult extractFromDisplayNameWithResult(ParameterExtractionContext context, 
-                                                         CsvFileSource csvFileSource) {
+                                                         CsvSource csvSource) {
         String displayName = context.getDisplayName();
         if (displayName == null || displayName.trim().isEmpty()) {
             return ParseResult.failure();
@@ -111,84 +109,39 @@ public class CsvFileSourceExtractionStrategy implements ParameterExtractionStrat
         Matcher matcher = DISPLAY_NAME_PATTERN.matcher(displayName.trim());
         if (matcher.matches()) {
             String csvStr = matcher.group(1).trim();
-            Object[] parsedValues = parseCsvString(csvStr, csvFileSource);
+            Object[] parsedValues = parseCsvString(csvStr, csvSource);
             return ParseResult.success(parsedValues);
         }
 
         return ParseResult.failure();
     }
 
-    private Object[] extractFromFile(CsvFileSource csvFileSource, 
-                                    ParameterExtractionContext context) {
+    private Object[] extractFromAnnotation(CsvSource csvSource, 
+                                           ParameterExtractionContext context) {
         try {
-            String[] resources = csvFileSource.resources();
-            if (resources == null || resources.length == 0) {
+            String[] csvLines = csvSource.value();
+            if (csvLines == null || csvLines.length == 0) {
                 return new Object[0];
             }
 
-            // Use first resource as fallback
-            String resourcePath = resources[0];
-            List<String> lines = readCsvFile(resourcePath, csvFileSource);
-            
-            if (lines.isEmpty()) {
-                return new Object[0];
-            }
-
-            // Skip header lines if specified
-            int numLinesToSkip = csvFileSource.numLinesToSkip();
-            if (numLinesToSkip > 0 && lines.size() > numLinesToSkip) {
-                lines = lines.subList(numLinesToSkip, lines.size());
-            }
-
-            // Return first non-empty line parsed as fallback
-            for (String line : lines) {
-                if (line != null && !line.trim().isEmpty()) {
-                    return parseCsvString(line, csvFileSource);
-                }
-            }
-
-            return new Object[0];
+            // Return first CSV line parsed as fallback
+            String firstLine = csvLines[0];
+            return parseCsvString(firstLine, csvSource);
 
         } catch (Exception e) {
-            logger.debug("Failed to extract CSV from file", e);
+            logger.debug("Failed to extract CSV from annotation", e);
             return new Object[0];
         }
     }
 
-    private List<String> readCsvFile(String resourcePath, CsvFileSource csvFileSource) 
-            throws IOException {
-        List<String> lines = new ArrayList<>();
-        
-        // Try to read as resource first, then as file
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
-        if (inputStream != null) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    lines.add(line);
-                }
-            }
-        } else {
-            // Try reading as file path
-            try (BufferedReader reader = new BufferedReader(new FileReader(resourcePath))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    lines.add(line);
-                }
-            }
-        }
-
-        return lines;
-    }
-
-    private Object[] parseCsvString(String csvString, CsvFileSource csvFileSource) {
+    private Object[] parseCsvString(String csvString, CsvSource csvSource) {
         if (csvString == null || csvString.trim().isEmpty()) {
             return new Object[0];
         }
 
         try {
             // Get configuration from annotation
-            char delimiterChar = csvFileSource.delimiter();
+            char delimiterChar = csvSource.delimiter();
             String delimiter = String.valueOf(delimiterChar);
             String[] nullValuesArray = new String[0]; // Default empty array
             char quoteCharacter = '"'; // Default quote character

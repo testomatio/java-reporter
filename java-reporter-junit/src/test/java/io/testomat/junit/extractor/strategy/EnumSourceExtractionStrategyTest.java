@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.testomat.junit.extractor.strategy.handlers.EnumSourceHandler;
 import java.lang.reflect.Method;
 import java.time.DayOfWeek;
 import java.util.Map;
@@ -26,12 +27,12 @@ import org.junit.jupiter.params.provider.EnumSource;
 @DisplayName("EnumSourceExtractionStrategy Tests")
 class EnumSourceExtractionStrategyTest {
 
-    private EnumSourceExtractionStrategy strategy;
+    private EnumSourceHandler strategy;
     private ExtensionContext mockContext;
 
     @BeforeEach
     void setUp() {
-        strategy = new EnumSourceExtractionStrategy();
+        strategy = new EnumSourceHandler();
         mockContext = mock(ExtensionContext.class);
     }
 

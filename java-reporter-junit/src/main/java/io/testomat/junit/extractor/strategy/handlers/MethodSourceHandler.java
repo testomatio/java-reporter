@@ -1,8 +1,10 @@
-package io.testomat.junit.extractor.strategy;
+package io.testomat.junit.extractor.strategy.handlers;
 
+import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
+import io.testomat.junit.exception.ParameterExtractionException;
+import io.testomat.junit.extractor.strategy.ParameterExtractionHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,9 +21,9 @@ import org.slf4j.LoggerFactory;
  * Supports extraction of parameter values from methods specified in @MethodSource annotations
  * with various configurations including method name resolution and argument handling.
  */
-public class MethodSourceExtractionStrategy implements ParameterExtractionStrategy {
+public class MethodSourceHandler implements ParameterExtractionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(MethodSourceExtractionStrategy.class);
+    private static final Logger logger = LoggerFactory.getLogger(MethodSourceHandler.class);
     private static final Pattern DISPLAY_NAME_PATTERN = Pattern.compile("^\\[\\d+\\]\\s*(.*)$");
 
     @Override

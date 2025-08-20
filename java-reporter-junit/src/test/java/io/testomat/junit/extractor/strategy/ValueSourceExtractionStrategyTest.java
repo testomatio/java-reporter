@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.testomat.junit.extractor.strategy.handlers.ValueSourceHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
@@ -25,12 +26,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 @DisplayName("ValueSourceExtractionStrategy Tests")
 class ValueSourceExtractionStrategyTest {
 
-    private ValueSourceExtractionStrategy strategy;
+    private ValueSourceHandler strategy;
     private ExtensionContext mockContext;
 
     @BeforeEach
     void setUp() {
-        strategy = new ValueSourceExtractionStrategy();
+        strategy = new ValueSourceHandler();
         mockContext = mock(ExtensionContext.class);
     }
 

@@ -1,4 +1,4 @@
-package io.testomat.junit.extractor.strategy;
+package io.testomat.junit.exception;
 
 /**
  * Exception thrown when parameter extraction fails during strategy execution.

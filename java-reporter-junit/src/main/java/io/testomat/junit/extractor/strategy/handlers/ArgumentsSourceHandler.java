@@ -1,5 +1,8 @@
-package io.testomat.junit.extractor.strategy;
+package io.testomat.junit.extractor.strategy.handlers;
 
+import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
+import io.testomat.junit.exception.ParameterExtractionException;
+import io.testomat.junit.extractor.strategy.ParameterExtractionHandler;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -20,9 +23,9 @@ import org.slf4j.LoggerFactory;
  * Supports extraction of parameter values from custom ArgumentsProvider implementations
  * specified in @ArgumentsSource annotations with various configurations.
  */
-public class ArgumentsSourceExtractionStrategy implements ParameterExtractionStrategy {
+public class ArgumentsSourceHandler implements ParameterExtractionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArgumentsSourceExtractionStrategy.class);
+    private static final Logger logger = LoggerFactory.getLogger(ArgumentsSourceHandler.class);
     private static final Pattern DISPLAY_NAME_PATTERN = Pattern.compile("^\\[\\d+\\]\\s*(.*)$");
 
     @Override
