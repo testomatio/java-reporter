@@ -91,8 +91,8 @@ class NullSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -115,8 +115,8 @@ class NullSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -139,8 +139,8 @@ class NullSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -163,8 +163,8 @@ class NullSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -187,8 +187,8 @@ class NullSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -211,8 +211,8 @@ class NullSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -235,8 +235,8 @@ class NullSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -259,8 +259,8 @@ class NullSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -317,9 +317,9 @@ class NullSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
         // Should fallback to null since @NullSource always provides null
-        assertNull(paramMap.get("param0"));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -345,19 +345,19 @@ class NullSourceExtractionStrategyTest {
 
         @ParameterizedTest
         @NullSource
-        public void basicNullSourceTest(String value) {
+        public void basicNullSourceTest(String input) {
             // Test method for reflection with String parameter
         }
 
         @ParameterizedTest
         @NullSource
-        public void integerNullSourceTest(Integer value) {
+        public void integerNullSourceTest(Integer number) {
             // Test method for reflection with Integer parameter
         }
 
         @ParameterizedTest
         @NullSource
-        public void customObjectNullSourceTest(Object value) {
+        public void customObjectNullSourceTest(Object data) {
             // Test method for reflection with Object parameter
         }
 

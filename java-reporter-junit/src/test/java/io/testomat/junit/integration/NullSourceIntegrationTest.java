@@ -39,8 +39,8 @@ public class NullSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -63,8 +63,8 @@ public class NullSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -87,8 +87,8 @@ public class NullSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -111,8 +111,8 @@ public class NullSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -135,8 +135,8 @@ public class NullSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -159,9 +159,9 @@ public class NullSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
         // @NullSource always provides null, regardless of display name parsing issues
-        assertNull(paramMap.get("param0"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -184,9 +184,9 @@ public class NullSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
         // @NullSource always provides null, even if display name shows something else
-        assertNull(paramMap.get("param0"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     // Test class with actual parameterized methods
@@ -194,19 +194,19 @@ public class NullSourceIntegrationTest {
 
         @ParameterizedTest
         @NullSource
-        public void stringNullSourceTest(String value) {
+        public void stringNullSourceTest(String inputValue) {
             // Real parameterized test method with String parameter
         }
 
         @ParameterizedTest
         @NullSource
-        public void integerNullSourceTest(Integer value) {
+        public void integerNullSourceTest(Integer inputValue) {
             // Real parameterized test method with Integer parameter
         }
 
         @ParameterizedTest
         @NullSource
-        public void objectNullSourceTest(Object value) {
+        public void objectNullSourceTest(Object inputValue) {
             // Real parameterized test method with Object parameter
         }
     }

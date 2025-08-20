@@ -39,9 +39,9 @@ public class CsvFileSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
-        assertEquals(true, paramMap.get("param2"));
+        assertEquals("hello", paramMap.get("productCode"));
+        assertEquals(42, paramMap.get("stockLevel"));
+        assertEquals(true, paramMap.get("isActive"));
     }
 
     @Test
@@ -64,8 +64,8 @@ public class CsvFileSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello, world", paramMap.get("param0"));
-        assertEquals("test value", paramMap.get("param1"));
+        assertEquals("hello, world", paramMap.get("category"));
+        assertEquals("test value", paramMap.get("description"));
     }
 
     @Test
@@ -88,8 +88,8 @@ public class CsvFileSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        assertEquals("hello", paramMap.get("itemType"));
+        assertEquals(42, paramMap.get("itemCount"));
     }
 
     @Test
@@ -136,8 +136,8 @@ public class CsvFileSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("world", paramMap.get("param0"));
-        assertEquals(84, paramMap.get("param1"));
+        assertEquals("world", paramMap.get("itemType"));
+        assertEquals(84, paramMap.get("itemCount"));
     }
 
     // Test class with actual parameterized methods
@@ -145,25 +145,25 @@ public class CsvFileSourceIntegrationTest {
 
         @ParameterizedTest
         @CsvFileSource(resources = "/test-data.csv")
-        public void mixedCsvFileTest(String text, int number, boolean flag) {
+        public void mixedCsvFileTest(String productCode, int stockLevel, boolean isActive) {
             // Real parameterized test method
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/quoted-data.csv")
-        public void quotedCsvFileTest(String first, String second) {
+        public void quotedCsvFileTest(String category, String description) {
             // Real parameterized test method with quoted values
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/custom-delimiter.csv", delimiter = ';')
-        public void customDelimiterCsvFileTest(String text, int number) {
+        public void customDelimiterCsvFileTest(String itemType, int itemCount) {
             // Real parameterized test method with custom delimiter
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/non-existent.csv")
-        public void nonExistentFileCsvTest(String text, int number) {
+        public void nonExistentFileCsvTest(String itemType, int itemCount) {
             // Real parameterized test method with non-existent file
         }
     }

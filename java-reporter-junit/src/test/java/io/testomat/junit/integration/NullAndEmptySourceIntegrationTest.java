@@ -41,8 +41,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -65,8 +65,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertEquals("", paramMap.get("inputValue"));
     }
 
     @Test
@@ -89,8 +89,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("collection"));
+        assertNull(paramMap.get("collection"));
     }
 
     @Test
@@ -113,8 +113,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("[]", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("collection"));
+        assertEquals("[]", paramMap.get("collection"));
     }
 
     @Test
@@ -137,8 +137,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("collection"));
+        assertNull(paramMap.get("collection"));
     }
 
     @Test
@@ -161,8 +161,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("[]", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("collection"));
+        assertEquals("[]", paramMap.get("collection"));
     }
 
     @Test
@@ -185,8 +185,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("{}", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("dataMap"));
+        assertEquals("{}", paramMap.get("dataMap"));
     }
 
     @Test
@@ -209,8 +209,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertEquals("", paramMap.get("inputValue"));
     }
 
     @Test
@@ -233,8 +233,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertNull(paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -257,8 +257,8 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
+        assertEquals("", paramMap.get("inputValue"));
     }
 
     @Test
@@ -281,9 +281,9 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
         // @NullAndEmptySource fallback should be null (first value)
-        assertNull(paramMap.get("param0"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -306,9 +306,9 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey("inputValue"));
         // @NullAndEmptySource fallback should be null when display name doesn't match patterns
-        assertNull(paramMap.get("param0"));
+        assertNull(paramMap.get("inputValue"));
     }
 
     @Test
@@ -331,9 +331,9 @@ public class NullAndEmptySourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey("collection"));
         // Should fallback to null regardless of parameter type
-        assertNull(paramMap.get("param0"));
+        assertNull(paramMap.get("collection"));
     }
 
     // Test class with actual parameterized methods
@@ -341,31 +341,31 @@ public class NullAndEmptySourceIntegrationTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void stringNullAndEmptySourceTest(String value) {
+        public void stringNullAndEmptySourceTest(String inputValue) {
             // Real parameterized test method with String parameter
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void arrayNullAndEmptySourceTest(String[] values) {
+        public void arrayNullAndEmptySourceTest(String[] collection) {
             // Real parameterized test method with array parameter
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void listNullAndEmptySourceTest(List<String> values) {
+        public void listNullAndEmptySourceTest(List<String> collection) {
             // Real parameterized test method with List parameter
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void setNullAndEmptySourceTest(Set<String> values) {
+        public void setNullAndEmptySourceTest(Set<String> collection) {
             // Real parameterized test method with Set parameter
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void mapNullAndEmptySourceTest(Map<String, String> values) {
+        public void mapNullAndEmptySourceTest(Map<String, String> dataMap) {
             // Real parameterized test method with Map parameter
         }
     }

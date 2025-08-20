@@ -89,8 +89,8 @@ class CsvFileSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals(42, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -113,10 +113,10 @@ class CsvFileSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test", paramMap.get("param0"));
-        assertEquals(100, paramMap.get("param1"));
-        assertEquals(true, paramMap.get("param2"));
-        assertEquals(3.14, paramMap.get("param3"));
+        assertEquals("test", paramMap.get(context.getParameterName(0)));
+        assertEquals(100, paramMap.get(context.getParameterName(1)));
+        assertEquals(true, paramMap.get(context.getParameterName(2)));
+        assertEquals(3.14, paramMap.get(context.getParameterName(3)));
     }
 
     @Test
@@ -139,8 +139,8 @@ class CsvFileSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello, world", paramMap.get("param0"));
-        assertEquals("test value", paramMap.get("param1"));
+        assertEquals("hello, world", paramMap.get(context.getParameterName(0)));
+        assertEquals("test value", paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -163,9 +163,9 @@ class CsvFileSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertNull(paramMap.get("param1"));
-        assertEquals("world", paramMap.get("param2"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(1)));
+        assertEquals("world", paramMap.get(context.getParameterName(2)));
     }
 
     @Test
@@ -188,8 +188,8 @@ class CsvFileSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals(42, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -212,9 +212,9 @@ class CsvFileSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals("", paramMap.get("param1"));
-        assertEquals("world", paramMap.get("param2"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals("", paramMap.get(context.getParameterName(1)));
+        assertEquals("world", paramMap.get(context.getParameterName(2)));
     }
 
     @Test
@@ -237,7 +237,7 @@ class CsvFileSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -284,9 +284,9 @@ class CsvFileSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("first, value", paramMap.get("param0"));
-        assertEquals("second value", paramMap.get("param1"));
-        assertEquals(42, paramMap.get("param2"));
+        assertEquals("first, value", paramMap.get(context.getParameterName(0)));
+        assertEquals("second value", paramMap.get(context.getParameterName(1)));
+        assertEquals(42, paramMap.get(context.getParameterName(2)));
     }
 
     @Test
@@ -352,49 +352,49 @@ class CsvFileSourceExtractionStrategyTest {
 
         @ParameterizedTest
         @CsvFileSource(resources = "/test-data.csv")
-        public void basicCsvFileTest(String text, int number) {
+        public void basicCsvFileTest(String name, int value) {
             // Test method for reflection
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/mixed-data.csv")
-        public void mixedTypeCsvFileTest(String text, int number, boolean flag, double decimal) {
+        public void mixedTypeCsvFileTest(String description, int count, boolean isEnabled, double percentage) {
             // Test method for reflection with mixed types
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/quoted-data.csv")
-        public void quotedCsvFileTest(String first, String second) {
+        public void quotedCsvFileTest(String firstName, String lastName) {
             // Test method for reflection with quoted values
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/null-data.csv")
-        public void nullValueCsvFileTest(String first, String second, String third) {
+        public void nullValueCsvFileTest(String username, String email, String phone) {
             // Test method for reflection with null values
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/custom-delimiter-data.csv", delimiter = ';')
-        public void customDelimiterCsvFileTest(String text, int number) {
+        public void customDelimiterCsvFileTest(String category, int priority) {
             // Test method for reflection with custom delimiter
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/empty-data.csv")
-        public void emptyValueCsvFileTest(String first, String second, String third) {
+        public void emptyValueCsvFileTest(String title, String description, String status) {
             // Test method for reflection with empty values
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/single-data.csv")
-        public void singleCsvFileTest(String value) {
+        public void singleCsvFileTest(String identifier) {
             // Test method for reflection with single CSV values
         }
 
         @ParameterizedTest
         @CsvFileSource(resources = "/complex-data.csv")
-        public void complexCsvFileTest(String first, String second, int third) {
+        public void complexCsvFileTest(String product, String vendor, int quantity) {
             // Test method for reflection with complex CSV
         }
 

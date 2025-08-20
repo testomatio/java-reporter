@@ -93,8 +93,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -117,8 +117,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -141,8 +141,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("[]", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("[]", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -165,8 +165,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("[]", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("[]", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -189,8 +189,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("{}", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("{}", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -213,8 +213,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -237,8 +237,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -261,8 +261,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -285,8 +285,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("[]", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("[]", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -309,8 +309,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("[]", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("[]", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -333,8 +333,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("{}", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("{}", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -357,8 +357,8 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
-        assertEquals("", paramMap.get("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
+        assertEquals("", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -381,9 +381,9 @@ class EmptySourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertTrue(paramMap.containsKey("param0"));
+        assertTrue(paramMap.containsKey(context.getParameterName(0)));
         // Should fallback to empty string since @EmptySource always provides empty values
-        assertEquals("", paramMap.get("param0"));
+        assertEquals("", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -425,31 +425,31 @@ class EmptySourceExtractionStrategyTest {
 
         @ParameterizedTest
         @EmptySource
-        public void basicEmptySourceTest(String value) {
+        public void basicEmptySourceTest(String text) {
             // Test method for reflection with String parameter
         }
 
         @ParameterizedTest
         @EmptySource
-        public void arrayEmptySourceTest(String[] values) {
+        public void arrayEmptySourceTest(String[] items) {
             // Test method for reflection with array parameter
         }
 
         @ParameterizedTest
         @EmptySource
-        public void listEmptySourceTest(List<String> values) {
+        public void listEmptySourceTest(List<String> collection) {
             // Test method for reflection with List parameter
         }
 
         @ParameterizedTest
         @EmptySource
-        public void setEmptySourceTest(Set<String> values) {
+        public void setEmptySourceTest(Set<String> elements) {
             // Test method for reflection with Set parameter
         }
 
         @ParameterizedTest
         @EmptySource
-        public void mapEmptySourceTest(Map<String, String> values) {
+        public void mapEmptySourceTest(Map<String, String> dictionary) {
             // Test method for reflection with Map parameter
         }
 

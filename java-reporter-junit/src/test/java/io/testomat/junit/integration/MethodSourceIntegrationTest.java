@@ -41,9 +41,9 @@ public class MethodSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
-        assertEquals(true, paramMap.get("param2"));
+        assertEquals("hello", paramMap.get("userName"));
+        assertEquals(42, paramMap.get("userId"));
+        assertEquals(true, paramMap.get("isActive"));
     }
 
     @Test
@@ -66,8 +66,8 @@ public class MethodSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals("world", paramMap.get("param1"));
+        assertEquals("hello", paramMap.get("firstName"));
+        assertEquals("world", paramMap.get("lastName"));
     }
 
     @Test
@@ -90,9 +90,9 @@ public class MethodSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test", paramMap.get("param0"));
-        assertEquals(100, paramMap.get("param1"));
-        assertEquals(false, paramMap.get("param2"));
+        assertEquals("test", paramMap.get("projectName"));
+        assertEquals(100, paramMap.get("maxSize"));
+        assertEquals(false, paramMap.get("isPublic"));
     }
 
     @Test
@@ -115,8 +115,8 @@ public class MethodSourceIntegrationTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertNull(paramMap.get("param1"));
+        assertEquals("hello", paramMap.get("message"));
+        assertNull(paramMap.get("additionalInfo"));
     }
 
     @Test
@@ -142,8 +142,8 @@ public class MethodSourceIntegrationTest {
         // Should have parameters from actual method invocation
         if (!paramMap.isEmpty()) {
             // If method invocation worked, verify the data
-            assertTrue(paramMap.containsKey("param0"));
-            assertTrue(paramMap.containsKey("param1"));
+            assertTrue(paramMap.containsKey("serviceName"));
+            assertTrue(paramMap.containsKey("servicePort"));
         }
         // At minimum, we should get a valid map structure
         assertNotNull(paramMap);
@@ -154,31 +154,31 @@ public class MethodSourceIntegrationTest {
 
         @ParameterizedTest
         @MethodSource("mixedDataProvider")
-        public void mixedMethodSourceTest(String text, int number, boolean flag) {
+        public void mixedMethodSourceTest(String userName, int userId, boolean isActive) {
             // Real parameterized test method
         }
 
         @ParameterizedTest
         @MethodSource("argumentsDataProvider")
-        public void argumentsMethodSourceTest(String first, String second) {
+        public void argumentsMethodSourceTest(String firstName, String lastName) {
             // Real parameterized test method with Arguments
         }
 
         @ParameterizedTest
         @MethodSource("arrayDataProvider")
-        public void arrayMethodSourceTest(String text, int number, boolean flag) {
+        public void arrayMethodSourceTest(String projectName, int maxSize, boolean isPublic) {
             // Real parameterized test method with array data
         }
 
         @ParameterizedTest
         @MethodSource("nullDataProvider")
-        public void nullValueMethodSourceTest(String first, String second) {
+        public void nullValueMethodSourceTest(String message, String additionalInfo) {
             // Real parameterized test method with null values
         }
 
         @ParameterizedTest
         @MethodSource("providersDataProvider")
-        public void methodSourceWithProvidersTest(String text, int number) {
+        public void methodSourceWithProvidersTest(String serviceName, int servicePort) {
             // Real parameterized test method that should work with fallback
         }
 

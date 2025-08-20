@@ -91,7 +91,7 @@ class EnumSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(DayOfWeek.MONDAY, paramMap.get("param0"));
+        assertEquals(DayOfWeek.MONDAY, paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -114,7 +114,7 @@ class EnumSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(DayOfWeek.FRIDAY, paramMap.get("param0"));
+        assertEquals(DayOfWeek.FRIDAY, paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -137,7 +137,7 @@ class EnumSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(TimeUnit.SECONDS, paramMap.get("param0"));
+        assertEquals(TimeUnit.SECONDS, paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -160,7 +160,7 @@ class EnumSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertNull(paramMap.get("param0"));
+        assertNull(paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -183,7 +183,7 @@ class EnumSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(DayOfWeek.MONDAY, paramMap.get("param0")); // Should get first from names filter
+        assertEquals(DayOfWeek.MONDAY, paramMap.get(context.getParameterName(0))); // Should get first from names filter
     }
 
     @Test
@@ -207,7 +207,7 @@ class EnumSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(TestEnum.VALUE1, paramMap.get("param0")); // Should get first enum constant
+        assertEquals(TestEnum.VALUE1, paramMap.get(context.getParameterName(0))); // Should get first enum constant
     }
 
     @Test
@@ -230,7 +230,7 @@ class EnumSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(TestEnum.VALUE2, paramMap.get("param0"));
+        assertEquals(TestEnum.VALUE2, paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -253,7 +253,7 @@ class EnumSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("INVALID_DAY", paramMap.get("param0")); // Should return as string when enum parsing fails
+        assertEquals("INVALID_DAY", paramMap.get(context.getParameterName(0))); // Should return as string when enum parsing fails
     }
 
     @Test
@@ -276,7 +276,7 @@ class EnumSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals(DayOfWeek.MONDAY, paramMap.get("param0")); // Should fallback to annotation
+        assertEquals(DayOfWeek.MONDAY, paramMap.get(context.getParameterName(0))); // Should fallback to annotation
     }
 
     @Test
@@ -323,25 +323,25 @@ class EnumSourceExtractionStrategyTest {
 
         @ParameterizedTest
         @EnumSource(DayOfWeek.class)
-        public void dayOfWeekEnumTest(DayOfWeek day) {
+        public void dayOfWeekEnumTest(DayOfWeek weekday) {
             // Test method for reflection
         }
 
         @ParameterizedTest
         @EnumSource(TimeUnit.class)
-        public void timeUnitEnumTest(TimeUnit unit) {
+        public void timeUnitEnumTest(TimeUnit timeUnit) {
             // Test method for reflection
         }
 
         @ParameterizedTest
         @EnumSource(value = DayOfWeek.class, names = {"MONDAY", "TUESDAY", "WEDNESDAY"})
-        public void dayOfWeekWithNamesFilterTest(DayOfWeek day) {
+        public void dayOfWeekWithNamesFilterTest(DayOfWeek selectedDay) {
             // Test method for reflection with names filter
         }
 
         @ParameterizedTest
         @EnumSource // No explicit enum class - should be inferred from parameter type
-        public void implicitEnumTypeTest(TestEnum testEnum) {
+        public void implicitEnumTypeTest(TestEnum enumValue) {
             // Test method for reflection with implicit enum type
         }
 

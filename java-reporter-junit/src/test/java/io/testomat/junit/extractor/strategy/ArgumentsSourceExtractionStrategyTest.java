@@ -92,8 +92,8 @@ class ArgumentsSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals(42, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -116,10 +116,10 @@ class ArgumentsSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test", paramMap.get("param0"));
-        assertEquals(100, paramMap.get("param1"));
-        assertEquals(true, paramMap.get("param2"));
-        assertEquals(3.14, paramMap.get("param3"));
+        assertEquals("test", paramMap.get(context.getParameterName(0)));
+        assertEquals(100, paramMap.get(context.getParameterName(1)));
+        assertEquals(true, paramMap.get(context.getParameterName(2)));
+        assertEquals(3.14, paramMap.get(context.getParameterName(3)));
     }
 
     @Test
@@ -142,8 +142,8 @@ class ArgumentsSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertEquals(42, paramMap.get("param1"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals(42, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -166,9 +166,9 @@ class ArgumentsSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("world", paramMap.get("param0"));
-        assertEquals(84, paramMap.get("param1"));
-        assertEquals(false, paramMap.get("param2"));
+        assertEquals("world", paramMap.get(context.getParameterName(0)));
+        assertEquals(84, paramMap.get(context.getParameterName(1)));
+        assertEquals(false, paramMap.get(context.getParameterName(2)));
     }
 
     @Test
@@ -191,8 +191,8 @@ class ArgumentsSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("test", paramMap.get("param0"));
-        assertEquals(123, paramMap.get("param1"));
+        assertEquals("test", paramMap.get(context.getParameterName(0)));
+        assertEquals(123, paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -215,9 +215,9 @@ class ArgumentsSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
-        assertNull(paramMap.get("param1"));
-        assertEquals("world", paramMap.get("param2"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertNull(paramMap.get(context.getParameterName(1)));
+        assertEquals("world", paramMap.get(context.getParameterName(2)));
     }
 
     @Test
@@ -240,8 +240,8 @@ class ArgumentsSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello world", paramMap.get("param0"));
-        assertEquals("test value", paramMap.get("param1"));
+        assertEquals("hello world", paramMap.get(context.getParameterName(0)));
+        assertEquals("test value", paramMap.get(context.getParameterName(1)));
     }
 
     @Test
@@ -264,7 +264,7 @@ class ArgumentsSourceExtractionStrategyTest {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> paramMap = (Map<String, Object>) result;
-        assertEquals("hello", paramMap.get("param0"));
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
     }
 
     @Test
@@ -395,49 +395,49 @@ class ArgumentsSourceExtractionStrategyTest {
 
         @ParameterizedTest
         @ArgumentsSource(BasicArgumentsProvider.class)
-        public void basicArgumentsSourceTest(String text, int number) {
+        public void basicArgumentsSourceTest(String message, int value) {
             // Test method for reflection
         }
 
         @ParameterizedTest
         @ArgumentsSource(MixedTypeArgumentsProvider.class)
-        public void mixedTypeArgumentsSourceTest(String text, int number, boolean flag, double decimal) {
+        public void mixedTypeArgumentsSourceTest(String description, int count, boolean isActive, double percentage) {
             // Test method for reflection with mixed types
         }
 
         @ParameterizedTest
         @ArgumentsSource(BasicArgumentsProvider.class)
-        public void argumentsDisplayTest(String first, int second) {
+        public void argumentsDisplayTest(String name, int id) {
             // Test method for reflection with Arguments display
         }
 
         @ParameterizedTest
         @ArgumentsSource(BasicArgumentsProvider.class)
-        public void arrayDisplayTest(String text, int number, boolean flag) {
+        public void arrayDisplayTest(String label, int size, boolean enabled) {
             // Test method for reflection with array display
         }
 
         @ParameterizedTest
         @ArgumentsSource(BasicArgumentsProvider.class)
-        public void customObjectTest(String text, int number) {
+        public void customObjectTest(String title, int priority) {
             // Test method for reflection with custom object display
         }
 
         @ParameterizedTest
         @ArgumentsSource(NullArgumentsProvider.class)
-        public void nullValueArgumentsSourceTest(String first, String second, String third) {
+        public void nullValueArgumentsSourceTest(String firstName, String middleName, String lastName) {
             // Test method for reflection with null values
         }
 
         @ParameterizedTest
         @ArgumentsSource(BasicArgumentsProvider.class)
-        public void quotedArgumentsSourceTest(String first, String second) {
+        public void quotedArgumentsSourceTest(String username, String password) {
             // Test method for reflection with quoted values
         }
 
         @ParameterizedTest
         @ArgumentsSource(SingleArgumentsProvider.class)
-        public void singleArgumentsSourceTest(String value) {
+        public void singleArgumentsSourceTest(String input) {
             // Test method for reflection with single values
         }
 
