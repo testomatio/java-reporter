@@ -1,10 +1,12 @@
 package io.testomat.junit.extractor.strategy;
 
+import io.testomat.junit.exception.ParameterExtractionException;
+
 /**
  * Strategy interface for extracting parameters from different types of JUnit parameterized test annotations.
  * Each implementation handles parameter extraction for a specific annotation type (e.g., @ValueSource, @CsvSource).
  */
-public interface ParameterExtractionStrategy {
+public interface ParameterExtractionHandler {
 
     /**
      * Determines if this strategy can handle parameter extraction for the given test context.

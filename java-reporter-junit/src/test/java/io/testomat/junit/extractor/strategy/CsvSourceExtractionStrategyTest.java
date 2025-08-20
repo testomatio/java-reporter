@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.testomat.junit.extractor.strategy.handlers.CsvSourceHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
@@ -24,12 +25,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 @DisplayName("CsvSourceExtractionStrategy Tests")
 class CsvSourceExtractionStrategyTest {
 
-    private CsvSourceExtractionStrategy strategy;
+    private CsvSourceHandler strategy;
     private ExtensionContext mockContext;
 
     @BeforeEach
     void setUp() {
-        strategy = new CsvSourceExtractionStrategy();
+        strategy = new CsvSourceHandler();
         mockContext = mock(ExtensionContext.class);
     }
 

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.testomat.junit.extractor.strategy.handlers.MethodSourceHandler;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map;
@@ -27,12 +28,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 @DisplayName("MethodSourceExtractionStrategy Tests")
 class MethodSourceExtractionStrategyTest {
 
-    private MethodSourceExtractionStrategy strategy;
+    private MethodSourceHandler strategy;
     private ExtensionContext mockContext;
 
     @BeforeEach
     void setUp() {
-        strategy = new MethodSourceExtractionStrategy();
+        strategy = new MethodSourceHandler();
         mockContext = mock(ExtensionContext.class);
     }
 

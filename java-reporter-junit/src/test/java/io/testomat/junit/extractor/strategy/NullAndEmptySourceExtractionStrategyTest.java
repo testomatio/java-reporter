@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
+import io.testomat.junit.extractor.strategy.handlers.NullAndEmptySourceHandler;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
@@ -27,12 +28,12 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 @DisplayName("NullAndEmptySourceExtractionStrategy Tests")
 class NullAndEmptySourceExtractionStrategyTest {
 
-    private NullAndEmptySourceExtractionStrategy strategy;
+    private NullAndEmptySourceHandler strategy;
     private ExtensionContext mockContext;
 
     @BeforeEach
     void setUp() {
-        strategy = new NullAndEmptySourceExtractionStrategy();
+        strategy = new NullAndEmptySourceHandler();
         mockContext = mock(ExtensionContext.class);
         reset(mockContext); // Reset mock between tests
     }

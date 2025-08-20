@@ -1,5 +1,8 @@
-package io.testomat.junit.extractor.strategy;
+package io.testomat.junit.extractor.strategy.handlers;
 
+import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
+import io.testomat.junit.exception.ParameterExtractionException;
+import io.testomat.junit.extractor.strategy.ParameterExtractionHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.LinkedHashMap;
@@ -15,9 +18,9 @@ import org.slf4j.LoggerFactory;
  * Supports extraction of enum values from @EnumSource annotations with various configurations
  * including names filtering, mode selection, and enum constant parsing.
  */
-public class EnumSourceExtractionStrategy implements ParameterExtractionStrategy {
+public class EnumSourceHandler implements ParameterExtractionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(EnumSourceExtractionStrategy.class);
+    private static final Logger logger = LoggerFactory.getLogger(EnumSourceHandler.class);
     private static final Pattern DISPLAY_NAME_PATTERN = Pattern.compile("^\\[\\d+\\]\\s*(.*)$");
 
     @Override
