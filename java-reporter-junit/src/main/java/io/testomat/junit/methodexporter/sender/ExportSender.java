@@ -47,7 +47,8 @@ public class ExportSender {
         String requestBody = exporterRequestBodyBuilder.buildRequestBody(exporterTestCases);
         String url = apiUrl + LOAD_URL_PART + provider.getProperty(API_KEY_PROPERTY_NAME);
 
-        log.debug("Sending request to {}", url);
+        log.info("Sending test case export to API: {} test cases", exporterTestCases.size());
+        log.info("Export request body: {}", requestBody);
         for (int attempt = 1; attempt <= RETRY_MAX_ATTEMPTS; attempt++) {
             log.debug("Attempt {} of {}", attempt, exporterTestCases.size());
             try {

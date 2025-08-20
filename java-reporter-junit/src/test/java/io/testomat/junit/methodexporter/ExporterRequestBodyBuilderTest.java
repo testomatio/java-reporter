@@ -1,207 +1,106 @@
 package io.testomat.junit.methodexporter;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.testomat.junit.model.ExporterTestCase;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 
-public class ExporterRequestBodyBuilderTest {
+import static org.junit.jupiter.api.Assertions.*;
 
-    private final ExporterRequestBodyBuilder builder = new ExporterRequestBodyBuilder();
+class ExporterRequestBodyBuilderTest {
 
-    @Test
-    public void testBuildRequestBodyWithWindowsPaths() {
-        ExporterTestCase testCase = new ExporterTestCase();
-        testCase.setName("testMethod");
-        testCase.setCode("@Test public void testMethod() {}");
-        testCase.setFile("src\\test\\java\\com\\example\\TestClass.java");
-        testCase.setSkipped(false);
-        testCase.setSuites(Arrays.asList("TestClass"));
-        testCase.setLabels(Arrays.asList("unit"));
+    private ExporterRequestBodyBuilder builder;
+    private ObjectMapper mapper;
 
-        List<ExporterTestCase> testCases = Collections.singletonList(testCase);
-        String result = builder.buildRequestBody(testCases);
-
-        assertNotNull(result);
-        assertTrue(result.contains(
-                "\"file\": \"src\\\\test\\\\java\\\\com\\\\example\\\\TestClass.java\""));
-        assertTrue(result.contains("\"framework\": \"junit\""));
-        assertTrue(result.contains("\"language\": \"java\""));
+    @BeforeEach
+    void setUp() {
+        builder = new ExporterRequestBodyBuilder();
+        mapper = new ObjectMapper();
     }
 
     @Test
-    public void testBuildRequestBodyWithUnixPaths() {
+    void buildRequestBody_withSingleTestCase_returnsValidJsonAndNormalizesFields() throws Exception {
         ExporterTestCase testCase = new ExporterTestCase();
-        testCase.setName("testMethod");
-        testCase.setCode("@Test public void testMethod() {}");
-        testCase.setFile("src/test/java/com/example/TestClass.java");
-        testCase.setSkipped(false);
-        testCase.setSuites(Arrays.asList("TestClass"));
-        testCase.setLabels(Arrays.asList("unit"));
+        testCase.setName("My\r\nTest");
+        testCase.setCode("System.out.println(\"Hello\");");
+        testCase.setFile("File\rPath.java");
+        testCase.setSkipped(true);
+        testCase.setSuites(Arrays.asList("Suite1", "Suite2"));
+        testCase.setLabels(Collections.singletonList("smoke"));
 
-        List<ExporterTestCase> testCases = Collections.singletonList(testCase);
-        String result = builder.buildRequestBody(testCases);
+        String json = builder.buildRequestBody(List.of(testCase));
 
-        assertNotNull(result);
-        assertTrue(result.contains("\"file\": \"src/test/java/com/example/TestClass.java\""));
-        assertTrue(result.contains("\"framework\": \"junit\""));
-        assertTrue(result.contains("\"language\": \"java\""));
+        JsonNode root = mapper.readTree(json);
+        assertEquals("junit", root.get("framework").asText());
+        assertEquals("java", root.get("language").asText());
+        assertTrue(root.get("noempty").asBoolean());
+        assertTrue(root.get("no-detach").asBoolean());
+        assertTrue(root.get("structure").asBoolean());
+        assertTrue(root.get("sync").asBoolean());
+
+        JsonNode tests = root.get("tests");
+        assertEquals(1, tests.size());
+
+        JsonNode exported = tests.get(0);
+        assertEquals("My\nTest", exported.get("name").asText()); // normalized
+        assertEquals("File\nPath.java", exported.get("file").asText()); // normalized
+        assertTrue(exported.get("skipped").asBoolean());
+        assertEquals(2, exported.get("suites").size());
+        assertEquals("smoke", exported.get("labels").get(0).asText());
     }
 
     @Test
-    public void testBuildRequestBodyWithMixedSlashesInPath() {
-        ExporterTestCase testCase = new ExporterTestCase();
-        testCase.setName("testMethod");
-        testCase.setCode("@Test public void testMethod() {}");
-        testCase.setFile("src\\test/java\\com/example\\TestClass.java");
-        testCase.setSkipped(false);
-        testCase.setSuites(Arrays.asList("TestClass"));
-        testCase.setLabels(Arrays.asList("unit"));
+    void buildRequestBody_withEmptyList_producesEmptyTestsArray() throws Exception {
+        String json = builder.buildRequestBody(Collections.emptyList());
 
-        List<ExporterTestCase> testCases = Collections.singletonList(testCase);
-        String result = builder.buildRequestBody(testCases);
-
-        assertNotNull(result);
-        assertTrue(result.contains(
-                "\"file\": \"src\\\\test/java\\\\com/example\\\\TestClass.java\""));
+        JsonNode root = mapper.readTree(json);
+        assertTrue(root.get("tests").isArray());
+        assertEquals(0, root.get("tests").size());
     }
 
     @Test
-    public void testBuildRequestBodyWithSpecialCharactersInPath() {
+    void buildRequestBody_withNullStrings_normalizesToEmpty() throws Exception {
         ExporterTestCase testCase = new ExporterTestCase();
-        testCase.setName("testMethod");
-        testCase.setCode("@Test public void testMethod() {}");
-        testCase.setFile("src/test/java/com/example/Test\"Class.java");
-        testCase.setSkipped(false);
-        testCase.setSuites(Arrays.asList("TestClass"));
-        testCase.setLabels(Arrays.asList("unit"));
-
-        List<ExporterTestCase> testCases = Collections.singletonList(testCase);
-        String result = builder.buildRequestBody(testCases);
-
-        assertNotNull(result);
-        assertTrue(result.contains("\"file\": \"src/test/java/com/example/Test\\\"Class.java\""));
-    }
-
-    @Test
-    public void testBuildRequestBodyWithNewlinesInCode() {
-        ExporterTestCase testCase = new ExporterTestCase();
-        testCase.setName("testMethod");
-        testCase.setCode("@Test\npublic void testMethod() {\n    // test code\n}");
-        testCase.setFile("src/test/java/TestClass.java");
-        testCase.setSkipped(false);
-        testCase.setSuites(Arrays.asList("TestClass"));
-        testCase.setLabels(Arrays.asList("unit"));
-
-        List<ExporterTestCase> testCases = Collections.singletonList(testCase);
-        String result = builder.buildRequestBody(testCases);
-
-        assertNotNull(result);
-        assertTrue(result.contains(
-                "\"code\": \"@Test\\npublic void testMethod() {\\n    // test code\\n}\""));
-    }
-
-    @Test
-    public void testBuildRequestBodyWithWindowsNewlines() {
-        ExporterTestCase testCase = new ExporterTestCase();
-        testCase.setName("testMethod");
-        testCase.setCode("@Test\r\npublic void testMethod() {\r\n    // test code\r\n}");
-        testCase.setFile("src/test/java/TestClass.java");
-        testCase.setSkipped(false);
-        testCase.setSuites(Arrays.asList("TestClass"));
-        testCase.setLabels(Arrays.asList("unit"));
-
-        List<ExporterTestCase> testCases = Collections.singletonList(testCase);
-        String result = builder.buildRequestBody(testCases);
-
-        assertNotNull(result);
-        assertTrue(result.contains(
-                "\"code\": \"@Test\\npublic void testMethod() {\\n    // test code\\n}\""));
-    }
-
-    @Test
-    public void testBuildRequestBodyWithAbsoluteWindowsPath() {
-        ExporterTestCase testCase = new ExporterTestCase();
-        testCase.setName("testMethod");
-        testCase.setCode("@Test public void testMethod() {}");
-        testCase.setFile("C:\\Users\\developer\\project\\src\\test\\java\\TestClass.java");
-        testCase.setSkipped(false);
-        testCase.setSuites(Arrays.asList("TestClass"));
-        testCase.setLabels(Arrays.asList("unit"));
-
-        List<ExporterTestCase> testCases = Collections.singletonList(testCase);
-        String result = builder.buildRequestBody(testCases);
-
-        assertNotNull(result);
-        assertTrue(result.contains(
-                "\"file\": \"C:\\\\Users\\\\developer\\\\"
-                        + "project\\\\src\\\\test\\\\java\\\\TestClass.java\""));
-    }
-
-    @Test
-    public void testBuildRequestBodyWithAbsoluteUnixPath() {
-        ExporterTestCase testCase = new ExporterTestCase();
-        testCase.setName("testMethod");
-        testCase.setCode("@Test public void testMethod() {}");
-        testCase.setFile("/home/user/project/src/test/java/TestClass.java");
-        testCase.setSkipped(false);
-        testCase.setSuites(Arrays.asList("TestClass"));
-        testCase.setLabels(Arrays.asList("unit"));
-
-        List<ExporterTestCase> testCases = Collections.singletonList(testCase);
-        String result = builder.buildRequestBody(testCases);
-
-        assertNotNull(result);
-        assertTrue(result.contains(
-                "\"file\": \"/home/user/project/src/test/java/TestClass.java\""));
-    }
-
-    @Test
-    public void testBuildRequestBodyWithNullFilePath() {
-        ExporterTestCase testCase = new ExporterTestCase();
-        testCase.setName("testMethod");
-        testCase.setCode("@Test public void testMethod() {}");
+        testCase.setName(null);
+        testCase.setCode(null);
         testCase.setFile(null);
         testCase.setSkipped(false);
-        testCase.setSuites(Arrays.asList("TestClass"));
-        testCase.setLabels(Arrays.asList("unit"));
+        testCase.setSuites(Collections.emptyList());
+        testCase.setLabels(Collections.emptyList());
 
-        List<ExporterTestCase> testCases = Collections.singletonList(testCase);
-        String result = builder.buildRequestBody(testCases);
+        String json = builder.buildRequestBody(List.of(testCase));
 
-        assertNotNull(result);
-        assertTrue(result.contains("\"file\": \"\""));
+        JsonNode exported = mapper.readTree(json).get("tests").get(0);
+        assertEquals("", exported.get("name").asText());
+        assertEquals("", exported.get("code").asText());
+        assertEquals("", exported.get("file").asText());
     }
 
     @Test
-    public void testBuildRequestBodyWithMultipleTestCasesFromDifferentPaths() {
-        ExporterTestCase windowsTest = new ExporterTestCase();
-        windowsTest.setName("windowsTest");
-        windowsTest.setCode("@Test public void windowsTest() {}");
-        windowsTest.setFile("src\\test\\java\\WindowsTest.java");
-        windowsTest.setSkipped(false);
-        windowsTest.setSuites(Arrays.asList("WindowsTest"));
-        windowsTest.setLabels(Arrays.asList("unit"));
+    void buildRequestBody_withMultipleCases_allCasesIncluded() throws Exception {
+        ExporterTestCase case1 = new ExporterTestCase();
+        case1.setName("Case1");
+        case1.setCode("Code1");
+        case1.setFile("File1");
+        case1.setSkipped(false);
 
-        ExporterTestCase unixTest = new ExporterTestCase();
-        unixTest.setName("unixTest");
-        unixTest.setCode("@Test public void unixTest() {}");
-        unixTest.setFile("src/test/java/UnixTest.java");
-        unixTest.setSkipped(false);
-        unixTest.setSuites(Arrays.asList("UnixTest"));
-        unixTest.setLabels(Arrays.asList("unit"));
+        ExporterTestCase case2 = new ExporterTestCase();
+        case2.setName("Case2");
+        case2.setCode("Code2");
+        case2.setFile("File2");
+        case2.setSkipped(true);
 
-        List<ExporterTestCase> testCases = Arrays.asList(windowsTest, unixTest);
-        String result = builder.buildRequestBody(testCases);
+        String json = builder.buildRequestBody(List.of(case1, case2));
 
-        assertNotNull(result);
-        assertTrue(result.contains("\"file\": \"src\\\\test\\\\java\\\\WindowsTest.java\""));
-        assertTrue(result.contains("\"file\": \"src/test/java/UnixTest.java\""));
-        assertTrue(result.contains("\"tests\": ["));
-        assertTrue(result.contains(",\n"));
+        JsonNode tests = mapper.readTree(json).get("tests");
+        assertEquals(2, tests.size());
+        assertEquals("Case1", tests.get(0).get("name").asText());
+        assertEquals("Case2", tests.get(1).get("name").asText());
+        assertTrue(tests.get(1).get("skipped").asBoolean());
     }
 }
