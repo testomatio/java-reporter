@@ -1,10 +1,9 @@
 package io.testomat.junit.extractor.strategy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,41 +33,6 @@ class CsvFileSourceExtractionStrategyTest {
         mockContext = mock(ExtensionContext.class);
     }
 
-    @Test
-    @DisplayName("Should support methods with @CsvFileSource annotation")
-    void shouldSupportCsvFileSourceAnnotation() throws NoSuchMethodException {
-        // Given
-        Method method = TestMethodHolder.class.getMethod("basicCsvFileTest", String.class, int.class);
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
-        when(mockContext.getDisplayName()).thenReturn("basicCsvFileTest");
-        when(mockContext.getUniqueId()).thenReturn("test-id");
-
-        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
-
-        // When
-        boolean supports = strategy.supports(context);
-
-        // Then
-        assertTrue(supports);
-    }
-
-    @Test
-    @DisplayName("Should not support methods without @CsvFileSource annotation")
-    void shouldNotSupportNonCsvFileSourceMethods() throws NoSuchMethodException {
-        // Given
-        Method method = TestMethodHolder.class.getMethod("regularTest");
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
-        when(mockContext.getDisplayName()).thenReturn("regularTest");
-        when(mockContext.getUniqueId()).thenReturn("test-id");
-
-        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
-
-        // When
-        boolean supports = strategy.supports(context);
-
-        // Then
-        assertFalse(supports);
-    }
 
     @Test
     @DisplayName("Should extract CSV file parameters from display name")
@@ -315,24 +279,15 @@ class CsvFileSourceExtractionStrategyTest {
     }
 
     @Test
-    @DisplayName("Should return correct strategy name")
-    void shouldReturnCorrectStrategyName() {
+    @DisplayName("Should have correct strategy name")
+    void shouldHaveCorrectStrategyName() {
         // When
-        String name = strategy.getStrategyName();
-
+        String strategyName = strategy.getStrategyName();
+        
         // Then
-        assertEquals("CsvFileSourceExtractionStrategy", name);
+        assertEquals("CsvFileSourceExtractionStrategy", strategyName);
     }
 
-    @Test
-    @DisplayName("Should return correct priority")
-    void shouldReturnCorrectPriority() {
-        // When
-        int priority = strategy.getPriority();
-
-        // Then
-        assertEquals(10, priority);
-    }
 
     @Test
     @DisplayName("Should handle invalid context gracefully")

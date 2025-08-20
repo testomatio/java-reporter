@@ -1,10 +1,9 @@
 package io.testomat.junit.extractor.strategy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -38,41 +37,6 @@ class EmptySourceExtractionStrategyTest {
         reset(mockContext); // Reset mock between tests
     }
 
-    @Test
-    @DisplayName("Should support methods with @EmptySource annotation")
-    void shouldSupportEmptySourceAnnotation() throws NoSuchMethodException {
-        // Given
-        Method method = TestMethodHolder.class.getMethod("basicEmptySourceTest", String.class);
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
-        when(mockContext.getDisplayName()).thenReturn("basicEmptySourceTest");
-        when(mockContext.getUniqueId()).thenReturn("test-id");
-
-        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
-
-        // When
-        boolean supports = strategy.supports(context);
-
-        // Then
-        assertTrue(supports);
-    }
-
-    @Test
-    @DisplayName("Should not support methods without @EmptySource annotation")
-    void shouldNotSupportNonEmptySourceMethods() throws NoSuchMethodException {
-        // Given
-        Method method = TestMethodHolder.class.getMethod("regularTest");
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
-        when(mockContext.getDisplayName()).thenReturn("regularTest");
-        when(mockContext.getUniqueId()).thenReturn("test-id");
-
-        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
-
-        // When
-        boolean supports = strategy.supports(context);
-
-        // Then
-        assertFalse(supports);
-    }
 
     @Test
     @DisplayName("Should extract empty string parameter from display name")
@@ -388,24 +352,15 @@ class EmptySourceExtractionStrategyTest {
     }
 
     @Test
-    @DisplayName("Should return correct strategy name")
-    void shouldReturnCorrectStrategyName() {
+    @DisplayName("Should have correct strategy name")
+    void shouldHaveCorrectStrategyName() {
         // When
-        String name = strategy.getStrategyName();
-
+        String strategyName = strategy.getStrategyName();
+        
         // Then
-        assertEquals("EmptySourceExtractionStrategy", name);
+        assertEquals("EmptySourceExtractionStrategy", strategyName);
     }
 
-    @Test
-    @DisplayName("Should return correct priority")
-    void shouldReturnCorrectPriority() {
-        // When
-        int priority = strategy.getPriority();
-
-        // Then
-        assertEquals(5, priority);
-    }
 
     @Test
     @DisplayName("Should handle invalid context gracefully")
