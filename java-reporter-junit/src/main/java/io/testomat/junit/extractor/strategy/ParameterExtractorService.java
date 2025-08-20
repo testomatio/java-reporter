@@ -1,42 +1,31 @@
 package io.testomat.junit.extractor.strategy;
 
 import io.testomat.junit.exception.ParameterExtractionException;
-import io.testomat.junit.extractor.strategy.handlers.ArgumentsSourceHandler;
-import io.testomat.junit.extractor.strategy.handlers.CsvFileSourceHandler;
-import io.testomat.junit.extractor.strategy.handlers.CsvSourceHandler;
-import io.testomat.junit.extractor.strategy.handlers.EmptySourceHandler;
-import io.testomat.junit.extractor.strategy.handlers.EnumSourceHandler;
-import io.testomat.junit.extractor.strategy.handlers.MethodSourceHandler;
-import io.testomat.junit.extractor.strategy.handlers.NullAndEmptySourceHandler;
-import io.testomat.junit.extractor.strategy.handlers.NullSourceHandler;
-import io.testomat.junit.extractor.strategy.handlers.ValueSourceHandler;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import io.testomat.junit.extractor.strategy.handlers.ParameterExtractionHandler;
+import io.testomat.junit.extractor.strategy.ParameterHandlerRegistry;
+import java.util.Optional;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Service that orchestrates parameter extraction from parameterized tests using multiple strategies.
- * Automatically selects and applies the appropriate strategy based on test method annotations.
+ * Service that orchestrates parameter extraction from parameterized tests using direct annotation mapping.
+ * Automatically selects the appropriate handler based on test method annotations.
  */
 public class ParameterExtractorService {
 
     private static final Logger logger = LoggerFactory.getLogger(ParameterExtractorService.class);
-    private final List<ParameterExtractionHandler> handlers;
+    private final ParameterHandlerRegistry handlerRegistry;
 
     public ParameterExtractorService() {
-        this.handlers = new ArrayList<>();
-        registerDefaultStrategies();
+        this.handlerRegistry = new ParameterHandlerRegistry();
     }
 
     /**
-     * Constructor for testing with custom strategies.
+     * Constructor for testing with custom handler registry.
      */
-    public ParameterExtractorService(List<ParameterExtractionHandler> handlers) {
-        this.handlers = new ArrayList<>(handlers);
+    public ParameterExtractorService(ParameterHandlerRegistry handlerRegistry) {
+        this.handlerRegistry = handlerRegistry;
     }
 
     /**
@@ -55,13 +44,13 @@ public class ParameterExtractorService {
             return null;
         }
 
-        List<ParameterExtractionHandler> applicableStrategies = selectStrategies(context);
-        if (applicableStrategies.isEmpty()) {
-            logger.debug("No applicable strategies found for test: {}", context.getDisplayName());
+        Optional<ParameterExtractionHandler> handler = handlerRegistry.findHandler(context);
+        if (!handler.isPresent()) {
+            logger.debug("No applicable handler found for test: {}", context.getDisplayName());
             return null;
         }
 
-        ParameterExtractionHandler strategy = applicableStrategies.get(0);
+        ParameterExtractionHandler strategy = handler.get();
         try {
             Object result = strategy.extractParameters(context);
             logger.debug("Successfully extracted parameters using {}: {}", 
@@ -75,28 +64,9 @@ public class ParameterExtractorService {
     }
 
     /**
-     * Gets all registered strategies.
+     * Gets the handler registry for testing purposes.
      */
-    public List<ParameterExtractionHandler> getHandlers() {
-        return new ArrayList<>(handlers);
-    }
-
-    private void registerDefaultStrategies() {
-        handlers.add(new ValueSourceHandler());
-        handlers.add(new EnumSourceHandler());
-        handlers.add(new CsvSourceHandler());
-        handlers.add(new CsvFileSourceHandler());
-        handlers.add(new MethodSourceHandler());
-        handlers.add(new ArgumentsSourceHandler());
-        handlers.add(new NullAndEmptySourceHandler());
-        handlers.add(new NullSourceHandler());
-        handlers.add(new EmptySourceHandler());
-    }
-
-    private List<ParameterExtractionHandler> selectStrategies(ParameterExtractionContext context) {
-        return handlers.stream()
-                .filter(strategy -> strategy.supports(context))
-                .sorted(Comparator.comparingInt(ParameterExtractionHandler::getPriority))
-                .collect(Collectors.toList());
+    public ParameterHandlerRegistry getHandlerRegistry() {
+        return handlerRegistry;
     }
 }

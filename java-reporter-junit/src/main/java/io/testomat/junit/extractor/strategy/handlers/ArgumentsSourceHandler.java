@@ -19,18 +19,8 @@ public class ArgumentsSourceHandler extends AbstractParameterExtractionHandler {
 
 
     @Override
-    public int getPriority() {
-        return 20;
-    }
-
-    @Override
     public String getStrategyName() {
         return "ArgumentsSourceExtractionStrategy";
-    }
-
-    @Override
-    protected Class<? extends Annotation> getSupportedAnnotationType() {
-        return ArgumentsSource.class;
     }
 
     @Override

@@ -1,4 +1,4 @@
-package io.testomat.junit.extractor.strategy.handlers;
+package io.testomat.junit.extractor.strategy.handlers.util;
 
 import java.util.ArrayList;
 import java.util.List;
