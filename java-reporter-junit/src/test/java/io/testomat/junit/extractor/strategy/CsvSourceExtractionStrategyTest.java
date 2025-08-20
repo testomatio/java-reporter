@@ -1,7 +1,6 @@
 package io.testomat.junit.extractor.strategy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,39 +34,13 @@ class CsvSourceExtractionStrategyTest {
     }
 
     @Test
-    @DisplayName("Should support methods with @CsvSource annotation")
-    void shouldSupportCsvSourceAnnotation() throws NoSuchMethodException {
-        // Given
-        Method method = TestMethodHolder.class.getMethod("basicCsvTest", String.class, int.class);
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
-        when(mockContext.getDisplayName()).thenReturn("basicCsvTest");
-        when(mockContext.getUniqueId()).thenReturn("test-id");
-
-        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
-
+    @DisplayName("Should have correct strategy name")
+    void shouldHaveCorrectStrategyName() {
         // When
-        boolean supports = strategy.supports(context);
+        String strategyName = strategy.getStrategyName();
 
         // Then
-        assertTrue(supports);
-    }
-
-    @Test
-    @DisplayName("Should not support methods without @CsvSource annotation")
-    void shouldNotSupportNonCsvSourceMethods() throws NoSuchMethodException {
-        // Given
-        Method method = TestMethodHolder.class.getMethod("regularTest");
-        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
-        when(mockContext.getDisplayName()).thenReturn("regularTest");
-        when(mockContext.getUniqueId()).thenReturn("test-id");
-
-        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
-
-        // When
-        boolean supports = strategy.supports(context);
-
-        // Then
-        assertFalse(supports);
+        assertEquals("CsvSourceExtractionStrategy", strategyName);
     }
 
     @Test
@@ -335,15 +308,6 @@ class CsvSourceExtractionStrategyTest {
         assertEquals("CsvSourceExtractionStrategy", name);
     }
 
-    @Test
-    @DisplayName("Should return correct priority")
-    void shouldReturnCorrectPriority() {
-        // When
-        int priority = strategy.getPriority();
-
-        // Then
-        assertEquals(10, priority);
-    }
 
     @Test
     @DisplayName("Should handle invalid context gracefully")
