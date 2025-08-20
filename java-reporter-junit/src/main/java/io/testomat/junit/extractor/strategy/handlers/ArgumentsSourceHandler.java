@@ -1,73 +1,26 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import io.testomat.junit.exception.ParameterExtractionException;
-import io.testomat.junit.extractor.strategy.ParameterExtractionHandler;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Strategy for extracting parameters from @ArgumentsSource annotated parameterized tests.
+ * Parameter extraction handler for @ArgumentsSource annotated parameterized tests.
  * Supports extraction of parameter values from custom ArgumentsProvider implementations
- * specified in @ArgumentsSource annotations with various configurations.
+ * specified in @ArgumentsSource annotations. Handles complex argument providers with
+ * automatic instantiation and invocation.
  */
-public class ArgumentsSourceHandler implements ParameterExtractionHandler {
+public class ArgumentsSourceHandler extends AbstractParameterExtractionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArgumentsSourceHandler.class);
-    private static final Pattern DISPLAY_NAME_PATTERN = Pattern.compile("^\\[\\d+\\]\\s*(.*)$");
-
-    @Override
-    public boolean supports(ParameterExtractionContext context) {
-        return context.isValid() && context.hasAnnotation(ArgumentsSource.class);
-    }
-
-    @Override
-    public Object extractParameters(ParameterExtractionContext context) 
-            throws ParameterExtractionException {
-        if (!supports(context)) {
-            return null;
-        }
-
-        try {
-            ArgumentsSource argumentsSource = context.getAnnotation(ArgumentsSource.class);
-            if (argumentsSource == null) {
-                return null;
-            }
-
-            // Try to extract from display name first 
-            // (most reliable for getting actual parameter values)
-            ParseResult parseResult = extractFromDisplayNameWithResult(context, argumentsSource);
-            if (parseResult.isSuccessful()) {
-                return formatParameters(parseResult.getValue(), context);
-            }
-
-            // Fallback: extract from ArgumentsProvider 
-            // (won't give us the specific values for this invocation)
-            Object[] providerValues = extractFromArgumentsProvider(argumentsSource, context);
-            return formatParameters(providerValues, context);
-
-        } catch (Exception e) {
-            logger.debug("Failed to extract ArgumentsSource parameters for: {}", 
-                        context.getDisplayName(), e);
-            throw new ParameterExtractionException("Failed to extract ArgumentsSource parameters", e);
-        }
-    }
 
     @Override
     public int getPriority() {
-        return 20; // Highest priority due to complexity of custom providers
+        return 20;
     }
 
     @Override
@@ -75,49 +28,23 @@ public class ArgumentsSourceHandler implements ParameterExtractionHandler {
         return "ArgumentsSourceExtractionStrategy";
     }
 
-    private static class ParseResult {
-        private final boolean successful;
-        private final Object[] values;
-
-        private ParseResult(boolean successful, Object[] values) {
-            this.successful = successful;
-            this.values = values;
-        }
-
-        public static ParseResult success(Object[] values) {
-            return new ParseResult(true, values);
-        }
-
-        public static ParseResult failure() {
-            return new ParseResult(false, null);
-        }
-
-        public boolean isSuccessful() {
-            return successful;
-        }
-
-        public Object[] getValue() {
-            return values;
-        }
+    @Override
+    protected Class<? extends Annotation> getSupportedAnnotationType() {
+        return ArgumentsSource.class;
     }
 
-    private ParseResult extractFromDisplayNameWithResult(ParameterExtractionContext context, 
-                                                         ArgumentsSource argumentsSource) {
-        String displayName = context.getDisplayName();
-        if (displayName == null || displayName.trim().isEmpty()) {
-            return ParseResult.failure();
-        }
+    @Override
+    protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {
+        return parseArgumentsSourceDisplayName(valueStr, context);
+    }
 
-        // JUnit 5 parameterized tests format: "[1] value1, value2, value3" etc.
-        // For ArgumentsSource, display name might contain complex objects or custom formats
-        Matcher matcher = DISPLAY_NAME_PATTERN.matcher(displayName.trim());
-        if (matcher.matches()) {
-            String valueStr = matcher.group(1).trim();
-            Object[] parsedValues = parseArgumentsSourceDisplayName(valueStr, context);
-            return ParseResult.success(parsedValues);
+    @Override
+    protected Object extractFromAnnotation(ParameterExtractionContext context) {
+        ArgumentsSource argumentsSource = context.getAnnotation(ArgumentsSource.class);
+        if (argumentsSource == null) {
+            return new Object[0];
         }
-
-        return ParseResult.failure();
+        return extractFromArgumentsProvider(argumentsSource, context);
     }
 
     private Object[] extractFromArgumentsProvider(ArgumentsSource argumentsSource, 
@@ -128,25 +55,21 @@ public class ArgumentsSourceHandler implements ParameterExtractionHandler {
                 return new Object[0];
             }
 
-            // Instantiate the ArgumentsProvider
             ArgumentsProvider provider = instantiateProvider(providerClass);
             if (provider == null) {
                 return new Object[0];
             }
 
-            // Create a mock ExtensionContext for the provider
             ExtensionContext extensionContext = context.getExtensionContext();
             if (extensionContext == null) {
                 return new Object[0];
             }
 
-            // Invoke the provider to get arguments
             Stream<? extends Arguments> argumentsStream = provider.provideArguments(extensionContext);
             if (argumentsStream == null) {
                 return new Object[0];
             }
 
-            // Get the first Arguments object as fallback
             Arguments firstArguments = argumentsStream.findFirst().orElse(null);
             if (firstArguments != null) {
                 return firstArguments.get();
@@ -162,7 +85,6 @@ public class ArgumentsSourceHandler implements ParameterExtractionHandler {
 
     private ArgumentsProvider instantiateProvider(Class<? extends ArgumentsProvider> providerClass) {
         try {
-            // Try default constructor first
             Constructor<? extends ArgumentsProvider> defaultConstructor = 
                 providerClass.getDeclaredConstructor();
             defaultConstructor.setAccessible(true);
@@ -173,7 +95,6 @@ public class ArgumentsSourceHandler implements ParameterExtractionHandler {
                         providerClass.getName(), e);
             
             try {
-                // Try any available constructor
                 Constructor<?>[] constructors = providerClass.getDeclaredConstructors();
                 for (Constructor<?> constructor : constructors) {
                     if (constructor.getParameterCount() == 0) {
@@ -182,7 +103,6 @@ public class ArgumentsSourceHandler implements ParameterExtractionHandler {
                     }
                 }
                 
-                // If no parameterless constructor, try first constructor with null parameters
                 if (constructors.length > 0) {
                     Constructor<?> firstConstructor = constructors[0];
                     firstConstructor.setAccessible(true);
@@ -207,21 +127,17 @@ public class ArgumentsSourceHandler implements ParameterExtractionHandler {
 
         String trimmed = displayValue.trim();
 
-        // Handle Arguments display format: "Arguments{arguments=[value1, value2, value3]}"
         if (trimmed.startsWith("Arguments{arguments=[") && trimmed.endsWith("]}")) {
             String argsContent = trimmed.substring(21, trimmed.length() - 2);
             return parseCommaSeparatedValues(argsContent);
         }
 
-        // Handle array-like display: "[value1, value2, value3]"
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
             String arrayContent = trimmed.substring(1, trimmed.length() - 1);
             return parseCommaSeparatedValues(arrayContent);
         }
 
-        // Handle custom object displays - try to extract meaningful values
         if (trimmed.contains("(") && trimmed.contains(")")) {
-            // Handle constructor-like display: "CustomObject(value1, value2)"
             int startParen = trimmed.indexOf('(');
             int endParen = trimmed.lastIndexOf(')');
             if (startParen >= 0 && endParen > startParen) {
@@ -230,12 +146,10 @@ public class ArgumentsSourceHandler implements ParameterExtractionHandler {
             }
         }
 
-        // Handle simple comma-separated values
         if (trimmed.contains(",")) {
             return parseCommaSeparatedValues(trimmed);
         }
 
-        // Single value
         return new Object[]{parseTypedValue(trimmed)};
     }
 
@@ -244,7 +158,6 @@ public class ArgumentsSourceHandler implements ParameterExtractionHandler {
             return new Object[0];
         }
 
-        // Simple comma splitting - could be enhanced for complex nested structures
         String[] parts = content.split(",");
         Object[] result = new Object[parts.length];
         
@@ -256,79 +169,9 @@ public class ArgumentsSourceHandler implements ParameterExtractionHandler {
         return result;
     }
 
-    private Object parseTypedValue(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return value;
-        }
-
-        String trimmed = value.trim();
-
-        // Remove quotes if present
-        if ((trimmed.startsWith("\"") && trimmed.endsWith("\"")) 
-            || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-            trimmed = trimmed.substring(1, trimmed.length() - 1);
-        }
-
-        // Handle null
-        if ("null".equals(trimmed)) {
-            return null;
-        }
-
-        // Try parsing as boolean
-        if ("true".equalsIgnoreCase(trimmed)) {
-            return true;
-        }
-        if ("false".equalsIgnoreCase(trimmed)) {
-            return false;
-        }
-
-        // Try parsing as number
-        try {
-            if (trimmed.contains(".")) {
-                return Double.parseDouble(trimmed);
-            } else {
-                long longVal = Long.parseLong(trimmed);
-                // Return as int if it fits, otherwise as long
-                if (longVal >= Integer.MIN_VALUE 
-                    && longVal <= Integer.MAX_VALUE) {
-                    return (int) longVal;
-                }
-                return longVal;
-            }
-        } catch (NumberFormatException e) {
-            // Not a number, continue
-        }
-
-        // Return as string
-        return trimmed;
+    @Override
+    protected Object parseTypedValue(String value) {
+        String trimmed = removeQuotes(value);
+        return super.parseTypedValue(trimmed);
     }
-
-    private Object formatParameters(Object[] values, 
-                                    ParameterExtractionContext context) {
-        if (values == null || values.length == 0) {
-            return new LinkedHashMap<String, Object>();
-        }
-
-        Method method = context.getTestMethod();
-        if (method == null) {
-            // If no method info, create generic parameter map
-            Map<String, Object> parameterMap = new LinkedHashMap<>();
-            for (int i = 0; i < values.length; i++) {
-                parameterMap.put("param" + i, values[i]);
-            }
-            return parameterMap;
-        }
-
-        Parameter[] parameters = method.getParameters();
-        
-        // Create parameter map with proper names
-        Map<String, Object> parameterMap = new LinkedHashMap<>();
-        for (int i = 0; i < values.length; i++) {
-            String parameterName = context.getParameterName(i);
-            parameterMap.put(parameterName, values[i]);
-        }
-
-        return parameterMap;
-    }
-
 }

@@ -61,7 +61,6 @@ public class ParameterExtractorService {
             return null;
         }
 
-        // Execute the highest priority strategy that supports this test
         ParameterExtractionHandler strategy = applicableStrategies.get(0);
         try {
             Object result = strategy.extractParameters(context);
@@ -76,17 +75,6 @@ public class ParameterExtractorService {
     }
 
     /**
-     * Registers a new parameter extraction strategy.
-     *
-     * @param strategy the strategy to register
-     */
-    public void registerStrategy(ParameterExtractionHandler strategy) {
-        if (strategy != null) {
-            handlers.add(strategy);
-        }
-    }
-
-    /**
      * Gets all registered strategies.
      */
     public List<ParameterExtractionHandler> getHandlers() {
@@ -94,7 +82,6 @@ public class ParameterExtractorService {
     }
 
     private void registerDefaultStrategies() {
-        // Register built-in strategies
         handlers.add(new ValueSourceHandler());
         handlers.add(new EnumSourceHandler());
         handlers.add(new CsvSourceHandler());

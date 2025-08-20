@@ -98,18 +98,6 @@ public class ParameterExtractionContext {
         return testMethod != null && extensionContext != null;
     }
 
-    /**
-     * Gets all parameter names for the test method using source code parsing when possible.
-     * Falls back to reflection-based names if source parsing fails.
-     * 
-     * @return list of parameter names, never null
-     */
-    public List<String> getParameterNames() {
-        if (testMethod == null) {
-            return new java.util.ArrayList<>();
-        }
-        return parameterNameResolver.resolveParameterNames(testMethod);
-    }
 
     /**
      * Gets a specific parameter name by index.
@@ -122,17 +110,5 @@ public class ParameterExtractionContext {
             return "param" + parameterIndex;
         }
         return parameterNameResolver.getParameterName(testMethod, parameterIndex);
-    }
-
-    /**
-     * Gets the number of parameters for the test method.
-     * 
-     * @return parameter count, or 0 if method is null
-     */
-    public int getParameterCount() {
-        if (testMethod == null) {
-            return 0;
-        }
-        return testMethod.getParameterCount();
     }
 }

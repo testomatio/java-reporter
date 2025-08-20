@@ -1,71 +1,24 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import io.testomat.junit.exception.ParameterExtractionException;
-import io.testomat.junit.extractor.strategy.ParameterExtractionHandler;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Strategy for extracting parameters from @MethodSource annotated parameterized tests.
+ * Parameter extraction handler for @MethodSource annotated parameterized tests.
  * Supports extraction of parameter values from methods specified in @MethodSource annotations
- * with various configurations including method name resolution and argument handling.
+ * with automatic method name resolution and argument handling for various return types.
  */
-public class MethodSourceHandler implements ParameterExtractionHandler {
+public class MethodSourceHandler extends AbstractParameterExtractionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(MethodSourceHandler.class);
-    private static final Pattern DISPLAY_NAME_PATTERN = Pattern.compile("^\\[\\d+\\]\\s*(.*)$");
-
-    @Override
-    public boolean supports(ParameterExtractionContext context) {
-        return context.isValid() && context.hasAnnotation(MethodSource.class);
-    }
-
-    @Override
-    public Object extractParameters(ParameterExtractionContext context) 
-            throws ParameterExtractionException {
-        if (!supports(context)) {
-            return null;
-        }
-
-        try {
-            MethodSource methodSource = context.getAnnotation(MethodSource.class);
-            if (methodSource == null) {
-                return null;
-            }
-
-            // Try to extract from display name first 
-            // (most reliable for getting actual parameter values)
-            ParseResult parseResult = extractFromDisplayNameWithResult(context, methodSource);
-            if (parseResult.isSuccessful()) {
-                return formatParameters(parseResult.getValue(), context);
-            }
-
-            // Fallback: extract from method source 
-            // (won't give us the specific values for this invocation)
-            Object[] methodValues = extractFromMethodSource(methodSource, context);
-            return formatParameters(methodValues, context);
-
-        } catch (Exception e) {
-            logger.debug("Failed to extract MethodSource parameters for: {}", 
-                        context.getDisplayName(), e);
-            throw new ParameterExtractionException("Failed to extract MethodSource parameters", e);
-        }
-    }
 
     @Override
     public int getPriority() {
-        return 15; // Higher priority than simple sources due to complexity
+        return 15;
     }
 
     @Override
@@ -73,49 +26,23 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
         return "MethodSourceExtractionStrategy";
     }
 
-    private static class ParseResult {
-        private final boolean successful;
-        private final Object[] values;
-
-        private ParseResult(boolean successful, Object[] values) {
-            this.successful = successful;
-            this.values = values;
-        }
-
-        public static ParseResult success(Object[] values) {
-            return new ParseResult(true, values);
-        }
-
-        public static ParseResult failure() {
-            return new ParseResult(false, null);
-        }
-
-        public boolean isSuccessful() {
-            return successful;
-        }
-
-        public Object[] getValue() {
-            return values;
-        }
+    @Override
+    protected Class<? extends Annotation> getSupportedAnnotationType() {
+        return MethodSource.class;
     }
 
-    private ParseResult extractFromDisplayNameWithResult(ParameterExtractionContext context, 
-                                                         MethodSource methodSource) {
-        String displayName = context.getDisplayName();
-        if (displayName == null || displayName.trim().isEmpty()) {
-            return ParseResult.failure();
-        }
+    @Override
+    protected Object parseDisplayNameValue(String valueStr, ParameterExtractionContext context) {
+        return parseMethodSourceDisplayName(valueStr, context);
+    }
 
-        // JUnit 5 parameterized tests format: "[1] value1, value2, value3" etc.
-        // For MethodSource, the display name might contain complex objects or arrays
-        Matcher matcher = DISPLAY_NAME_PATTERN.matcher(displayName.trim());
-        if (matcher.matches()) {
-            String valueStr = matcher.group(1).trim();
-            Object[] parsedValues = parseMethodSourceDisplayName(valueStr, context);
-            return ParseResult.success(parsedValues);
+    @Override
+    protected Object extractFromAnnotation(ParameterExtractionContext context) {
+        MethodSource methodSource = context.getAnnotation(MethodSource.class);
+        if (methodSource == null) {
+            return new Object[0];
         }
-
-        return ParseResult.failure();
+        return extractFromMethodSource(methodSource, context);
     }
 
     private Object[] extractFromMethodSource(MethodSource methodSource, 
@@ -123,7 +50,6 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
         try {
             String[] methodNames = methodSource.value();
             
-            // If no method names specified, try to infer from test method name
             if (methodNames.length == 0) {
                 Method testMethod = context.getTestMethod();
                 if (testMethod != null) {
@@ -135,7 +61,6 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
                 return new Object[0];
             }
 
-            // Try to resolve and invoke the first method
             String methodName = methodNames[0];
             Method sourceMethod = resolveSourceMethod(methodName, context);
             if (sourceMethod != null) {
@@ -152,7 +77,6 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
     }
 
     private String inferMethodName(String testMethodName) {
-        // Common patterns: testSomething -> provideSomething or somethingProvider
         if (testMethodName.startsWith("test")) {
             String baseName = testMethodName.substring(4);
             return "provide" + baseName;
@@ -169,7 +93,6 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
 
             Class<?> testClass = testMethod.getDeclaringClass();
             
-            // Handle fully qualified method names (ClassName#methodName)
             if (methodName.contains("#")) {
                 String[] parts = methodName.split("#", 2);
                 String className = parts[0];
@@ -183,7 +106,6 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
                     return null;
                 }
             } else {
-                // Simple method name - look in the test class
                 return findMethodByName(testClass, methodName);
             }
 
@@ -194,7 +116,6 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
     }
 
     private Method findMethodByName(Class<?> clazz, String methodName) {
-        // Look for static methods with the given name that return Stream, Iterator, or array
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.getName().equals(methodName) 
                 && java.lang.reflect.Modifier.isStatic(method.getModifiers())
@@ -244,8 +165,7 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
                 }
             }
 
-            // Fallback: treat the result itself as a single argument
-            return new Object[]{result};
+                return new Object[]{result};
 
         } catch (Exception e) {
             logger.debug("Failed to extract arguments from result", e);
@@ -264,8 +184,7 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
         } else if (element instanceof Object[]) {
             return (Object[]) element;
         } else {
-            // Single argument
-            return new Object[]{element};
+                return new Object[]{element};
         }
     }
 
@@ -277,24 +196,20 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
 
         String trimmed = displayValue.trim();
 
-        // Handle array-like display: "[value1, value2, value3]"
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
             String arrayContent = trimmed.substring(1, trimmed.length() - 1);
             return parseCommaSeparatedValues(arrayContent);
         }
 
-        // Handle Arguments.of() display: "Arguments{arguments=[value1, value2, value3]}"
         if (trimmed.startsWith("Arguments{arguments=[") && trimmed.endsWith("]}")) {
             String argsContent = trimmed.substring(21, trimmed.length() - 2);
             return parseCommaSeparatedValues(argsContent);
         }
 
-        // Handle simple comma-separated values
         if (trimmed.contains(",")) {
             return parseCommaSeparatedValues(trimmed);
         }
 
-        // Single value
         return new Object[]{parseTypedValue(trimmed)};
     }
 
@@ -303,7 +218,6 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
             return new Object[0];
         }
 
-        // Simple comma splitting - could be enhanced for complex nested structures
         String[] parts = content.split(",");
         Object[] result = new Object[parts.length];
         
@@ -315,73 +229,5 @@ public class MethodSourceHandler implements ParameterExtractionHandler {
         return result;
     }
 
-    private Object parseTypedValue(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return value;
-        }
-
-        String trimmed = value.trim();
-
-        // Handle null
-        if ("null".equals(trimmed)) {
-            return null;
-        }
-
-        // Try parsing as boolean
-        if ("true".equalsIgnoreCase(trimmed)) {
-            return true;
-        }
-        if ("false".equalsIgnoreCase(trimmed)) {
-            return false;
-        }
-
-        // Try parsing as number
-        try {
-            if (trimmed.contains(".")) {
-                return Double.parseDouble(trimmed);
-            } else {
-                long longVal = Long.parseLong(trimmed);
-                // Return as int if it fits, otherwise as long
-                if (longVal >= Integer.MIN_VALUE 
-                    && longVal <= Integer.MAX_VALUE) {
-                    return (int) longVal;
-                }
-                return longVal;
-            }
-        } catch (NumberFormatException e) {
-            // Not a number, continue
-        }
-
-        // Return as string
-        return value;
-    }
-
-    private Object formatParameters(Object[] values, 
-                                    ParameterExtractionContext context) {
-        if (values == null || values.length == 0) {
-            return new LinkedHashMap<String, Object>();
-        }
-
-        Method method = context.getTestMethod();
-        if (method == null) {
-            // If no method info, create generic parameter map
-            Map<String, Object> parameterMap = new LinkedHashMap<>();
-            for (int i = 0; i < values.length; i++) {
-                parameterMap.put("param" + i, values[i]);
-            }
-            return parameterMap;
-        }
-
-        Parameter[] parameters = method.getParameters();
-        
-        // Create parameter map with proper names
-        Map<String, Object> parameterMap = new LinkedHashMap<>();
-        for (int i = 0; i < values.length; i++) {
-            String parameterName = context.getParameterName(i);
-            parameterMap.put(parameterName, values[i]);
-        }
-
-        return parameterMap;
-    }
 
 }
