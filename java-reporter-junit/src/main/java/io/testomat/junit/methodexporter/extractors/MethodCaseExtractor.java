@@ -41,13 +41,10 @@ public class MethodCaseExtractor {
      */
     public List<ExporterTestCase> extractTestCases(CompilationUnit cu, String filepath) {
         List<MethodDeclaration> allMethods = cu.findAll(MethodDeclaration.class);
-        log.debug("Found {} total methods in file", allMethods.size());
 
         List<MethodDeclaration> testMethods = allMethods.stream()
                 .filter(this::isTestMethod)
                 .collect(Collectors.toList());
-
-        log.debug("Found {} test methods after filtering", testMethods.size());
 
         return convertDeclarationsToLoaderTestCases(testMethods, filepath);
     }
@@ -57,13 +54,9 @@ public class MethodCaseExtractor {
         List<ExporterTestCase> cases = new ArrayList<>();
         for (MethodDeclaration method : declarations) {
             try {
-                log.debug("Converting method: {}", method.getNameAsString());
                 ExporterTestCase testCase = createTestCase(method, filepath);
                 cases.add(testCase);
-                log.debug("Successfully converted method: {}", method.getNameAsString());
             } catch (Exception e) {
-                log.error("Failed to convert method {}: {}",
-                        method.getNameAsString(), e.getMessage(), e);
                 throw new ExtractionException(
                         "Failed to convert List<MethodDeclaration> to List<ExporterTestCase>", e);
             }
@@ -73,7 +66,8 @@ public class MethodCaseExtractor {
 
     private boolean isTestMethod(MethodDeclaration method) {
         try {
-            boolean isTest = method.getAnnotations().stream()
+
+            return method.getAnnotations().stream()
                     .anyMatch(ann -> {
                         String name = ann.getNameAsString();
                         return "Test".equals(name)
@@ -81,18 +75,7 @@ public class MethodCaseExtractor {
                                 || "RepeatedTest".equals(name)
                                 || "TestFactory".equals(name);
                     });
-
-            if (isTest) {
-                log.debug("Method {} is a test method", method.getNameAsString());
-            } else {
-                log.debug("Method {} is NOT a test method - skipping export",
-                        method.getNameAsString());
-            }
-
-            return isTest;
         } catch (Exception e) {
-            log.error("Error checking if method {} is test method: {}",
-                    method.getNameAsString(), e.getMessage());
             return false;
         }
     }

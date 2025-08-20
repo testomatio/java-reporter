@@ -1,511 +1,336 @@
 package io.testomat.junit.constructor;
 
-import static io.testomat.core.constants.CommonConstants.FAILED;
-import static io.testomat.core.constants.CommonConstants.PASSED;
-import static io.testomat.core.constants.CommonConstants.SKIPPED;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
+import io.testomat.junit.extractor.JunitMetaDataExtractor;
+import java.lang.reflect.Method;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.opentest4j.TestAbortedException;
 
-/**
- * Comprehensive unit tests for JUnitTestResultConstructor class.
- * Tests the public constructTestRunResult method with various scenarios.
- */
-@DisplayName("JUnitTestResultConstructor Tests")
 class JUnitTestResultConstructorTest {
 
-    private JUnitTestResultConstructor constructor;
-    private TestMetadata testMetadata;
+    @Mock
+    private JunitMetaDataExtractor mockExtractor;
+    @Mock
     private ExtensionContext mockContext;
+    @Mock
+    private TestMetadata mockMetadata;
+
+    private JUnitTestResultConstructor constructor;
 
     @BeforeEach
     void setUp() {
-        constructor = new JUnitTestResultConstructor();
-        testMetadata = new TestMetadata(
-                "Test Method Name",
-                "TEST-001",
-                "Test Suite Name",
-                "TestClass.java"
-        );
-        mockContext = mock(ExtensionContext.class);
+        MockitoAnnotations.openMocks(this);
+        constructor = new JUnitTestResultConstructor(mockExtractor);
     }
 
-    @Nested
-    @DisplayName("Custom Message Scenarios")
-    class CustomMessageTests {
-
-        @Test
-        @DisplayName("Should create TestResult with custom message when message is provided")
-        void shouldCreateTestResultWithCustomMessage() {
-            // Given
-            String customMessage = "Custom test message";
-            String status = PASSED;
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, customMessage, status, mockContext);
-
-            // Then
-            assertNotNull(result);
-            assertEquals(testMetadata.getTitle(), result.getTitle());
-            assertEquals(testMetadata.getTestId(), result.getTestId());
-            assertEquals(testMetadata.getSuiteTitle(), result.getSuiteTitle());
-            assertEquals(testMetadata.getFile(), result.getFile());
-            assertEquals(customMessage, result.getMessage());
-            assertEquals(status, result.getStatus());
-        }
-
-        @Test
-        @DisplayName("Should use custom message and extract stack trace when context has exception")
-        void shouldUseCustomMessageAndExtractStackTrace() {
-            // Given
-            String customMessage = "Custom failure message";
-            String status = FAILED;
-            RuntimeException exception = new RuntimeException("Original exception");
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, customMessage, status, mockContext);
-
-            // Then
-            assertEquals(customMessage, result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains("RuntimeException"));
-            assertTrue(result.getStack().contains("Original exception"));
-        }
-
-        @Test
-        @DisplayName("Should use custom message with null stack when context has no exception")
-        void shouldUseCustomMessageWithNullStackWhenNoException() {
-            // Given
-            String customMessage = "Custom message";
-            String status = PASSED;
-            when(mockContext.getExecutionException()).thenReturn(Optional.empty());
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, customMessage, status, mockContext);
-
-            // Then
-            assertEquals(customMessage, result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNull(result.getStack());
-        }
-
-        @Test
-        @DisplayName("Should use custom message with null stack when context is null")
-        void shouldUseCustomMessageWithNullStackWhenContextIsNull() {
-            // Given
-            String customMessage = "Custom message";
-            String status = PASSED;
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, customMessage, status, null);
-
-            // Then
-            assertEquals(customMessage, result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNull(result.getStack());
-        }
-
-        @Test
-        @DisplayName("Should filter TestAbortedException when using custom message")
-        void shouldFilterTestAbortedExceptionWhenUsingCustomMessage() {
-            // Given
-            String customMessage = "Custom message";
-            String status = SKIPPED;
-            TestAbortedException abortedException = new TestAbortedException("Test aborted");
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(abortedException));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, customMessage, status, mockContext);
-
-            // Then
-            assertEquals(customMessage, result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNull(result.getStack());
-        }
+    @Test
+    @DisplayName("Constructor should reject null extractor")
+    void constructorShouldRejectNullExtractor() {
+        assertThatThrownBy(() -> new JUnitTestResultConstructor(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("metaDataExtractor cannot be null");
     }
 
-    @Nested
-    @DisplayName("Exception Details Extraction Scenarios")
-    class ExceptionDetailsTests {
-
-        @Test
-        @DisplayName("Should extract exception message and stack when message is null")
-        void shouldExtractExceptionDetailsWhenMessageIsNull() {
-            // Given
-            String status = FAILED;
-            RuntimeException exception = new RuntimeException("Test failed with exception");
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertEquals("Test failed with exception", result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains("RuntimeException"));
-            assertTrue(result.getStack().contains("Test failed with exception"));
-        }
-
-        @Test
-        @DisplayName("Should handle exception with null message")
-        void shouldHandleExceptionWithNullMessage() {
-            // Given
-            String status = FAILED;
-            RuntimeException exception = new RuntimeException((String) null);
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertNull(result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains("RuntimeException"));
-        }
-
-        @Test
-        @DisplayName("Should handle exception with empty message")
-        void shouldHandleExceptionWithEmptyMessage() {
-            // Given
-            String status = FAILED;
-            RuntimeException exception = new RuntimeException("");
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertEquals("", result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNotNull(result.getStack());
-        }
-
-        @Test
-        @DisplayName("Should filter TestAbortedException and return empty details")
-        void shouldFilterTestAbortedExceptionAndReturnEmptyDetails() {
-            // Given
-            String status = SKIPPED;
-            TestAbortedException abortedException = new TestAbortedException("Test was aborted");
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(abortedException));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertNull(result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNull(result.getStack());
-        }
-
-        @Test
-        @DisplayName("Should return empty details when context has no exception")
-        void shouldReturnEmptyDetailsWhenContextHasNoException() {
-            // Given
-            String status = PASSED;
-            when(mockContext.getExecutionException()).thenReturn(Optional.empty());
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertNull(result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNull(result.getStack());
-        }
-
-        @Test
-        @DisplayName("Should return empty details when context is null")
-        void shouldReturnEmptyDetailsWhenContextIsNull() {
-            // Given
-            String status = PASSED;
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, null);
-
-            // Then
-            assertNull(result.getMessage());
-            assertEquals(status, result.getStatus());
-            assertNull(result.getStack());
-        }
+    @Test
+    @DisplayName("Should reject null metadata")
+    void shouldRejectNullMetadata() {
+        assertThatThrownBy(() -> constructor.constructTestRunResult(null, "msg", "passed", mockContext))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("metadata cannot be null");
     }
 
-    @Nested
-    @DisplayName("Different Exception Types")
-    class DifferentExceptionTypesTests {
-
-        @Test
-        @DisplayName("Should handle AssertionError correctly")
-        void shouldHandleAssertionError() {
-            // Given
-            String status = FAILED;
-            AssertionError assertionError = new AssertionError("Assertion failed: expected <true> but was <false>");
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(assertionError));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertEquals("Assertion failed: expected <true> but was <false>", result.getMessage());
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains("AssertionError"));
-        }
-
-        @Test
-        @DisplayName("Should handle IllegalArgumentException correctly")
-        void shouldHandleIllegalArgumentException() {
-            // Given
-            String status = FAILED;
-            IllegalArgumentException exception = new IllegalArgumentException("Invalid argument provided");
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertEquals("Invalid argument provided", result.getMessage());
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains("IllegalArgumentException"));
-        }
-
-        @Test
-        @DisplayName("Should handle nested exceptions correctly")
-        void shouldHandleNestedExceptions() {
-            // Given
-            String status = FAILED;
-            RuntimeException rootCause = new RuntimeException("Root cause");
-            IllegalStateException wrappedException = new IllegalStateException("Wrapper exception", rootCause);
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(wrappedException));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertEquals("Wrapper exception", result.getMessage());
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains("IllegalStateException"));
-            assertTrue(result.getStack().contains("Wrapper exception"));
-            assertTrue(result.getStack().contains("Caused by"));
-            assertTrue(result.getStack().contains("Root cause"));
-        }
-
-        @Test
-        @DisplayName("Should handle custom exceptions correctly")
-        void shouldHandleCustomExceptions() {
-            // Given
-            String status = FAILED;
-            CustomTestException customException = new CustomTestException("Custom test failure");
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(customException));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertEquals("Custom test failure", result.getMessage());
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains("CustomTestException"));
-        }
+    @Test
+    @DisplayName("Should reject null status")
+    void shouldRejectNullStatus() {
+        assertThatThrownBy(() -> constructor.constructTestRunResult(mockMetadata, "msg", null, mockContext))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("status cannot be null");
     }
 
-    @Nested
-    @DisplayName("Edge Cases and Boundary Tests")
-    class EdgeCasesTests {
-
-        @Test
-        @DisplayName("Should handle null metadata gracefully")
-        void shouldHandleNullMetadata() {
-            // Given
-            String customMessage = "Test message";
-            String status = PASSED;
-
-            assertThrows(IllegalArgumentException.class,
-                    () -> constructor.constructTestRunResult(null, customMessage, status, mockContext));
-        }
-
-        @Test
-        @DisplayName("Should handle null status")
-        void shouldHandleNullStatus() {
-            // Given
-            String customMessage = "Test message";
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, customMessage, null, mockContext);
-
-            // Then
-            assertNotNull(result);
-            assertEquals(customMessage, result.getMessage());
-            assertNull(result.getStatus());
-        }
-
-        @Test
-        @DisplayName("Should handle very long exception messages")
-        void shouldHandleVeryLongExceptionMessages() {
-            // Given
-            String status = FAILED;
-            String longMessage = "A".repeat(10000);
-            RuntimeException exception = new RuntimeException(longMessage);
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertEquals(longMessage, result.getMessage());
-            assertNotNull(result.getStack());
-        }
-
-        @Test
-        @DisplayName("Should handle special characters in exception messages")
-        void shouldHandleSpecialCharactersInExceptionMessages() {
-            // Given
-            String status = FAILED;
-            String specialMessage = "Test failed: \n\t\r\"Special chars: áéíóú ñ üöä 中文 🚀\"";
-            RuntimeException exception = new RuntimeException(specialMessage);
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertEquals(specialMessage, result.getMessage());
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains(specialMessage));
-        }
-
-        @Test
-        @DisplayName("Should preserve metadata fields correctly")
-        void shouldPreserveMetadataFieldsCorrectly() {
-            // Given
-            TestMetadata customMetadata = new TestMetadata(
-                    "Custom Test Title",
-                    "CUSTOM-TEST-ID-123",
-                    "Custom Suite Title",
-                    "com/example/CustomTestClass.java"
-            );
-            String customMessage = "Custom message";
-            String status = PASSED;
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    customMetadata, customMessage, status, mockContext);
-
-            // Then
-            assertEquals("Custom Test Title", result.getTitle());
-            assertEquals("CUSTOM-TEST-ID-123", result.getTestId());
-            assertEquals("Custom Suite Title", result.getSuiteTitle());
-            assertEquals("com/example/CustomTestClass.java", result.getFile());
-            assertEquals(customMessage, result.getMessage());
-            assertEquals(status, result.getStatus());
-        }
-
-        @Test
-        @DisplayName("Should handle metadata with null fields")
-        void shouldHandleMetadataWithNullFields() {
-            // Given
-            TestMetadata nullFieldsMetadata = new TestMetadata(null, null, null, null);
-            String customMessage = "Test message";
-            String status = PASSED;
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    nullFieldsMetadata, customMessage, status, mockContext);
-
-            // Then
-            assertNotNull(result);
-            assertNull(result.getTitle());
-            assertNull(result.getTestId());
-            assertNull(result.getSuiteTitle());
-            assertNull(result.getFile());
-            assertEquals(customMessage, result.getMessage());
-            assertEquals(status, result.getStatus());
-        }
+    @Test
+    @DisplayName("Should reject null context")
+    void shouldRejectNullContext() {
+        assertThatThrownBy(() -> constructor.constructTestRunResult(mockMetadata, "msg", "passed", null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("context cannot be null");
     }
 
-    @Nested
-    @DisplayName("Stack Trace Handling Tests")
-    class StackTraceTests {
+    @Test
+    @DisplayName("Should build basic test result from metadata")
+    void shouldBuildBasicTestResultFromMetadata() {
+        // Given
+        when(mockMetadata.getSuiteTitle()).thenReturn("MySuite");
+        when(mockMetadata.getTestId()).thenReturn("test-1");
+        when(mockMetadata.getTitle()).thenReturn("MyTest");
+        when(mockMetadata.getFile()).thenReturn("MyTest.java");
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.empty());
 
-        @Test
-        @DisplayName("Should generate complete stack trace")
-        void shouldGenerateCompleteStackTrace() {
-            // Given
-            String status = FAILED;
-            RuntimeException exception = new RuntimeException("Test exception");
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, "custom message", "passed", mockContext);
 
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, status, mockContext);
-
-            // Then
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains("java.lang.RuntimeException: Test exception"));
-            assertTrue(result.getStack().contains("at "));
-            assertTrue(result.getStack().contains(this.getClass().getName()));
-        }
-
-        @Test
-        @DisplayName("Should include method names in stack trace")
-        void shouldIncludeMethodNamesInStackTrace() {
-            // Given
-            RuntimeException exception = createExceptionInNestedMethod();
-            when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
-
-            // When
-            TestResult result = constructor.constructTestRunResult(
-                    testMetadata, null, FAILED, mockContext);
-
-            // Then
-            assertNotNull(result.getStack());
-            assertTrue(result.getStack().contains("createExceptionInNestedMethod"));
-        }
-
-        private RuntimeException createExceptionInNestedMethod() {
-            return new RuntimeException("Exception from nested method");
-        }
+        // Then
+        assertThat(result.getSuiteTitle()).isEqualTo("MySuite");
+        assertThat(result.getTestId()).isEqualTo("test-1");
+        assertThat(result.getTitle()).isEqualTo("MyTest");
+        assertThat(result.getFile()).isEqualTo("MyTest.java");
+        assertThat(result.getMessage()).isEqualTo("custom message");
+        assertThat(result.getStatus()).isEqualTo("passed");
+        assertThat(result.getStack()).isNull();
+        assertThat(result.getExample()).isNull();
+        assertThat(result.getRid()).isNull();
     }
 
-    /**
-     * Custom exception class for testing
-     */
-    private static class CustomTestException extends Exception {
-        public CustomTestException(String message) {
-            super(message);
-        }
+    @Test
+    @DisplayName("Should extract stack trace when message provided but exception exists")
+    void shouldExtractStackTraceWhenMessageProvidedButExceptionExists() {
+        // Given
+        RuntimeException testException = new RuntimeException("Test error");
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(testException));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, "custom message", "failed", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isEqualTo("custom message");
+        assertThat(result.getStack()).contains("RuntimeException").contains("Test error");
+    }
+
+    @Test
+    @DisplayName("Should extract message and stack when no message provided")
+    void shouldExtractMessageAndStackWhenNoMessageProvided() {
+        // Given
+        RuntimeException testException = new RuntimeException("Extracted error");
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(testException));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, null, "failed", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isEqualTo("Extracted error");
+        assertThat(result.getStack()).contains("RuntimeException").contains("Extracted error");
+    }
+
+    @Test
+    @DisplayName("Should handle parameterized test with parameters")
+    void shouldHandleParameterizedTestWithParameters() {
+        // Given
+        Object[] params = {"param1", 42, true};
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(true);
+        when(mockExtractor.extractTestParameters(mockContext)).thenReturn(params);
+        when(mockContext.getUniqueId()).thenReturn("unique-123");
+        when(mockContext.getExecutionException()).thenReturn(Optional.empty());
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, "test", "passed", mockContext);
+
+        // Then
+        assertThat(result.getExample()).isEqualTo(params);
+        assertThat(result.getRid()).isEqualTo("unique-123");
+    }
+
+    @Test
+    @DisplayName("Should filter out TestAbortedException")
+    void shouldFilterOutTestAbortedException() {
+        // Given
+        TestAbortedException abortedException = new TestAbortedException("Test skipped");
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(abortedException));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, null, "skipped", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isNull();
+        assertThat(result.getStack()).isNull();
+    }
+
+    @Test
+    @DisplayName("Should allow other exceptions through filter")
+    void shouldAllowOtherExceptionsThroughFilter() {
+        // Given
+        IllegalArgumentException allowedException = new IllegalArgumentException("Valid error");
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(allowedException));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, null, "failed", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isEqualTo("Valid error");
+        assertThat(result.getStack()).contains("IllegalArgumentException");
+    }
+
+    @Test
+    @DisplayName("Should sanitize Testomat API keys in exception messages")
+    void shouldSanitizeTestomatApiKeysInExceptionMessages() {
+        // Given
+        RuntimeException exception = new RuntimeException("Error with key tstmt_secret123");
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, null, "failed", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isEqualTo("Error with key tstmt_***");
+    }
+
+    @Test
+    @DisplayName("Should sanitize Windows paths in stack traces")
+    void shouldSanitizeWindowsPathsInStackTraces() {
+        // Given
+        RuntimeException exception = new RuntimeException("Error in C:\\Users\\test\\MyClass.java");
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, null, "failed", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isEqualTo("Error in MyClass.java");
+    }
+
+    @Test
+    @DisplayName("Should sanitize Unix paths in stack traces")
+    void shouldSanitizeUnixPathsInStackTraces() {
+        // Given
+        RuntimeException exception = new RuntimeException("Error in /home/user/project/MyClass.java");
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, null, "failed", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isEqualTo("Error in MyClass.java");
+    }
+
+    @Test
+    @DisplayName("Should preserve original text when no sensitive content")
+    void shouldPreserveOriginalTextWhenNoSensitiveContent() {
+        // Given
+        RuntimeException exception = new RuntimeException("Normal error message");
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, null, "failed", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isEqualTo("Normal error message");
+    }
+
+    @Test
+    @DisplayName("Should handle multiple sanitization patterns in same text")
+    void shouldHandleMultipleSanitizationPatternsInSameText() {
+        // Given
+        String complexMessage = "Failed with tstmt_key123 in C:\\Users\\test\\App.java";
+        RuntimeException exception = new RuntimeException(complexMessage);
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, null, "failed", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isEqualTo("Failed with tstmt_*** in App.java");
+    }
+
+    @Test
+    @DisplayName("Should handle null exception message gracefully")
+    void shouldHandleNullExceptionMessageGracefully() {
+        // Given
+        RuntimeException exception = new RuntimeException((String) null);
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.of(exception));
+        setupBasicMetadata();
+
+        // When
+        TestResult result = constructor.constructTestRunResult(mockMetadata, null, "failed", mockContext);
+
+        // Then
+        assertThat(result.getMessage()).isNull();
+        assertThat(result.getStack()).isNotNull(); // Stack trace should still be present
+    }
+
+    @Test
+    @DisplayName("Should verify extractor is called for parameterized test detection")
+    void shouldVerifyExtractorIsCalledForParameterizedTestDetection() {
+        // Given
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.empty());
+        setupBasicMetadata();
+
+        // When
+        constructor.constructTestRunResult(mockMetadata, "test", "passed", mockContext);
+
+        // Then
+        verify(mockExtractor).isParameterizedTest(mockContext);
+    }
+
+    @Test
+    @DisplayName("Should not extract parameters when test is not parameterized")
+    void shouldNotExtractParametersWhenTestIsNotParameterized() {
+        // Given
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.empty());
+        setupBasicMetadata();
+
+        // When
+        constructor.constructTestRunResult(mockMetadata, "test", "passed", mockContext);
+
+        // Then
+        verify(mockExtractor, never()).extractTestParameters(mockContext);
+    }
+
+    @Test
+    @DisplayName("Should extract parameters only when test is parameterized")
+    void shouldExtractParametersOnlyWhenTestIsParameterized() {
+        // Given
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(true);
+        when(mockExtractor.extractTestParameters(mockContext)).thenReturn(null);
+        when(mockContext.getDisplayName()).thenReturn("testMethod");
+        when(mockContext.getExecutionException()).thenReturn(Optional.empty());
+        setupBasicMetadata();
+
+        // When
+        constructor.constructTestRunResult(mockMetadata, "test", "passed", mockContext);
+
+        // Then
+        verify(mockExtractor).extractTestParameters(mockContext);
+    }
+
+    private void setupBasicMetadata() {
+        when(mockMetadata.getSuiteTitle()).thenReturn("TestSuite");
+        when(mockMetadata.getTestId()).thenReturn("test-1");
+        when(mockMetadata.getTitle()).thenReturn("TestMethod");
+        when(mockMetadata.getFile()).thenReturn("TestClass.java");
     }
 }

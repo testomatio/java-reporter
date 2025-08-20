@@ -1,0 +1,381 @@
+package io.testomat.junit.extractor.strategy;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.testomat.junit.extractor.strategy.handlers.CsvSourceHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+/**
+ * Tests for CsvSourceExtractionStrategy to verify parameter extraction from @CsvSource annotations.
+ */
+@DisplayName("CsvSourceExtractionStrategy Tests")
+class CsvSourceExtractionStrategyTest {
+
+    private CsvSourceHandler strategy;
+    private ExtensionContext mockContext;
+
+    @BeforeEach
+    void setUp() {
+        strategy = new CsvSourceHandler();
+        mockContext = mock(ExtensionContext.class);
+    }
+
+    @Test
+    @DisplayName("Should have correct strategy name")
+    void shouldHaveCorrectStrategyName() {
+        // When
+        String strategyName = strategy.getStrategyName();
+
+        // Then
+        assertEquals("CsvSourceExtractionStrategy", strategyName);
+    }
+
+    @Test
+    @DisplayName("Should extract CSV parameters from display name")
+    void shouldExtractCsvParametersFromDisplayName() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("basicCsvTest", String.class, int.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("[1] hello, 42");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        String param0Name = context.getParameterName(0);
+        String param1Name = context.getParameterName(1);
+        assertEquals("hello", paramMap.get(param0Name));
+        assertEquals(42, paramMap.get(param1Name));
+    }
+
+    @Test
+    @DisplayName("Should extract CSV parameters with different types")
+    void shouldExtractCsvParametersWithDifferentTypes() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("mixedTypeCsvTest", String.class, int.class, boolean.class, double.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("[1] test, 100, true, 3.14");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        String param0Name = context.getParameterName(0);
+        String param1Name = context.getParameterName(1);
+        String param2Name = context.getParameterName(2);
+        String param3Name = context.getParameterName(3);
+        assertEquals("test", paramMap.get(param0Name));
+        assertEquals(100, paramMap.get(param1Name));
+        assertEquals(true, paramMap.get(param2Name));
+        assertEquals(3.14, paramMap.get(param3Name));
+    }
+
+    @Test
+    @DisplayName("Should handle quoted CSV values")
+    void shouldHandleQuotedCsvValues() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("quotedCsvTest", String.class, String.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("[1] \"hello, world\", \"test value\"");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        String param0Name = context.getParameterName(0);
+        String param1Name = context.getParameterName(1);
+        assertEquals("hello, world", paramMap.get(param0Name));
+        assertEquals("test value", paramMap.get(param1Name));
+    }
+
+    @Test
+    @DisplayName("Should handle null values in CSV")
+    void shouldHandleNullValuesInCsv() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("nullValueCsvTest", String.class, String.class, String.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("[1] hello, null, world");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        String param0Name = context.getParameterName(0);
+        String param1Name = context.getParameterName(1);
+        String param2Name = context.getParameterName(2);
+        assertEquals("hello", paramMap.get(param0Name));
+        assertNull(paramMap.get(param1Name));
+        assertEquals("world", paramMap.get(param2Name));
+    }
+
+    @Test
+    @DisplayName("Should handle custom delimiter")
+    void shouldHandleCustomDelimiter() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("customDelimiterCsvTest", String.class, int.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("[1] hello; 42");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals(42, paramMap.get(context.getParameterName(1)));
+    }
+
+    @Test
+    @DisplayName("Should handle empty values in CSV")
+    void shouldHandleEmptyValuesInCsv() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("emptyValueCsvTest", String.class, String.class, String.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("[1] hello, , world");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+        assertEquals("", paramMap.get(context.getParameterName(1)));
+        assertEquals("world", paramMap.get(context.getParameterName(2)));
+    }
+
+    @Test
+    @DisplayName("Should extract single CSV parameter")
+    void shouldExtractSingleCsvParameter() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("singleCsvTest", String.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("[1] hello");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        assertEquals("hello", paramMap.get(context.getParameterName(0)));
+    }
+
+    @Test
+    @DisplayName("Should fallback to annotation values when display name parsing fails")
+    void shouldFallbackToAnnotationValues() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("basicCsvTest", String.class, int.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("unparseable display name");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        assertEquals("test1", paramMap.get(context.getParameterName(0))); // Should get first value from annotation
+        assertEquals(100, paramMap.get(context.getParameterName(1)));
+    }
+
+    @Test
+    @DisplayName("Should handle complex CSV with spaces and quotes")
+    void shouldHandleComplexCsvWithSpacesAndQuotes() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("complexCsvTest", String.class, String.class, int.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("[1] \"first, value\", second value, 42");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        assertEquals("first, value", paramMap.get(context.getParameterName(0)));
+        assertEquals("second value", paramMap.get(context.getParameterName(1)));
+        assertEquals(42, paramMap.get(context.getParameterName(2)));
+    }
+
+    @Test
+    @DisplayName("Should handle empty display name")
+    void shouldHandleEmptyDisplayName() throws Exception {
+        // Given
+        Method method = TestMethodHolder.class.getMethod("basicCsvTest", String.class, int.class);
+        when(mockContext.getTestMethod()).thenReturn(Optional.of(method));
+        when(mockContext.getDisplayName()).thenReturn("");
+        when(mockContext.getUniqueId()).thenReturn("test-id");
+
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> paramMap = (Map<String, Object>) result;
+        assertEquals("test1", paramMap.get(context.getParameterName(0))); // Should fallback to annotation
+        assertEquals(100, paramMap.get(context.getParameterName(1)));
+    }
+
+    @Test
+    @DisplayName("Should return correct strategy name")
+    void shouldReturnCorrectStrategyName() {
+        // When
+        String name = strategy.getStrategyName();
+
+        // Then
+        assertEquals("CsvSourceExtractionStrategy", name);
+    }
+
+
+    @Test
+    @DisplayName("Should handle invalid context gracefully")
+    void shouldHandleInvalidContextGracefully() throws Exception {
+        // Given
+        when(mockContext.getTestMethod()).thenReturn(Optional.empty());
+        ParameterExtractionContext context = new ParameterExtractionContext(mockContext);
+
+        // When
+        Object result = strategy.extractParameters(context);
+
+        // Then
+        assertNull(result);
+    }
+
+    // Test helper class with methods for reflection
+    public static class TestMethodHolder {
+
+        @ParameterizedTest
+        @CsvSource({"test1, 100", "test2, 200", "test3, 300"})
+        public void basicCsvTest(String productName, int maxCount) {
+            // Test method for reflection
+        }
+
+        @ParameterizedTest
+        @CsvSource({"test, 100, true, 3.14", "another, 200, false, 2.71"})
+        public void mixedTypeCsvTest(String description, int quantity, boolean enabled, double price) {
+            // Test method for reflection with mixed types
+        }
+
+        @ParameterizedTest
+        @CsvSource({"\"hello, world\", \"test value\"", "\"another\", \"value\""})
+        public void quotedCsvTest(String message, String tag) {
+            // Test method for reflection with quoted values
+        }
+
+        @ParameterizedTest
+        @CsvSource({"hello, null, world", "test, , value"})
+        public void nullValueCsvTest(String prefix, String middle, String suffix) {
+            // Test method for reflection with null values
+        }
+
+        @ParameterizedTest
+        @CsvSource(value = {"hello; 42", "world; 84"}, delimiter = ';')
+        public void customDelimiterCsvTest(String label, int value) {
+            // Test method for reflection with custom delimiter
+        }
+
+        @ParameterizedTest
+        @CsvSource({"hello, , world", "test, , value"})
+        public void emptyValueCsvTest(String start, String empty, String end) {
+            // Test method for reflection with empty values
+        }
+
+        @ParameterizedTest
+        @CsvSource({"hello", "world", "test"})
+        public void singleCsvTest(String inputText) {
+            // Test method for reflection with single CSV values
+        }
+
+        @ParameterizedTest
+        @CsvSource({"\"first, value\", second value, 42", "\"another, test\", third value, 84"})
+        public void complexCsvTest(String complexField, String simpleField, int numericField) {
+            // Test method for reflection with complex CSV
+        }
+
+        public void regularTest() {
+            // Regular test method without parameterization
+        }
+    }
+}

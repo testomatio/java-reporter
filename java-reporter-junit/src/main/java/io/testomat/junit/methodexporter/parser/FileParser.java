@@ -12,13 +12,13 @@ public class FileParser {
     public CompilationUnit parseFile(String filepath) {
         try {
             Path filePath = Paths.get(filepath);
-            
+
             boolean exists = filePath.toFile().exists();
-            
+
             if (!exists) {
                 return null;
             }
-            
+
             synchronized (lock) {
                 return StaticJavaParser.parse(filePath);
             }

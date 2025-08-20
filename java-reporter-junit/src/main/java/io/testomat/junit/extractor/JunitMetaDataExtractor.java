@@ -4,50 +4,127 @@ import io.testomat.core.annotation.TestId;
 import io.testomat.core.annotation.Title;
 import io.testomat.core.exception.NoMethodInContextException;
 import io.testomat.core.model.TestMetadata;
+import io.testomat.junit.extractor.strategy.ParameterExtractorService;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
 
+/**
+ * Extracts metadata and parameters from JUnit test methods.
+ * Provides comprehensive test information including titles, IDs, suite names,
+ * file paths, and parameter extraction for parameterized tests.
+ */
 public class JunitMetaDataExtractor {
 
-    public TestMetadata extractTestMetadata(ExtensionContext context) {
-        Method testMethod = getTestMethod(context);
-        String title = getTestTitle(testMethod);
-        Class<?> testClass = context.getRequiredTestClass();
-        String suiteTitle = testClass.getSimpleName();
-        String file = getFilePath(testClass);
-        String testId = getTestId(testMethod);
+    private final ParameterExtractorService parameterExtractorService;
 
-        return new TestMetadata(title, testId, suiteTitle, file);
+    public JunitMetaDataExtractor() {
+        this.parameterExtractorService = new ParameterExtractorService();
     }
 
     /**
-     * Gets the file path for the test class.
+     * Constructor for testing with custom parameter extractor service.
+     */
+    public JunitMetaDataExtractor(ParameterExtractorService parameterExtractorService) {
+        this.parameterExtractorService = parameterExtractorService;
+    }
+
+    /**
+     * Extracts complete metadata for a test method.
      *
-     * @param testClass the test class
-     * @return path to the java file
+     * @param context the JUnit extension context
+     * @return TestMetadata containing title, ID, suite name, and file path
+     * @throws NoMethodInContextException if no test method is found
      */
-    private String getFilePath(Class<?> testClass) {
-        String packagePath = testClass.getPackage().getName().replace('.', '/');
-        String className = testClass.getSimpleName() + ".java";
-        return packagePath + "/" + className;
+    public TestMetadata extractTestMetadata(ExtensionContext context) {
+        Method method = getTestMethod(context);
+        Class<?> testClass = context.getRequiredTestClass();
+
+        return new TestMetadata(
+                buildTestTitle(method, context),
+                extractTestId(method),
+                testClass.getSimpleName(),
+                buildFilePath(testClass)
+        );
     }
 
     /**
-     * Gets test title from @Title annotation or JUnit display name.
+     * Extracts parameters from parameterized tests.
+     *
+     * @param context the JUnit extension context
+     * @return parameter object (single value for simple params, Map for multiple/complex params),
+     * or null for non-parameterized tests
      */
-    private String getTestTitle(Method method) {
-        Title titleAnnotation = method.getAnnotation(Title.class);
-        return titleAnnotation != null ? titleAnnotation.value() : method.getName();
+    public Object extractTestParameters(ExtensionContext context) {
+        return parameterExtractorService.extractParameters(context);
     }
 
-    private String getTestId(Method method) {
-        TestId testIdAnnotation = method.getAnnotation(TestId.class);
-        return testIdAnnotation != null ? testIdAnnotation.value() : null;
+    /**
+     * Checks if the test method is a parameterized test.
+     *
+     * @param context the JUnit extension context
+     * @return true if the test method is annotated with @ParameterizedTest
+     */
+    public boolean isParameterizedTest(ExtensionContext context) {
+        try {
+            Method method = context.getTestMethod().orElse(null);
+            return method != null && method.isAnnotationPresent(ParameterizedTest.class);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private String buildTestTitle(Method method, ExtensionContext context) {
+        try {
+            String titleFromAnnotation = extractTitleFromAnnotation(method);
+            if (!titleFromAnnotation.equals(method.getName())) {
+                return titleFromAnnotation;
+            }
+
+            ParameterizedTest parameterized = method.getAnnotation(ParameterizedTest.class);
+            if (parameterized != null) {
+                return buildParameterizedTitle(method, parameterized);
+            }
+
+            return method.getName();
+        } catch (Exception e) {
+            return context.getDisplayName();
+        }
+    }
+
+    private String buildParameterizedTitle(Method method, ParameterizedTest parameterized) {
+        String customName = parameterized.name();
+        if (isCustomNameProvided(customName)) {
+            return method.getName();
+        }
+        return method.getName();
+    }
+
+    private boolean isCustomNameProvided(String name) {
+        return name != null
+                && !name.trim().isEmpty()
+                && !name.equals("{default_display_name}");
+    }
+
+    private String extractTitleFromAnnotation(Method method) {
+        Title annotation = method.getAnnotation(Title.class);
+        return annotation != null ? annotation.value() : method.getName();
+    }
+
+    private String extractTestId(Method method) {
+        TestId annotation = method.getAnnotation(TestId.class);
+        return annotation != null ? annotation.value() : null;
+    }
+
+    private String buildFilePath(Class<?> testClass) {
+        String packagePath = testClass.getPackage().getName().replace('.', '/');
+        return packagePath + "/" + testClass.getSimpleName() + ".java";
     }
 
     private Method getTestMethod(ExtensionContext context) {
-        return context.getTestMethod().orElseThrow(
-                () -> new NoMethodInContextException(
-                        "No test method found in " + context.getDisplayName()));
+        return context.getTestMethod().orElseThrow(() ->
+                new NoMethodInContextException("No test method found in "
+                        + context.getDisplayName())
+        );
     }
 }

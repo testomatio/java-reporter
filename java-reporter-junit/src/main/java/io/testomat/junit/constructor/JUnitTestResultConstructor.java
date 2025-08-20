@@ -3,110 +3,234 @@ package io.testomat.junit.constructor;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
+import io.testomat.junit.exception.ReporterException;
+import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.opentest4j.TestAbortedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Constructs test case results from JUnit 5 extension contexts.
- * Supports custom messages and extracts exception details from execution context.
+ * Constructs test result objects from JUnit test execution context and metadata.
+ * This class is responsible for building {@link TestResult} instances by extracting
+ * relevant information from JUnit's {@link ExtensionContext}, including test metadata,
+ * execution status, exception details, and parameterized test data.
  */
 public class JUnitTestResultConstructor {
+
     private static final Logger log = LoggerFactory.getLogger(JUnitTestResultConstructor.class);
 
+    private static final Pattern TESTOMAT_API_KEY_PATTERN = Pattern.compile(
+            "\\btstmt_[a-zA-Z0-9_-]+", Pattern.CASE_INSENSITIVE);
+    private static final Pattern WINDOWS_PATH_PATTERN = Pattern.compile(
+            "[C-Z]:\\\\[^\\s]+\\\\([^\\\\\\s]+)");
+    private static final Pattern UNIX_PATH_PATTERN = Pattern.compile(
+            "/[^\\s]+/([^/\\s]+)");
+
+    private final JunitMetaDataExtractor metaDataExtractor;
+
+    /**
+     * Creates a new JUnitTestResultConstructor with a default metadata extractor.
+     */
+    public JUnitTestResultConstructor() {
+        this.metaDataExtractor = new JunitMetaDataExtractor();
+    }
+
+    /**
+     * Creates a new JUnitTestResultConstructor with the specified metadata extractor.
+     *
+     * @param metaDataExtractor the metadata extractor to use for extracting test information
+     * @throws NullPointerException if metaDataExtractor is null
+     */
+    public JUnitTestResultConstructor(JunitMetaDataExtractor metaDataExtractor) {
+        // REVIEW: Exemplary defensive programming - null check with meaningful message
+        this.metaDataExtractor = Objects.requireNonNull(metaDataExtractor,
+                "metaDataExtractor cannot be null");
+    }
+
+    /**
+     * Constructs a test result from the provided metadata and execution context.
+     * This method processes both regular and parameterized tests, extracting exception
+     * details when available and preserving test parameters for parameterized tests.
+     *
+     * @param metadata the test metadata containing suite title, test ID, title, and file
+     * @param message  the test message (if null, will be extracted from context exception)
+     * @param status   the test execution status (e.g., "passed", "failed", "skipped")
+     * @param context  the JUnit extension context containing execution details
+     * @return a complete TestResult object with all available information
+     */
     public TestResult constructTestRunResult(TestMetadata metadata,
                                              String message,
                                              String status,
                                              ExtensionContext context) {
+        Objects.requireNonNull(metadata, "metadata cannot be null");
+        Objects.requireNonNull(status, "status cannot be null");
+        Objects.requireNonNull(context, "context cannot be null");
 
-        if (metadata == null) {
-            throw new IllegalArgumentException("Metadata is null");
-        }
         String stack;
+        Object example = null;
+        String rid = null;
+
+        if (metaDataExtractor.isParameterizedTest(context)) {
+            example = metaDataExtractor.extractTestParameters(context);
+            rid = context.getUniqueId();
+            log.debug("Parameterized test - example: {}, rid: {}", example, rid);
+        }
 
         if (message != null) {
-            log.debug("Creating JUnit test result with custom message: {} - {}",
-                    metadata.getTitle(), message);
             stack = extractStackTrace(context);
         } else {
-            log.debug("Creating JUnit test result with exception details for: {}",
-                    metadata.getTitle());
             ExceptionDetails details = extractExceptionDetails(context);
             message = details.getMessage();
             stack = details.getStack();
         }
 
-        return createTestResult(metadata, message, status, stack);
+        return createTestResult(metadata, message, status, stack, example, rid);
     }
 
     /**
-     * Creates TestResult with provided message and stack trace.
+     * Creates a TestResult object using the provided parameters.
+     *
+     * @param metadata the test metadata
+     * @param message  the test message
+     * @param status   the test status
+     * @param stack    the stack trace (if any)
+     * @param example  the test parameters for parameterized tests (if any)
+     * @param rid      the unique identifier for parameterized test runs (if any)
+     * @return a complete TestResult object
      */
     private TestResult createTestResult(TestMetadata metadata,
                                         String message,
                                         String status,
-                                        String stack) {
-        return TestResult.builder()
+                                        String stack,
+                                        Object example,
+                                        String rid) {
+        Objects.requireNonNull(metadata, "metadata cannot be null");
+
+        TestResult.Builder builder = TestResult.builder()
                 .withSuiteTitle(metadata.getSuiteTitle())
                 .withTestId(metadata.getTestId())
                 .withTitle(metadata.getTitle())
                 .withFile(metadata.getFile())
                 .withMessage(message)
                 .withStatus(status)
-                .withStack(stack)
-                .build();
+                .withStack(stack);
+
+        if (example != null) {
+            builder.withExample(example);
+        }
+
+        if (rid != null) {
+            builder.withRid(rid);
+        }
+
+        return builder.build();
     }
 
     /**
-     * Extracts exception details from JUnit extension context.
+     * Extracts exception details from the test execution context.
+     *
+     * @param context the extension context
+     * @return exception details if a reportable exception exists, empty details otherwise
      */
     private ExceptionDetails extractExceptionDetails(ExtensionContext context) {
-        return Optional.ofNullable(context)
-                .flatMap(ExtensionContext::getExecutionException)
-                .filter(this::isReportableException)
+        return extractReportableException(context)
                 .map(this::createExceptionDetails)
                 .orElse(ExceptionDetails.empty());
     }
 
     /**
-     * Extracts stack trace from JUnit extension context.
+     * Extracts the stack trace from the test execution context.
+     *
+     * @param context the extension context
+     * @return the stack trace string if a reportable exception exists, null otherwise
      */
     private String extractStackTrace(ExtensionContext context) {
-        return Optional.ofNullable(context)
-                .flatMap(ExtensionContext::getExecutionException)
-                .filter(this::isReportableException)
+        return extractReportableException(context)
                 .map(this::getStackTrace)
                 .orElse(null);
     }
 
     /**
-     * Creates exception details with message and stack trace.
+     * Extracts a reportable exception from the execution context.
+     * Filters out test aborted exceptions as they are not considered reportable.
+     *
+     * @param context the extension context
+     * @return an optional containing the reportable exception if present
+     */
+    private Optional<Throwable> extractReportableException(ExtensionContext context) {
+        return context.getExecutionException()
+                .filter(this::isReportableException);
+    }
+
+    /**
+     * Creates exception details from a throwable.
+     *
+     * @param throwable the throwable to process
+     * @return exception details containing message and stack trace
+     * @throws NullPointerException if throwable is null
      */
     private ExceptionDetails createExceptionDetails(Throwable throwable) {
-        String message = throwable.getMessage();
+        Objects.requireNonNull(throwable, "throwable cannot be null");
+        String message = sanitizeSensitiveContent(throwable.getMessage());
         String stack = getStackTrace(throwable);
-        log.debug("Including error details for failed test");
         return new ExceptionDetails(message, stack);
     }
 
     /**
-     * Converts throwable to stack trace string.
+     * Sanitizes text content by removing sensitive information.
+     * Specifically removes Testomat API keys and simplifies file paths.
+     *
+     * @param text the raw text to sanitize
+     * @return sanitized text with sensitive information removed
      */
-    private String getStackTrace(Throwable throwable) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        throwable.printStackTrace(pw);
-        return sw.toString();
+    private String sanitizeSensitiveContent(String text) {
+        if (text == null) {
+            return null;
+        }
+
+        String sanitized = text;
+
+        sanitized = TESTOMAT_API_KEY_PATTERN.matcher(sanitized).replaceAll("tstmt_***");
+
+        sanitized = WINDOWS_PATH_PATTERN.matcher(sanitized).replaceAll("$1");
+        sanitized = UNIX_PATH_PATTERN.matcher(sanitized).replaceAll("$1");
+
+        return sanitized;
     }
 
     /**
-     * Checks if exception should be reported (excludes test aborted exceptions).
+     * Converts a throwable to its string representation including stack trace.
+     *
+     * @param throwable the throwable to convert
+     * @return the complete stack trace as a string
+     * @throws ReporterException if an error occurs while extracting the stack trace
+     */
+    private String getStackTrace(Throwable throwable) {
+        try (StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw)) {
+            throwable.printStackTrace(pw);
+            String rawStackTrace = sw.toString();
+            return sanitizeSensitiveContent(rawStackTrace);
+        } catch (Exception e) {
+            throw new ReporterException("Failed to get stack trace", e);
+        }
+    }
+
+    /**
+     * Determines if an exception should be reported.
+     * Test aborted exceptions are considered non-reportable.
+     *
+     * @param throwable the throwable to check
+     * @return true if the exception should be reported, false otherwise
+     * @throws NullPointerException if throwable is null
      */
     private boolean isReportableException(Throwable throwable) {
-        return !(throwable instanceof TestAbortedException);
+        return !(Objects.requireNonNull(throwable) instanceof TestAbortedException);
     }
 }

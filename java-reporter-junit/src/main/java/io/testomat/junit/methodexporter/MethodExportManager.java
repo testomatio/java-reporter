@@ -57,8 +57,7 @@ public class MethodExportManager {
 
         try {
             if (!isInitializeExportRequired()) {
-                log.debug("Export not required - property {} not set",
-                        EXPORT_REQUIRED_PROPERTY_NAME);
+
                 return;
             }
 
@@ -102,8 +101,7 @@ public class MethodExportManager {
             List<ExporterTestCase> testCases;
             try {
                 testCases = methodCaseExtractor.extractTestCases(cu, filepath);
-                log.debug("Test case extraction completed. Extracted {} test cases",
-                        testCases != null ? testCases.size() : 0);
+
             } catch (Exception e) {
                 log.error("Exception during test case extraction: {}", e.getMessage(), e);
                 return;
@@ -133,8 +131,7 @@ public class MethodExportManager {
             log.debug("Finished processing class: {}", className);
 
         } catch (Exception e) {
-            log.error("Unexpected exception in loadTestBodyForClass for class {}: {}",
-                    testClass.getName(), e.getMessage(), e);
+            log.warn("Exception during processing class: {}", e.getMessage(), e);
         }
     }
 
