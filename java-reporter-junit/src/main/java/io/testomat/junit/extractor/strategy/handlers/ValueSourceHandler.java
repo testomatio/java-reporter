@@ -1,7 +1,8 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
-import org.junit.jupiter.params.provider.ValueSource;
+import io.testomat.junit.util.ParameterizedTestSupport;
+import java.lang.annotation.Annotation;
 
 /**
  * Parameter extraction handler for @ValueSource annotated parameterized tests.
@@ -22,43 +23,57 @@ public class ValueSourceHandler extends AbstractParameterExtractionHandler {
 
     @Override
     protected Object extractFromAnnotation(ParameterExtractionContext context) {
-        ValueSource valueSource = context.getAnnotation(ValueSource.class);
-        if (valueSource == null) {
+        if (!ParameterizedTestSupport.isAvailable()) {
             return null;
         }
 
-        if (valueSource.strings().length > 0) {
-            return valueSource.strings()[0];
-        }
-        if (valueSource.ints().length > 0) {
-            return valueSource.ints()[0];
-        }
-        if (valueSource.longs().length > 0) {
-            return valueSource.longs()[0];
-        }
-        if (valueSource.doubles().length > 0) {
-            return valueSource.doubles()[0];
-        }
-        if (valueSource.floats().length > 0) {
-            return valueSource.floats()[0];
-        }
-        if (valueSource.bytes().length > 0) {
-            return valueSource.bytes()[0];
-        }
-        if (valueSource.shorts().length > 0) {
-            return valueSource.shorts()[0];
-        }
-        if (valueSource.booleans().length > 0) {
-            return valueSource.booleans()[0];
-        }
-        if (valueSource.chars().length > 0) {
-            return valueSource.chars()[0];
-        }
-        if (valueSource.classes().length > 0) {
-            return valueSource.classes()[0];
-        }
+        return ParameterizedTestSupport.loadAnnotationClass("ValueSource")
+            .map(valueSourceClass -> {
+                Annotation valueSource = context.getAnnotation(valueSourceClass);
+                if (valueSource == null) {
+                    return null;
+                }
+                return extractValueFromValueSource(valueSource);
+            })
+            .orElse(null);
+    }
 
-        return null;
+    private Object extractValueFromValueSource(Annotation valueSource) {
+        try {
+            Class<?> annotationClass = valueSource.annotationType();
+
+            String[] methodNames = {"strings", "ints", "longs", "doubles",
+                    "floats", "bytes", "shorts", "booleans", "chars", "classes"};
+            
+            for (String methodName : methodNames) {
+                Object result = tryExtractArray(valueSource, annotationClass, methodName);
+                if (result != null) {
+                    return result;
+                }
+            }
+
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Object tryExtractArray(Annotation annotation, Class<?> annotationClass,
+                                   String methodName) {
+        try {
+            java.lang.reflect.Method method = annotationClass.getMethod(methodName);
+            Object array = method.invoke(annotation);
+
+            if (array != null) {
+                int length = java.lang.reflect.Array.getLength(array);
+                if (length > 0) {
+                    return java.lang.reflect.Array.get(array, 0);
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private Object parseValue(String value) {

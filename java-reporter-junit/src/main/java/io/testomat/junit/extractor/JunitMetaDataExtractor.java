@@ -5,9 +5,9 @@ import io.testomat.core.annotation.Title;
 import io.testomat.core.exception.NoMethodInContextException;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.junit.extractor.strategy.ParameterExtractorService;
+import io.testomat.junit.util.ParameterizedTestSupport;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.params.ParameterizedTest;
 
 /**
  * Extracts metadata and parameters from JUnit test methods.
@@ -68,7 +68,7 @@ public class JunitMetaDataExtractor {
     public boolean isParameterizedTest(ExtensionContext context) {
         try {
             Method method = context.getTestMethod().orElse(null);
-            return method != null && method.isAnnotationPresent(ParameterizedTest.class);
+            return ParameterizedTestSupport.isParameterizedTest(method);
         } catch (Exception e) {
             return false;
         }
@@ -81,9 +81,19 @@ public class JunitMetaDataExtractor {
                 return titleFromAnnotation;
             }
 
-            ParameterizedTest parameterized = method.getAnnotation(ParameterizedTest.class);
-            if (parameterized != null) {
-                return buildParameterizedTitle(method, parameterized);
+            // Check for ParameterizedTest annotation using reflection
+            if (ParameterizedTestSupport.isParameterizedTest(method)) {
+                ParameterizedTestSupport.loadAnnotationClass("ParameterizedTest")
+                        .ifPresent(parameterizedTestClass -> {
+                            try {
+                                Object parameterized = method.getAnnotation(parameterizedTestClass);
+                                if (parameterized != null) {
+                                    buildParameterizedTitle(method, parameterized);
+                                }
+                            } catch (Exception e) {
+                                // Ignore reflection errors
+                            }
+                        });
             }
 
             return method.getName();
@@ -92,12 +102,18 @@ public class JunitMetaDataExtractor {
         }
     }
 
-    private String buildParameterizedTitle(Method method, ParameterizedTest parameterized) {
-        String customName = parameterized.name();
-        if (isCustomNameProvided(customName)) {
+    private String buildParameterizedTitle(Method method, Object parameterized) {
+        try {
+            // Use reflection to safely access the name() method
+            java.lang.reflect.Method nameMethod = parameterized.getClass().getMethod("name");
+            String customName = (String) nameMethod.invoke(parameterized);
+            if (isCustomNameProvided(customName)) {
+                return method.getName();
+            }
+            return method.getName();
+        } catch (Exception e) {
             return method.getName();
         }
-        return method.getName();
     }
 
     private boolean isCustomNameProvided(String name) {

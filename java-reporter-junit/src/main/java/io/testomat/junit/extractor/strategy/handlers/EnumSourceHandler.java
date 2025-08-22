@@ -1,9 +1,10 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
+import io.testomat.junit.util.ParameterizedTestSupport;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.junit.jupiter.params.provider.EnumSource;
 
 /**
  * Parameter extraction handler for @EnumSource annotated parameterized tests.
@@ -24,14 +25,31 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
 
     @Override
     protected Object extractFromAnnotation(ParameterExtractionContext context) {
-        EnumSource enumSource = context.getAnnotation(EnumSource.class);
-        if (enumSource == null) {
+        if (!ParameterizedTestSupport.isAvailable()) {
             return null;
         }
-        try {
-            Class<? extends Enum<?>> enumClass = enumSource.value();
 
-            if (enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum")) {
+        return ParameterizedTestSupport.loadAnnotationClass("EnumSource")
+                .map(enumSourceClass -> {
+                    Annotation enumSource = context.getAnnotation(enumSourceClass);
+                    if (enumSource == null) {
+                        return null;
+                    }
+                    return extractValueFromEnumSource(enumSource, context);
+                })
+                .orElse(null);
+    }
+
+    private Object extractValueFromEnumSource(Annotation enumSource,
+                                              ParameterExtractionContext context) {
+        try {
+            Class<?> annotationClass = enumSource.annotationType();
+
+            java.lang.reflect.Method valueMethod = annotationClass.getMethod("value");
+            Class<? extends Enum<?>> enumClass =
+                    (Class<? extends Enum<?>>) valueMethod.invoke(enumSource);
+
+            if (isNullEnum(enumClass)) {
                 enumClass = inferEnumClassFromMethod(context);
             }
 
@@ -44,16 +62,11 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
                 return null;
             }
 
-            String[] names = enumSource.names();
+            java.lang.reflect.Method namesMethod = annotationClass.getMethod("names");
+            String[] names = (String[]) namesMethod.invoke(enumSource);
+
             if (names.length > 0) {
-                for (String name : names) {
-                    try {
-                        return Enum.valueOf((Class) enumClass, name);
-                    } catch (IllegalArgumentException e) {
-                        logger.warn("Could not find enum constant {}", name);
-                    }
-                }
-                return null;
+                return findFirstValidEnumConstant(enumClass, names);
             }
 
             return enumConstants[0];
@@ -62,6 +75,22 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
             logger.debug("Failed to extract enum from annotation", e);
             return null;
         }
+    }
+
+    private boolean isNullEnum(Class<? extends Enum<?>> enumClass) {
+        return enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum");
+    }
+
+    private Object findFirstValidEnumConstant(Class<? extends Enum<?>> enumClass,
+                                             String[] names) {
+        for (String name : names) {
+            try {
+                return Enum.valueOf((Class) enumClass, name);
+            } catch (IllegalArgumentException e) {
+                logger.warn("Could not find enum constant {}", name);
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -95,26 +124,52 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
             return null;
         }
 
-        try {
-            EnumSource enumSource = context.getAnnotation(EnumSource.class);
-            Class<? extends Enum<?>> enumClass = enumSource.value();
+        if (!ParameterizedTestSupport.isAvailable()) {
+            return value;
+        }
 
-            if (enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum")) {
+        try {
+            return ParameterizedTestSupport.loadAnnotationClass("EnumSource")
+                    .map(enumSourceClass -> {
+                        Annotation enumSource = context.getAnnotation(enumSourceClass);
+                        if (enumSource == null) {
+                            return value;
+                        }
+                        return parseEnumWithReflection(enumSource, trimmed, context);
+                    })
+                    .orElse(value);
+        } catch (Exception e) {
+            logger.debug("Failed to parse enum value: {}", trimmed, e);
+            return value;
+        }
+    }
+
+    private Object parseEnumWithReflection(Annotation enumSource, String trimmed,
+                                           ParameterExtractionContext context) {
+        try {
+            Method valueMethod = enumSource.annotationType().getMethod("value");
+            Class<? extends Enum<?>> enumClass =
+                    (Class<? extends Enum<?>>) valueMethod.invoke(enumSource);
+
+            if (isNullEnum(enumClass)) {
                 enumClass = inferEnumClassFromMethod(context);
             }
 
             if (enumClass != null) {
-                String enumName = trimmed;
-                if (trimmed.contains(".")) {
-                    enumName = trimmed.substring(trimmed.lastIndexOf('.') + 1);
-                }
-
+                String enumName = extractEnumName(trimmed);
                 return Enum.valueOf((Class) enumClass, enumName);
             }
         } catch (Exception e) {
-            logger.debug("Failed to parse enum value: {}", trimmed, e);
+            logger.debug("Failed to parse enum value with reflection: {}", trimmed, e);
         }
 
-        return value;
+        return trimmed;
+    }
+
+    private String extractEnumName(String trimmed) {
+        if (trimmed.contains(".")) {
+            return trimmed.substring(trimmed.lastIndexOf('.') + 1);
+        }
+        return trimmed;
     }
 }
