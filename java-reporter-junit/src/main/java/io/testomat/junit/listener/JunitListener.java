@@ -60,10 +60,6 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         this.processedClasses = ConcurrentHashMap.newKeySet();
     }
 
-    static {
-        System.out.println("==== 33 ====");
-    }
-
     @Override
     public void beforeAll(ExtensionContext context) {
         if (!isListeningRequired()) {
