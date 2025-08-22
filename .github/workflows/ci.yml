@@ -31,7 +31,7 @@ jobs:
           echo "This ensures all internal dependencies are available locally before testing"
           
           # Module build order (based on dependencies)
-          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
+          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber")
           
           for module in "${MODULES[@]}"; do
             if [ -d "$module" ]; then
@@ -64,7 +64,7 @@ jobs:
         run: |
           echo "🧪 Running tests for all modules..."
           
-          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "distribution")
+          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber")
           
           for module in "${MODULES[@]}"; do
             if [ -d "$module" ]; then
