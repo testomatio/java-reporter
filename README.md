@@ -56,8 +56,8 @@ and team collaboration features.
    ```xml
    <dependency>
        <groupId>io.testomat</groupId>
-       <artifactId>java-reporter-distribution</artifactId>
-       <version>0.6.7</version>
+       <artifactId>java-reporter-/frameworkName/</artifactId>
+       <version>0.7.0</version>
    </dependency>
    ``` 
 2. create the `testomatio.properties` file in your `resources` folder and add into it:
@@ -360,7 +360,7 @@ And the dashboard - something like this:
 
 ### Tests not appearing in Testomat.io?
 
-1. **Check your API key** - it should start with `tstmt_`
+1. **Check your API key** - it should start with `tstmt_` and be related to the project you're looking at.
 2. **Verify internet connection** - the reporter needs to reach `app.testomat.io`
 3. **Check test names** - make sure they match your Testomat.io project structure
 4. **Enable auto-creation** - add `-Dtestomatio.create=true` to create missing tests
