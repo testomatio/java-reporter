@@ -17,31 +17,30 @@ public final class ParameterizedTestSupport {
     private static final Map<String, String> ANNOTATION_CLASS_NAMES = new HashMap<>();
 
     static {
-        // Map of annotation simple names to fully qualified class names
-        ANNOTATION_CLASS_NAMES.put(
-                "ParameterizedTest", "org.junit.jupiter.params.ParameterizedTest");
-        ANNOTATION_CLASS_NAMES.put(
-                "ValueSource", "org.junit.jupiter.params.provider.ValueSource");
-        ANNOTATION_CLASS_NAMES.put(
-                "EnumSource", "org.junit.jupiter.params.provider.EnumSource");
-        ANNOTATION_CLASS_NAMES.put(
-                "CsvSource", "org.junit.jupiter.params.provider.CsvSource");
-        ANNOTATION_CLASS_NAMES.put(
-                "CsvFileSource", "org.junit.jupiter.params.provider.CsvFileSource");
-        ANNOTATION_CLASS_NAMES.put(
-                "MethodSource", "org.junit.jupiter.params.provider.MethodSource");
-        ANNOTATION_CLASS_NAMES.put(
-                "ArgumentsSource", "org.junit.jupiter.params.provider.ArgumentsSource");
-        ANNOTATION_CLASS_NAMES.put(
-                "NullSource", "org.junit.jupiter.params.provider.NullSource");
-        ANNOTATION_CLASS_NAMES.put(
-                "EmptySource", "org.junit.jupiter.params.provider.EmptySource");
-        ANNOTATION_CLASS_NAMES.put(
-                "NullAndEmptySource", "org.junit.jupiter.params.provider.NullAndEmptySource");
-        ANNOTATION_CLASS_NAMES.put(
-                "Arguments", "org.junit.jupiter.params.provider.Arguments");
-        ANNOTATION_CLASS_NAMES.put(
-                "ArgumentsProvider", "org.junit.jupiter.params.provider.ArgumentsProvider");
+        ANNOTATION_CLASS_NAMES.put("ParameterizedTest",
+                "org.junit.jupiter.params.ParameterizedTest");
+        ANNOTATION_CLASS_NAMES.put("ValueSource",
+                "org.junit.jupiter.params.provider.ValueSource");
+        ANNOTATION_CLASS_NAMES.put("EnumSource",
+                "org.junit.jupiter.params.provider.EnumSource");
+        ANNOTATION_CLASS_NAMES.put("CsvSource",
+                "org.junit.jupiter.params.provider.CsvSource");
+        ANNOTATION_CLASS_NAMES.put("CsvFileSource",
+                "org.junit.jupiter.params.provider.CsvFileSource");
+        ANNOTATION_CLASS_NAMES.put("MethodSource",
+                "org.junit.jupiter.params.provider.MethodSource");
+        ANNOTATION_CLASS_NAMES.put("ArgumentsSource",
+                "org.junit.jupiter.params.provider.ArgumentsSource");
+        ANNOTATION_CLASS_NAMES.put("NullSource",
+                "org.junit.jupiter.params.provider.NullSource");
+        ANNOTATION_CLASS_NAMES.put("EmptySource",
+                "org.junit.jupiter.params.provider.EmptySource");
+        ANNOTATION_CLASS_NAMES.put("NullAndEmptySource",
+                "org.junit.jupiter.params.provider.NullAndEmptySource");
+        ANNOTATION_CLASS_NAMES.put("Arguments",
+                "org.junit.jupiter.params.provider.Arguments");
+        ANNOTATION_CLASS_NAMES.put("ArgumentsProvider",
+                "org.junit.jupiter.params.provider.ArgumentsProvider");
     }
 
     private ParameterizedTestSupport() {
@@ -59,7 +58,7 @@ public final class ParameterizedTestSupport {
     /**
      * Safely loads a JUnit params class by simple name.
      *
-     * @param simpleName the simple name of the class (e.g., "ParameterizedTest", "ValueSource")
+     * @param simpleName the simple name of the class
      * @return Optional containing the class if available, empty otherwise
      */
     public static Optional<Class<?>> loadClass(String simpleName) {
@@ -101,7 +100,6 @@ public final class ParameterizedTestSupport {
             return Optional.empty();
         }
 
-        // Check cache first
         if (CLASS_CACHE.containsKey(className)) {
             return Optional.ofNullable(CLASS_CACHE.get(className));
         }

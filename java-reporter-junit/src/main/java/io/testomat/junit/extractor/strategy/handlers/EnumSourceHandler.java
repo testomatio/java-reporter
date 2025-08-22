@@ -45,13 +45,11 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
         try {
             Class<?> annotationClass = enumSource.annotationType();
 
-            // Get the enum class using reflection
             java.lang.reflect.Method valueMethod = annotationClass.getMethod("value");
             Class<? extends Enum<?>> enumClass =
                     (Class<? extends Enum<?>>) valueMethod.invoke(enumSource);
 
-            // Check if it's NullEnum (indicating we need to infer from method)
-            if (enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum")) {
+            if (isNullEnum(enumClass)) {
                 enumClass = inferEnumClassFromMethod(context);
             }
 
@@ -64,19 +62,11 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
                 return null;
             }
 
-            // Check for specific names
             java.lang.reflect.Method namesMethod = annotationClass.getMethod("names");
             String[] names = (String[]) namesMethod.invoke(enumSource);
 
             if (names.length > 0) {
-                for (String name : names) {
-                    try {
-                        return Enum.valueOf((Class) enumClass, name);
-                    } catch (IllegalArgumentException e) {
-                        logger.warn("Could not find enum constant {}", name);
-                    }
-                }
-                return null;
+                return findFirstValidEnumConstant(enumClass, names);
             }
 
             return enumConstants[0];
@@ -85,6 +75,22 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
             logger.debug("Failed to extract enum from annotation", e);
             return null;
         }
+    }
+
+    private boolean isNullEnum(Class<? extends Enum<?>> enumClass) {
+        return enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum");
+    }
+
+    private Object findFirstValidEnumConstant(Class<? extends Enum<?>> enumClass,
+                                             String[] names) {
+        for (String name : names) {
+            try {
+                return Enum.valueOf((Class) enumClass, name);
+            } catch (IllegalArgumentException e) {
+                logger.warn("Could not find enum constant {}", name);
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -145,22 +151,25 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
             Class<? extends Enum<?>> enumClass =
                     (Class<? extends Enum<?>>) valueMethod.invoke(enumSource);
 
-            if (enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum")) {
+            if (isNullEnum(enumClass)) {
                 enumClass = inferEnumClassFromMethod(context);
             }
 
             if (enumClass != null) {
-                String enumName = trimmed;
-                if (trimmed.contains(".")) {
-                    enumName = trimmed.substring(trimmed.lastIndexOf('.') + 1);
-                }
-
+                String enumName = extractEnumName(trimmed);
                 return Enum.valueOf((Class) enumClass, enumName);
             }
         } catch (Exception e) {
             logger.debug("Failed to parse enum value with reflection: {}", trimmed, e);
         }
 
+        return trimmed;
+    }
+
+    private String extractEnumName(String trimmed) {
+        if (trimmed.contains(".")) {
+            return trimmed.substring(trimmed.lastIndexOf('.') + 1);
+        }
         return trimmed;
     }
 }

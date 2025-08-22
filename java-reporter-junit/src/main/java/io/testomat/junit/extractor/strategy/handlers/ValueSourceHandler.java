@@ -42,54 +42,14 @@ public class ValueSourceHandler extends AbstractParameterExtractionHandler {
         try {
             Class<?> annotationClass = valueSource.annotationType();
 
-            Object result = tryExtractArray(valueSource, annotationClass, "strings");
-            if (result != null) {
-                return result;
-            }
-
-            result = tryExtractArray(valueSource, annotationClass, "ints");
-            if (result != null) {
-                return result;
-            }
-
-            result = tryExtractArray(valueSource, annotationClass, "longs");
-            if (result != null) {
-                return result;
-            }
-
-            result = tryExtractArray(valueSource, annotationClass, "doubles");
-            if (result != null) {
-                return result;
-            }
-
-            result = tryExtractArray(valueSource, annotationClass, "floats");
-            if (result != null) {
-                return result;
-            }
-
-            result = tryExtractArray(valueSource, annotationClass, "bytes");
-            if (result != null) {
-                return result;
-            }
-
-            result = tryExtractArray(valueSource, annotationClass, "shorts");
-            if (result != null) {
-                return result;
-            }
-
-            result = tryExtractArray(valueSource, annotationClass, "booleans");
-            if (result != null) {
-                return result;
-            }
-
-            result = tryExtractArray(valueSource, annotationClass, "chars");
-            if (result != null) {
-                return result;
-            }
-
-            result = tryExtractArray(valueSource, annotationClass, "classes");
-            if (result != null) {
-                return result;
+            String[] methodNames = {"strings", "ints", "longs", "doubles",
+                    "floats", "bytes", "shorts", "booleans", "chars", "classes"};
+            
+            for (String methodName : methodNames) {
+                Object result = tryExtractArray(valueSource, annotationClass, methodName);
+                if (result != null) {
+                    return result;
+                }
             }
 
             return null;
@@ -103,7 +63,7 @@ public class ValueSourceHandler extends AbstractParameterExtractionHandler {
         try {
             java.lang.reflect.Method method = annotationClass.getMethod(methodName);
             Object array = method.invoke(annotation);
-            
+
             if (array != null) {
                 int length = java.lang.reflect.Array.getLength(array);
                 if (length > 0) {
