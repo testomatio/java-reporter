@@ -10,19 +10,11 @@ import io.testomat.junit.extractor.strategy.handlers.NullAndEmptySourceHandler;
 import io.testomat.junit.extractor.strategy.handlers.NullSourceHandler;
 import io.testomat.junit.extractor.strategy.handlers.ParameterExtractionHandler;
 import io.testomat.junit.extractor.strategy.handlers.ValueSourceHandler;
+import io.testomat.junit.util.ParameterizedTestSupport;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.junit.jupiter.params.provider.CsvFileSource;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.EmptySource;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Registry that maintains direct mapping between JUnit parameter source annotations
@@ -64,7 +56,7 @@ public final class ParameterHandlerRegistry {
      * @throws IllegalStateException if multiple conflicting handlers are found
      */
     public Optional<ParameterExtractionHandler> findHandler(ParameterExtractionContext context) {
-        if (!context.isValid()) {
+        if (!context.isValid() || !ParameterizedTestSupport.isAvailable()) {
             return Optional.empty();
         }
 
@@ -72,6 +64,11 @@ public final class ParameterHandlerRegistry {
         Class<? extends Annotation> foundAnnotation = null;
 
         for (Annotation annotation : context.getAnnotations()) {
+            // Only process JUnit params annotations
+            if (!ParameterizedTestSupport.isJunitParamsAnnotation(annotation)) {
+                continue;
+            }
+
             Class<? extends Annotation> annotationType = annotation.annotationType();
             ParameterExtractionHandler handler = handlerMap.get(annotationType);
 
@@ -92,14 +89,24 @@ public final class ParameterHandlerRegistry {
     }
 
     private void registerDefaultHandlers() {
-        handlerMap.put(ValueSource.class, new ValueSourceHandler());
-        handlerMap.put(EnumSource.class, new EnumSourceHandler());
-        handlerMap.put(CsvSource.class, new CsvSourceHandler());
-        handlerMap.put(CsvFileSource.class, new CsvFileSourceHandler());
-        handlerMap.put(MethodSource.class, new MethodSourceHandler());
-        handlerMap.put(ArgumentsSource.class, new ArgumentsSourceHandler());
-        handlerMap.put(NullAndEmptySource.class, new NullAndEmptySourceHandler());
-        handlerMap.put(NullSource.class, new NullSourceHandler());
-        handlerMap.put(EmptySource.class, new EmptySourceHandler());
+        // Only register handlers if JUnit params is available
+        if (!ParameterizedTestSupport.isAvailable()) {
+            return;
+        }
+
+        registerHandler("ValueSource", new ValueSourceHandler());
+        registerHandler("EnumSource", new EnumSourceHandler());
+        registerHandler("CsvSource", new CsvSourceHandler());
+        registerHandler("CsvFileSource", new CsvFileSourceHandler());
+        registerHandler("MethodSource", new MethodSourceHandler());
+        registerHandler("ArgumentsSource", new ArgumentsSourceHandler());
+        registerHandler("NullAndEmptySource", new NullAndEmptySourceHandler());
+        registerHandler("NullSource", new NullSourceHandler());
+        registerHandler("EmptySource", new EmptySourceHandler());
+    }
+
+    private void registerHandler(String annotationName, ParameterExtractionHandler handler) {
+        ParameterizedTestSupport.loadAnnotationClass(annotationName)
+                .ifPresent(annotationClass -> handlerMap.put(annotationClass, handler));
     }
 }

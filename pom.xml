@@ -31,9 +31,6 @@
             <organizationUrl>https://testomat.io</organizationUrl>
         </developer>
     </developers>
-    <modules>
-        <module>distribution</module>
-    </modules>
 
     <scm>
         <connection>scm:git:git://github.com/testomatio/java-reporter.git</connection>
