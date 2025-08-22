@@ -1,9 +1,10 @@
 package io.testomat.junit.extractor.strategy.handlers;
 
 import io.testomat.junit.extractor.strategy.ParameterExtractionContext;
+import io.testomat.junit.util.ParameterizedTestSupport;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import org.junit.jupiter.params.provider.EnumSource;
 
 /**
  * Parameter extraction handler for @EnumSource annotated parameterized tests.
@@ -24,13 +25,32 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
 
     @Override
     protected Object extractFromAnnotation(ParameterExtractionContext context) {
-        EnumSource enumSource = context.getAnnotation(EnumSource.class);
-        if (enumSource == null) {
+        if (!ParameterizedTestSupport.isAvailable()) {
             return null;
         }
-        try {
-            Class<? extends Enum<?>> enumClass = enumSource.value();
 
+        return ParameterizedTestSupport.loadAnnotationClass("EnumSource")
+                .map(enumSourceClass -> {
+                    Annotation enumSource = context.getAnnotation(enumSourceClass);
+                    if (enumSource == null) {
+                        return null;
+                    }
+                    return extractValueFromEnumSource(enumSource, context);
+                })
+                .orElse(null);
+    }
+
+    private Object extractValueFromEnumSource(Annotation enumSource,
+                                              ParameterExtractionContext context) {
+        try {
+            Class<?> annotationClass = enumSource.annotationType();
+
+            // Get the enum class using reflection
+            java.lang.reflect.Method valueMethod = annotationClass.getMethod("value");
+            Class<? extends Enum<?>> enumClass =
+                    (Class<? extends Enum<?>>) valueMethod.invoke(enumSource);
+
+            // Check if it's NullEnum (indicating we need to infer from method)
             if (enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum")) {
                 enumClass = inferEnumClassFromMethod(context);
             }
@@ -44,7 +64,10 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
                 return null;
             }
 
-            String[] names = enumSource.names();
+            // Check for specific names
+            java.lang.reflect.Method namesMethod = annotationClass.getMethod("names");
+            String[] names = (String[]) namesMethod.invoke(enumSource);
+
             if (names.length > 0) {
                 for (String name : names) {
                     try {
@@ -95,9 +118,32 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
             return null;
         }
 
+        if (!ParameterizedTestSupport.isAvailable()) {
+            return value;
+        }
+
         try {
-            EnumSource enumSource = context.getAnnotation(EnumSource.class);
-            Class<? extends Enum<?>> enumClass = enumSource.value();
+            return ParameterizedTestSupport.loadAnnotationClass("EnumSource")
+                    .map(enumSourceClass -> {
+                        Annotation enumSource = context.getAnnotation(enumSourceClass);
+                        if (enumSource == null) {
+                            return value;
+                        }
+                        return parseEnumWithReflection(enumSource, trimmed, context);
+                    })
+                    .orElse(value);
+        } catch (Exception e) {
+            logger.debug("Failed to parse enum value: {}", trimmed, e);
+            return value;
+        }
+    }
+
+    private Object parseEnumWithReflection(Annotation enumSource, String trimmed,
+                                           ParameterExtractionContext context) {
+        try {
+            Method valueMethod = enumSource.annotationType().getMethod("value");
+            Class<? extends Enum<?>> enumClass =
+                    (Class<? extends Enum<?>>) valueMethod.invoke(enumSource);
 
             if (enumClass.getName().equals("org.junit.jupiter.params.provider.NullEnum")) {
                 enumClass = inferEnumClassFromMethod(context);
@@ -112,9 +158,9 @@ public class EnumSourceHandler extends AbstractParameterExtractionHandler {
                 return Enum.valueOf((Class) enumClass, enumName);
             }
         } catch (Exception e) {
-            logger.debug("Failed to parse enum value: {}", trimmed, e);
+            logger.debug("Failed to parse enum value with reflection: {}", trimmed, e);
         }
 
-        return value;
+        return trimmed;
     }
 }
