@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-cucumber</artifactId>
-    <version>0.6.8</version>
+    <version>0.7.2</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter Cucumber</name>
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.6.462</version>
+            <version>0.7.2</version>
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
@@ -70,6 +70,12 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
