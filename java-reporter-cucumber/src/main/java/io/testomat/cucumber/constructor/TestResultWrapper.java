@@ -11,11 +11,13 @@ public class TestResultWrapper {
     private final TestMetadata testMetadata;
     private final String status;
     private final TestCaseFinished cucumberTestCaseFinished;
+    private Object example;
 
     private TestResultWrapper(Builder builder) {
         this.testMetadata = builder.testMetadata;
         this.status = builder.status;
         this.cucumberTestCaseFinished = builder.cucumberTestCaseFinished;
+        this.example = builder.example;
     }
 
     /**
@@ -32,6 +34,7 @@ public class TestResultWrapper {
         private TestMetadata testMetadata;
         private String status;
         private TestCaseFinished cucumberTestCaseFinished;
+        private Object example;
 
         public Builder withTestMetadata(TestMetadata testMetadata) {
             this.testMetadata = testMetadata;
@@ -48,9 +51,18 @@ public class TestResultWrapper {
             return this;
         }
 
+        public Builder withExample(Object example) {
+            this.example = example;
+            return this;
+        }
+
         public TestResultWrapper build() {
             return new TestResultWrapper(this);
         }
+    }
+
+    public Object getExample() {
+        return example;
     }
 
     public TestMetadata getTestMetadata() {

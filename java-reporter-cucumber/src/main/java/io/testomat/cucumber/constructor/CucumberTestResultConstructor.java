@@ -31,6 +31,8 @@ public class CucumberTestResultConstructor {
                 .withStatus(holder.getStatus())
                 .withMessage(exceptionDetails.getMessage())
                 .withStack(exceptionDetails.getStack())
+                .withRid(holder.getCucumberTestCaseFinished().getTestCase().getId().toString())
+                .withExample(holder.getExample())
                 .build();
     }
 

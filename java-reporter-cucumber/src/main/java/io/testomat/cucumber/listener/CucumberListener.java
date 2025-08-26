@@ -2,11 +2,9 @@ package io.testomat.cucumber.listener;
 
 import io.cucumber.plugin.EventListener;
 import io.cucumber.plugin.Plugin;
-import io.cucumber.plugin.event.EventPublisher;
-import io.cucumber.plugin.event.TestCaseFinished;
-import io.cucumber.plugin.event.TestRunFinished;
-import io.cucumber.plugin.event.TestRunStarted;
+import io.cucumber.plugin.event.*;
 import io.testomat.core.exception.ReportTestResultException;
+
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
@@ -14,7 +12,12 @@ import io.testomat.cucumber.constructor.CucumberTestResultConstructor;
 import io.testomat.cucumber.constructor.TestResultWrapper;
 import io.testomat.cucumber.extractor.CucumberMetaDataExtractor;
 import io.testomat.cucumber.listener.normalizer.StatusNormalizer;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Cucumber plugin for Testomat.io integration.
@@ -70,6 +73,7 @@ public class CucumberListener implements Plugin, EventListener {
                     .withTestMetadata(metadata)
                     .withStatus(status)
                     .withCucumberTestCaseFinished(event)
+                    .withExample(getParams(event))
                     .build();
 
             TestResult result = resultConstructor.constructTestRunResult(wrapper);
@@ -80,5 +84,47 @@ public class CucumberListener implements Plugin, EventListener {
                     : "Unknown Test";
             throw new ReportTestResultException("Failed to report test result for: " + testName, e);
         }
+    }
+
+    private Map<Object, Object> getParams(TestCaseFinished event) {
+
+        Map<Object, Object> params = new HashMap<>();
+
+        List<TestStep> testSteps = event.getTestCase().getTestSteps();
+
+        for (TestStep testStep : testSteps) {
+            if (testStep instanceof PickleStepTestStep) {
+                String stepText = ((PickleStepTestStep) testStep).getStepText();
+                params.putAll(extractValuesFromStepText(stepText));
+            }
+        }
+
+        return params;
+    }
+
+    private Map<String, Object> extractValuesFromStepText(String stepText) {
+        Map<String, Object> values = new HashMap<>();
+
+        Pattern quotedPattern = Pattern.compile("[\"']([^\"']+)[\"']|\\b(\\d+(?:\\.\\d+)?)\\b");
+        Matcher matcher = quotedPattern.matcher(stepText);
+
+        int index = 0;
+        while (matcher.find()) {
+            Object value;
+            if (matcher.group(1) != null) {
+                value = matcher.group(1);
+            } else {
+                String numStr = matcher.group(2);
+                if (numStr.contains(".")) {
+                    value = Double.parseDouble(numStr);
+                } else {
+                    value = Long.parseLong(numStr);
+                }
+            }
+            values.put("step_value_" + index, value);
+            index++;
+        }
+
+        return values;
     }
 }
