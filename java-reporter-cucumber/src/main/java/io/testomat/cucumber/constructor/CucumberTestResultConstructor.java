@@ -13,14 +13,29 @@ public class CucumberTestResultConstructor {
 
     private final TestDataExtractor testDataExtractor;
 
+    /**
+     * Creates a new instance with default test data extractor.
+     */
     public CucumberTestResultConstructor() {
         this.testDataExtractor = new TestDataExtractor();
     }
 
+    /**
+     * Creates a new instance with the specified test data extractor.
+     *
+     * @param testDataExtractor the test data extractor to use
+     */
     public CucumberTestResultConstructor(TestDataExtractor testDataExtractor) {
         this.testDataExtractor = testDataExtractor;
     }
 
+    /**
+     * Constructs a test result from a Cucumber test case finished event.
+     * Extracts test metadata, status, and error details from the event.
+     *
+     * @param event the Cucumber test case finished event
+     * @return the constructed test result
+     */
     public TestResult constructTestRunResult(TestCaseFinished event) {
 
         ExceptionDetails exceptionDetails = testDataExtractor.extractExceptionDetails(event);

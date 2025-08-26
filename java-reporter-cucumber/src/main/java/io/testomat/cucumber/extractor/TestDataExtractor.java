@@ -21,6 +21,10 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Extracts test metadata and parameters from Cucumber test case finished events.
+ * Handles test identification, status normalization, and parameter extraction.
+ */
 public class TestDataExtractor {
     private static final Logger log = LoggerFactory.getLogger(TestDataExtractor.class);
     private static final String QUOTED_PATTERN = "[\"']([^\"']+)[\"']|\\b(\\d+(?:\\.\\d+)?)\\b";
@@ -28,6 +32,13 @@ public class TestDataExtractor {
     private static final String UNKNOWN_TEST = "Unknown test";
     private static final String TITLE_PREFIX = "@title:";
 
+    /**
+     * Creates parameter map from test step text values.
+     * Extracts quoted strings and numeric values from Cucumber step definitions.
+     *
+     * @param event the Cucumber test case finished event
+     * @return map containing extracted parameter values
+     */
     public Map<Object, Object> createExample(TestCaseFinished event) {
 
         Map<Object, Object> params = new HashMap<>();
@@ -43,6 +54,12 @@ public class TestDataExtractor {
         return params;
     }
 
+    /**
+     * Extracts exception details from test execution result.
+     *
+     * @param event the Cucumber test case finished event
+     * @return exception details if error exists, empty details otherwise
+     */
     public ExceptionDetails extractExceptionDetails(TestCaseFinished event) {
         if (event.getResult().getError() != null) {
             return createExceptionDetails(event.getResult().getError());
@@ -50,6 +67,13 @@ public class TestDataExtractor {
         return ExceptionDetails.empty();
     }
 
+    /**
+     * Extracts test ID from Cucumber tags.
+     * Looks for tags matching the pattern @T[a-z0-9]{8}.
+     *
+     * @param event the Cucumber test case finished event
+     * @return test ID if found, null otherwise
+     */
     public String extractTestId(TestCaseFinished event) {
         TestCase testCase = event.getTestCase();
         if (testCase == null || testCase.getTags() == null) {
@@ -62,6 +86,13 @@ public class TestDataExtractor {
                 .orElse(null);
     }
 
+    /**
+     * Extracts test title from Cucumber tags or scenario name.
+     * Looks for @title: tags first, falls back to scenario name.
+     *
+     * @param event the Cucumber test case finished event
+     * @return test title or scenario name
+     */
     public String extractTitle(TestCaseFinished event) {
         TestCase testCase = event.getTestCase();
         if (testCase == null || testCase.getTags() == null) {
@@ -75,6 +106,13 @@ public class TestDataExtractor {
                 .orElse(getTestName(testCase));
     }
 
+    /**
+     * Extracts feature file name from test case URI.
+     * Handles both Unix and Windows path formats.
+     *
+     * @param event the Cucumber test case finished event
+     * @return feature file name, null if extraction fails
+     */
     public String extractFileName(TestCaseFinished event) {
         try {
             String path = event.getTestCase().getUri().getPath();
@@ -94,6 +132,13 @@ public class TestDataExtractor {
         }
     }
 
+    /**
+     * Normalizes Cucumber test status to standard format.
+     *
+     * @param event the Cucumber test case finished event
+     * @return normalized status (PASSED, FAILED, or SKIPPED)
+     * @throws StatusNormalizerException if result is null
+     */
     public String getNormalizedStatus(TestCaseFinished event) {
         Result result = event.getResult();
         if (result == null) {
