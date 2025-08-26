@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>test33</groupId>
+    <groupId>io.testomat</groupId>
     <artifactId>java-reporter-cucumber</artifactId>
-    <version>test33</version>
+    <version>0.7.2</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter Cucumber</name>
@@ -70,6 +70,12 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
