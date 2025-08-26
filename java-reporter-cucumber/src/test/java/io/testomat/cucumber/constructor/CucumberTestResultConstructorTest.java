@@ -1,324 +1,148 @@
 package io.testomat.cucumber.constructor;
 
-import static io.testomat.core.constants.CommonConstants.FAILED;
-import static io.testomat.core.constants.CommonConstants.PASSED;
-import static io.testomat.core.constants.CommonConstants.SKIPPED;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
-
 import io.cucumber.plugin.event.Result;
+import io.cucumber.plugin.event.TestCase;
 import io.cucumber.plugin.event.TestCaseFinished;
-import io.testomat.core.model.TestMetadata;
+import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
-import org.junit.jupiter.api.AfterEach;
+import io.testomat.cucumber.extractor.TestDataExtractor;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-@DisplayName("CucumberTestResultConstructor Tests")
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 class CucumberTestResultConstructorTest {
+
+    @Mock
+    private TestDataExtractor testDataExtractor;
+
+    @Mock
+    private TestCaseFinished testCaseFinished;
+
+    @Mock
+    private TestCase testCase;
+
+    @Mock
+    private Result result;
 
     private CucumberTestResultConstructor constructor;
 
-    @Mock
-    private TestResultWrapper mockWrapper;
-
-    @Mock
-    private TestMetadata mockMetadata;
-
-    @Mock
-    private TestCaseFinished mockEvent;
-
-    @Mock
-    private Result mockResult;
-
-    private AutoCloseable mockitoCloseable;
-
     @BeforeEach
     void setUp() {
-        mockitoCloseable = MockitoAnnotations.openMocks(this);
-        constructor = new CucumberTestResultConstructor();
-
-        when(mockMetadata.getTitle()).thenReturn("Test Method");
-        when(mockMetadata.getTestId()).thenReturn("test-123");
-        when(mockMetadata.getSuiteTitle()).thenReturn("TestSuite");
-        when(mockMetadata.getFile()).thenReturn("TestSuite.feature");
-
-        when(mockWrapper.getTestMetadata()).thenReturn(mockMetadata);
-        when(mockWrapper.getStatus()).thenReturn(PASSED);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        if (mockitoCloseable != null) {
-            mockitoCloseable.close();
-        }
+        MockitoAnnotations.openMocks(this);
+        constructor = new CucumberTestResultConstructor(testDataExtractor);
     }
 
     @Test
-    @DisplayName("Should throw IllegalArgumentException when wrapper is null")
-    void shouldThrowExceptionWhenWrapperIsNull() {
-        // When & Then
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> constructor.constructTestRunResult(null)
-        );
-
-        assertEquals("TestRunResultWrapper cannot be null", exception.getMessage());
+    void shouldCreateDefaultConstructor() {
+        CucumberTestResultConstructor defaultConstructor = new CucumberTestResultConstructor();
+        assertNotNull(defaultConstructor);
     }
 
     @Test
-    @DisplayName("Should throw IllegalArgumentException when metadata is null")
-    void shouldThrowExceptionWhenMetadataIsNull() {
+    void shouldConstructTestRunResultWithAllFields() {
         // Given
-        when(mockWrapper.getTestMetadata()).thenReturn(null);
+        URI testUri = URI.create("file:///test/path/TestFeature.feature");
+        UUID testCaseId = UUID.randomUUID();
+        ExceptionDetails exceptionDetails = new ExceptionDetails("Test error", "Stack trace");
+        Map<Object, Object> example = new HashMap<>();
+        example.put("key", "value");
 
-        // When & Then
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> constructor.constructTestRunResult(mockWrapper)
-        );
-
-        assertEquals("TestMetadata cannot be null", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Should create TestResult with exception details when cucumber event has error")
-    void shouldCreateTestResultWithExceptionDetails() {
-        // Given
-        RuntimeException testException = new RuntimeException("Cucumber test failed");
-
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(mockEvent);
-        when(mockEvent.getResult()).thenReturn(mockResult);
-        when(mockResult.getError()).thenReturn(testException);
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getUri()).thenReturn(testUri);
+        when(testCase.getId()).thenReturn(testCaseId);
+        
+        when(testDataExtractor.extractExceptionDetails(testCaseFinished)).thenReturn(exceptionDetails);
+        when(testDataExtractor.getNormalizedStatus(testCaseFinished)).thenReturn("PASSED");
+        when(testDataExtractor.createExample(testCaseFinished)).thenReturn(example);
+        when(testDataExtractor.extractTestId(testCaseFinished)).thenReturn("@T12345678");
+        when(testDataExtractor.extractFileName(testCaseFinished)).thenReturn("TestFeature.feature");
+        when(testDataExtractor.extractTitle(testCaseFinished)).thenReturn("Test Title");
 
         // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
+        TestResult result = constructor.constructTestRunResult(testCaseFinished);
 
         // Then
         assertNotNull(result);
-        assertEquals("Test Method", result.getTitle());
-        assertEquals("test-123", result.getTestId());
-        assertEquals("TestSuite", result.getSuiteTitle());
-        assertEquals("TestSuite.feature", result.getFile());
-        assertEquals(PASSED, result.getStatus());
-        assertEquals("Cucumber test failed", result.getMessage());
-        assertNotNull(result.getStack());
-        assertTrue(result.getStack().contains("RuntimeException"));
-        assertTrue(result.getStack().contains("Cucumber test failed"));
+        assertEquals("PASSED", result.getStatus());
+        assertEquals("file:///test/path/TestFeature.feature", result.getSuiteTitle());
+        assertEquals(example, result.getExample());
+        assertEquals("@T12345678", result.getTestId());
+        assertEquals("TestFeature.feature", result.getFile());
+        assertEquals("Test Title", result.getTitle());
+        assertEquals(testCaseId.toString(), result.getRid());
+        assertEquals("Test error", result.getMessage());
+        assertEquals("Stack trace", result.getStack());
     }
 
     @Test
-    @DisplayName("Should create TestResult with empty exception details when no error in result")
-    void shouldCreateTestResultWithEmptyExceptionDetailsWhenNoError() {
+    void shouldConstructTestRunResultWithEmptyExceptionDetails() {
         // Given
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(mockEvent);
-        when(mockEvent.getResult()).thenReturn(mockResult);
-        when(mockResult.getError()).thenReturn(null);
+        URI testUri = URI.create("file:///test/path/TestFeature.feature");
+        UUID testCaseId = UUID.randomUUID();
+        ExceptionDetails emptyExceptionDetails = ExceptionDetails.empty();
+        Map<Object, Object> emptyExample = new HashMap<>();
+
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getUri()).thenReturn(testUri);
+        when(testCase.getId()).thenReturn(testCaseId);
+        
+        when(testDataExtractor.extractExceptionDetails(testCaseFinished)).thenReturn(emptyExceptionDetails);
+        when(testDataExtractor.getNormalizedStatus(testCaseFinished)).thenReturn("FAILED");
+        when(testDataExtractor.createExample(testCaseFinished)).thenReturn(emptyExample);
+        when(testDataExtractor.extractTestId(testCaseFinished)).thenReturn(null);
+        when(testDataExtractor.extractFileName(testCaseFinished)).thenReturn(null);
+        when(testDataExtractor.extractTitle(testCaseFinished)).thenReturn("Unknown test");
 
         // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
+        TestResult result = constructor.constructTestRunResult(testCaseFinished);
 
         // Then
         assertNotNull(result);
-        assertEquals("Test Method", result.getTitle());
-        assertEquals("test-123", result.getTestId());
-        assertEquals("TestSuite", result.getSuiteTitle());
-        assertEquals("TestSuite.feature", result.getFile());
-        assertEquals(PASSED, result.getStatus());
-        assertNull(result.getMessage());
-        assertNull(result.getStack());
-    }
-
-    @Test
-    @DisplayName("Should create TestResult with empty exception details when no cucumber event")
-    void shouldCreateTestResultWithEmptyExceptionDetailsWhenNoEvent() {
-        // Given
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(null);
-
-        // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("Test Method", result.getTitle());
-        assertEquals("test-123", result.getTestId());
-        assertEquals("TestSuite", result.getSuiteTitle());
-        assertEquals("TestSuite.feature", result.getFile());
-        assertEquals(PASSED, result.getStatus());
-        assertNull(result.getMessage());
-        assertNull(result.getStack());
-    }
-
-    @Test
-    @DisplayName("Should handle failed test status correctly")
-    void shouldHandleFailedTestStatus() {
-        // Given
-        AssertionError assertionError = new AssertionError("Expected <true> but was <false>");
-
-        when(mockWrapper.getStatus()).thenReturn(FAILED);
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(mockEvent);
-        when(mockEvent.getResult()).thenReturn(mockResult);
-        when(mockResult.getError()).thenReturn(assertionError);
-
-        // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(FAILED, result.getStatus());
-        assertEquals("Expected <true> but was <false>", result.getMessage());
-        assertNotNull(result.getStack());
-        assertTrue(result.getStack().contains("AssertionError"));
-    }
-
-    @Test
-    @DisplayName("Should handle skipped test status correctly")
-    void shouldHandleSkippedTestStatus() {
-        // Given
-        when(mockWrapper.getStatus()).thenReturn(SKIPPED);
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(null);
-
-        // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(SKIPPED, result.getStatus());
-        assertNull(result.getMessage());
-        assertNull(result.getStack());
-    }
-
-    @Test
-    @DisplayName("Should handle metadata with null testId correctly")
-    void shouldHandleMetadataWithNullTestId() {
-        // Given
-        when(mockMetadata.getTestId()).thenReturn(null);
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(null);
-
-        // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
-
-        // Then
-        assertNotNull(result);
+        assertEquals("FAILED", result.getStatus());
+        assertEquals("file:///test/path/TestFeature.feature", result.getSuiteTitle());
+        assertEquals(emptyExample, result.getExample());
         assertNull(result.getTestId());
-        assertEquals("Test Method", result.getTitle());
-        assertEquals("TestSuite", result.getSuiteTitle());
-    }
-
-    @Test
-    @DisplayName("Should preserve all metadata fields in result")
-    void shouldPreserveAllMetadataFields() {
-        // Given
-        when(mockMetadata.getTitle()).thenReturn("Custom Cucumber Test");
-        when(mockMetadata.getTestId()).thenReturn("custom-id-456");
-        when(mockMetadata.getSuiteTitle()).thenReturn("CustomFeature");
-        when(mockMetadata.getFile()).thenReturn("custom.feature");
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(null);
-
-        // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("Custom Cucumber Test", result.getTitle());
-        assertEquals("custom-id-456", result.getTestId());
-        assertEquals("CustomFeature", result.getSuiteTitle());
-        assertEquals("custom.feature", result.getFile());
-        assertEquals(PASSED, result.getStatus());
-    }
-
-    @Test
-    @DisplayName("Should handle nested exceptions correctly")
-    void shouldHandleNestedExceptions() {
-        // Given
-        RuntimeException cause = new RuntimeException("Root cause");
-        RuntimeException wrapper = new RuntimeException("Wrapper exception", cause);
-
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(mockEvent);
-        when(mockEvent.getResult()).thenReturn(mockResult);
-        when(mockResult.getError()).thenReturn(wrapper);
-
-        // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("Wrapper exception", result.getMessage());
-        assertNotNull(result.getStack());
-        assertTrue(result.getStack().contains("Wrapper exception"));
-        assertTrue(result.getStack().contains("Root cause"));
-        assertTrue(result.getStack().contains("Caused by:"));
-    }
-
-    @Test
-    @DisplayName("Should handle exception without message")
-    void shouldHandleExceptionWithoutMessage() {
-        // Given
-        RuntimeException exceptionWithoutMessage = new RuntimeException();
-
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(mockEvent);
-        when(mockEvent.getResult()).thenReturn(mockResult);
-        when(mockResult.getError()).thenReturn(exceptionWithoutMessage);
-
-        // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
-
-        // Then
-        assertNotNull(result);
+        assertNull(result.getFile());
+        assertEquals("Unknown test", result.getTitle());
+        assertEquals(testCaseId.toString(), result.getRid());
         assertNull(result.getMessage());
-        assertNotNull(result.getStack());
-        assertTrue(result.getStack().contains("RuntimeException"));
+        assertNull(result.getStack());
     }
 
     @Test
-    @DisplayName("Should handle different exception types correctly")
-    void shouldHandleDifferentExceptionTypes() {
+    void shouldVerifyAllExtractorMethodsAreCalled() {
         // Given
-        NullPointerException npe = new NullPointerException("Null pointer error");
-
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(mockEvent);
-        when(mockEvent.getResult()).thenReturn(mockResult);
-        when(mockResult.getError()).thenReturn(npe);
+        URI testUri = URI.create("file:///test.feature");
+        UUID testCaseId = UUID.randomUUID();
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getUri()).thenReturn(testUri);
+        when(testCase.getId()).thenReturn(testCaseId);
+        
+        when(testDataExtractor.extractExceptionDetails(any())).thenReturn(ExceptionDetails.empty());
+        when(testDataExtractor.getNormalizedStatus(any())).thenReturn("PASSED");
+        when(testDataExtractor.createExample(any())).thenReturn(new HashMap<>());
+        when(testDataExtractor.extractTestId(any())).thenReturn(null);
+        when(testDataExtractor.extractFileName(any())).thenReturn("test.feature");
+        when(testDataExtractor.extractTitle(any())).thenReturn("Test");
 
         // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
+        constructor.constructTestRunResult(testCaseFinished);
 
         // Then
-        assertNotNull(result);
-        assertEquals("Null pointer error", result.getMessage());
-        assertNotNull(result.getStack());
-        assertTrue(result.getStack().contains("NullPointerException"));
-        assertTrue(result.getStack().contains("Null pointer error"));
-    }
-
-    @Test
-    @DisplayName("Should create stack trace with proper format")
-    void shouldCreateStackTraceWithProperFormat() {
-        // Given
-        IllegalStateException exception = new IllegalStateException("Invalid state");
-
-        when(mockWrapper.getCucumberTestCaseFinished()).thenReturn(mockEvent);
-        when(mockEvent.getResult()).thenReturn(mockResult);
-        when(mockResult.getError()).thenReturn(exception);
-
-        // When
-        TestResult result = constructor.constructTestRunResult(mockWrapper);
-
-        // Then
-        assertNotNull(result);
-        assertNotNull(result.getStack());
-
-        String stack = result.getStack();
-        assertTrue(stack.contains("IllegalStateException: Invalid state"));
-        assertTrue(stack.contains("at "));
-        // Stack trace should contain method calls
-        assertTrue(stack.split("\n").length > 1);
+        verify(testDataExtractor).extractExceptionDetails(testCaseFinished);
+        verify(testDataExtractor).getNormalizedStatus(testCaseFinished);
+        verify(testDataExtractor).createExample(testCaseFinished);
+        verify(testDataExtractor).extractTestId(testCaseFinished);
+        verify(testDataExtractor).extractFileName(testCaseFinished);
+        verify(testDataExtractor).extractTitle(testCaseFinished);
     }
 }

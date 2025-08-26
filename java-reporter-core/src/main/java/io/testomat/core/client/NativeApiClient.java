@@ -1,8 +1,5 @@
 package io.testomat.core.client;
 
-import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
-import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
-
 import io.testomat.core.client.http.CustomHttpClient;
 import io.testomat.core.client.request.NativeRequestBodyBuilder;
 import io.testomat.core.client.request.RequestBodyBuilder;
@@ -17,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
+import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
 /**
  * HTTP client for Testomat.io API operations.

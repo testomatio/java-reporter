@@ -1,9 +1,5 @@
 package io.testomat.cucumber.listener;
 
-import static io.testomat.core.constants.CommonConstants.FAILED;
-import static io.testomat.core.constants.CommonConstants.PASSED;
-import static io.testomat.core.constants.CommonConstants.SKIPPED;
-
 import io.cucumber.plugin.EventListener;
 import io.cucumber.plugin.Plugin;
 import io.cucumber.plugin.event.EventPublisher;
@@ -11,30 +7,53 @@ import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
 import io.testomat.core.exception.ReportTestResultException;
-import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.cucumber.constructor.CucumberTestResultConstructor;
-import io.testomat.cucumber.constructor.TestResultWrapper;
-import io.testomat.cucumber.extractor.CucumberMetaDataExtractor;
+import io.testomat.cucumber.exception.CucumberListenerException;
 
 /**
  * Cucumber plugin for Testomat.io integration.
  * Reports Cucumber test execution results to Testomat.io platform.
  */
 public class CucumberListener implements Plugin, EventListener {
-    private final GlobalRunManager runManager = GlobalRunManager.getInstance();
-    private final CucumberMetaDataExtractor metaDataExtractor = new CucumberMetaDataExtractor();
-    private final CucumberTestResultConstructor resultConstructor =
-            new CucumberTestResultConstructor();
+    private final GlobalRunManager runManager;
+    private final CucumberTestResultConstructor resultConstructor;
 
+    /**
+     * Creates a new listener with default dependencies.
+     */
+    public CucumberListener() {
+        this.runManager = GlobalRunManager.getInstance();
+        this.resultConstructor = new CucumberTestResultConstructor();
+    }
+
+    /**
+     * Creates a new listener with specified dependencies.
+     * Used primarily for testing with mocked dependencies.
+     *
+     * @param resultConstructor the test result constructor
+     * @param runManager the global run manager
+     */
+    public CucumberListener(CucumberTestResultConstructor resultConstructor,
+                            GlobalRunManager runManager) {
+        this.runManager = runManager;
+        this.resultConstructor = resultConstructor;
+    }
+
+    /**
+     * Registers event handlers for Cucumber test execution events.
+     *
+     * @param eventPublisher the Cucumber event publisher
+     */
     @Override
     public void setEventPublisher(EventPublisher eventPublisher) {
-        eventPublisher.registerHandlerFor(TestRunStarted.class,
-                e -> runManager.incrementSuiteCounter());
-        eventPublisher.registerHandlerFor(TestRunFinished.class,
-                e -> runManager.decrementSuiteCounter());
-        eventPublisher.registerHandlerFor(TestCaseFinished.class, this::handleTestCaseFinished);
+        eventPublisher.registerHandlerFor(
+                TestRunStarted.class, e -> runManager.incrementSuiteCounter());
+        eventPublisher.registerHandlerFor(
+                TestRunFinished.class, e -> runManager.decrementSuiteCounter());
+        eventPublisher.registerHandlerFor(
+                TestCaseFinished.class, this::handleTestCaseFinished);
     }
 
     void handleTestCaseFinished(TestCaseFinished event) {
@@ -42,48 +61,17 @@ public class CucumberListener implements Plugin, EventListener {
             return;
         }
 
+        if (event == null) {
+            throw new CucumberListenerException("The listener received null event");
+        }
+
         try {
-            String status = normalizeStatus(
-                    event.getResult() != null
-                            ? event.getResult().getStatus()
-                            : null);
-            TestMetadata metadata = metaDataExtractor.extractTestMetadata(event.getTestCase());
-
-            TestResultWrapper wrapper = TestResultWrapper.builder()
-                    .withTestMetadata(metadata)
-                    .withStatus(status)
-                    .withCucumberTestCaseFinished(event)
-                    .build();
-
-            TestResult result = resultConstructor.constructTestRunResult(wrapper);
+            TestResult result = resultConstructor.constructTestRunResult(event);
             runManager.reportTest(result);
-
         } catch (Exception e) {
             String testName = event.getTestCase() != null ? event.getTestCase().getName()
                     : "Unknown Test";
             throw new ReportTestResultException("Failed to report test result for: " + testName, e);
-        }
-    }
-
-    private String normalizeStatus(Object frameworkStatus) {
-        if (frameworkStatus == null) {
-            return FAILED;
-        }
-
-        switch (frameworkStatus.toString().toUpperCase()) {
-            case "PASSED":
-            case "SUCCESS":
-            case "SUCCESSFUL":
-                return PASSED;
-            case "SKIPPED":
-            case "PENDING":
-            case "UNDEFINED":
-            case "AMBIGUOUS":
-            case "DISABLED":
-            case "ABORTED":
-                return SKIPPED;
-            default:
-                return FAILED;
         }
     }
 }
