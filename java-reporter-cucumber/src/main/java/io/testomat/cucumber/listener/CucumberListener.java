@@ -20,13 +20,20 @@ public class CucumberListener implements Plugin, EventListener {
     private final GlobalRunManager runManager;
     private final CucumberTestResultConstructor resultConstructor;
 
+    /**
+     * Creates a new listener with default dependencies.
+     */
     public CucumberListener() {
         this.runManager = GlobalRunManager.getInstance();
         this.resultConstructor = new CucumberTestResultConstructor();
     }
 
     /**
-     * Testing constructor
+     * Creates a new listener with specified dependencies.
+     * Used primarily for testing with mocked dependencies.
+     *
+     * @param resultConstructor the test result constructor
+     * @param runManager the global run manager
      */
     public CucumberListener(CucumberTestResultConstructor resultConstructor,
                             GlobalRunManager runManager) {
@@ -34,6 +41,11 @@ public class CucumberListener implements Plugin, EventListener {
         this.resultConstructor = resultConstructor;
     }
 
+    /**
+     * Registers event handlers for Cucumber test execution events.
+     *
+     * @param eventPublisher the Cucumber event publisher
+     */
     @Override
     public void setEventPublisher(EventPublisher eventPublisher) {
         eventPublisher.registerHandlerFor(
