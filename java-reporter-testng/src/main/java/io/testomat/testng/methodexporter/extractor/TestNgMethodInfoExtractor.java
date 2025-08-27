@@ -7,6 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Extracts detailed information from TestNG test methods.
+ * Handles method names, code bodies, suite hierarchies, and skip detection.
+ */
 public class TestNgMethodInfoExtractor {
 
     private static final String IGNORE_ANNOTATION = "Ignore";

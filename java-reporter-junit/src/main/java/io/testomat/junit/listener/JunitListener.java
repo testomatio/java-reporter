@@ -48,6 +48,11 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     /**
      * Constructor for testing
+     *
+     * @param methodExportManager the method export manager
+     * @param runManager the global run manager
+     * @param reporter the JUnit test reporter
+     * @param provider the property provider
      */
     public JunitListener(MethodExportManager methodExportManager,
                          GlobalRunManager runManager,

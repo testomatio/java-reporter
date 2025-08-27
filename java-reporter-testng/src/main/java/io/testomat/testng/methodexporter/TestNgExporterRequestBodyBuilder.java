@@ -3,6 +3,10 @@ package io.testomat.testng.methodexporter;
 import io.testomat.testng.methodexporter.model.TestNgExporterTestCase;
 import java.util.List;
 
+/**
+ * Builds JSON request bodies for Testomat.io test export API.
+ * Converts test case data into properly formatted JSON for transmission.
+ */
 public class TestNgExporterRequestBodyBuilder {
     private static final String FRAMEWORK_NAME = "testng";
     private static final String LANGUAGE_NAME = "java";

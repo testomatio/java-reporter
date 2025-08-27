@@ -11,6 +11,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Locates Java source files for TestNG test classes.
+ * Resolves class paths to their corresponding source file locations.
+ */
 public class TestNgFileFinder {
     private static final Logger log = LoggerFactory.getLogger(TestNgFileFinder.class);
     private static final String FILE_SEPARATOR = FileSystems.getDefault().getSeparator();

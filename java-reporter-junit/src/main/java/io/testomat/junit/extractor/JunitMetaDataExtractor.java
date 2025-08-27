@@ -24,6 +24,8 @@ public class JunitMetaDataExtractor {
 
     /**
      * Constructor for testing with custom parameter extractor service.
+     *
+     * @param parameterExtractorService the custom parameter extractor service
      */
     public JunitMetaDataExtractor(ParameterExtractorService parameterExtractorService) {
         this.parameterExtractorService = parameterExtractorService;

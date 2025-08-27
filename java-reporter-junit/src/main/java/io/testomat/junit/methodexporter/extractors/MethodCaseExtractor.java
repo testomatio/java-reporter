@@ -12,6 +12,11 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Extracts test case information from parsed Java compilation units.
+ * This class identifies test methods within AST nodes and converts them
+ * to ExporterTestCase objects containing all necessary export metadata.
+ */
 public class MethodCaseExtractor {
     private static final Logger log = LoggerFactory.getLogger(MethodCaseExtractor.class);
 
@@ -27,6 +32,10 @@ public class MethodCaseExtractor {
 
     /**
      * Constructor for testing
+     *
+     * @param methodInfoExtractor the method info extractor
+     * @param labelExtractor the label extractor
+     * @param fileFinder the file finder
      */
     public MethodCaseExtractor(MethodInfoExtractor methodInfoExtractor,
                                LabelExtractor labelExtractor,
@@ -37,7 +46,13 @@ public class MethodCaseExtractor {
     }
 
     /**
-     * Extracts ExporterTestCases from compilationUint
+     * Extracts test cases from a parsed compilation unit.
+     * Identifies test methods and converts them to ExporterTestCase objects
+     * with complete metadata including names, labels, code bodies, and suite hierarchy.
+     *
+     * @param cu the parsed compilation unit to extract from
+     * @param filepath the source file path for reference
+     * @return list of extracted test cases
      */
     public List<ExporterTestCase> extractTestCases(CompilationUnit cu, String filepath) {
         List<MethodDeclaration> allMethods = cu.findAll(MethodDeclaration.class);
