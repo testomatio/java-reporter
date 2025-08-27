@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * JSON request body builder for Testomat.io API operations.
- * Handles serialization and structure creation for all API endpoints.
- * Enhanced to support parameterized tests with example data and RID.
+ * Default implementation of {@link RequestBodyBuilder} for Testomat.io API requests.
+ * Handles JSON serialization and payload structure creation for all API endpoints
+ * with support for parameterized tests, shared runs, and configurable properties.
  */
 public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     private final String createParam;
@@ -37,22 +37,22 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
 
     public NativeRequestBodyBuilder() {
-        this.publishParam = getPublishProperty();
-        this.sharedRun = getSharedRunProperty();
-        this.sharedRunTimeout = getSharedRunTimeoutProperty();
+        this.publishParam = getPropertySafely(PUBLISH_PROPERTY_NAME);
+        this.sharedRun = getPropertySafely(SHARED_RUN_PROPERTY_NAME);
+        this.sharedRunTimeout = getPropertySafely(SHARED_TIMEOUT_PROPERTY_NAME);
         this.objectMapper = new ObjectMapper();
-        this.createParam = getCreateParamProperty();
+        this.createParam = getPropertySafely(CREATE_TEST_PROPERTY_NAME);
     }
 
     @Override
     public String buildCreateRunBody(String title) {
         try {
             Map<String, String> body = new HashMap<>(Map.of(ApiRequestFields.TITLE, title));
-            String customEnv = getCustomEnvironmentProperty();
+            String customEnv = getPropertySafely(ENVIRONMENT_PROPERTY_NAME);
             if (customEnv != null) {
                 body.put(ApiRequestFields.ENVIRONMENT, customEnv);
             }
-            String groupTitle = getRunGroupTitleProperty();
+            String groupTitle = getPropertySafely(RUN_GROUP_PROPERTY_NAME);
             if (groupTitle != null) {
                 body.put(ApiRequestFields.GROUP_TITLE, groupTitle);
             }
@@ -106,8 +106,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     }
 
     /**
-     * Converts test result to map for JSON serialization.
-     * Enhanced to include parameterized test fields (example and RID).
+     * Converts test result to map structure for JSON serialization.
+     * Includes all standard fields plus support for parameterized test data.
      */
     private Map<String, Object> buildTestResultMap(TestResult result) {
         Map<String, Object> body = new HashMap<>();
@@ -144,49 +144,16 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         return body;
     }
 
-    private String getCustomEnvironmentProperty() {
+    /**
+     * Safely retrieves property value, returning null if property is not found or any exception occurs.
+     * Centralizes exception handling for all property access operations.
+     *
+     * @param propertyName the name of the property to retrieve
+     * @return property value or null if not found/error occurs
+     */
+    private String getPropertySafely(String propertyName) {
         try {
-            return provider.getProperty(ENVIRONMENT_PROPERTY_NAME);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String getRunGroupTitleProperty() {
-        try {
-            return provider.getProperty(RUN_GROUP_PROPERTY_NAME);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String getCreateParamProperty() {
-        try {
-            return provider.getProperty(CREATE_TEST_PROPERTY_NAME);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String getSharedRunProperty() {
-        try {
-            return provider.getProperty(SHARED_RUN_PROPERTY_NAME);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String getSharedRunTimeoutProperty() {
-        try {
-            return provider.getProperty(SHARED_TIMEOUT_PROPERTY_NAME);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String getPublishProperty() {
-        try {
-            return provider.getProperty(PUBLISH_PROPERTY_NAME);
+            return provider.getProperty(propertyName);
         } catch (Exception e) {
             return null;
         }
