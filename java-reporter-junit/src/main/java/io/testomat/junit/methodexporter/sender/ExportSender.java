@@ -14,6 +14,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Handles sending test case information to the Testomat.io API.
+ * This class builds HTTP requests containing test method bodies and metadata,
+ * then transmits them to the configured Testomat server endpoint with retry logic.
+ */
 public class ExportSender {
     private static final Logger log = LoggerFactory.getLogger(ExportSender.class);
     private static final String LOAD_URL_PART = "api/load?api_key=";
@@ -35,6 +40,14 @@ public class ExportSender {
         this.provider = provider;
     }
 
+    /**
+     * Sends a list of test cases to the Testomat.io API.
+     * Builds the request payload and transmits it to the configured endpoint
+     * with retry logic for handling temporary failures.
+     *
+     * @param exporterTestCases the test cases to send to the API
+     * @throws MethodExporterException if the export request fails after all retries
+     */
     public void sendTestCases(List<ExporterTestCase> exporterTestCases) {
         if (exporterTestCases.isEmpty()) {
             log.debug("No exporter test cases found");

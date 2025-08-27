@@ -9,6 +9,11 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Locates source files for test classes in various common directory structures.
+ * This class searches through standard Maven/Gradle directory layouts to find
+ * the corresponding .java source file for a given test class.
+ */
 public class FileFinder {
     private static final Logger log = LoggerFactory.getLogger(FileFinder.class);
     private static final String FILE_SEPARATOR = FileSystems.getDefault().getSeparator();
@@ -25,6 +30,13 @@ public class FileFinder {
         this.normalizer = normalizer;
     }
 
+    /**
+     * Finds the source file path for the given test class.
+     * Searches through common source directory structures including Maven and Gradle layouts.
+     *
+     * @param testClass the test class to locate
+     * @return the file path to the source file, or null if not found
+     */
     public String getTestClassFilePath(Class<?> testClass) {
         if (testClass == null) {
             return null;

@@ -2,6 +2,11 @@ package io.testomat.junit.model;
 
 import java.util.List;
 
+/**
+ * Represents a test case for export to Testomat.io.
+ * Contains all necessary information about a test including its name,
+ * associated suites, source code, file location, and metadata.
+ */
 public class ExporterTestCase {
     private String name;
     private List<String> suites;

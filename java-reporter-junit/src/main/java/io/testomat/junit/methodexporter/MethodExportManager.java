@@ -14,6 +14,11 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Manages the export of test method bodies to Testomat.io.
+ * This class handles the extraction, parsing, and sending of test case information
+ * from JUnit test classes to the Testomat reporting system.
+ */
 public class MethodExportManager {
     public static final String EXPORT_REQUIRED_PROPERTY_NAME = "testomatio.export.required";
 
@@ -51,6 +56,10 @@ public class MethodExportManager {
 
     /**
      * Loads and exports test method bodies for the specified test class.
+     * This method extracts test cases from the class file, parses them,
+     * and sends them to the Testomat server if export is required.
+     *
+     * @param testClass the test class to process
      */
     public void loadTestBodyForClass(Class<?> testClass) {
         log.debug("loadTestBodyForClass called for class: {}", testClass.getName());
@@ -135,6 +144,13 @@ public class MethodExportManager {
         }
     }
 
+    /**
+     * Loads test method bodies if export is required for the given extension context.
+     * This is a simplified version that processes a single extension context.
+     *
+     * @param extensionContext the JUnit extension context
+     * @throws IllegalArgumentException if extensionContext is null
+     */
     public void loadTestBodyIfRequired(final ExtensionContext extensionContext) {
         if (!isInitializeExportRequired()) {
             return;
