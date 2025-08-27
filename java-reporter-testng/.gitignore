@@ -5,6 +5,7 @@ build/
 !**/src/test/**/build/
 allure-results/
 
+.claude
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
