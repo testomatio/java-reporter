@@ -1,5 +1,8 @@
 package io.testomat.core.client.urlbuilder;
 
+import io.testomat.core.exception.InvalidProvidedPropertyException;
+import io.testomat.core.exception.UrlBuildingException;
+
 /**
  * Strategy interface for building Testomat.io API endpoint URLs.
  * Handles URL construction with proper parameter encoding and validation.
