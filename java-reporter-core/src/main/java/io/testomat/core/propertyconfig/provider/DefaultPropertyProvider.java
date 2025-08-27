@@ -7,8 +7,13 @@ import io.testomat.core.propertyconfig.util.DefaultPropertiesStorage;
 import io.testomat.core.propertyconfig.util.StringUtils;
 
 /**
- * Property provider that provides default values as final fallback.
- * Last priority in the property resolution chain.
+ * Property provider that provides built-in default values as final fallback.
+ * Lowest priority in the property resolution chain, ensuring that essential
+ * properties always have reasonable default values when not explicitly configured.
+ * 
+ * <p>Default values are stored in {@link DefaultPropertiesStorage} and include
+ * fallback values for API URLs, timeouts, and other essential configuration.
+ * This provider never delegates to a next provider since it's the end of the chain.
  */
 public class DefaultPropertyProvider extends AbstractPropertyProvider {
 

@@ -11,8 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Singleton factory for creating Testomat.io API client instances.
- * Loads API key from properties and creates configured client.
+ * Default implementation of {@link ClientFactory} for Testomat.io API clients.
+ * Singleton factory that loads API key from properties and creates production-ready
+ * clients with native HTTP implementation and standard request builders.
  */
 public class TestomatClientFactory implements ClientFactory {
     private static final PropertyProvider propertyProvider =
@@ -24,9 +25,10 @@ public class TestomatClientFactory implements ClientFactory {
     }
 
     /**
-     * Returns singleton factory instance.
+     * Returns the singleton factory instance.
+     * Thread-safe lazy initialization of factory.
      *
-     * @return ClientFactory instance
+     * @return configured ClientFactory instance
      */
     public static ClientFactory getClientFactory() {
         if (instance == null) {

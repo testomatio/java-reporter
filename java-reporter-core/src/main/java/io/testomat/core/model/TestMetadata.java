@@ -1,11 +1,24 @@
 package io.testomat.core.model;
 
+/**
+ * Basic test identification metadata without execution results.
+ * Contains essential information for test discovery and organization.
+ * Lighter alternative to {@link TestResult} when only test identity is needed.
+ */
 public class TestMetadata {
     private String title;
     private String testId;
     private String suiteTitle;
     private String file;
 
+    /**
+     * Creates test metadata with identification information.
+     * 
+     * @param title human-readable test name
+     * @param testId unique test identifier from test management system  
+     * @param suiteTitle test suite or class name
+     * @param file source file path where test is located
+     */
     public TestMetadata(String title, String testId,
                         String suiteTitle, String file) {
         this.title = title;
