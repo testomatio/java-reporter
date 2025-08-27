@@ -27,7 +27,7 @@ and team collaboration features.
 | **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅     |
 | **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅     |
 | **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅     |
-| **Parametrized tests support**     | Enhanced support for parameterized testing         |    ✅   |   ✅    |    ⏳     |
+| **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅     |
 | **Test artifacts support**         | Screenshots, logs, and file attachments            |   ⏳   |   ⏳    |    ⏳     |
 | **Step-by-step reporting**         | Detailed test step execution tracking              |   ⏳   |   ⏳    |    ⏳     |
 | **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |       |        |          |
@@ -57,7 +57,7 @@ and team collaboration features.
    <dependency>
        <groupId>io.testomat</groupId>
        <artifactId>java-reporter-/frameworkName/</artifactId>
-       <version>0.7.0</version>
+       <version>0.x.x</version>
    </dependency>
    ``` 
 2. create the `testomatio.properties` file in your `resources` folder and add into it:
@@ -99,28 +99,13 @@ No additional actions needed as TestNG handles the extension implicitly.
 
 ### Cucumber
 
-**Add our listener to your test runner:**
+Create the `cucumber.properties` file if you don't have one yet and add this line:
 
-```java
-
-@RunWith(Cucumber.class)
-@CucumberOptions(
-        features = "src/test/resources/features",
-        glue = {"steps"},
-        plugin = {
-                "pretty",
-                "json:target/cucumber-reports/",
-                "html:target/cucumber-reports/",
-                "io.testomat.cucumber.listener.CucumberListener"  // 👈 Add this line
-        }
-)
-public class TestRunner {
-}
-```
-
+   ```properties
+      cucumber.plugin=io.testomat.cucumber.listener.CucumberListener
+   ```
 ---
-
-### 🔧 Advanced Setup (For Power Users)
+### 🔧 Advanced Custom Setup
 
 > **⚠️ Only use this if you need custom behavior** - like adding extra logic to test lifecycle events.
 
@@ -141,7 +126,7 @@ This lets you customize how the reporter works by overriding core classes:
 
 **Step 1:** Complete the Simple Setup first (except for Cucumber-only projects)
 
-**Step 2:** Create the services directory:
+**Step 2:** Create the `services` directory:
 
    ```
       📁 src/main/resources/META-INF/services/
