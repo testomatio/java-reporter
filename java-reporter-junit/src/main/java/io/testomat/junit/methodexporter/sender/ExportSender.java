@@ -35,6 +35,8 @@ public class ExportSender {
 
     /**
      * Constructor for testing
+     *
+     * @param provider the property provider
      */
     public ExportSender(PropertyProvider provider) {
         this.provider = provider;

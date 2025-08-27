@@ -13,6 +13,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Sends extracted TestNG test cases to Testomat.io API.
+ * Handles HTTP communication with retry logic and error handling.
+ */
 public class TestNgExportSender {
     private static final Logger log = LoggerFactory.getLogger(TestNgExportSender.class);
 

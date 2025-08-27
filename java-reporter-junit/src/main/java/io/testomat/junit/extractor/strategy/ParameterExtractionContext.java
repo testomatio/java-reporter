@@ -38,6 +38,8 @@ public class ParameterExtractionContext {
 
     /**
      * Gets the JUnit extension context.
+     *
+     * @return the JUnit extension context
      */
     public ExtensionContext getExtensionContext() {
         return extensionContext;
@@ -45,6 +47,8 @@ public class ParameterExtractionContext {
 
     /**
      * Gets the test method being executed.
+     *
+     * @return the test method, or null if not available
      */
     public Method getTestMethod() {
         return testMethod;
@@ -52,6 +56,8 @@ public class ParameterExtractionContext {
 
     /**
      * Gets all annotations present on the test method.
+     *
+     * @return array of annotations on the test method
      */
     public Annotation[] getAnnotations() {
         return annotations.clone();
@@ -59,6 +65,8 @@ public class ParameterExtractionContext {
 
     /**
      * Gets the display name of the test execution.
+     *
+     * @return the display name of the test execution
      */
     public String getDisplayName() {
         return displayName;
@@ -66,6 +74,8 @@ public class ParameterExtractionContext {
 
     /**
      * Gets the unique identifier for this test execution.
+     *
+     * @return the unique identifier for this test execution
      */
     public String getUniqueId() {
         return uniqueId;
@@ -73,6 +83,9 @@ public class ParameterExtractionContext {
 
     /**
      * Checks if the test method has a specific annotation.
+     *
+     * @param annotationType the annotation type to check for
+     * @return true if the test method has the specified annotation, false otherwise
      */
     public boolean hasAnnotation(Class<? extends Annotation> annotationType) {
         if (testMethod == null) {
@@ -83,6 +96,10 @@ public class ParameterExtractionContext {
 
     /**
      * Gets a specific annotation from the test method.
+     *
+     * @param <T> the annotation type
+     * @param annotationType the annotation type to retrieve
+     * @return the annotation instance, or null if not present
      */
     public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
         if (testMethod == null) {
@@ -93,6 +110,8 @@ public class ParameterExtractionContext {
 
     /**
      * Checks if this context represents a valid parameterized test.
+     *
+     * @return true if the context has valid test method and extension context, false otherwise
      */
     public boolean isValid() {
         return testMethod != null && extensionContext != null;

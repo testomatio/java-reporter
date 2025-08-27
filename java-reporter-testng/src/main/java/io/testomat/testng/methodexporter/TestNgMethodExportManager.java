@@ -13,6 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Manages the export of TestNG test method bodies to Testomat.io.
+ * Coordinates file finding, parsing, test case extraction, and transmission.
+ * Ensures each test class is processed only once through concurrent tracking.
+ */
 public class TestNgMethodExportManager {
     public static final String EXPORT_REQUIRED_PROPERTY_NAME = "testomatio.export.required";
 

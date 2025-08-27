@@ -11,6 +11,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Extracts TestNG test cases from parsed source code compilation units.
+ * Identifies test methods, extracts their code, and builds test case objects.
+ */
 public class TestNgMethodCaseExtractor {
     private static final Logger log = LoggerFactory.getLogger(TestNgMethodCaseExtractor.class);
 

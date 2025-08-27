@@ -25,6 +25,8 @@ public class FileFinder {
 
     /**
      * Constructor for testing
+     *
+     * @param normalizer the path normalizer
      */
     public FileFinder(final PathNormalizer normalizer) {
         this.normalizer = normalizer;
@@ -83,6 +85,10 @@ public class FileFinder {
     /**
      * Extracts package-relative file path from full file path.
      * Updated to work similarly to TestNgFileFinder but for JUnit context.
+     *
+     * @param filepath the full file path to process
+     * @return the relative file path from the package root,
+     * or "UnknownFile.java" if path is invalid
      */
     public String extractRelativeFilePath(String filepath) {
         try {

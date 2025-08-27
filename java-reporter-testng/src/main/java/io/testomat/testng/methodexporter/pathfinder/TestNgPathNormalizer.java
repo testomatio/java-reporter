@@ -5,6 +5,10 @@ import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Normalizes file paths for cross-platform compatibility.
+ * Handles Windows and Unix path format differences.
+ */
 public class TestNgPathNormalizer {
     private static final Logger log = LoggerFactory.getLogger(TestNgPathNormalizer.class);
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase()
