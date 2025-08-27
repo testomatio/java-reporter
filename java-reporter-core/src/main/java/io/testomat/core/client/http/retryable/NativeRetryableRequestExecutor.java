@@ -17,6 +17,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Default implementation of retry logic for HTTP requests.
+ * Provides exponential backoff with configurable retry attempts for transient failures
+ * including network timeouts, connection errors, and specific server error status codes.
+ */
 public class NativeRetryableRequestExecutor implements RetryableRequestExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(NativeRetryableRequestExecutor.class);

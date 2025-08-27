@@ -1,14 +1,18 @@
 package io.testomat.core.propertyconfig.interf;
 
 /**
- * Factory for creating configured property provider chains.
+ * Factory interface for creating pre-configured property provider chains.
+ * Implementations define the specific chain order and initialization logic
+ * for different property resolution strategies.
  */
 public interface PropertyProviderFactory {
 
     /**
-     * Creates property provider with configured chain of responsibility.
+     * Creates a property provider with a pre-configured chain of responsibility.
+     * The returned provider is the head of the chain and will delegate through
+     * all configured providers until a property is found or all sources are exhausted.
      *
-     * @return property provider chain head
+     * @return property provider chain head, ready for property resolution
      */
     PropertyProvider getPropertyProvider();
 }

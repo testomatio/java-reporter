@@ -6,8 +6,14 @@ import io.testomat.core.propertyconfig.interf.AbstractPropertyProvider;
 import io.testomat.core.propertyconfig.util.StringUtils;
 
 /**
- * Property provider that reads from JVM system properties.
- * First priority in the property resolution chain.
+ * Property provider that reads from JVM system properties (-D flags).
+ * Highest priority in the property resolution chain, allowing runtime overrides
+ * of any Testomat.io configuration property.
+ * 
+ * <p>Example usage: {@code -Dtestomatio.api.key=your-api-key}
+ * 
+ * <p>Automatically converts property keys from dot notation to system property format
+ * using {@link StringUtils#fromEnvStyle(String)}.
  */
 
 public class JvmSystemPropertyProvider extends AbstractPropertyProvider {

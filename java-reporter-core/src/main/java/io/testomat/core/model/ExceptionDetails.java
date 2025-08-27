@@ -2,12 +2,19 @@ package io.testomat.core.model;
 
 /**
  * Container for exception details extracted from test failures.
- * Holds message and stack trace information for reporting.
+ * Holds error message and stack trace information for diagnostic reporting to Testomat.io.
+ * Immutable data structure for safe sharing across reporting components.
  */
 public class ExceptionDetails {
     private final String message;
     private final String stack;
 
+    /**
+     * Creates exception details with message and stack trace.
+     * 
+     * @param message error or exception message, may be null
+     * @param stack full stack trace string, may be null
+     */
     public ExceptionDetails(String message, String stack) {
         this.message = message;
         this.stack = stack;
