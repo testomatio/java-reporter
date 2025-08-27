@@ -32,6 +32,10 @@ public class MethodCaseExtractor {
 
     /**
      * Constructor for testing
+     *
+     * @param methodInfoExtractor the method info extractor
+     * @param labelExtractor the label extractor
+     * @param fileFinder the file finder
      */
     public MethodCaseExtractor(MethodInfoExtractor methodInfoExtractor,
                                LabelExtractor labelExtractor,

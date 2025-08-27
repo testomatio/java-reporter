@@ -43,6 +43,12 @@ public class MethodExportManager {
 
     /**
      * Constructor for testing
+     *
+     * @param provider the property provider
+     * @param fileFinder the file finder
+     * @param exportSender the export sender
+     * @param fileParser the file parser
+     * @param methodCaseExtractor the method case extractor
      */
     public MethodExportManager(PropertyProvider provider, FileFinder fileFinder,
                                ExportSender exportSender, FileParser fileParser,

@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Extracts labels from TestNG test methods.
+ * Supports labels from annotations, method comments, and naming patterns.
+ */
 public class TestNgLabelExtractor {
     private static final String COMMENT_LABEL_PATTERN = "@(\\w+)(?::(\\w+))?|#(\\w+)";
 

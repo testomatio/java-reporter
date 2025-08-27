@@ -23,6 +23,8 @@ public class ParameterExtractorService {
 
     /**
      * Constructor for testing with custom handler registry.
+     *
+     * @param handlerRegistry the custom handler registry
      */
     public ParameterExtractorService(ParameterHandlerRegistry handlerRegistry) {
         this.handlerRegistry = handlerRegistry;
@@ -65,6 +67,8 @@ public class ParameterExtractorService {
 
     /**
      * Gets the handler registry for testing purposes.
+     *
+     * @return the handler registry instance
      */
     public ParameterHandlerRegistry getHandlerRegistry() {
         return handlerRegistry;

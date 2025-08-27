@@ -2,6 +2,10 @@ package io.testomat.testng.methodexporter.model;
 
 import java.util.List;
 
+/**
+ * Represents a test case to be exported to Testomat.io.
+ * Contains test metadata, source code, and associated labels.
+ */
 public class TestNgExporterTestCase {
     private String name;
     private List<String> suites;
