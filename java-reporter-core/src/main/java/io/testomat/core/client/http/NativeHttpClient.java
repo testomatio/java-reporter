@@ -18,6 +18,11 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Production HTTP client implementation using Java 11+ HttpClient.
+ * Provides robust request execution with automatic retries, connection pooling,
+ * and configurable timeouts for reliable Testomat.io API communication.
+ */
 public class NativeHttpClient implements CustomHttpClient {
     private static final String HEADER_CONTENT_NAME = "Content-Type";
     private static final String HEADER_CONTENT_VALUE = "application/json";

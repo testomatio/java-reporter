@@ -19,8 +19,9 @@ import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
 /**
- * HTTP client for Testomat.io API operations.
- * Handles test run lifecycle and result reporting with proper error handling.
+ * Default HTTP-based implementation of {@link ApiInterface}.
+ * Handles test run lifecycle and result reporting with comprehensive error handling
+ * and automatic URL/request body construction for Testomat.io API endpoints.
  */
 public class NativeApiClient implements ApiInterface {
     private static final Logger log = LoggerFactory.getLogger(NativeApiClient.class);
@@ -32,11 +33,12 @@ public class NativeApiClient implements ApiInterface {
     private final RequestBodyBuilder requestBodyBuilder;
 
     /**
-     * Creates API client with custom dependencies for testing.
+     * Creates API client with injectable dependencies.
+     * Primarily used for testing with mock implementations.
      *
-     * @param apiKey             API key for authentication
-     * @param client             HTTP client implementation
-     * @param requestBodyBuilder request body builder for JSON payloads
+     * @param apiKey             Testomat.io API key for authentication
+     * @param client             HTTP client implementation for network requests
+     * @param requestBodyBuilder builder for creating JSON request payloads
      */
     public NativeApiClient(String apiKey,
                            CustomHttpClient client,

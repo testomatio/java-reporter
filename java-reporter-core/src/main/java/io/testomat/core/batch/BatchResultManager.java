@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
  * Manages batch processing of test results for efficient API reporting.
  * Collects test results in batches and periodically flushes them to Testomat.io.
  * Provides automatic retry mechanism and graceful shutdown handling.
+ * 
+ * <p>Thread-safe for concurrent test execution with configurable batch size and flush intervals.
  */
 public class BatchResultManager {
 
@@ -40,7 +42,6 @@ public class BatchResultManager {
      *
      * @param apiClient API client for reporting test results
      * @param runUid    unique identifier of the test run
-     * @throws NumberFormatException if batch size or flush interval properties are invalid
      */
     public BatchResultManager(ApiInterface apiClient, String runUid) {
         this.apiClient = apiClient;

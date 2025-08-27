@@ -1,14 +1,45 @@
 package io.testomat.core.model;
 
+/**
+ * Represents a test execution result with metadata for Testomat.io reporting.
+ * Contains test outcome, diagnostic information, and optional parameterized test data.
+ * 
+ * <p>Use the {@link Builder} for convenient construction:
+ * <pre>{@code
+ * TestResult result = TestResult.builder()
+ *     .withTitle("User Login Test")
+ *     .withStatus("passed")
+ *     .withSuiteTitle("Authentication Tests")
+ *     .withFile("LoginTest.java")
+ *     .build();
+ * }</pre>
+ */
 public class TestResult {
+    /** Human-readable test method or scenario name */
     private String title;
+    
+    /** Unique test identifier from Testomat.io test management system */
     private String testId;
+    
+    /** Test suite or test class name containing this test */
     private String suiteTitle;
+    
+    /** Source file path where the test is located */
     private String file;
+    
+    /** Test execution status: "passed", "failed", or "skipped" */
     private String status;
+    
+    /** Error or failure message for failed tests, null for passed tests */
     private String message;
+    
+    /** Stack trace for failed tests, null for passed tests */
     private String stack;
+    
+    /** Parameterized test data or example values for data-driven tests */
     private Object example;
+    
+    /** Run identifier for associating results with specific test execution runs */
     private String rid;
 
     public TestResult() {
@@ -29,6 +60,10 @@ public class TestResult {
         this.rid = rid;
     }
 
+    /**
+     * Builder for constructing TestResult instances with fluent API.
+     * Provides convenient method chaining for setting test result properties.
+     */
     public static class Builder {
         private String title;
         private String testId;
@@ -90,6 +125,11 @@ public class TestResult {
         }
     }
 
+    /**
+     * Creates a new TestResult builder instance.
+     * 
+     * @return new Builder for constructing TestResult objects
+     */
     public static Builder builder() {
         return new Builder();
     }
