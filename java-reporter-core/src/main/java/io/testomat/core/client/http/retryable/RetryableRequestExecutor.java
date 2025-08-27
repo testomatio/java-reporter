@@ -1,5 +1,8 @@
 package io.testomat.core.client.http.retryable;
 
+import io.testomat.core.exception.RequestExecutionFailedException;
+import io.testomat.core.exception.RequestStatusNotSuccessException;
+import io.testomat.core.exception.RequestTimeoutException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
