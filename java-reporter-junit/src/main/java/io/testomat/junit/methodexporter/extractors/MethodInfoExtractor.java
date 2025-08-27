@@ -7,6 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Extracts detailed information from test method declarations for export purposes.
+ * This class analyzes JUnit test methods to extract names, code bodies, skip status,
+ * and suite hierarchies from parsed source code using JavaParser AST.
+ */
 public class MethodInfoExtractor {
 
     private static final String DISPLAY_NAME_ANNOTATION = "DisplayName";

@@ -5,6 +5,10 @@ import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Utility class for normalizing file paths across different operating systems.
+ * Ensures consistent path format and handles platform-specific path separators.
+ */
 public class PathNormalizer {
     private static final Logger log = LoggerFactory.getLogger(PathNormalizer.class);
     private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase()
@@ -12,6 +16,10 @@ public class PathNormalizer {
 
     /**
      * Normalizes file path for cross-platform compatibility.
+     * Converts path separators and handles platform-specific formatting.
+     *
+     * @param path the path to normalize
+     * @return normalized path with forward slashes, or the original path if null/empty
      */
     public String normalizePath(String path) {
         if (path == null || path.isEmpty()) {

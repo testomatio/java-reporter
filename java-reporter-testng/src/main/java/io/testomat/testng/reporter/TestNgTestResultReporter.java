@@ -19,6 +19,11 @@ import org.testng.ISuite;
 import org.testng.ITestResult;
 import org.testng.annotations.Test;
 
+/**
+ * Reports TestNG test results to Testomat.io platform.
+ * Handles both regular test execution results and disabled tests from suites.
+ * Supports parameterized tests with unique identification and deduplication.
+ */
 public class TestNgTestResultReporter {
     private static final String DISABLED_MESSAGE = "Test disabled via @Test(enabled = false)";
 

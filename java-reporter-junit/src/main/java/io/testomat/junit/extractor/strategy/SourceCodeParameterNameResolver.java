@@ -295,6 +295,8 @@ public class SourceCodeParameterNameResolver {
 
     /**
      * Gets cache statistics for monitoring and debugging.
+     *
+     * @return the current number of cached parameter name entries
      */
     public int getCacheSize() {
         return parameterNameCache.size();

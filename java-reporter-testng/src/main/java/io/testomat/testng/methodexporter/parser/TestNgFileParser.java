@@ -8,6 +8,10 @@ import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Parses Java source files into JavaParser compilation units.
+ * Provides thread-safe parsing with error handling and validation.
+ */
 public class TestNgFileParser {
     private static final Logger log = LoggerFactory.getLogger(TestNgFileParser.class);
     private final Object lock = new Object();
