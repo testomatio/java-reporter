@@ -17,8 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Native implementation of URL builder for Testomat.io API endpoints.
- * Constructs URLs for test run operations using standard Java libraries.
+ * Default implementation of {@link UrlBuilder} using standard Java HTTP libraries.
+ * Constructs validated URLs for Testomat.io API endpoints with proper parameter encoding,
+ * base URL normalization, and comprehensive input validation.
  */
 public class NativeUrlBuilder implements UrlBuilder {
     private static final Logger log = LoggerFactory.getLogger(NativeUrlBuilder.class);
@@ -32,9 +33,11 @@ public class NativeUrlBuilder implements UrlBuilder {
     private final PropertyProvider provider = factory.getPropertyProvider();
 
     /**
-     * Builds URL for creating a new test run.
+     * Constructs URL for test run creation endpoint.
      *
-     * @return complete URL for test run creation
+     * @return complete URL for creating new test runs
+     * @throws InvalidProvidedPropertyException if base URL or API key configuration is invalid
+     * @throws UrlBuildingException if URL construction results in malformed URL
      */
     @Override
     public String buildCreateRunUrl() {
@@ -51,10 +54,12 @@ public class NativeUrlBuilder implements UrlBuilder {
     }
 
     /**
-     * Builds URL for reporting test results.
+     * Constructs URL for test result reporting endpoint.
      *
-     * @param testRunUid unique identifier of the test run
-     * @return complete URL for test result reporting
+     * @param testRunUid unique identifier of the target test run
+     * @return complete URL for reporting test results to specified run
+     * @throws UrlBuildingException if testRunUid is null or empty
+     * @throws InvalidProvidedPropertyException if base URL or API key configuration is invalid
      */
     @Override
     public String buildReportTestUrl(String testRunUid) {
@@ -74,10 +79,12 @@ public class NativeUrlBuilder implements UrlBuilder {
     }
 
     /**
-     * Builds URL for finishing a test run.
+     * Constructs URL for test run finalization endpoint.
      *
-     * @param testRunUid unique identifier of the test run
-     * @return complete URL for test run completion
+     * @param testRunUid unique identifier of the target test run
+     * @return complete URL for finalizing specified test run
+     * @throws UrlBuildingException if testRunUid is null or empty
+     * @throws InvalidProvidedPropertyException if base URL or API key configuration is invalid
      */
     @Override
     public String buildFinishTestRunUrl(String testRunUid) {
@@ -96,7 +103,7 @@ public class NativeUrlBuilder implements UrlBuilder {
     }
 
     /**
-     * Gets base URL from properties with validation.
+     * Retrieves and validates base URL from configuration properties.
      */
     private String getBaseUrl() {
         String baseUrl = provider.getProperty(HOST_URL_PROPERTY_NAME);

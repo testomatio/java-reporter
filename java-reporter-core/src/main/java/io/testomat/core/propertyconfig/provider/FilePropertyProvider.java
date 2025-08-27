@@ -12,8 +12,15 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Property provider that reads from properties file on classpath.
- * Third priority in the property resolution chain.
+ * Property provider that reads from properties file on the classpath.
+ * Third priority in the property resolution chain, providing persistent
+ * configuration that can be packaged with the application.
+ * 
+ * <p>Loads properties from {@value io.testomat.core.constants.PropertyNameConstants#PROPERTIES_FILE_NAME}
+ * file located on the classpath root. If the file is not found, returns empty properties
+ * without throwing an exception.
+ * 
+ * <p>Property format: {@code testomatio.api.key=your-api-key}
  */
 public class FilePropertyProvider extends AbstractPropertyProvider {
 

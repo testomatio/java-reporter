@@ -5,44 +5,45 @@ import io.testomat.core.model.TestResult;
 import java.util.List;
 
 /**
- * Builder for creating JSON request bodies for Testomat.io API.
+ * Strategy interface for building JSON request bodies for Testomat.io API operations.
+ * Handles the construction and serialization of request payloads for different API endpoints.
  */
 public interface RequestBodyBuilder {
 
     /**
-     * Builds request body for creating test run.
+     * Creates JSON request body for test run creation endpoint.
      *
-     * @param title test run title
-     * @return JSON request body
+     * @param title descriptive title for the test run
+     * @return JSON-formatted request body string
      * @throws JsonProcessingException if JSON serialization fails
      */
     String buildCreateRunBody(String title) throws JsonProcessingException;
 
     /**
-     * Builds request body for reporting single test result.
+     * Creates JSON request body for single test result reporting.
      *
-     * @param result test result to report
-     * @return JSON request body
+     * @param result test execution result with status and metadata
+     * @return JSON-formatted request body string
      * @throws JsonProcessingException if JSON serialization fails
      */
     String buildSingleTestReportBody(TestResult result) throws JsonProcessingException;
 
     /**
-     * Builds request body for reporting multiple test results.
+     * Creates JSON request body for batch test result reporting.
      *
-     * @param results test results to report
-     * @param apiKey API key for authentication
-     * @return JSON request body
+     * @param results collection of test execution results
+     * @param apiKey API key for authentication in batch requests
+     * @return JSON-formatted request body string
      * @throws JsonProcessingException if JSON serialization fails
      */
     String buildBatchTestReportBody(List<TestResult> results, String apiKey)
             throws JsonProcessingException;
 
     /**
-     * Builds request body for finishing test run.
+     * Creates JSON request body for test run finalization.
      *
-     * @param duration test run duration in seconds
-     * @return JSON request body
+     * @param duration total test run duration in seconds
+     * @return JSON-formatted request body string
      * @throws JsonProcessingException if JSON serialization fails
      */
     String buildFinishRunBody(float duration) throws JsonProcessingException;

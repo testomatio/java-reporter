@@ -5,8 +5,12 @@ import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.propertyconfig.interf.PropertyProviderFactory;
 
 /**
- * Singleton factory creating property provider chains with fallback behavior.
- * Configures chain order: JVM properties → Environment → File → Defaults.
+ * Singleton factory implementation creating standard Testomat.io property provider chains.
+ * Assembles the complete chain of responsibility for property resolution with proper
+ * fallback behavior according to priority order.
+ * 
+ * <p>Creates pre-configured chain: JVM properties → Environment → File → Defaults.
+ * This ensures consistent property resolution behavior across all Testomat.io components.
  */
 public class PropertyProviderFactoryImpl implements PropertyProviderFactory {
     private static PropertyProviderFactory instance;
@@ -15,9 +19,11 @@ public class PropertyProviderFactoryImpl implements PropertyProviderFactory {
     }
 
     /**
-     * Returns singleton factory instance.
+     * Returns the singleton factory instance with thread-safe lazy initialization.
+     * Multiple calls return the same instance, ensuring consistent property provider
+     * configuration across the application.
      *
-     * @return PropertyProviderFactory instance
+     * @return PropertyProviderFactory singleton instance
      */
     public static PropertyProviderFactory getPropertyProviderFactory() {
         if (instance == null) {
@@ -26,6 +32,12 @@ public class PropertyProviderFactoryImpl implements PropertyProviderFactory {
         return instance;
     }
 
+    /**
+     * Creates a fully configured property provider chain ready for use.
+     * Links all providers in the standard priority order and returns the chain head.
+     * 
+     * @return head of the property provider chain (JvmSystemPropertyProvider)
+     */
     @Override
     public PropertyProvider getPropertyProvider() {
         PropertyProvider[] chain = AbstractPropertyProvider.getPropertyProviders();

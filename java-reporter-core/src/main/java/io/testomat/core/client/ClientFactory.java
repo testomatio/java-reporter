@@ -1,14 +1,17 @@
 package io.testomat.core.client;
 
 /**
- * Factory for creating API client instances.
+ * Abstract factory for creating {@link ApiInterface} implementations.
+ * Provides a pluggable mechanism for different API client configurations.
  */
 public interface ClientFactory {
 
     /**
-     * Creates configured API client instance.
+     * Creates a fully configured API client instance.
+     * Implementation should handle all necessary initialization including
+     * authentication, HTTP client setup, and request/response handling.
      *
-     * @return API client implementation
+     * @return ready-to-use API client implementation
      */
     ApiInterface createClient();
 }
