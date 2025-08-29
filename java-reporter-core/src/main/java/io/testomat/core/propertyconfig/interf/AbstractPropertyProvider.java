@@ -13,8 +13,8 @@ import io.testomat.core.propertyconfig.provider.SystemEnvPropertyProvider;
  * 
  * <p>The standard chain order prioritizes more specific/temporary sources over general ones:
  * <ol>
- *   <li>JVM System Properties (-Dtestomatio.api.key=value)</li>
- *   <li>Environment Variables (TESTOMATIO_API_KEY=value)</li> 
+ *   <li>JVM System Properties (-Dtestomatio=value)</li>
+ *   <li>Environment Variables (TESTOMATIO=value)</li>
  *   <li>Property Files (testomatio.properties)</li>
  *   <li>Default Values (built-in fallbacks)</li>
  * </ol>

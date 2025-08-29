@@ -14,7 +14,7 @@ import io.testomat.core.exception.PropertyNotFoundException;
  * <pre>{@code
  * PropertyProvider provider = new JvmSystemPropertyProvider();
  * provider.setNext(new SystemEnvPropertyProvider());
- * String apiKey = provider.getProperty("testomatio.api.key");
+ * String apiKey = provider.getProperty("testomatio");
  * }</pre>
  */
 public interface PropertyProvider {
@@ -23,7 +23,7 @@ public interface PropertyProvider {
      * Retrieves property value by key from this provider or delegates to next in chain.
      * Searches this provider's source first, then delegates to next provider if not found.
      *
-     * @param key property key to search for (e.g., "testomatio.api.key")
+     * @param key property key to search for (e.g., "testomatio")
      * @return property value if found
      * @throws PropertyNotFoundException if property not found in this provider or any chained providers
      */

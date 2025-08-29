@@ -14,7 +14,7 @@ public class StringUtils {
      * Converts property key to environment variable style (uppercase with underscores).
      * Transforms dot notation to environment variable convention.
      * 
-     * <p>Example: {@code "testomatio.api.key"} → {@code "TESTOMATIO_API_KEY"}
+     * <p>Example: {@code "testomatio"} → {@code "TESTOMATIO"}
      * 
      * @param inputKey property key in dot notation
      * @return environment variable style key, or empty string if input is null/empty
@@ -30,7 +30,7 @@ public class StringUtils {
      * Converts property key from environment variable style to standard dot notation.
      * Transforms uppercase underscore format to lowercase dot notation.
      * 
-     * <p>Example: {@code "TESTOMATIO_API_KEY"} → {@code "testomatio.api.key"}
+     * <p>Example: {@code "TESTOMATIO"} → {@code "testomatio"}
      * 
      * @param inputKey property key in environment variable style  
      * @return dot notation style key, or empty string if input is null/empty
