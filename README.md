@@ -67,11 +67,11 @@ and team collaboration features.
 3. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
 4. **Set your API key** as environment variable:
    ```bash
-   export testomatio.api.key=tstmt_your_key_here
+   export testomatio=tstmt_your_key_here
    ```
     - Or add to the `testomatio.properties` :
    ```properties
-   testomatio.api.key=tstmt_your_key_here
+   testomatio=tstmt_your_key_here
    ```
 
 5. Also provide run title in the `testomatio.run.title` property otherwise runs will have name "Default Test Run".
@@ -169,7 +169,7 @@ This lets you customize how the reporter works by overriding core classes:
 
    ```properties
       # Your Testomat.io project API key (find it in your project settings)
-testomatio.api.key=tstmt_your_key_here
+testomatio=tstmt_your_key_here
 testomatio.listening=ture
    ```
 
@@ -290,7 +290,7 @@ Use these oneliners to **download jar and update** ids in one move
 ```bash
 # Simple run with custom title
 mvn test \
-  -Dtestomatio.api.key=tstmt_your_key \
+  -Dtestomatio=tstmt_your_key \
   -Dtestomatio.run.title="My Feature Tests"
 ```
 
@@ -299,7 +299,7 @@ mvn test \
 ```bash
 # Shared run that team members can contribute to
 mvn test \
-  -Dtestomatio.api.key=tstmt_your_key \
+  -Dtestomatio=tstmt_your_key \
   -Dtestomatio.shared.run="integration-tests" \
   -Dtestomatio.env="staging"
 ```
@@ -309,7 +309,7 @@ mvn test \
 ```bash
 # Public report for sharing with stakeholders
 mvn test \
-  -Dtestomatio.api.key=tstmt_your_key \
+  -Dtestomatio=tstmt_your_key \
   -Dtestomatio.run.title="Demo for Product Team" \
   -Dtestomatio.publish=1
 ```
