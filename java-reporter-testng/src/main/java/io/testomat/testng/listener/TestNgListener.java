@@ -4,19 +4,16 @@ import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
-import io.testomat.core.annotation.TestId;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.testng.filter.TestIdFilter;
 import io.testomat.testng.methodexporter.TestNgMethodExportManager;
 import io.testomat.testng.reporter.TestNgTestResultReporter;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.IAnnotationTransformer;
 import org.testng.IInvokedMethod;
 import org.testng.IInvokedMethodListener;
 import org.testng.ISuite;
@@ -24,15 +21,13 @@ import org.testng.ISuiteListener;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
-import org.testng.annotations.ITestAnnotation;
 
 /**
  * TestNG listener for Testomat.io integration.
  * Reports TestNG test execution results to Testomat.io platform.
- * Supports custom annotations (@Title, @TestId) and handles disabled tests.
  * Also exports test method bodies when required.
  */
-public class TestNgListener implements ISuiteListener, ITestListener, 
+public class TestNgListener implements ISuiteListener, ITestListener,
         IInvokedMethodListener {
     private static final Logger log = LoggerFactory.getLogger(TestNgListener.class);
     private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
@@ -43,6 +38,7 @@ public class TestNgListener implements ISuiteListener, ITestListener,
     private final PropertyProvider provider;
 
     private final Set<String> processedClasses;
+    private final TestIdFilter testIdFilter;
 
     public TestNgListener() {
         this.methodExportManager = new TestNgMethodExportManager();
@@ -51,6 +47,7 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         this.reporter = new TestNgTestResultReporter();
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+        this.testIdFilter = new TestIdFilter();
     }
 
     /**
@@ -65,6 +62,7 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         this.methodExportManager = methodExportManager;
         this.provider = provider;
         this.processedClasses = ConcurrentHashMap.newKeySet();
+        this.testIdFilter = new TestIdFilter();
     }
 
     @Override
@@ -129,21 +127,8 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         if (!isListeningRequired()) {
             return;
         }
-        
-        String providedIds = System.getProperty("ids");
-        if (providedIds != null && !providedIds.trim().isEmpty()) {
-            TestId testIdAnnotation = result.getMethod().getConstructorOrMethod()
-                    .getMethod().getAnnotation(TestId.class);
-            
-            if (testIdAnnotation == null) {
-                throw new org.testng.SkipException("Test filtered: no @TestId annotation");
-            }
-            
-            String testId = testIdAnnotation.value();
-            if (!isTestIdIncluded(testId, providedIds)) {
-                throw new org.testng.SkipException("Test filtered by ID: " + testId);
-            }
-        }
+
+        testIdFilter.filterTest(result);
     }
 
     @Override
@@ -172,21 +157,6 @@ public class TestNgListener implements ISuiteListener, ITestListener,
     @Override
     public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
 
-    }
-    
-    private boolean isTestIdIncluded(String testId, String providedIds) {
-        if (testId == null || providedIds == null) {
-            return false;
-        }
-        
-        String[] allowedIds = providedIds.split(",");
-        for (String allowedId : allowedIds) {
-            String trimmed = allowedId.trim();
-            if (!trimmed.isEmpty() && testId.equals(trimmed)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private boolean isListeningRequired() {
