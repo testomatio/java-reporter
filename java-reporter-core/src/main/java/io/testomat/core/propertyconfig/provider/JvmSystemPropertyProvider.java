@@ -10,7 +10,7 @@ import io.testomat.core.propertyconfig.util.StringUtils;
  * Highest priority in the property resolution chain, allowing runtime overrides
  * of any Testomat.io configuration property.
  * 
- * <p>Example usage: {@code -Dtestomatio.api.key=your-api-key}
+ * <p>Example usage: {@code -Dtestomatio=your-api-key}
  * 
  * <p>Automatically converts property keys from dot notation to system property format
  * using {@link StringUtils#fromEnvStyle(String)}.

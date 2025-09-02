@@ -34,7 +34,7 @@ class NativeUrlBuilderTest {
     @DisplayName("Should build create run URL successfully")
     void buildCreateRunUrl_ValidProperties_ShouldReturnCorrectUrl() {
         when(mockPropertyProvider.getProperty("testomatio.url")).thenReturn("https://api.testomat.io");
-        when(mockPropertyProvider.getProperty("testomatio.api.key")).thenReturn("test-api-key");
+        when(mockPropertyProvider.getProperty("testomatio")).thenReturn("test-api-key");
 
         try (MockedStatic<PropertyProviderFactoryImpl> mockedStatic = 
                  mockStatic(PropertyProviderFactoryImpl.class)) {
@@ -56,7 +56,7 @@ class NativeUrlBuilderTest {
     @DisplayName("Should handle URL with trailing slash")
     void buildCreateRunUrl_UrlWithTrailingSlash_ShouldNormalizeUrl() {
         when(mockPropertyProvider.getProperty("testomatio.url")).thenReturn("https://api.testomat.io/");
-        when(mockPropertyProvider.getProperty("testomatio.api.key")).thenReturn("api-key");
+        when(mockPropertyProvider.getProperty("testomatio")).thenReturn("api-key");
 
         try (MockedStatic<PropertyProviderFactoryImpl> mockedStatic = 
                  mockStatic(PropertyProviderFactoryImpl.class)) {
@@ -75,7 +75,7 @@ class NativeUrlBuilderTest {
     @DisplayName("Should URL encode API key")
     void buildCreateRunUrl_SpecialCharactersInApiKey_ShouldEncodeCorrectly() {
         when(mockPropertyProvider.getProperty("testomatio.url")).thenReturn("https://api.testomat.io");
-        when(mockPropertyProvider.getProperty("testomatio.api.key")).thenReturn("key with spaces & special chars");
+        when(mockPropertyProvider.getProperty("testomatio")).thenReturn("key with spaces & special chars");
 
         try (MockedStatic<PropertyProviderFactoryImpl> mockedStatic = 
                  mockStatic(PropertyProviderFactoryImpl.class)) {
@@ -135,7 +135,7 @@ class NativeUrlBuilderTest {
     @DisplayName("Should throw exception for null API key")
     void buildCreateRunUrl_NullApiKey_ShouldThrowException() {
         when(mockPropertyProvider.getProperty("testomatio.url")).thenReturn("https://api.testomat.io");
-        when(mockPropertyProvider.getProperty("testomatio.api.key")).thenReturn(null);
+        when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
 
         try (MockedStatic<PropertyProviderFactoryImpl> mockedStatic = 
                  mockStatic(PropertyProviderFactoryImpl.class)) {
@@ -157,7 +157,7 @@ class NativeUrlBuilderTest {
     void buildReportTestUrl_ValidInput_ShouldReturnCorrectUrl() {
         String testRunUid = "run-123";
         when(mockPropertyProvider.getProperty("testomatio.url")).thenReturn("https://api.testomat.io");
-        when(mockPropertyProvider.getProperty("testomatio.api.key")).thenReturn("test-key");
+        when(mockPropertyProvider.getProperty("testomatio")).thenReturn("test-key");
 
         try (MockedStatic<PropertyProviderFactoryImpl> mockedStatic = 
                  mockStatic(PropertyProviderFactoryImpl.class)) {
@@ -211,7 +211,7 @@ class NativeUrlBuilderTest {
     void buildReportTestUrl_WhitespaceInUid_ShouldTrimCorrectly() {
         String testRunUid = "  run-123  ";
         when(mockPropertyProvider.getProperty("testomatio.url")).thenReturn("https://api.testomat.io");
-        when(mockPropertyProvider.getProperty("testomatio.api.key")).thenReturn("test-key");
+        when(mockPropertyProvider.getProperty("testomatio")).thenReturn("test-key");
 
         try (MockedStatic<PropertyProviderFactoryImpl> mockedStatic = 
                  mockStatic(PropertyProviderFactoryImpl.class)) {
@@ -231,7 +231,7 @@ class NativeUrlBuilderTest {
     void buildFinishTestRunUrl_ValidInput_ShouldReturnCorrectUrl() {
         String testRunUid = "run-456";
         when(mockPropertyProvider.getProperty("testomatio.url")).thenReturn("https://api.testomat.io");
-        when(mockPropertyProvider.getProperty("testomatio.api.key")).thenReturn("finish-key");
+        when(mockPropertyProvider.getProperty("testomatio")).thenReturn("finish-key");
 
         try (MockedStatic<PropertyProviderFactoryImpl> mockedStatic = 
                  mockStatic(PropertyProviderFactoryImpl.class)) {

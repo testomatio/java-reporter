@@ -20,7 +20,7 @@ import java.util.Properties;
  * file located on the classpath root. If the file is not found, returns empty properties
  * without throwing an exception.
  * 
- * <p>Property format: {@code testomatio.api.key=your-api-key}
+ * <p>Property format: {@code testomatio=your-api-key}
  */
 public class FilePropertyProvider extends AbstractPropertyProvider {
 
