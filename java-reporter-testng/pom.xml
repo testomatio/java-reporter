@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.testomat</groupId>
+    <groupId>test</groupId>
     <artifactId>java-reporter-testng</artifactId>
-    <version>0.6.8</version>
+    <version>test</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter TestNG</name>
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.6.8</version>
+            <version>0.7.5</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -91,6 +91,17 @@
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M9</version>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
                 </configuration>
             </plugin>
 
