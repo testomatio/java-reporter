@@ -25,7 +25,6 @@ import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.annotations.ITestAnnotation;
-import org.testng.xml.XmlSuite;
 
 /**
  * TestNG listener for Testomat.io integration.
@@ -34,7 +33,7 @@ import org.testng.xml.XmlSuite;
  * Also exports test method bodies when required.
  */
 public class TestNgListener implements ISuiteListener, ITestListener, 
-        IInvokedMethodListener, IAnnotationTransformer {
+        IInvokedMethodListener {
     private static final Logger log = LoggerFactory.getLogger(TestNgListener.class);
     private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
 
@@ -74,28 +73,6 @@ public class TestNgListener implements ISuiteListener, ITestListener,
             return;
         }
         log.debug("Suite started: {}", suite.getName());
-        
-        // Test ID filtering is handled by IAnnotationTransformer
-        String providedIds = System.getProperty("ids");
-        if (providedIds != null && !providedIds.trim().isEmpty()) {
-            System.out.println("=== USING ANNOTATION TRANSFORMER FOR ID FILTER ===");
-            System.out.println("Filter IDs: " + providedIds);
-            System.out.println("Suite: " + suite.getName());
-            
-            try {
-                XmlSuite xmlSuite = suite.getXmlSuite();
-                System.out.println("XmlSuite: " + xmlSuite.getName());
-                
-                // Register this listener as annotation transformer
-                xmlSuite.addListener(TestNgListener.class.getName());
-                System.out.println("Registered TestNgListener as annotation transformer");
-                System.out.println("Total listeners: " + xmlSuite.getListeners().size());
-                
-            } catch (Exception e) {
-                System.out.println("Error registering annotation transformer: " + e.getMessage());
-            }
-        }
-        
         runManager.incrementSuiteCounter();
         reporter.reportTestResult(suite);
     }
@@ -155,37 +132,17 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         
         String providedIds = System.getProperty("ids");
         if (providedIds != null && !providedIds.trim().isEmpty()) {
-            
-            System.out.println("=== TEST START FILTER DEBUG ===");
-            System.out.println("Method: " + result.getTestClass().getName() 
-                             + "." + result.getMethod().getMethodName());
-            System.out.println("Provided IDs: '" + providedIds + "'");
-            
             TestId testIdAnnotation = result.getMethod().getConstructorOrMethod()
                     .getMethod().getAnnotation(TestId.class);
             
-            System.out.println("@TestId present: " + (testIdAnnotation != null));
-            
             if (testIdAnnotation == null) {
-                System.out.println("SKIPPING: No @TestId annotation");
-                result.setStatus(ITestResult.SKIP);
                 throw new org.testng.SkipException("Test filtered: no @TestId annotation");
             }
             
             String testId = testIdAnnotation.value();
-            System.out.println("Found @TestId: '" + testId + "'");
-            
-            boolean shouldInclude = isTestIdIncluded(testId, providedIds);
-            System.out.println("Should include: " + shouldInclude);
-            
-            if (!shouldInclude) {
-                System.out.println("SKIPPING: Test ID not in filter");
-                result.setStatus(ITestResult.SKIP);
+            if (!isTestIdIncluded(testId, providedIds)) {
                 throw new org.testng.SkipException("Test filtered by ID: " + testId);
             }
-            
-            System.out.println("RUNNING: Test will execute");
-            System.out.println("=== END TEST START FILTER DEBUG ===");
         }
     }
 
@@ -214,83 +171,22 @@ public class TestNgListener implements ISuiteListener, ITestListener,
 
     @Override
     public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
-        // Nothing to do after invocation for filtering
-    }
 
-    @Override
-    public void transform(ITestAnnotation annotation, Class testClass, 
-                         Constructor testConstructor, Method testMethod) {
-        try {
-            if (annotation == null || testMethod == null || testClass == null) {
-                return;
-            }
-            
-            String providedIds = System.getProperty("ids");
-            if (providedIds == null || providedIds.trim().isEmpty()) {
-                return; // No filtering
-            }
-            
-            System.out.println("=== ANNOTATION TRANSFORMER DEBUG ===");
-            System.out.println("Method: " + testClass.getName() + "." + testMethod.getName());
-            System.out.println("Provided IDs: '" + providedIds + "'");
-            
-            TestId testIdAnnotation = testMethod.getAnnotation(TestId.class);
-            System.out.println("@TestId present: " + (testIdAnnotation != null));
-            
-            if (testIdAnnotation == null) {
-                System.out.println("DISABLING: No @TestId annotation");
-                annotation.setEnabled(false);
-                return;
-            }
-            
-            String testId = testIdAnnotation.value();
-            if (testId == null || testId.trim().isEmpty()) {
-                System.out.println("DISABLING: Empty @TestId value");
-                annotation.setEnabled(false);
-                return;
-            }
-            
-            System.out.println("Found @TestId: '" + testId + "'");
-            
-            boolean shouldInclude = isTestIdIncluded(testId, providedIds);
-            System.out.println("Should include: " + shouldInclude);
-            
-            if (!shouldInclude) {
-                System.out.println("DISABLING: Test ID not in filter");
-                annotation.setEnabled(false);
-            } else {
-                System.out.println("KEEPING: Test will run");
-            }
-            
-            System.out.println("=== END ANNOTATION TRANSFORMER DEBUG ===");
-            
-        } catch (Exception e) {
-            System.out.println("ERROR in IAnnotationTransformer: " + e.getMessage());
-            log.error("Error in IAnnotationTransformer for method: {}", 
-                     testMethod != null ? testMethod.getName() : "unknown", e);
-            // On error, don't disable the test - let it run
-        }
     }
     
     private boolean isTestIdIncluded(String testId, String providedIds) {
-        try {
-            if (testId == null || providedIds == null) {
-                return false;
-            }
-            
-            String[] allowedIds = providedIds.split(",");
-            for (String allowedId : allowedIds) {
-                String trimmed = allowedId.trim();
-                System.out.println("  Comparing: '" + testId + "' == '" + trimmed + "'");
-                if (!trimmed.isEmpty() && testId.equals(trimmed)) {
-                    return true;
-                }
-            }
-            return false;
-        } catch (Exception e) {
-            System.out.println("ERROR in isTestIdIncluded: " + e.getMessage());
+        if (testId == null || providedIds == null) {
             return false;
         }
+        
+        String[] allowedIds = providedIds.split(",");
+        for (String allowedId : allowedIds) {
+            String trimmed = allowedId.trim();
+            if (!trimmed.isEmpty() && testId.equals(trimmed)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isListeningRequired() {
