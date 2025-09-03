@@ -1,1 +1,1 @@
-io.testomat.junit.TestIdFilterWithLogging
+io.testomat.junit.filter.TestIdFilter
