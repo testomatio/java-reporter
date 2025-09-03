@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>test</groupId>
+    <groupId>test111</groupId>
     <artifactId>java-reporter-junit</artifactId>
-    <version>test</version>
+    <version>test111</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter JUnit</name>
@@ -99,12 +99,12 @@
             <version>${junit.version}</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-engine</artifactId>
-            <version>1.9.2</version>
-            <scope>compile</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.junit.platform</groupId>-->
+<!--            <artifactId>junit-platform-engine</artifactId>-->
+<!--            <version>1.9.2</version>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>

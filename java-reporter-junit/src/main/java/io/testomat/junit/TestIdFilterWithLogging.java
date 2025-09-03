@@ -15,6 +15,7 @@ public class TestIdFilterWithLogging implements PostDiscoveryFilter {
     private final Set<String> allowedIds;
 
     public TestIdFilterWithLogging() {
+
         String idsProperty = System.getProperty("ids");
         System.out.println("=== ФІЛЬТР ІНІЦІАЛІЗУЄТЬСЯ ===");
         System.out.println("System property 'ids': " + idsProperty);
@@ -65,8 +66,9 @@ public class TestIdFilterWithLogging implements PostDiscoveryFilter {
                     return FilterResult.excluded("Test ID " + testId + " is not in allowed list");
                 }
             } else {
-                System.out.println("  -> EXCLUDED (no @TestId annotation)");
-                return FilterResult.excluded("Test method does not have @TestId annotation");
+                System.out.println("  -> INCLUDED (no @TestId annotation - allowing test to run)");
+                return FilterResult.included(
+                "Test method without @TestId annotation is allowed when filtering by IDs");
             }
         }
 
