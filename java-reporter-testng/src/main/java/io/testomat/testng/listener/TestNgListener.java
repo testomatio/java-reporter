@@ -7,12 +7,14 @@ import static io.testomat.core.constants.CommonConstants.SKIPPED;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.testng.filter.TestIdFilter;
 import io.testomat.testng.methodexporter.TestNgMethodExportManager;
 import io.testomat.testng.reporter.TestNgTestResultReporter;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.IInvokedMethod;
 import org.testng.IInvokedMethodListener;
 import org.testng.ISuite;
 import org.testng.ISuiteListener;
@@ -23,10 +25,10 @@ import org.testng.ITestResult;
 /**
  * TestNG listener for Testomat.io integration.
  * Reports TestNG test execution results to Testomat.io platform.
- * Supports custom annotations (@Title, @TestId) and handles disabled tests.
  * Also exports test method bodies when required.
  */
-public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMethodListener {
+public class TestNgListener implements ISuiteListener, ITestListener,
+        IInvokedMethodListener {
     private static final Logger log = LoggerFactory.getLogger(TestNgListener.class);
     private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
 
@@ -36,6 +38,7 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
     private final PropertyProvider provider;
 
     private final Set<String> processedClasses;
+    private final TestIdFilter testIdFilter;
 
     public TestNgListener() {
         this.methodExportManager = new TestNgMethodExportManager();
@@ -44,6 +47,7 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
         this.reporter = new TestNgTestResultReporter();
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+        this.testIdFilter = new TestIdFilter();
     }
 
     /**
@@ -58,6 +62,7 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
         this.methodExportManager = methodExportManager;
         this.provider = provider;
         this.processedClasses = ConcurrentHashMap.newKeySet();
+        this.testIdFilter = new TestIdFilter();
     }
 
     @Override
@@ -118,6 +123,15 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
     }
 
     @Override
+    public void onTestStart(ITestResult result) {
+        if (!isListeningRequired()) {
+            return;
+        }
+
+        testIdFilter.filterTest(result);
+    }
+
+    @Override
     public void onTestSkipped(ITestResult result) {
         if (!isListeningRequired()) {
             return;
@@ -138,6 +152,11 @@ public class TestNgListener implements ISuiteListener, ITestListener, IInvokedMe
         } else {
             log.debug("Test class {} already processed", className);
         }
+    }
+
+    @Override
+    public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
+
     }
 
     private boolean isListeningRequired() {
