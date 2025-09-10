@@ -27,7 +27,8 @@ import java.util.Map;
  * with support for parameterized tests, shared runs, and configurable properties.
  */
 public class NativeRequestBodyBuilder implements RequestBodyBuilder {
-    private final String createParam;
+    private static final String TRUE = "true";
+    private final Boolean createParam;
     private final String sharedRun;
     private final String sharedRunTimeout;
     private final String publishParam;
@@ -41,7 +42,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         this.sharedRun = getPropertySafely(SHARED_RUN_PROPERTY_NAME);
         this.sharedRunTimeout = getPropertySafely(SHARED_TIMEOUT_PROPERTY_NAME);
         this.objectMapper = new ObjectMapper();
-        this.createParam = getPropertySafely(CREATE_TEST_PROPERTY_NAME);
+        this.createParam = getCreateParam();
     }
 
     @Override
@@ -137,15 +138,16 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put("rid", result.getRid());
         }
 
-        if (this.createParam != null) {
-            body.put("create", "true");
+        if (createParam) {
+            body.put("create", TRUE);
         }
 
         return body;
     }
 
     /**
-     * Safely retrieves property value, returning null if property is not found or any exception occurs.
+     * Safely retrieves property value, returning null if property is not
+     * found or any exception occurs.
      * Centralizes exception handling for all property access operations.
      *
      * @param propertyName the name of the property to retrieve
@@ -156,6 +158,14 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             return provider.getProperty(propertyName);
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    private boolean getCreateParam() {
+        try {
+           return  provider.getProperty(CREATE_TEST_PROPERTY_NAME).equalsIgnoreCase(TRUE);
+        } catch (Exception e) {
+            return false;
         }
     }
 }
