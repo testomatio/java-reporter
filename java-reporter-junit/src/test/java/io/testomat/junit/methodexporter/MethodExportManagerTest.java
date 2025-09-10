@@ -568,7 +568,7 @@ class MethodExportManagerTest {
             List<ExporterTestCase> testCases = createTestCases(5);
 
             when(mockPropertyProvider.getProperty(MethodExportManager.EXPORT_REQUIRED_PROPERTY_NAME))
-                    .thenReturn("enabled");
+                    .thenReturn("true");
             when(mockFileFinder.getTestClassFilePath(TestClassA.class)).thenReturn(filepath);
             when(mockFileParser.parseFile(filepath)).thenReturn(mockCompilationUnit);
             when(mockMethodCaseExtractor.extractTestCases(mockCompilationUnit, filepath))
