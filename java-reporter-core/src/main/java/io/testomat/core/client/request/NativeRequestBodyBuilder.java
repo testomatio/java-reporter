@@ -139,7 +139,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         }
 
         if (createParam) {
-            body.put("create", "true");
+            body.put("create", TRUE);
         }
 
         return body;
