@@ -1,4 +1,4 @@
-package io.testomat.core.artifact;
+package io.testomat.core.exception;
 
 public class ArtifactManagementException extends RuntimeException {
     public ArtifactManagementException(String message) {

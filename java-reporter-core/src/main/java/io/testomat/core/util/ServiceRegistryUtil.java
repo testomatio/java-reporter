@@ -1,9 +1,9 @@
-package io.testomat.core;
+package io.testomat.core.util;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ServiceRegistry {
+public class ServiceRegistryUtil {
     private static final Map<Class<?>, Object> services = new ConcurrentHashMap<>();
     
     @SuppressWarnings("unchecked")
