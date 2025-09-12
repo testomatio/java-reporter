@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -25,7 +26,7 @@ import org.slf4j.LoggerFactory;
  * Reports JUnit test execution results to Testomat.io platform.
  */
 public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
-        AfterAllCallback, TestWatcher {
+        AfterAllCallback, AfterEachCallback, TestWatcher {
 
     private static final Logger log = LoggerFactory.getLogger(JunitListener.class);
     private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
@@ -151,5 +152,13 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) throws Exception {
+        ArtifactHandler.Directories.get(0)
+
+
+                DIRECTORIES.clear
     }
 }
