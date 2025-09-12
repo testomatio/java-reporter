@@ -1,4 +1,4 @@
-package io.testomat.core.util;
+package io.testomat.core.facade;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
