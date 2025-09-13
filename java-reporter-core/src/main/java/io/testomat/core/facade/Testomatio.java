@@ -8,6 +8,6 @@ public class Testomatio {
     private static final ConcurrentHashMap<String, List<String>> ARTIFACT_STORAGE = new ConcurrentHashMap<>();
 
     public static void artifact(String... directories) {
-        ServiceRegistryUtil.getService(ArtifactManager.class).manageArtifact(directories);
+        ServiceRegistryUtil.getService(ArtifactManager.class).storeDirectories(directories);
     }
 }

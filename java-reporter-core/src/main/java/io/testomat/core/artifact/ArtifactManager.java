@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 public class ArtifactManager {
     private static final Logger log = LoggerFactory.getLogger(ArtifactManager.class);
 
-    public void manageArtifact(String... directories) {
+    public void storeDirectories(String... directories) {
         for (String dir : directories) {
             if (isValidFilePath(dir)) {
                 TemporalArtifactStorage.store(dir);
