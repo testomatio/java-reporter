@@ -58,16 +58,28 @@ public class GlobalRunManager {
 
         try {
             ClientFactory clientFactory = TestomatClientFactory.getClientFactory();
+            log.debug("Client factory initialized successfully");
             ApiInterface client = clientFactory.createClient();
+            log.debug("Client created successfully");
             String uid = getCustomRunUid(client);
+            if (uid != null) {
+                log.debug("Custom uid = {}", uid);
+            } else {
+                log.debug("Custom uid is not provided");
+            }
 
             apiClient.set(client);
+            log.debug("Api client is set");
             runUid.set(uid);
+            log.debug("Run ID is set: {}", runUid);
 
             batchManager.set(new BatchResultManager(client, uid));
+            log.debug("Batch manager is set");
             startTime = System.currentTimeMillis();
+            log.debug("Start time = {}", startTime);
 
             registerShutdownHook();
+            log.debug("Shutdown hook registered");
 
             log.debug("Global test run initialized with UID: {}", uid);
         } catch (Exception e) {

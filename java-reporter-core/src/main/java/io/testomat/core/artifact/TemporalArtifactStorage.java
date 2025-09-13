@@ -9,4 +9,10 @@ public class TemporalArtifactStorage {
     public static void store(String dir) {
         DIRECTORIES.get().add(dir);
     }
+
+    public static void cleanup() {
+        for (String dir : DIRECTORIES.get()) {
+            dir = null;
+        }
+    }
 }

@@ -14,6 +14,7 @@ import io.testomat.core.model.TestResult;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,12 +128,12 @@ public class NativeApiClient implements ApiInterface {
     }
 
     private void logAndPrintUrls(Map<String, Object> responseBody) {
-        String publicUrl = responseBody.get("public_url").toString();
+        Object publicUrlObject = responseBody.get("public_url");
 
         log.info("[TESTOMATIO] Testomat.io java core reporter version: [{}]", REPORTER_VERSION);
 
-        if (publicUrl != null) {
-            log.info("[TESTOMATIO] Public url: {}", publicUrl);
+        if (publicUrlObject != null) {
+            log.info("[TESTOMATIO] Public url: {}", publicUrlObject.toString());
         }
 
         log.info("[TESTOMATIO] See run aggregation at: {}", responseBody.get("url"));
