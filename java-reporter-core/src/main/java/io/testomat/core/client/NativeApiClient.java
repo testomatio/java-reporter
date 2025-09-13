@@ -1,5 +1,7 @@
 package io.testomat.core.client;
 
+import io.testomat.core.artifact.ArtifactKeyGenerator;
+import io.testomat.core.artifact.credential.CredentialsManager;
 import io.testomat.core.client.http.CustomHttpClient;
 import io.testomat.core.client.request.NativeRequestBodyBuilder;
 import io.testomat.core.client.request.RequestBodyBuilder;
@@ -31,6 +33,7 @@ public class NativeApiClient implements ApiInterface {
     private final String apiKey;
     private final CustomHttpClient client;
     private final RequestBodyBuilder requestBodyBuilder;
+    private final CredentialsManager credentialsManager = new CredentialsManager();
 
     /**
      * Creates API client with injectable dependencies.
@@ -56,16 +59,21 @@ public class NativeApiClient implements ApiInterface {
         log.debug("Creating run with request url: {}", url);
         String requestBody = requestBodyBuilder.buildCreateRunBody(title);
 
-        Map<String, String> responseBody = client.post(url, requestBody, Map.class);
+        Map<String, Object> responseBody = client.post(url, requestBody, Map.class);
         log.debug(responseBody.toString());
 
         if (responseBody == null || !responseBody.containsKey(RESPONSE_UID_KEY)) {
             throw new RunCreationFailedException(
                     "Invalid response: missing UID in create test run response");
         }
+        if (responseBody.containsKey("artifacts")) {
+            ArtifactKeyGenerator.initializeRunId(responseBody.get(RESPONSE_UID_KEY));
+            Map<String, Object> creds = (Map<String, Object>)responseBody.get("artifacts");
+            credentialsManager.populateCredentialsFromServerResponse(creds);
+        }
         logAndPrintUrls(responseBody);
         log.debug("Created test run with UID: {}", responseBody.get(RESPONSE_UID_KEY));
-        return responseBody.get(RESPONSE_UID_KEY);
+        return responseBody.get(RESPONSE_UID_KEY).toString();
     }
 
     @Override
@@ -118,8 +126,8 @@ public class NativeApiClient implements ApiInterface {
         }
     }
 
-    private void logAndPrintUrls(Map<String, String> responseBody) {
-        String publicUrl = responseBody.get("public_url");
+    private void logAndPrintUrls(Map<String, Object> responseBody) {
+        String publicUrl = responseBody.get("public_url").toString();
 
         log.info("[TESTOMATIO] Testomat.io java core reporter version: [{}]", REPORTER_VERSION);
 

@@ -5,9 +5,9 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.testomat</groupId>
+    <groupId>coretest</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.6.8</version>
+    <version>coretest</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>
@@ -66,6 +66,16 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>software.amazon.awssdk</groupId>-->
+<!--            <artifactId>s3</artifactId>-->
+<!--            <version>2.33.4</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>aws-sdk-java</artifactId>
+            <version>2.33.6</version>
         </dependency>
 
         <!-- Test dependencies -->

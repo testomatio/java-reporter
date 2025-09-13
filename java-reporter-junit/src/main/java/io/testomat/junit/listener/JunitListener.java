@@ -4,6 +4,7 @@ import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
+import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
@@ -35,7 +36,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
     private final GlobalRunManager runManager;
     private final JunitTestReporter reporter;
     private final PropertyProvider provider;
-
+    private final AwsService awsService;
     private final Set<String> processedClasses;
 
     public JunitListener() {
@@ -43,6 +44,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         this.runManager = GlobalRunManager.getInstance();
         this.reporter = new JunitTestReporter();
         this.processedClasses = ConcurrentHashMap.newKeySet();
+        this.awsService = new AwsService();
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
     }
@@ -58,12 +60,14 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
     public JunitListener(MethodExportManager methodExportManager,
                          GlobalRunManager runManager,
                          JunitTestReporter reporter,
-                         PropertyProvider provider) {
+                         PropertyProvider provider,
+                         AwsService awsService) {
         this.methodExportManager = methodExportManager;
         this.runManager = runManager;
         this.reporter = reporter;
         this.provider = provider;
         this.processedClasses = ConcurrentHashMap.newKeySet();
+        this.awsService = awsService;
     }
 
     @Override
@@ -155,10 +159,11 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) throws Exception {
-        ArtifactHandler.Directories.get(0)
-
-
-                DIRECTORIES.clear
+    public void afterEach(ExtensionContext context) throws Exception {
+        awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId());
+        //        ArtifactHandler.Directories.get(0)
+        //
+        //
+        //                DIRECTORIES.clear
     }
 }
