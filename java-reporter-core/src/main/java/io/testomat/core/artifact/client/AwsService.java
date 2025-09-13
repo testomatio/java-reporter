@@ -38,23 +38,18 @@ public class AwsService {
     public void uploadAllArtifactsForTest(String testName, String rid) {
         if (TemporalArtifactStorage.DIRECTORIES.get().isEmpty()) {
             log.debug("Artifact list is empty for test: {}", testName);
-            CompletableFuture.completedFuture(null);
             return;
         }
 
         S3Credentials credentials = CredentialsManager.getCredentials();
 
-        List<CompletableFuture<Void>> uploadFutures = TemporalArtifactStorage.DIRECTORIES.get().stream()
-                .map(dir -> {
-                    String key = artifactKeyGenerator.generateKey(dir, rid, testName);
-                    return uploadArtifact(dir, key, credentials);
-                })
-                .collect(Collectors.toList());
-
-        CompletableFuture.allOf(uploadFutures.toArray(new CompletableFuture[0]));
+        for (String dir : TemporalArtifactStorage.DIRECTORIES.get()) {
+            String key = artifactKeyGenerator.generateKey(dir, rid, testName);
+            uploadArtifact(dir, key, credentials);
+        }
     }
 
-    private CompletableFuture<Void> uploadArtifact(String dir, String key, S3Credentials credentials) {
+    private void uploadArtifact(String dir, String key, S3Credentials credentials) {
         byte[] content;
         Path path = Paths.get(dir);
         try {
@@ -62,9 +57,7 @@ public class AwsService {
             log.debug("Successfully read {} bytes from file: {}", content.length, path);
         } catch (IOException e) {
             log.error("Failed to read bytes from path: {}", path, e);
-            CompletableFuture<Void> failedFuture = new CompletableFuture<>();
-            failedFuture.completeExceptionally(new ArtifactManagementException("Failed to read bytes from path: " + path));
-            return failedFuture;
+            throw new ArtifactManagementException("Failed to read bytes from path: " + path);
         }
         
         PutObjectRequest request = PutObjectRequest.builder()
@@ -75,14 +68,13 @@ public class AwsService {
         log.debug("Uploading to S3: bucket={}, key={}, size={} bytes",
                 credentials.getBucket(), key, content.length);
 
-        return getOrCreateClient().putObject(request, AsyncRequestBody.fromBytes(content))
-                .thenAccept(response -> {
-                    log.info("S3 upload completed successfully for file: {} (ETag: {})", path, response.eTag());
-                })
-                .exceptionally(throwable -> {
-                    log.error("S3 upload failed for file: {} to bucket: {}, key: {}", path, credentials.getBucket(), key, throwable);
-                    throw new ArtifactManagementException("S3 upload failed: " + throwable.getMessage(), throwable);
-                });
+        try {
+            getOrCreateClient().putObject(request, AsyncRequestBody.fromBytes(content)).get();
+            log.info("S3 upload completed successfully for file: {}", path);
+        } catch (Exception e) {
+            log.error("S3 upload failed for file: {} to bucket: {}, key: {}", path, credentials.getBucket(), key, e);
+            throw new ArtifactManagementException("S3 upload failed: " + e.getMessage(), e);
+        }
     }
 
     private S3AsyncClient initialize() {
