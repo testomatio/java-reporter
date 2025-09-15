@@ -106,6 +106,11 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         return objectMapper.writeValueAsString(body);
     }
 
+    @Override
+    public String buildUploadLinksBody(String jsonString) {
+        return "";
+    }
+
     /**
      * Converts test result to map structure for JSON serialization.
      * Includes all standard fields plus support for parameterized test data.
@@ -163,7 +168,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
     private boolean getCreateParam() {
         try {
-           return  provider.getProperty(CREATE_TEST_PROPERTY_NAME).equalsIgnoreCase(TRUE);
+            return provider.getProperty(CREATE_TEST_PROPERTY_NAME).equalsIgnoreCase(TRUE);
         } catch (Exception e) {
             return false;
         }

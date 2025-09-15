@@ -47,4 +47,6 @@ public interface RequestBodyBuilder {
      * @throws JsonProcessingException if JSON serialization fails
      */
     String buildFinishRunBody(float duration) throws JsonProcessingException;
+
+    String buildUploadLinksBody(String jsonString);
 }

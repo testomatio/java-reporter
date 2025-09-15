@@ -14,7 +14,7 @@ public class ArtifactManager {
     public void storeDirectories(String... directories) {
         for (String dir : directories) {
             if (isValidFilePath(dir)) {
-                TemporalArtifactStorage.store(dir);
+                TempArtifactDirectoriesStorage.store(dir);
             } else {
                 log.info("Invalid artifact path provided: {}", dir);
             }

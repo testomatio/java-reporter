@@ -4,7 +4,6 @@ import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
-import io.testomat.core.artifact.TemporalArtifactStorage;
 import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
@@ -54,9 +53,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
      * Constructor for testing
      *
      * @param methodExportManager the method export manager
-     * @param runManager the global run manager
-     * @param reporter the JUnit test reporter
-     * @param provider the property provider
+     * @param runManager          the global run manager
+     * @param reporter            the JUnit test reporter
+     * @param provider            the property provider
      */
     public JunitListener(MethodExportManager methodExportManager,
                          GlobalRunManager runManager,
@@ -160,8 +159,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
     }
 
     @Override
-    public void afterEach(ExtensionContext context) throws Exception {
+    public void afterEach(ExtensionContext context) {
         awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId());
-        TemporalArtifactStorage.cleanup();
     }
 }

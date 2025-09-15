@@ -47,4 +47,6 @@ public interface ApiInterface {
      * @throws IOException if network request fails or API returns error
      */
     void finishTestRun(String uid, float duration) throws IOException;
+
+    void uploadLinksToTestomatio(String uid);
 }

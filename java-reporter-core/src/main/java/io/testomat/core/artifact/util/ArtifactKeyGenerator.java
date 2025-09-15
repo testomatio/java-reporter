@@ -1,4 +1,4 @@
-package io.testomat.core.artifact;
+package io.testomat.core.artifact.util;
 
 import java.nio.file.Paths;
 
@@ -13,7 +13,7 @@ public class ArtifactKeyGenerator {
     public String generateKey(String dir, String rid, String testName) {
         return runId
                 + SEPARATOR
-                + testName + ":" + rid
+                + rid
                 + SEPARATOR
                 + Paths.get(dir).getFileName();
     }
