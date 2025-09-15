@@ -3,6 +3,7 @@ package io.testomat.core.runmanager;
 import static io.testomat.core.constants.PropertyNameConstants.CUSTOM_RUN_UID_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 
+import io.testomat.core.artifact.util.ArtifactKeyGenerator;
 import io.testomat.core.batch.BatchResultManager;
 import io.testomat.core.client.ApiInterface;
 import io.testomat.core.client.ClientFactory;
@@ -59,29 +60,31 @@ public class GlobalRunManager {
         try {
             ClientFactory clientFactory = TestomatClientFactory.getClientFactory();
             log.debug("Client factory initialized successfully");
+
             ApiInterface client = clientFactory.createClient();
             log.debug("Client created successfully");
-            String uid = getCustomRunUid(client);
-            if (uid != null) {
-                log.debug("Custom uid = {}", uid);
-            } else {
-                log.debug("Custom uid is not provided");
-            }
+
+            String uid = defineRunId(client);
+            log.debug("Uid defined successfully: {}", uid);
+
+            ArtifactKeyGenerator.initializeRunId(uid);
+            log.debug("ArtifactKeyGenerator received uid: {}", uid);
 
             apiClient.set(client);
             log.debug("Api client is set");
+
             runUid.set(uid);
-            log.debug("Run ID is set: {}", runUid);
 
             batchManager.set(new BatchResultManager(client, uid));
             log.debug("Batch manager is set");
+
             startTime = System.currentTimeMillis();
             log.debug("Start time = {}", startTime);
 
             registerShutdownHook();
             log.debug("Shutdown hook registered");
 
-            log.debug("Global test run initialized with UID: {}", uid);
+            log.debug("Global run manger initialized with UID: {}", uid);
         } catch (Exception e) {
             log.error("Failed to initialize test run: {}", String.valueOf(e));
         }
@@ -145,6 +148,7 @@ public class GlobalRunManager {
      * Calculates run duration and sends completion notification to Testomat.io.
      */
     private void finalizeRun() {
+        apiClient.get().uploadLinksToTestomatio(runUid.get());
         BatchResultManager manager = batchManager.getAndSet(null);
         if (manager != null) {
             manager.shutdown();
@@ -174,7 +178,7 @@ public class GlobalRunManager {
                 .getPropertyProvider().getProperty(RUN_TITLE_PROPERTY_NAME);
     }
 
-    private String getCustomRunUid(ApiInterface client) throws IOException {
+    private String defineRunId(ApiInterface client) throws IOException {
         String customUid;
         try {
             customUid = provider.getProperty(CUSTOM_RUN_UID_PROPERTY_NAME);

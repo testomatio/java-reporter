@@ -1,12 +1,17 @@
 package io.testomat.core.client;
 
-import io.testomat.core.artifact.ArtifactKeyGenerator;
+import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
+import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
+
+import io.testomat.core.artifact.LinkUploadBodyBuilder;
+import io.testomat.core.artifact.UploadedArtifactLinksStorage;
 import io.testomat.core.artifact.credential.CredentialsManager;
 import io.testomat.core.client.http.CustomHttpClient;
 import io.testomat.core.client.request.NativeRequestBodyBuilder;
 import io.testomat.core.client.request.RequestBodyBuilder;
 import io.testomat.core.client.urlbuilder.NativeUrlBuilder;
 import io.testomat.core.client.urlbuilder.UrlBuilder;
+import io.testomat.core.exception.ArtifactManagementException;
 import io.testomat.core.exception.FinishReportFailedException;
 import io.testomat.core.exception.ReportingFailedException;
 import io.testomat.core.exception.RunCreationFailedException;
@@ -14,20 +19,16 @@ import io.testomat.core.model.TestResult;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
-import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
 /**
  * Default HTTP-based implementation of {@link ApiInterface}.
  * Handles test run lifecycle and result reporting with comprehensive error handling
  * and automatic URL/request body construction for Testomat.io API endpoints.
  */
-public class NativeApiClient implements ApiInterface {
-    private static final Logger log = LoggerFactory.getLogger(NativeApiClient.class);
+public class TestomatioClient implements ApiInterface {
+    private static final Logger log = LoggerFactory.getLogger(TestomatioClient.class);
 
     private final UrlBuilder urlBuilder = new NativeUrlBuilder();
 
@@ -35,6 +36,7 @@ public class NativeApiClient implements ApiInterface {
     private final CustomHttpClient client;
     private final RequestBodyBuilder requestBodyBuilder;
     private final CredentialsManager credentialsManager = new CredentialsManager();
+    private final LinkUploadBodyBuilder linkUploadBodyBuilder = new LinkUploadBodyBuilder();
 
     /**
      * Creates API client with injectable dependencies.
@@ -44,9 +46,9 @@ public class NativeApiClient implements ApiInterface {
      * @param client             HTTP client implementation for network requests
      * @param requestBodyBuilder builder for creating JSON request payloads
      */
-    public NativeApiClient(String apiKey,
-                           CustomHttpClient client,
-                           NativeRequestBodyBuilder requestBodyBuilder) {
+    public TestomatioClient(String apiKey,
+                            CustomHttpClient client,
+                            NativeRequestBodyBuilder requestBodyBuilder) {
         this.apiKey = apiKey;
         this.client = client;
         this.requestBodyBuilder = requestBodyBuilder;
@@ -68,8 +70,7 @@ public class NativeApiClient implements ApiInterface {
                     "Invalid response: missing UID in create test run response");
         }
         if (responseBody.containsKey("artifacts")) {
-            ArtifactKeyGenerator.initializeRunId(responseBody.get(RESPONSE_UID_KEY));
-            Map<String, Object> creds = (Map<String, Object>)responseBody.get("artifacts");
+            Map<String, Object> creds = (Map<String, Object>) responseBody.get("artifacts");
             credentialsManager.populateCredentialsFromServerResponse(creds);
         }
         logAndPrintUrls(responseBody);
@@ -124,6 +125,21 @@ public class NativeApiClient implements ApiInterface {
         } catch (Exception e) {
             log.error("Failed to finish test run with uid: {}", uid);
             throw new FinishReportFailedException("Failed to finish test run " + e.getMessage());
+        }
+    }
+
+    public void uploadLinksToTestomatio(String uid) {
+
+        String requestBody = linkUploadBodyBuilder.buildLinkUploadRequestBody(UploadedArtifactLinksStorage.getLinkStorage());
+        if (UploadedArtifactLinksStorage.getLinkStorage().isEmpty()) {
+            return;
+        }
+        String url = urlBuilder.buildReportTestUrl(uid);
+
+        try {
+            client.post(url, requestBody, null);
+        } catch (IOException e) {
+            throw new ArtifactManagementException("Failed to upload artifact links to Testomatio", e);
         }
     }
 
