@@ -106,7 +106,7 @@ class JunitListenerTest {
         @DisplayName("Should return false when property throws PropertyNotFoundException")
         void shouldReturnFalseWhenPropertyThrowsPropertyNotFoundException() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening"))
+            when(mockPropertyProvider.getProperty("testomatio"))
                     .thenThrow(new PropertyNotFoundException("Property not found"));
 
             // When
@@ -120,7 +120,7 @@ class JunitListenerTest {
         @DisplayName("Should return false when property throws RuntimeException")
         void shouldReturnFalseWhenPropertyThrowsRuntimeException() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening"))
+            when(mockPropertyProvider.getProperty("testomatio"))
                     .thenThrow(new RuntimeException("Unexpected error"));
 
             // When
@@ -134,7 +134,7 @@ class JunitListenerTest {
         @DisplayName("Should return false when property returns null")
         void shouldReturnFalseWhenPropertyReturnsNull() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn(null);
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
 
             // When
             junitListener.beforeAll(mockExtensionContext);
@@ -152,7 +152,7 @@ class JunitListenerTest {
         @DisplayName("Should increment suite counter when listening is required")
         void shouldIncrementSuiteCounterWhenListeningIsRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
 
             // When
             junitListener.beforeAll(mockExtensionContext);
@@ -165,7 +165,7 @@ class JunitListenerTest {
         @DisplayName("Should not increment suite counter when listening is not required")
         void shouldNotIncrementSuiteCounterWhenListeningIsNotRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn(null);
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
 
             // When
             junitListener.beforeAll(mockExtensionContext);
@@ -178,7 +178,7 @@ class JunitListenerTest {
         @DisplayName("Should handle multiple beforeAll calls when listening is required")
         void shouldHandleMultipleBeforeAllCallsWhenListeningIsRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("enabled");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("enabled");
 
             // When
             junitListener.beforeAll(mockExtensionContext);
@@ -198,7 +198,7 @@ class JunitListenerTest {
         @DisplayName("Should export test class and decrement suite counter when listening is required")
         void shouldExportTestClassAndDecrementSuiteCounterWhenListeningIsRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When
@@ -213,7 +213,7 @@ class JunitListenerTest {
         @DisplayName("Should not export or decrement when listening is not required")
         void shouldNotExportOrDecrementWhenListeningIsNotRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn(null);
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
 
             // When
             junitListener.afterAll(mockExtensionContext);
@@ -227,7 +227,7 @@ class JunitListenerTest {
         @DisplayName("Should only decrement suite counter when no test class present")
         void shouldOnlyDecrementSuiteCounterWhenNoTestClassPresent() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
 
             // When
@@ -247,7 +247,7 @@ class JunitListenerTest {
         @DisplayName("Should not perform any operations in beforeEach regardless of listening status")
         void shouldNotPerformAnyOperationsInBeforeEach() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
 
             // When
             junitListener.beforeEach(mockExtensionContext);
@@ -269,7 +269,7 @@ class JunitListenerTest {
         void shouldReportTestAsDisabledWhenListeningIsRequired() {
             // Given
             String reason = "Test disabled for maintenance";
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When
@@ -285,7 +285,7 @@ class JunitListenerTest {
         void shouldNotReportWhenListeningIsNotRequired() {
             // Given
             String reason = "Test disabled";
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn(null);
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
 
             // When
             junitListener.testDisabled(mockExtensionContext, Optional.of(reason));
@@ -299,7 +299,7 @@ class JunitListenerTest {
         @DisplayName("Should use default message when no reason provided")
         void shouldUseDefaultMessageWhenNoReasonProvided() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When
@@ -319,7 +319,7 @@ class JunitListenerTest {
         @DisplayName("Should report test as successful when listening is required")
         void shouldReportTestAsSuccessfulWhenListeningIsRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When
@@ -334,7 +334,7 @@ class JunitListenerTest {
         @DisplayName("Should not report when listening is not required")
         void shouldNotReportWhenListeningIsNotRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn(null);
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
 
             // When
             junitListener.testSuccessful(mockExtensionContext);
@@ -354,7 +354,7 @@ class JunitListenerTest {
         void shouldReportTestAsAbortedWhenListeningIsRequired() {
             // Given
             Throwable cause = new RuntimeException("Test was aborted");
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When
@@ -370,7 +370,7 @@ class JunitListenerTest {
         void shouldNotReportWhenListeningIsNotRequired() {
             // Given
             Throwable cause = new RuntimeException("Test was aborted");
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn(null);
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
 
             // When
             junitListener.testAborted(mockExtensionContext, cause);
@@ -385,7 +385,7 @@ class JunitListenerTest {
         void shouldHandleNullCauseMessage() {
             // Given
             Throwable cause = new RuntimeException(); // No message
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When
@@ -406,7 +406,7 @@ class JunitListenerTest {
         void shouldReportTestAsFailedWhenListeningIsRequired() {
             // Given
             Throwable cause = new AssertionError("Expected <5> but was <3>");
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When
@@ -422,7 +422,7 @@ class JunitListenerTest {
         void shouldNotReportWhenListeningIsNotRequired() {
             // Given
             Throwable cause = new AssertionError("Test failed");
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn(null);
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
 
             // When
             junitListener.testFailed(mockExtensionContext, cause);
@@ -437,7 +437,7 @@ class JunitListenerTest {
         void shouldHandleNullCauseMessage() {
             // Given
             Throwable cause = new AssertionError(); // No message
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When
@@ -460,7 +460,7 @@ class JunitListenerTest {
             ExtensionContext contextA = org.mockito.Mockito.mock(ExtensionContext.class);
             ExtensionContext contextB = org.mockito.Mockito.mock(ExtensionContext.class);
 
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(contextA.getTestClass()).thenReturn(Optional.of(TestClassA.class));
             when(contextA.getUniqueId()).thenReturn("test-context-A");
             when(contextB.getTestClass()).thenReturn(Optional.of(TestClassB.class));
@@ -480,7 +480,7 @@ class JunitListenerTest {
         @DisplayName("Should not export when listening is not required")
         void shouldNotExportWhenListeningIsNotRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn(null);
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When
@@ -495,7 +495,7 @@ class JunitListenerTest {
         @DisplayName("Should not export when test class is not present")
         void shouldNotExportWhenTestClassIsNotPresent() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
 
             // When
@@ -514,7 +514,7 @@ class JunitListenerTest {
         @DisplayName("Should handle PropertyNotFoundException gracefully in all callbacks")
         void shouldHandlePropertyNotFoundExceptionGracefullyInAllCallbacks() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening"))
+            when(mockPropertyProvider.getProperty("testomatio"))
                     .thenThrow(new PropertyNotFoundException("Property not found"));
 
             // When & Then - all callbacks should handle exception gracefully
@@ -542,7 +542,7 @@ class JunitListenerTest {
         @DisplayName("Should handle unexpected RuntimeException in property access")
         void shouldHandleUnexpectedRuntimeExceptionInPropertyAccess() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening"))
+            when(mockPropertyProvider.getProperty("testomatio"))
                     .thenThrow(new RuntimeException("Unexpected property access error"));
 
             // When & Then - should not propagate exception
@@ -557,7 +557,7 @@ class JunitListenerTest {
         @DisplayName("Should handle intermittent property provider failures")
         void shouldHandleIntermittentPropertyProviderFailures() {
             // Given - first call fails, second succeeds
-            when(mockPropertyProvider.getProperty("testomatio.listening"))
+            when(mockPropertyProvider.getProperty("testomatio"))
                     .thenThrow(new RuntimeException("Temporary failure"))
                     .thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
@@ -580,7 +580,7 @@ class JunitListenerTest {
         @DisplayName("Should handle complete test lifecycle when listening is required")
         void shouldHandleCompleteTestLifecycleWhenListeningIsRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("enabled");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("enabled");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When - simulate complete test lifecycle
@@ -603,7 +603,7 @@ class JunitListenerTest {
         @DisplayName("Should handle complete test lifecycle when listening is not required")
         void shouldHandleCompleteTestLifecycleWhenListeningIsNotRequired() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn(null);
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
 
             // When - simulate complete test lifecycle
             junitListener.beforeAll(mockExtensionContext);
@@ -623,7 +623,7 @@ class JunitListenerTest {
         @DisplayName("Should be thread-safe for concurrent test execution")
         void shouldBeThreadSafeForConcurrentTestExecution() {
             // Given
-            when(mockPropertyProvider.getProperty("testomatio.listening")).thenReturn("true");
+            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
             when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
 
             // When - simulate concurrent test execution
