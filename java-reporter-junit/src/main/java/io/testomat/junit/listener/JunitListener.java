@@ -3,6 +3,7 @@ package io.testomat.junit.listener;
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
+import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
@@ -28,7 +29,6 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         AfterAllCallback, TestWatcher {
 
     private static final Logger log = LoggerFactory.getLogger(JunitListener.class);
-    private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
 
     private final MethodExportManager methodExportManager;
     private final GlobalRunManager runManager;
@@ -50,9 +50,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
      * Constructor for testing
      *
      * @param methodExportManager the method export manager
-     * @param runManager the global run manager
-     * @param reporter the JUnit test reporter
-     * @param provider the property provider
+     * @param runManager          the global run manager
+     * @param reporter            the JUnit test reporter
+     * @param provider            the property provider
      */
     public JunitListener(MethodExportManager methodExportManager,
                          GlobalRunManager runManager,
@@ -147,7 +147,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     private boolean isListeningRequired() {
         try {
-            return provider.getProperty(LISTENING_REQUIRED_PROPERTY_NAME) != null;
+            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
         } catch (Exception e) {
             return false;
         }
