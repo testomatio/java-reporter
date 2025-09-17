@@ -1,5 +1,7 @@
 package io.testomat.core.artifact.client;
 
+import io.testomat.core.ArtifactLinkData;
+import io.testomat.core.ArtifactLinkDataStorage;
 import io.testomat.core.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.artifact.UploadedArtifactLinksStorage;
 import io.testomat.core.artifact.credential.CredentialsManager;
@@ -39,7 +41,25 @@ public class AwsService {
         log.debug("AWS Service initialized");
     }
 
-    public void uploadAllArtifactsForTest(String testName, String rid) {
+//    public void uploadAllArtifactsForTest(String testName, String rid) {
+//        if (TempArtifactDirectoriesStorage.DIRECTORIES.get().isEmpty()) {
+//            log.debug("Artifact list is empty for test: {}", testName);
+//            return;
+//        }
+//
+//        S3Credentials credentials = CredentialsManager.getCredentials();
+//        List<String> uploadedArtifactsLinks = new ArrayList<>();
+//
+//        for (String dir : TempArtifactDirectoriesStorage.DIRECTORIES.get()) {
+//            String key = keyGenerator.generateKey(dir, rid, testName);
+//            uploadArtifact(dir, key, credentials);
+//            uploadedArtifactsLinks.add(urlGenerator.generateUrl(credentials.getBucket(), key));
+//        }
+//
+//        UploadedArtifactLinksStorage.store(rid, uploadedArtifactsLinks);
+//    }
+
+    public void uploadAllArtifactsForTest(String testName, String rid, String testId) {
         if (TempArtifactDirectoriesStorage.DIRECTORIES.get().isEmpty()) {
             log.debug("Artifact list is empty for test: {}", testName);
             return;
@@ -54,7 +74,8 @@ public class AwsService {
             uploadedArtifactsLinks.add(urlGenerator.generateUrl(credentials.getBucket(), key));
         }
 
-        UploadedArtifactLinksStorage.store(rid, uploadedArtifactsLinks);
+        //        UploadedArtifactLinksStorage.store(rid, uploadedArtifactsLinks);
+        ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE.add(new ArtifactLinkData(testName, rid,testId, uploadedArtifactsLinks));
     }
 
     private void uploadArtifact(String dir, String key, S3Credentials credentials) {

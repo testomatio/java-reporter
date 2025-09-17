@@ -3,6 +3,7 @@ package io.testomat.core.client;
 import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
+import io.testomat.core.ArtifactLinkDataStorage;
 import io.testomat.core.artifact.LinkUploadBodyBuilder;
 import io.testomat.core.artifact.UploadedArtifactLinksStorage;
 import io.testomat.core.artifact.credential.CredentialsManager;
@@ -130,11 +131,15 @@ public class TestomatioClient implements ApiInterface {
 
     public void uploadLinksToTestomatio(String uid) {
 
-        String requestBody = linkUploadBodyBuilder.buildLinkUploadRequestBody(UploadedArtifactLinksStorage.getLinkStorage(), apiKey);
-        if (UploadedArtifactLinksStorage.getLinkStorage().isEmpty()) {
-            return;
-        }
+        //        String requestBody = linkUploadBodyBuilder.buildLinkUploadRequestBody(
+        //        UploadedArtifactLinksStorage.getLinkStorage(), apiKey);
+        String requestBody = linkUploadBodyBuilder.buildLinkUploadRequestBody(
+                ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE, apiKey);
+        //        if (UploadedArtifactLinksStorage.getLinkStorage().isEmpty()) {
+        //            return;
+        //        }
         String url = urlBuilder.buildReportTestUrl(uid);
+        log.debug("-> REQUEST BODY: {}", requestBody);
 
         try {
             client.post(url, requestBody, null);
