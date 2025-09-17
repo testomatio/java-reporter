@@ -12,20 +12,24 @@ import org.slf4j.LoggerFactory;
 public class LinkUploadBodyBuilder {
     private static final Logger log = LoggerFactory.getLogger(LinkUploadBodyBuilder.class);
 
-    public String buildLinkUploadRequestBody(Map<String, List<String>> map) {
+    public String buildLinkUploadRequestBody(Map<String, List<String>> map, String apiKey) {
         ObjectMapper mapper = new ObjectMapper();
-        ArrayNode arrayNode = mapper.createArrayNode();
+        ObjectNode rootNode = mapper.createObjectNode();
+        ArrayNode testsArray = mapper.createArrayNode();
 
         for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-            ObjectNode objectNode = mapper.createObjectNode();
-            objectNode.put("rid", entry.getKey());
-            objectNode.set("artifacts", mapper.valueToTree(entry.getValue()));
-            arrayNode.add(objectNode);
+            ObjectNode testNode = mapper.createObjectNode();
+            testNode.put("rid", entry.getKey());
+            testNode.set("artifacts", mapper.valueToTree(entry.getValue()));
+            testsArray.add(testNode);
         }
+
+        rootNode.put("api_key", apiKey);
+        rootNode.set("tests", testsArray);
 
         String json = null;
         try {
-            json = mapper.writeValueAsString(arrayNode);
+            json = mapper.writeValueAsString(rootNode);
         } catch (JsonProcessingException e) {
             log.warn("Failed to convert convert link storage to json body");
         }
