@@ -8,6 +8,7 @@ import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import io.testomat.junit.methodexporter.MethodExportManager;
 import io.testomat.junit.reporter.JunitTestReporter;
 import java.util.Optional;
@@ -160,6 +161,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     @Override
     public void afterEach(ExtensionContext context) {
-        awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId());
+        awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
+                JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
     }
 }
