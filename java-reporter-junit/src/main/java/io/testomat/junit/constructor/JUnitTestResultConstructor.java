@@ -74,7 +74,8 @@ public class JUnitTestResultConstructor {
 
         String stack;
         Object example = null;
-        String rid = null;
+        String rid = context.getUniqueId();
+        log.debug("-> RID = {}", rid);
 
         if (metaDataExtractor.isParameterizedTest(context)) {
             example = metaDataExtractor.extractTestParameters(context);

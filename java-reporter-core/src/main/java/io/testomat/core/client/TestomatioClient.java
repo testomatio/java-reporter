@@ -130,7 +130,7 @@ public class TestomatioClient implements ApiInterface {
 
     public void uploadLinksToTestomatio(String uid) {
 
-        String requestBody = linkUploadBodyBuilder.buildLinkUploadRequestBody(UploadedArtifactLinksStorage.getLinkStorage());
+        String requestBody = linkUploadBodyBuilder.buildLinkUploadRequestBody(UploadedArtifactLinksStorage.getLinkStorage(), apiKey);
         if (UploadedArtifactLinksStorage.getLinkStorage().isEmpty()) {
             return;
         }
