@@ -72,7 +72,7 @@ public class TestomatioClient implements ApiInterface {
         }
         if (responseBody.containsKey("artifacts")) {
             Map<String, Object> creds = (Map<String, Object>) responseBody.get("artifacts");
-            credentialsManager.populateCredentialsFromServerResponse(creds);
+            credentialsManager.populateCredentials(creds);
         }
         logAndPrintUrls(responseBody);
         log.debug("Created test run with UID: {}", responseBody.get(RESPONSE_UID_KEY));
