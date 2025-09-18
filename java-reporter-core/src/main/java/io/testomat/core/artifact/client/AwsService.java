@@ -41,24 +41,6 @@ public class AwsService {
         log.debug("AWS Service initialized");
     }
 
-//    public void uploadAllArtifactsForTest(String testName, String rid) {
-//        if (TempArtifactDirectoriesStorage.DIRECTORIES.get().isEmpty()) {
-//            log.debug("Artifact list is empty for test: {}", testName);
-//            return;
-//        }
-//
-//        S3Credentials credentials = CredentialsManager.getCredentials();
-//        List<String> uploadedArtifactsLinks = new ArrayList<>();
-//
-//        for (String dir : TempArtifactDirectoriesStorage.DIRECTORIES.get()) {
-//            String key = keyGenerator.generateKey(dir, rid, testName);
-//            uploadArtifact(dir, key, credentials);
-//            uploadedArtifactsLinks.add(urlGenerator.generateUrl(credentials.getBucket(), key));
-//        }
-//
-//        UploadedArtifactLinksStorage.store(rid, uploadedArtifactsLinks);
-//    }
-
     public void uploadAllArtifactsForTest(String testName, String rid, String testId) {
         if (TempArtifactDirectoriesStorage.DIRECTORIES.get().isEmpty()) {
             log.debug("Artifact list is empty for test: {}", testName);
