@@ -1,5 +1,6 @@
 package io.testomat.junit.listener;
 
+import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_PROPERTY_NAME;
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
@@ -32,6 +33,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     private static final Logger log = LoggerFactory.getLogger(JunitListener.class);
     private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
+    private Boolean artifactEnabled;
 
     private final MethodExportManager methodExportManager;
     private final GlobalRunManager runManager;
@@ -48,6 +50,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         this.awsService = new AwsService();
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+        this.artifactEnabled = defineArtifactsDisabled();
     }
 
     /**
@@ -161,7 +164,24 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     @Override
     public void afterEach(ExtensionContext context) {
-        awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
-                JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
+        if (!artifactEnabled) {
+            awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
+                    JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
+        }
+    }
+
+    private boolean defineArtifactsDisabled() {
+        boolean result;
+        String property;
+        try {
+            property = provider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME);
+            result = property != null
+                    && !property.trim().isEmpty()
+                    && !property.equalsIgnoreCase("0");
+
+        } catch (Exception e) {
+            return false;
+        }
+        return result;
     }
 }
