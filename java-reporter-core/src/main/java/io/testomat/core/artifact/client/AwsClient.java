@@ -43,8 +43,7 @@ public class AwsClient {
         S3Credentials s3Credentials = CredentialsManager.getCredentials();
 
         if (!validationService.areCredentialsValid(s3Credentials)) {
-            log.error("S3 credentials validation failed during client initialization");
-            throw new ArtifactManagementException("Invalid S3 credentials provided");
+            log.error("S3 credentials validation failed during client initialization. The artifacts won't be handled");
         }
 
         log.debug("Creating S3 client for region: {}, bucket: {}",
