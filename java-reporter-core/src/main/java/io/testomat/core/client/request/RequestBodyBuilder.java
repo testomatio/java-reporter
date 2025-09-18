@@ -3,6 +3,7 @@ package io.testomat.core.client.request;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.testomat.core.model.TestResult;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Strategy interface for building JSON request bodies for Testomat.io API operations.
@@ -32,7 +33,7 @@ public interface RequestBodyBuilder {
      * Creates JSON request body for batch test result reporting.
      *
      * @param results collection of test execution results
-     * @param apiKey API key for authentication in batch requests
+     * @param apiKey  API key for authentication in batch requests
      * @return JSON-formatted request body string
      * @throws JsonProcessingException if JSON serialization fails
      */
@@ -49,4 +50,7 @@ public interface RequestBodyBuilder {
     String buildFinishRunBody(float duration) throws JsonProcessingException;
 
     String buildUploadLinksBody(String jsonString);
+
+    String buildBatchReportBodyWithArtifacts(List<Map<String, Object>> testsWithArtifacts,
+                                             String apiKey) throws JsonProcessingException;
 }

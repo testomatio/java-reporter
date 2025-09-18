@@ -39,6 +39,8 @@ public interface ApiInterface {
      */
     void reportTests(String uid, List<TestResult> results) throws IOException;
 
+    void sendTestWithArtifacts(String uid);
+
     /**
      * Finalizes the test run and marks it as completed.
      *
