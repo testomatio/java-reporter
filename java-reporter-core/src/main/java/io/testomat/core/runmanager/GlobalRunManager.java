@@ -3,6 +3,8 @@ package io.testomat.core.runmanager;
 import static io.testomat.core.constants.PropertyNameConstants.CUSTOM_RUN_UID_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 
+import io.testomat.core.ArtifactLinkDataStorage;
+import io.testomat.core.ReportedTestStorage;
 import io.testomat.core.artifact.util.ArtifactKeyGenerator;
 import io.testomat.core.batch.BatchResultManager;
 import io.testomat.core.client.ApiInterface;
@@ -148,20 +150,23 @@ public class GlobalRunManager {
      * Calculates run duration and sends completion notification to Testomat.io.
      */
     private void finalizeRun() {
-        apiClient.get().uploadLinksToTestomatio(runUid.get());
+        //        apiClient.get().uploadLinksToTestomatio(runUid.get());
         BatchResultManager manager = batchManager.getAndSet(null);
         if (manager != null) {
             manager.shutdown();
         }
 
-        String uid = runUid.getAndSet(null);
-        ApiInterface client = apiClient.getAndSet(null);
+        String uid = runUid.get();
+        ApiInterface client = apiClient.get();
 
         if (uid != null && client != null) {
             try {
                 float duration = (System.currentTimeMillis() - startTime) / 1000.0f;
                 client.finishTestRun(uid, duration);
                 log.debug("Test run finished: {}", uid);
+                ReportedTestStorage.linkArtifactsToTests(ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
+
+                apiClient.get().sendTestWithArtifacts(runUid.get());
             } catch (IOException e) {
                 log.error("Failed to finish test run{}", String.valueOf(e.getCause()));
             }

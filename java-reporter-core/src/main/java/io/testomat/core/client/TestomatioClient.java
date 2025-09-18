@@ -4,8 +4,8 @@ import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
 import io.testomat.core.ArtifactLinkDataStorage;
+import io.testomat.core.ReportedTestStorage;
 import io.testomat.core.artifact.LinkUploadBodyBuilder;
-import io.testomat.core.artifact.UploadedArtifactLinksStorage;
 import io.testomat.core.artifact.credential.CredentialsManager;
 import io.testomat.core.client.http.CustomHttpClient;
 import io.testomat.core.client.request.NativeRequestBodyBuilder;
@@ -111,6 +111,19 @@ public class TestomatioClient implements ApiInterface {
         } catch (Exception e) {
             log.error("Failed to report batch test /n{}", e.getMessage());
             throw new ReportingFailedException("Failed to report batch /n" + e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendTestWithArtifacts(String uid) {
+        log.debug("Preparing to secondary batch sending with artifacts");
+        String url = urlBuilder.buildReportTestUrl(uid);
+        try {
+            String requestBody = requestBodyBuilder.buildBatchReportBodyWithArtifacts(ReportedTestStorage.getStorage(), apiKey);
+            client.post(url, requestBody, null);
+            log.debug("Sent requestBody: {}", requestBody);
+        } catch (Exception e) {
+            log.error("Failed while secondary batch sending with artifacts");
         }
     }
 

@@ -11,6 +11,7 @@ import static io.testomat.core.constants.PropertyNameConstants.SHARED_TIMEOUT_PR
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.testomat.core.ReportedTestStorage;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.model.TestResult;
@@ -98,6 +99,16 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     }
 
     @Override
+    public String buildBatchReportBodyWithArtifacts(List<Map<String, Object>> testsWithArtifacts,
+                                                    String apiKey) throws JsonProcessingException {
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put(API_KEY_STRING, apiKey);
+        requestBody.put(TESTS_STRING, testsWithArtifacts);
+
+        return objectMapper.writeValueAsString(requestBody);
+    }
+
+    @Override
     public String buildFinishRunBody(float duration) throws JsonProcessingException {
         Map<String, Object> body = Map.of(
                 ApiRequestFields.STATUS_EVENT, "finish",
@@ -146,7 +157,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         if (createParam) {
             body.put("create", TRUE);
         }
-
+        ReportedTestStorage.store(body);
         return body;
     }
 
