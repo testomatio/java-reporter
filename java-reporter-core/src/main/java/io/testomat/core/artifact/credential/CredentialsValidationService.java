@@ -19,16 +19,16 @@ public class CredentialsValidationService {
         }
 
         if (creds.getAccessKeyId() == null || creds.getSecretAccessKey() == null ||
-            creds.getRegion() == null || creds.getBucket() == null) {
+                creds.getRegion() == null || creds.getBucket() == null) {
             log.error("S3 credentials validation failed: missing required fields - " +
-                     "accessKey: {}, secretKey: {}, region: {}, bucket: {}",
-                     creds.getAccessKeyId() != null, creds.getSecretAccessKey() != null,
-                     creds.getRegion() != null, creds.getBucket() != null);
+                            "accessKey: {}, secretKey: {}, region: {}, bucket: {}",
+                    creds.getAccessKeyId() != null, creds.getSecretAccessKey() != null,
+                    creds.getRegion() != null, creds.getBucket() != null);
             return false;
         }
 
         log.debug("Validating S3 credentials for bucket: {} in region: {}",
-                 creds.getBucket(), creds.getRegion());
+                creds.getBucket(), creds.getRegion());
 
         try (S3Client client = S3Client.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(
@@ -50,7 +50,7 @@ public class CredentialsValidationService {
             return false;
         } catch (Exception e) {
             log.error("S3 connection error during validation for bucket: {} - {}",
-                     creds.getBucket(), e.getMessage(), e);
+                    creds.getBucket(), e.getMessage(), e);
             return false;
         }
     }

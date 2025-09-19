@@ -7,7 +7,6 @@ public class ArtifactPropertyNames {
     public static final String SECRET_ACCESS_KEY_PROPERTY_NAME = " s3.secret.access.key.id";
     public static final String REGION_PROPERTY_NAME = "s3.region";
     public static final String ENDPOINT_PROPERTY_NAME = "s3.endpoint";
-    public static final String SESSION_TOKEN_PROPERTY_NAME = "s3.session.token";
 
     public static final String FORCE_PATH_PROPERTY_NAME = "s3.force.path.style";
     public static final String PRIVATE_ARTIFACTS_PROPERTY_NAME = "testomatio.private.artifacts";

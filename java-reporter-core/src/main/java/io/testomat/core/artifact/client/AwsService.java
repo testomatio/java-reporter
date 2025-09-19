@@ -3,7 +3,6 @@ package io.testomat.core.artifact.client;
 import io.testomat.core.ArtifactLinkData;
 import io.testomat.core.ArtifactLinkDataStorage;
 import io.testomat.core.artifact.TempArtifactDirectoriesStorage;
-import io.testomat.core.artifact.UploadedArtifactLinksStorage;
 import io.testomat.core.artifact.credential.CredentialsManager;
 import io.testomat.core.artifact.credential.S3Credentials;
 import io.testomat.core.artifact.util.ArtifactKeyGenerator;
@@ -38,7 +37,6 @@ public class AwsService {
         this.keyGenerator = keyGenerator;
         this.awsClient = awsClient;
         this.urlGenerator = urlGenerator;
-        log.debug("AWS Service initialized");
     }
 
     public void uploadAllArtifactsForTest(String testName, String rid, String testId) {
@@ -57,7 +55,7 @@ public class AwsService {
         }
 
         //        UploadedArtifactLinksStorage.store(rid, uploadedArtifactsLinks);
-        ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE.add(new ArtifactLinkData(testName, rid,testId, uploadedArtifactsLinks));
+        ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE.add(new ArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks));
     }
 
     private void uploadArtifact(String dir, String key, S3Credentials credentials) {
@@ -71,10 +69,16 @@ public class AwsService {
             throw new ArtifactManagementException("Failed to read bytes from path: " + path);
         }
 
-        PutObjectRequest request = PutObjectRequest.builder()
+        PutObjectRequest.Builder builder = PutObjectRequest.builder()
                 .bucket(credentials.getBucket())
-                .key(key)
-                .build();
+                .key(key);
+
+        if (credentials.isPresign()) {
+            builder.acl("private");
+        } else {
+            builder.acl("public-read");
+        }
+        PutObjectRequest request = builder.build();
 
         log.debug("Uploading to S3: bucket={}, key={}, size={} bytes",
                 credentials.getBucket(), key, content.length);
