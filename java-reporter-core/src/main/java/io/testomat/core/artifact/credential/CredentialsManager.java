@@ -2,10 +2,15 @@ package io.testomat.core.artifact.credential;
 
 import static io.testomat.core.constants.ArtifactPropertyNames.ACCESS_KEY_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.BUCKET_PROPERTY_NAME;
+import static io.testomat.core.constants.ArtifactPropertyNames.ENDPOINT_PROPERTY_NAME;
+import static io.testomat.core.constants.ArtifactPropertyNames.FORCE_PATH_PROPERTY_NAME;
+import static io.testomat.core.constants.ArtifactPropertyNames.PRIVATE_ARTIFACTS_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.REGION_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.SECRET_ACCESS_KEY_PROPERTY_NAME;
 import static io.testomat.core.constants.CredentialConstants.ACCESS_KEY_ID;
 import static io.testomat.core.constants.CredentialConstants.BUCKET;
+import static io.testomat.core.constants.CredentialConstants.ENDPOINT;
+import static io.testomat.core.constants.CredentialConstants.FORCE_PATH;
 import static io.testomat.core.constants.CredentialConstants.IAM;
 import static io.testomat.core.constants.CredentialConstants.PRESIGN;
 import static io.testomat.core.constants.CredentialConstants.REGION;
@@ -28,6 +33,9 @@ public class CredentialsManager {
     private static final String ACCESS_KEY_ID_FIELD = "accessKeyId";
     private static final String BUCKET_FIELD = "bucket";
     private static final String REGION_FIELD = "region";
+    private static final String PRESIGN_FIELD = "presign";
+    private static final String ENDPOINT_FIELD_NAME = "customEndpoint";
+    private static final String FORCE_PATH_STYLE_FIELD = "forcePath";
 
     private final PropertyProvider provider =
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
@@ -43,11 +51,30 @@ public class CredentialsManager {
             log.warn("Received null or empty credentials map");
             return;
         }
-        credentials.setIam(getBoolean(credsFromServer, IAM, false));
+        if (getPropertyFromEnv(FORCE_PATH_PROPERTY_NAME) != null) {
+            populateCredentialsFromEnv(getPropertyFromEnv(FORCE_PATH_PROPERTY_NAME), FORCE_PATH_STYLE_FIELD);
+            log.debug("ForcePath from env");
+        } else {
+            credentials.setPresign(getBoolean(credsFromServer, FORCE_PATH, false));
+            log.debug("ForcePath from server");
+        }
 
 
-        credentials.setPresign(getBoolean(credsFromServer, PRESIGN, false));
-        credentials.setShared(getBoolean(credsFromServer, SHARED, false));
+        if (getPropertyFromEnv(ENDPOINT_PROPERTY_NAME) != null) {
+            populateCredentialsFromEnv(getPropertyFromEnv(ENDPOINT_PROPERTY_NAME), ENDPOINT_FIELD_NAME);
+            log.debug("Endpoint from env");
+        } else {
+            credentials.setCustomEndpoint(getString(credsFromServer, ENDPOINT));
+            log.debug("Endpoint from server");
+        }
+
+        if (getPropertyFromEnv(PRIVATE_ARTIFACTS_PROPERTY_NAME) != null) {
+            populateCredentialsFromEnv(getPropertyFromEnv(PRIVATE_ARTIFACTS_PROPERTY_NAME), PRESIGN_FIELD);
+            log.debug("Presign from env");
+        } else {
+            credentials.setPresign(getBoolean(credsFromServer, PRESIGN, false));
+            log.debug("Presign from server");
+        }
 
         if (getPropertyFromEnv(SECRET_ACCESS_KEY_PROPERTY_NAME) != null) {
             populateCredentialsFromEnv(getPropertyFromEnv(SECRET_ACCESS_KEY_PROPERTY_NAME), SECRET_ACCESS_KEY_FIELD);
@@ -60,7 +87,6 @@ public class CredentialsManager {
         if (getPropertyFromEnv(ACCESS_KEY_PROPERTY_NAME) != null) {
             populateCredentialsFromEnv(getPropertyFromEnv(ACCESS_KEY_PROPERTY_NAME), ACCESS_KEY_ID_FIELD);
             log.debug("AccessKey from env");
-
         } else {
             credentials.setAccessKeyId(getString(credsFromServer, ACCESS_KEY_ID));
             log.debug("AccessKey from server");
@@ -68,15 +94,22 @@ public class CredentialsManager {
 
         if (getPropertyFromEnv(BUCKET_PROPERTY_NAME) != null) {
             populateCredentialsFromEnv(getPropertyFromEnv(BUCKET_PROPERTY_NAME), BUCKET_FIELD);
+            log.debug("Bucket from env");
         } else {
             credentials.setBucket(getString(credsFromServer, BUCKET));
+            log.debug("Bucket from server");
         }
 
         if (getPropertyFromEnv(REGION_PROPERTY_NAME) != null) {
             populateCredentialsFromEnv(getPropertyFromEnv(REGION_PROPERTY_NAME), REGION_FIELD);
+            log.debug("Region from env");
         } else {
             credentials.setRegion(getString(credsFromServer, REGION));
+            log.debug("Region from server");
         }
+
+        credentials.setIam(getBoolean(credsFromServer, IAM, false));
+        credentials.setShared(getBoolean(credsFromServer, SHARED, false));
 
         logCredentialsInitializationResult();
     }
@@ -130,9 +163,7 @@ public class CredentialsManager {
         } catch (IllegalAccessException e) {
             throw new ArtifactManagementException("Inaccessible field: " + fieldName);
         }
-
     }
-
 
     private void logCredentialsInitializationResult() {
         log.info("S3 credentials populated: bucket={}, region={}, presign={}, shared={}, iam={}",
