@@ -23,6 +23,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Manages S3 credentials by combining environment variables and server-provided configuration.
+ * Provides centralized access to S3 credentials with priority given to environment variables.
+ */
 public class CredentialsManager {
     private static final Logger log = LoggerFactory.getLogger(CredentialsManager.class);
     private static final S3Credentials credentials = new S3Credentials();
@@ -31,10 +35,20 @@ public class CredentialsManager {
     private final PropertyProvider provider =
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
 
+    /**
+     * Returns the singleton S3Credentials instance.
+     *
+     * @return current S3 credentials
+     */
     public static S3Credentials getCredentials() {
         return credentials;
     }
 
+    /**
+     * Populates S3 credentials from server response, with environment variables taking precedence.
+     *
+     * @param credsFromServer credentials map received from server
+     */
     public void populateCredentials(Map<String, Object> credsFromServer) {
         log.debug("Populating S3 credentials");
 

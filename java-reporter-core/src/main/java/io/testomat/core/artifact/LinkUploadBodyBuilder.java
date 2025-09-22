@@ -1,5 +1,10 @@
 package io.testomat.core.artifact;
 
+/**
+ * Builder for creating JSON request bodies containing artifact links for upload to the server.
+ * Handles serialization of artifact data and test run information.
+ */
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
