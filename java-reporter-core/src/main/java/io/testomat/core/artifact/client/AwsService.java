@@ -14,13 +14,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 public class AwsService {
     private static final Logger log = LoggerFactory.getLogger(AwsService.class);
+    private static final Map<String, Boolean> bucketAclSupport = new ConcurrentHashMap<>();
+
     private final ArtifactKeyGenerator keyGenerator;
     private final ArtifactUrlGenerator urlGenerator;
     private final AwsClient awsClient;
@@ -68,26 +73,82 @@ public class AwsService {
             throw new ArtifactManagementException("Failed to read bytes from path: " + path);
         }
 
-        PutObjectRequest.Builder builder = PutObjectRequest.builder()
-                .bucket(credentials.getBucket())
-                .key(key);
-
-        if (credentials.isPresign()) {
-            builder.acl("private");
-        } else {
-            builder.acl("public-read");
-        }
-        PutObjectRequest request = builder.build();
-
         log.debug("Uploading to S3: bucket={}, key={}, size={} bytes",
                 credentials.getBucket(), key, content.length);
 
+        String bucketName = credentials.getBucket();
+        Boolean supportsAcl = bucketAclSupport.get(bucketName);
+
+        if (supportsAcl == null) {
+            boolean uploadSuccessful = tryUploadWithAcl(path, key, credentials, content);
+            if (!uploadSuccessful) {
+                bucketAclSupport.put(bucketName, false);
+                tryUploadWithoutAcl(path, key, credentials, content);
+            } else {
+                bucketAclSupport.put(bucketName, true);
+            }
+        } else if (supportsAcl) {
+            tryUploadWithAcl(path, key, credentials, content);
+        } else {
+            tryUploadWithoutAcl(path, key, credentials, content);
+        }
+    }
+
+    private boolean tryUploadWithAcl(Path path, String key, S3Credentials credentials, byte[] content) {
         try {
+            PutObjectRequest.Builder builder = PutObjectRequest.builder()
+                    .bucket(credentials.getBucket())
+                    .key(key);
+
+            if (credentials.isPresign()) {
+                builder.acl("private");
+            } else {
+                builder.acl("public-read");
+            }
+            PutObjectRequest request = builder.build();
+
             awsClient.getS3Client().putObject(request, RequestBody.fromBytes(content));
-            log.info("S3 upload completed successfully for file: {}", path);
+            log.debug("S3 upload completed successfully with ACL for file: {}", path);
+            return true;
+        } catch (S3Exception e) {
+            if (isAclNotSupportedError(e)) {
+                log.info("Bucket '{}' does not support ACLs, will retry without ACL", credentials.getBucket());
+                return false;
+            } else {
+                log.error("S3 upload failed for file: {} to bucket: {}, key: {} - {} (Status: {})",
+                        path, credentials.getBucket(), key, e.awsErrorDetails().errorMessage(), e.statusCode());
+                throw new ArtifactManagementException("S3 upload failed: " + e.awsErrorDetails().errorMessage(), e);
+            }
         } catch (Exception e) {
             log.error("S3 upload failed for file: {} to bucket: {}, key: {}", path, credentials.getBucket(), key, e);
             throw new ArtifactManagementException("S3 upload failed: " + e.getMessage(), e);
         }
+    }
+
+    private void tryUploadWithoutAcl(Path path, String key, S3Credentials credentials, byte[] content) {
+        try {
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(credentials.getBucket())
+                    .key(key)
+                    .build();
+
+            awsClient.getS3Client().putObject(request, RequestBody.fromBytes(content));
+            log.info("S3 upload completed successfully for file: {}", path);
+        } catch (S3Exception e) {
+            log.error("S3 upload failed for file: {} to bucket: {}, key: {} - {} (Status: {})",
+                    path, credentials.getBucket(), key, e.awsErrorDetails().errorMessage(), e.statusCode());
+            throw new ArtifactManagementException("S3 upload failed: " + e.awsErrorDetails().errorMessage(), e);
+        } catch (Exception e) {
+            log.error("S3 upload failed for file: {} to bucket: {}, key: {}", path, credentials.getBucket(), key, e);
+            throw new ArtifactManagementException("S3 upload failed: " + e.getMessage(), e);
+        }
+    }
+
+    private boolean isAclNotSupportedError(S3Exception e) {
+        return (e.statusCode() == 400 &&
+                ("AccessControlListNotSupported".equals(e.awsErrorDetails().errorCode()) ||
+                        "BucketMustHaveLockedConfiguration".equals(e.awsErrorDetails().errorCode()) ||
+                        (e.awsErrorDetails().errorMessage() != null &&
+                                e.awsErrorDetails().errorMessage().contains("does not allow ACLs"))));
     }
 }
