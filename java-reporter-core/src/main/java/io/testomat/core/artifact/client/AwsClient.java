@@ -1,6 +1,5 @@
 package io.testomat.core.artifact.client;
 
-import io.testomat.core.artifact.credential.CredentialsValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.S3Client;

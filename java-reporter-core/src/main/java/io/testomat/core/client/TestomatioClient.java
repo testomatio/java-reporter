@@ -122,7 +122,8 @@ public class TestomatioClient implements ApiInterface {
         log.debug("Preparing to secondary batch sending with artifacts");
         String url = urlBuilder.buildReportTestUrl(uid);
         try {
-            String requestBody = requestBodyBuilder.buildBatchReportBodyWithArtifacts(ReportedTestStorage.getStorage(), apiKey);
+            String requestBody = requestBodyBuilder.buildBatchReportBodyWithArtifacts(
+                    ReportedTestStorage.getStorage(), apiKey);
             client.post(url, requestBody, null);
             log.debug("Sent requestBody: {}", requestBody);
         } catch (Exception e) {
@@ -147,13 +148,9 @@ public class TestomatioClient implements ApiInterface {
 
     public void uploadLinksToTestomatio(String uid) {
 
-        //        String requestBody = linkUploadBodyBuilder.buildLinkUploadRequestBody(
-        //        UploadedArtifactLinksStorage.getLinkStorage(), apiKey);
         String requestBody = linkUploadBodyBuilder.buildLinkUploadRequestBody(
                 ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE, apiKey);
-        //        if (UploadedArtifactLinksStorage.getLinkStorage().isEmpty()) {
-        //            return;
-        //        }
+
         String url = urlBuilder.buildReportTestUrl(uid);
         log.debug("-> REQUEST BODY: {}", requestBody);
 
