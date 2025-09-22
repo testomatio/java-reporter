@@ -15,20 +15,6 @@ import software.amazon.awssdk.services.s3.S3Configuration;
  * Factory для створення S3Client з підтримкою кастомних ендпоінтів
  */
 public class S3ClientFactory {
-//    private final boolean forcePath;
-//    private final String customEndpoint;
-//    private final String accessKey;
-//    private final String secretAccessKey;
-//    private final String region;
-//
-//    public S3ClientFactory() {
-//        S3Credentials s3Credentials = CredentialsManager.getCredentials();
-//        this.forcePath = s3Credentials.isForcePath();
-//        this.customEndpoint = s3Credentials.getCustomEndpoint();
-//        this.accessKey = s3Credentials.getAccessKeyId();
-//        this.secretAccessKey = s3Credentials.getSecretAccessKey();
-//        this.region = s3Credentials.getRegion();
-//    }
 
     public S3Client createS3Client() {
         S3Credentials s3Credentials = CredentialsManager.getCredentials();

@@ -7,6 +7,7 @@ import io.testomat.core.ArtifactLinkDataStorage;
 import io.testomat.core.ReportedTestStorage;
 import io.testomat.core.artifact.LinkUploadBodyBuilder;
 import io.testomat.core.artifact.credential.CredentialsManager;
+import io.testomat.core.artifact.credential.CredentialsValidationService;
 import io.testomat.core.client.http.CustomHttpClient;
 import io.testomat.core.client.request.NativeRequestBodyBuilder;
 import io.testomat.core.client.request.RequestBodyBuilder;
@@ -38,6 +39,7 @@ public class TestomatioClient implements ApiInterface {
     private final RequestBodyBuilder requestBodyBuilder;
     private final CredentialsManager credentialsManager = new CredentialsManager();
     private final LinkUploadBodyBuilder linkUploadBodyBuilder = new LinkUploadBodyBuilder();
+    private final CredentialsValidationService credentialsValidationService = new CredentialsValidationService();
 
     /**
      * Creates API client with injectable dependencies.
@@ -73,6 +75,7 @@ public class TestomatioClient implements ApiInterface {
         if (responseBody.containsKey("artifacts")) {
             Map<String, Object> creds = (Map<String, Object>) responseBody.get("artifacts");
             credentialsManager.populateCredentials(creds);
+            credentialsValidationService.areCredentialsValid(CredentialsManager.getCredentials());
         }
         logAndPrintUrls(responseBody);
         log.debug("Created test run with UID: {}", responseBody.get(RESPONSE_UID_KEY));

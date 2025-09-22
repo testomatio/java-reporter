@@ -54,7 +54,6 @@ public class AwsService {
             uploadedArtifactsLinks.add(urlGenerator.generateUrl(credentials.getBucket(), key));
         }
 
-        //        UploadedArtifactLinksStorage.store(rid, uploadedArtifactsLinks);
         ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE.add(new ArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks));
     }
 

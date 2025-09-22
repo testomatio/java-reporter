@@ -7,20 +7,25 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 public class AwsClient {
     private static final Logger log = LoggerFactory.getLogger(AwsClient.class);
-    private final CredentialsValidationService validationService;
     private volatile S3Client s3Client;
-    private S3ClientFactory clientFactory;
+    private final S3ClientFactory clientFactory;
 
     public AwsClient() {
-        this.validationService = new CredentialsValidationService();
         this.clientFactory = new S3ClientFactory();
     }
 
-    public AwsClient(CredentialsValidationService validationService, S3ClientFactory s3ClientFactory) {
-        this.validationService = validationService;
+    /**
+     * Test Constructor
+     */
+    public AwsClient(S3ClientFactory s3ClientFactory) {
         this.clientFactory = s3ClientFactory;
     }
 
+    /**
+     * Single copy getter
+     *
+     * @return S3Client
+     */
     public S3Client getS3Client() {
         if (s3Client == null) {
             s3Client = clientFactory.createS3Client();

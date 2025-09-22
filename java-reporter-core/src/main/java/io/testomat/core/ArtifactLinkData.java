@@ -4,10 +4,10 @@ import java.util.List;
 
 public class ArtifactLinkData {
     private String rid;
-    private String testId;
-    private String testName;
+    private final String testId;
+    private final String testName;
 
-    private List<String> links;
+    private final List<String> links;
 
     public ArtifactLinkData(String testName, String rid, String testId, List<String> links) {
         this.testName = testName;
@@ -20,16 +20,8 @@ public class ArtifactLinkData {
         return links;
     }
 
-    public void setLinks(List<String> links) {
-        this.links = links;
-    }
-
     public String getTestId() {
         return testId;
-    }
-
-    public void setTestId(String testId) {
-        this.testId = testId;
     }
 
     public String getRid() {
@@ -42,9 +34,5 @@ public class ArtifactLinkData {
 
     public String getTestName() {
         return testName;
-    }
-
-    public void setTestName(String testName) {
-        this.testName = testName;
     }
 }
