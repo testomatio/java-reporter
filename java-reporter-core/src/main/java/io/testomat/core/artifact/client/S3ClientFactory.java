@@ -12,10 +12,17 @@ import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.S3Configuration;
 
 /**
- * Factory для створення S3Client з підтримкою кастомних ендпоінтів
+ * Factory for creating configured S3Client instances with custom endpoint support.
+ * Handles AWS credentials, regions, and S3-compatible storage configurations.
  */
 public class S3ClientFactory {
 
+    /**
+     * Creates a configured S3Client based on current credentials and settings.
+     *
+     * @return configured S3Client instance
+     * @throws IllegalArgumentException if credentials are invalid or missing
+     */
     public S3Client createS3Client() {
         S3Credentials s3Credentials = CredentialsManager.getCredentials();
 

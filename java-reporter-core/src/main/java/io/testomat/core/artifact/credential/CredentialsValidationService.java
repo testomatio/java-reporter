@@ -7,6 +7,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+/**
+ * Service for validating S3 credentials by performing actual S3 operations.
+ * Uses HeadBucket operation to verify bucket access and credential validity.
+ */
 public class CredentialsValidationService {
     private static final Logger log = LoggerFactory.getLogger(CredentialsValidationService.class);
     private final AwsClient awsClient;
@@ -19,6 +23,12 @@ public class CredentialsValidationService {
         this.awsClient = awsClient;
     }
 
+    /**
+     * Validates S3 credentials by attempting a HeadBucket operation.
+     *
+     * @param creds the S3 credentials to validate
+     * @return true if credentials are valid and bucket is accessible, false otherwise
+     */
     public boolean areCredentialsValid(S3Credentials creds) {
         if (creds == null) {
             log.error("Cannot validate null S3 credentials");

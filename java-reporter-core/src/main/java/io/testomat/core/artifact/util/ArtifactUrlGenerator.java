@@ -4,6 +4,10 @@ import io.testomat.core.artifact.client.AwsClient;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
+/**
+ * Utility class for generating public and presigned URLs for S3 artifacts.
+ * Supports both direct S3 URLs and time-limited presigned URLs.
+ */
 public class ArtifactUrlGenerator {
     private final AwsClient awsClient;
 

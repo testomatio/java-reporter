@@ -22,6 +22,10 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+/**
+ * Service for managing S3 artifact uploads with automatic ACL fallback support.
+ * Handles file uploads to S3 buckets with intelligent ACL detection and caching.
+ */
 public class AwsService {
     private static final Logger log = LoggerFactory.getLogger(AwsService.class);
     private static final Map<String, Boolean> bucketAclSupport = new ConcurrentHashMap<>();
@@ -44,6 +48,13 @@ public class AwsService {
         this.urlGenerator = urlGenerator;
     }
 
+    /**
+     * Uploads all artifacts for a specific test to S3.
+     *
+     * @param testName the name of the test
+     * @param rid the request identifier
+     * @param testId the unique test identifier
+     */
     public void uploadAllArtifactsForTest(String testName, String rid, String testId) {
         if (TempArtifactDirectoriesStorage.DIRECTORIES.get().isEmpty()) {
             log.debug("Artifact list is empty for test: {}", testName);

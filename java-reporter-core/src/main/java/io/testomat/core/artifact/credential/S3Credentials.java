@@ -1,5 +1,9 @@
 package io.testomat.core.artifact.credential;
 
+/**
+ * Data class holding S3 configuration including credentials, bucket, and connection settings.
+ * Supports both AWS S3 and S3-compatible storage solutions.
+ */
 public class S3Credentials {
     private boolean presign;
     private boolean shared;
