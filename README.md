@@ -28,7 +28,7 @@ and team collaboration features.
 | **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅     |
 | **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅     |
 | **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅     |
-| **Test artifacts support**         | Screenshots, logs, and file attachments            |   ⏳   |   ⏳    |    ⏳     |
+| **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅     |
 | **Step-by-step reporting**         | Detailed test step execution tracking              |   ⏳   |   ⏳    |    ⏳     |
 | **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |       |        |          |
 
@@ -104,7 +104,9 @@ Create the `cucumber.properties` file if you don't have one yet and add this lin
    ```properties
       cucumber.plugin=io.testomat.cucumber.listener.CucumberListener
    ```
+
 ---
+
 ### 🔧 Advanced Custom Setup
 
 > **⚠️ Only use this if you need custom behavior** - like adding extra logic to test lifecycle events.
@@ -280,6 +282,75 @@ Use these oneliners to **download jar and update** ids in one move
 
 > For more details please read the description of full CLI functionality here:  
 > https://github.com/testomatio/java-check-tests
+
+---
+
+## 📎 Test Artifacts Support
+
+The Java Reporter supports attaching files (screenshots, logs, videos, etc.) to your test results and uploading them to
+S3-compatible storage.
+
+### Configuration
+
+Add these properties to your `testomatio.properties`:
+
+```properties
+# S3 Configuration (can also be provided by Testomat.io server)
+s3.bucket=your-bucket-name
+s3.access.key.id=your-access-key
+s3.secret.access.key.id=your-secret-key
+s3.region=us-east-1
+s3.endpoint=https://s3.amazonaws.com
+# Optional settings
+s3.force.path.style=false
+testomatio.private.artifacts=false
+testomatio.artifact.max.size=10485760
+testomatio.disable.artifacts=false
+```
+
+**Note**: S3 credentials can be configured either in properties file or provided automatically on Testomat.io UI.
+Environment variables take precedence over server-provided credentials.
+
+### Usage
+
+Use the `Testomatio` facade to attach files to your tests:
+
+```java
+import io.testomat.core.facade.Testomatio;
+
+public class MyTest {
+
+    @Test
+    public void testWithScreenshot() {
+        // Your test logic
+
+        // Attach artifacts (screenshots, logs, etc.)
+        Testomatio.artifact(
+                "/path/to/screenshot.png",
+                "/path/to/test.log"
+        );
+    }
+}
+```
+Multiple directories can be provided ti the `Testomatio.artifact(String ...)` facade method.
+
+### How It Works
+
+1. **File Validation**: Only existing files with valid paths are processed
+2. **S3 Upload**: Files are uploaded to your S3 bucket with organized folder structure
+3. **Link Generation**: Public URLs are generated and attached to test results
+4. **Thread Safety**: Multiple concurrent tests can safely attach artifacts
+
+### Configuration Options
+
+| Setting                        | Description                                   | Default |
+|--------------------------------|-----------------------------------------------|---------|
+| `testomatio.disable.artifacts` | Completely disable artifact uploading         | `false` |
+| `testomatio.private.artifacts` | Keep artifacts private (no public URLs)       | `false` |
+| `s3.force.path.style`          | Use path-style URLs for S3-compatible storage | `false` |
+
+As the result you will see something like this on UI after run completed:  
+<img src=img/artifactExample.png alt="artifact example" width=50% />
 
 ---
 
