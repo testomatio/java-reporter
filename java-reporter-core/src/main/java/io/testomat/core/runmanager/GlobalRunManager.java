@@ -1,6 +1,7 @@
 package io.testomat.core.runmanager;
 
 import static io.testomat.core.constants.PropertyNameConstants.CUSTOM_RUN_UID_PROPERTY_NAME;
+import static io.testomat.core.constants.PropertyNameConstants.DISABLE_REPORTING_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 
 import io.testomat.core.ArtifactLinkDataStorage;
@@ -55,7 +56,7 @@ public class GlobalRunManager {
      * Thread-safe operation that ensures single initialization.
      */
     public synchronized void initializeIfNeeded() {
-        if (runUid.get() != null) {
+        if (runUid.get() != null || isReportingDisabled()) {
             return;
         }
 
@@ -191,5 +192,16 @@ public class GlobalRunManager {
             customUid = client.createRun(getRunTitle());
         }
         return customUid;
+    }
+
+    private boolean isReportingDisabled() {
+        try {
+            return provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME) != null
+                    && !provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME).trim().isEmpty()
+                    && !provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME).equalsIgnoreCase("0");
+        } catch (Exception e) {
+            log.info("Reporting is disabled with testomatio.reporting.disabled=1");
+            return false;
+        }
     }
 }

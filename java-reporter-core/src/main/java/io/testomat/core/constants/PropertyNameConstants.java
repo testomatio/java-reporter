@@ -3,6 +3,8 @@ package io.testomat.core.constants;
 public class PropertyNameConstants {
     public static final String PROPERTIES_FILE_NAME = "testomatio.properties";
 
+    public static final String DISABLE_REPORTING_PROPERTY_NAME = "testomatio.reporting.disable";
+
     public static final String API_KEY_PROPERTY_NAME = "testomatio";
     public static final String CREATE_TEST_PROPERTY_NAME = "testomatio.create";
     public static final String HOST_URL_PROPERTY_NAME = "testomatio.url";
