@@ -26,7 +26,7 @@ public class ArtifactManager {
         }
     }
 
-    public static boolean isValidFilePath(String filePath) {
+    private boolean isValidFilePath(String filePath) {
         if (filePath == null || filePath.trim().isEmpty()) {
             return false;
         }
