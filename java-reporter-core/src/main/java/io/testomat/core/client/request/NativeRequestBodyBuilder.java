@@ -70,6 +70,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
                 body.put("access_event", "publish");
             }
 
+            body.put("overwrite", "true");
+
             return objectMapper.writeValueAsString(body);
 
         } catch (JsonProcessingException e) {
@@ -157,6 +159,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         if (createParam) {
             body.put("create", TRUE);
         }
+
+        body.put("overwrite", "true");
         ReportedTestStorage.store(body);
         return body;
     }
