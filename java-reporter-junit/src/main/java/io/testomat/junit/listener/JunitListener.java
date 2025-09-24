@@ -33,7 +33,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     private static final Logger log = LoggerFactory.getLogger(JunitListener.class);
     private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
-    private Boolean artifactEnabled;
+    private Boolean artifactDisabled;
 
     private final MethodExportManager methodExportManager;
     private final GlobalRunManager runManager;
@@ -50,7 +50,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         this.awsService = new AwsService();
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
-        this.artifactEnabled = defineArtifactsDisabled();
+        this.artifactDisabled = defineArtifactsDisabled();
     }
 
     /**
@@ -164,7 +164,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     @Override
     public void afterEach(ExtensionContext context) {
-        if (!artifactEnabled) {
+        if (!artifactDisabled) {
             awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
                     JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
         }

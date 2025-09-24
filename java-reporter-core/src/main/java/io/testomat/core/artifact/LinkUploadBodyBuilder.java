@@ -28,6 +28,7 @@ public class LinkUploadBodyBuilder {
             testNode.put("rid", data.getRid());
             testNode.put("test_id", data.getTestId());
             testNode.put("title", data.getTestName());
+            testNode.put("overwrite", "true");
             testNode.set("artifacts", mapper.valueToTree(data.getLinks()));
             testsArray.add(testNode);
         }
