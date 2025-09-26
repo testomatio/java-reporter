@@ -255,6 +255,7 @@ public class GlobalRunManager {
                 log.debug("Test run finished: {} (duration: {}s)", uid, duration);
 
                 ReportedTestStorage.linkArtifactsToTests(ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
+                Thread.sleep(15000);
                 client.sendTestWithArtifacts(uid);
                 log.debug("Artifacts sent successfully for run: {}", uid);
             } catch (IOException e) {
