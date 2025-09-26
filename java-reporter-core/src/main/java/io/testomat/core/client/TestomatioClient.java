@@ -109,6 +109,7 @@ public class TestomatioClient implements ApiInterface {
 
             String url = urlBuilder.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildBatchTestReportBody(results, apiKey);
+            log.debug("Batch request body: {}", requestBody);
 
             client.post(url, requestBody, null);
         } catch (Exception e) {
