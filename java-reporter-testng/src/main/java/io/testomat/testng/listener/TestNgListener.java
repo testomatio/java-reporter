@@ -175,7 +175,7 @@ public class TestNgListener implements ISuiteListener, ITestListener,
     @Override
     public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
         if (method.isTestMethod() && !defineArtifactsDisabled()) {
-            awsService.uploadAllArtifactsForTest(testResult.getTestName(),
+            awsService.uploadAllArtifactsForTest(testResult.getName(),
                     testNgParameterExtractor.generateRid(testResult),
                     metaDataExtractor.getTestId(
                             method.getTestMethod().getConstructorOrMethod().getMethod())

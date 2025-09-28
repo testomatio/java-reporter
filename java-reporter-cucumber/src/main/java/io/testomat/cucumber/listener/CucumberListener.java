@@ -6,11 +6,13 @@ import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
+import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.cucumber.constructor.CucumberTestResultConstructor;
 import io.testomat.cucumber.exception.CucumberListenerException;
+import io.testomat.cucumber.extractor.TestDataExtractor;
 
 /**
  * Cucumber plugin for Testomat.io integration.
@@ -19,13 +21,17 @@ import io.testomat.cucumber.exception.CucumberListenerException;
 public class CucumberListener implements Plugin, EventListener {
     private final GlobalRunManager runManager;
     private final CucumberTestResultConstructor resultConstructor;
+    private final AwsService awsService;
+    private final TestDataExtractor dataExtractor;
 
     /**
      * Creates a new listener with default dependencies.
      */
     public CucumberListener() {
+        this.dataExtractor = new TestDataExtractor();
         this.runManager = GlobalRunManager.getInstance();
         this.resultConstructor = new CucumberTestResultConstructor();
+        this.awsService = new AwsService();
     }
 
     /**
@@ -33,12 +39,15 @@ public class CucumberListener implements Plugin, EventListener {
      * Used primarily for testing with mocked dependencies.
      *
      * @param resultConstructor the test result constructor
-     * @param runManager the global run manager
+     * @param runManager        the global run manager
      */
     public CucumberListener(CucumberTestResultConstructor resultConstructor,
-                            GlobalRunManager runManager) {
+                            GlobalRunManager runManager,
+                            AwsService awsService, TestDataExtractor dataExtractor) {
         this.runManager = runManager;
         this.resultConstructor = resultConstructor;
+        this.awsService = awsService;
+        this.dataExtractor = dataExtractor;
     }
 
     /**
@@ -68,10 +77,23 @@ public class CucumberListener implements Plugin, EventListener {
         try {
             TestResult result = resultConstructor.constructTestRunResult(event);
             runManager.reportTest(result);
+            afterEach(event);
         } catch (Exception e) {
             String testName = event.getTestCase() != null ? event.getTestCase().getName()
                     : "Unknown Test";
             throw new ReportTestResultException("Failed to report test result for: " + testName, e);
         }
+    }
+
+    /**
+     * Called after each test case execution, similar to JUnit/TestNG afterEach.
+     * Override this method to add custom post-test logic.
+     *
+     * @param event the test case finished event
+     */
+    protected void afterEach(TestCaseFinished event) {
+        awsService.uploadAllArtifactsForTest(dataExtractor.extractTitle(event),
+                event.getTestCase().getId().toString(),
+                dataExtractor.extractTestId(event));
     }
 }
