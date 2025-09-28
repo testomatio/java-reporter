@@ -40,12 +40,15 @@ public class CucumberTestResultConstructor {
 
         ExceptionDetails exceptionDetails = testDataExtractor.extractExceptionDetails(event);
 
+        String fileName = testDataExtractor.extractFileName(event);
+        System.out.println("CucumberTestResultConstructor: extractFileName returned: " + fileName);
+
         return TestResult.builder()
                 .withStatus(testDataExtractor.getNormalizedStatus(event))
                 .withSuiteTitle(event.getTestCase().getUri().toString())
                 .withExample(testDataExtractor.createExample(event))
                 .withTestId(testDataExtractor.extractTestId(event))
-                .withFile(testDataExtractor.extractFileName(event))
+                .withFile(fileName)
                 .withTitle(testDataExtractor.extractTitle(event))
                 .withRid(event.getTestCase().getId().toString())
                 .withMessage(exceptionDetails.getMessage())

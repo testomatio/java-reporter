@@ -114,22 +114,7 @@ public class TestDataExtractor {
      * @return feature file name, null if extraction fails
      */
     public String extractFileName(TestCaseFinished event) {
-        try {
-            String path = event.getTestCase().getUri().getPath();
-
-            if (path.contains(":") && !path.startsWith("/")) {
-                int colonIndex = path.indexOf(":");
-                if (colonIndex < path.length() - 1) {
-                    path = path.substring(colonIndex + 1);
-                }
-            }
-
-            int lastSlash = path.lastIndexOf('/');
-            return lastSlash != -1 ? path.substring(lastSlash + 1) : path;
-
-        } catch (Exception e) {
-            return null;
-        }
+        return event.getTestCase().getUri().toString();
     }
 
     /**
