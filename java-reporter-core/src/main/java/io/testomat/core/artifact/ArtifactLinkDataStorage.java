@@ -1,4 +1,4 @@
-package io.testomat.core;
+package io.testomat.core.artifact;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

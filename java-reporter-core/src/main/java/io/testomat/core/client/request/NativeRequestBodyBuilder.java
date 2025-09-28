@@ -11,7 +11,7 @@ import static io.testomat.core.constants.PropertyNameConstants.SHARED_TIMEOUT_PR
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.testomat.core.ReportedTestStorage;
+import io.testomat.core.artifact.ReportedTestStorage;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.model.TestResult;
