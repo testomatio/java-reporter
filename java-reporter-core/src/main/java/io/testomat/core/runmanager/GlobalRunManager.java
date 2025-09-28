@@ -4,8 +4,8 @@ import static io.testomat.core.constants.PropertyNameConstants.CUSTOM_RUN_UID_PR
 import static io.testomat.core.constants.PropertyNameConstants.DISABLE_REPORTING_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 
-import io.testomat.core.ArtifactLinkDataStorage;
-import io.testomat.core.ReportedTestStorage;
+import io.testomat.core.artifact.ArtifactLinkDataStorage;
+import io.testomat.core.artifact.ReportedTestStorage;
 import io.testomat.core.artifact.util.ArtifactKeyGenerator;
 import io.testomat.core.batch.BatchResultManager;
 import io.testomat.core.client.ApiInterface;

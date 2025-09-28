@@ -1,6 +1,6 @@
 package io.testomat.core.facade;
 
-import io.testomat.core.artifact.ArtifactManager;
+import io.testomat.core.artifact.manager.ArtifactManager;
 
 /**
  * Main public API facade for Testomat.io integration.

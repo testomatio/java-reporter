@@ -1,10 +1,11 @@
-package io.testomat.core.artifact;
+package io.testomat.core.artifact.manager;
 
 /**
  * Manager for handling test artifacts with path validation and storage.
  * Provides secure file path validation and artifact registration for test runs.
  */
 
+import io.testomat.core.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.exception.ArtifactManagementException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
