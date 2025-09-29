@@ -114,7 +114,11 @@ public class TestDataExtractor {
      * @return feature file name, null if extraction fails
      */
     public String extractFileName(TestCaseFinished event) {
-        return event.getTestCase().getUri().toString();
+        try {
+            return event.getTestCase().getUri().toString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**

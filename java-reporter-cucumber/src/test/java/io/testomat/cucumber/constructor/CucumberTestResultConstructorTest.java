@@ -64,7 +64,7 @@ class CucumberTestResultConstructorTest {
         when(testDataExtractor.getNormalizedStatus(testCaseFinished)).thenReturn("PASSED");
         when(testDataExtractor.createExample(testCaseFinished)).thenReturn(example);
         when(testDataExtractor.extractTestId(testCaseFinished)).thenReturn("@T12345678");
-        when(testDataExtractor.extractFileName(testCaseFinished)).thenReturn("TestFeature.feature");
+        when(testDataExtractor.extractFileName(testCaseFinished)).thenReturn("file:///test/path/TestFeature.feature");
         when(testDataExtractor.extractTitle(testCaseFinished)).thenReturn("Test Title");
 
         // When
@@ -76,7 +76,7 @@ class CucumberTestResultConstructorTest {
         assertEquals("file:///test/path/TestFeature.feature", result.getSuiteTitle());
         assertEquals(example, result.getExample());
         assertEquals("@T12345678", result.getTestId());
-        assertEquals("TestFeature.feature", result.getFile());
+        assertEquals("file:///test/path/TestFeature.feature", result.getFile());
         assertEquals("Test Title", result.getTitle());
         assertEquals(testCaseId.toString(), result.getRid());
         assertEquals("Test error", result.getMessage());
@@ -131,7 +131,7 @@ class CucumberTestResultConstructorTest {
         when(testDataExtractor.getNormalizedStatus(any())).thenReturn("PASSED");
         when(testDataExtractor.createExample(any())).thenReturn(new HashMap<>());
         when(testDataExtractor.extractTestId(any())).thenReturn(null);
-        when(testDataExtractor.extractFileName(any())).thenReturn("test.feature");
+        when(testDataExtractor.extractFileName(any())).thenReturn("file:///test.feature");
         when(testDataExtractor.extractTitle(any())).thenReturn("Test");
 
         // When
