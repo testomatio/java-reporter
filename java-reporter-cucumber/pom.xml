@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-cucumber</artifactId>
-    <version>0.7.2</version>
+    <version>0.7.9</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter Cucumber</name>
@@ -48,9 +48,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>coretest</groupId>
+            <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>coretest</version>
+            <version>0.7.9</version>
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
