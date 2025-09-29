@@ -129,7 +129,7 @@ public class JunitMetaDataExtractor {
         return annotation != null ? annotation.value() : method.getName();
     }
 
-    private String extractTestId(Method method) {
+    public static String extractTestId(Method method) {
         TestId annotation = method.getAnnotation(TestId.class);
         return annotation != null ? annotation.value() : null;
     }

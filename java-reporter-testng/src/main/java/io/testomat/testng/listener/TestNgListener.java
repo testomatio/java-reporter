@@ -1,12 +1,16 @@
 package io.testomat.testng.listener;
 
+import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_PROPERTY_NAME;
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
+import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.testng.extractor.TestNgMetaDataExtractor;
+import io.testomat.testng.extractor.TestNgParameterExtractor;
 import io.testomat.testng.filter.TestIdFilter;
 import io.testomat.testng.methodexporter.TestNgMethodExportManager;
 import io.testomat.testng.reporter.TestNgTestResultReporter;
@@ -40,7 +44,13 @@ public class TestNgListener implements ISuiteListener, ITestListener,
     private final Set<String> processedClasses;
     private final TestIdFilter testIdFilter;
 
+    private final AwsService awsService;
+    private final TestNgParameterExtractor testNgParameterExtractor;
+    private final TestNgMetaDataExtractor metaDataExtractor;
+
     public TestNgListener() {
+        this.metaDataExtractor = new TestNgMetaDataExtractor();
+        this.testNgParameterExtractor = new TestNgParameterExtractor();
         this.methodExportManager = new TestNgMethodExportManager();
         this.processedClasses = ConcurrentHashMap.newKeySet();
         this.runManager = GlobalRunManager.getInstance();
@@ -48,6 +58,7 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
         this.testIdFilter = new TestIdFilter();
+        this.awsService = new AwsService();
     }
 
     /**
@@ -56,13 +67,20 @@ public class TestNgListener implements ISuiteListener, ITestListener,
     public TestNgListener(TestNgMethodExportManager methodExportManager,
                           TestNgTestResultReporter reporter,
                           GlobalRunManager runManager,
-                          PropertyProvider provider) {
+                          PropertyProvider provider,
+                          AwsService awsService,
+                          TestIdFilter testIdFilter,
+                          TestNgParameterExtractor testNgParameterExtractor,
+                          TestNgMetaDataExtractor metaDataExtractor) {
         this.runManager = runManager;
         this.reporter = reporter;
         this.methodExportManager = methodExportManager;
         this.provider = provider;
+        this.testNgParameterExtractor = testNgParameterExtractor;
+        this.metaDataExtractor = metaDataExtractor;
         this.processedClasses = ConcurrentHashMap.newKeySet();
-        this.testIdFilter = new TestIdFilter();
+        this.testIdFilter = testIdFilter;
+        this.awsService = awsService;
     }
 
     @Override
@@ -156,7 +174,13 @@ public class TestNgListener implements ISuiteListener, ITestListener,
 
     @Override
     public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
-
+        if (method.isTestMethod() && !defineArtifactsDisabled()) {
+            awsService.uploadAllArtifactsForTest(testResult.getName(),
+                    testNgParameterExtractor.generateRid(testResult),
+                    metaDataExtractor.getTestId(
+                            method.getTestMethod().getConstructorOrMethod().getMethod())
+            );
+        }
     }
 
     private boolean isListeningRequired() {
@@ -165,5 +189,20 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private boolean defineArtifactsDisabled() {
+        boolean result;
+        String property;
+        try {
+            property = provider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME);
+            result = property != null
+                    && !property.trim().isEmpty()
+                    && !property.equalsIgnoreCase("0");
+
+        } catch (Exception e) {
+            return false;
+        }
+        return result;
     }
 }

@@ -39,6 +39,8 @@ public interface ApiInterface {
      */
     void reportTests(String uid, List<TestResult> results) throws IOException;
 
+    void sendTestWithArtifacts(String uid);
+
     /**
      * Finalizes the test run and marks it as completed.
      *
@@ -47,4 +49,6 @@ public interface ApiInterface {
      * @throws IOException if network request fails or API returns error
      */
     void finishTestRun(String uid, float duration) throws IOException;
+
+    void uploadLinksToTestomatio(String uid);
 }

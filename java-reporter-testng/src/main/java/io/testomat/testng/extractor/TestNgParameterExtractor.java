@@ -122,23 +122,26 @@ public class TestNgParameterExtractor {
     }
 
     /**
-     * Generates unique RID (Run ID) for parameterized test based on parameters.
+     * Generates unique RID (Run ID) for test based on class name, method name and parameters.
      * Uses readable parameter values when possible.
+     * For non-parameterized tests, returns className.methodName.
      *
      * @param testResult TestNG test result containing parameters
-     * @return unique RID string or null if no parameters
+     * @return unique RID string (never null)
      */
     public String generateRid(ITestResult testResult) {
+        StringBuilder ridBuilder = new StringBuilder();
+        ridBuilder.append(testResult.getTestClass().getName())
+                  .append(".")
+                  .append(testResult.getMethod().getMethodName());
+
         Object[] parameters = testResult.getParameters();
         if (parameters == null || parameters.length == 0) {
-            return null;
+            return ridBuilder.toString();
         }
 
         Method method = testResult.getMethod().getConstructorOrMethod().getMethod();
         String[] parameterNames = extractParameterNames(method, parameters.length);
-
-        StringBuilder ridBuilder = new StringBuilder();
-        ridBuilder.append(testResult.getMethod().getMethodName());
 
         for (int i = 0; i < parameters.length; i++) {
             Object param = parameters[i];

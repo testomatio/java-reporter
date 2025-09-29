@@ -11,6 +11,7 @@ import static io.testomat.core.constants.PropertyNameConstants.SHARED_TIMEOUT_PR
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.testomat.core.artifact.ReportedTestStorage;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.model.TestResult;
@@ -69,6 +70,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
                 body.put("access_event", "publish");
             }
 
+            body.put("overwrite", "true");
+
             return objectMapper.writeValueAsString(body);
 
         } catch (JsonProcessingException e) {
@@ -98,12 +101,27 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     }
 
     @Override
+    public String buildBatchReportBodyWithArtifacts(List<Map<String, Object>> testsWithArtifacts,
+                                                    String apiKey) throws JsonProcessingException {
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put(API_KEY_STRING, apiKey);
+        requestBody.put(TESTS_STRING, testsWithArtifacts);
+
+        return objectMapper.writeValueAsString(requestBody);
+    }
+
+    @Override
     public String buildFinishRunBody(float duration) throws JsonProcessingException {
         Map<String, Object> body = Map.of(
                 ApiRequestFields.STATUS_EVENT, "finish",
                 ApiRequestFields.DURATION, duration
         );
         return objectMapper.writeValueAsString(body);
+    }
+
+    @Override
+    public String buildUploadLinksBody(String jsonString) {
+        return "";
     }
 
     /**
@@ -142,6 +160,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put("create", TRUE);
         }
 
+        body.put("overwrite", "true");
+        ReportedTestStorage.store(body);
         return body;
     }
 
@@ -163,8 +183,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
     private boolean getCreateParam() {
         try {
-            String property = provider.getProperty(CREATE_TEST_PROPERTY_NAME);
-            return property != null && !property.equalsIgnoreCase("0");
+            return provider.getProperty(CREATE_TEST_PROPERTY_NAME).equalsIgnoreCase(TRUE);
         } catch (Exception e) {
             return false;
         }
