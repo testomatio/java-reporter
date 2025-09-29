@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-testng</artifactId>
-    <version>0.7.8</version>
+    <version>0.7.9</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter TestNG</name>
@@ -44,9 +44,9 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>coretest</groupId>
+            <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>coretest</version>
+            <version>0.7.9</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
