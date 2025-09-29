@@ -60,12 +60,8 @@ and team collaboration features.
        <version>0.x.x</version>
    </dependency>
    ``` 
-2. create the `testomatio.properties` file in your `resources` folder and add into it:
-   ```properties
-   testomatio.listening=true
-   ```
-3. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
-4. **Set your API key** as environment variable:
+2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
+3. **Set your API key** as environment variable:
    ```bash
    export testomatio=tstmt_your_key_here
    ```
@@ -74,8 +70,8 @@ and team collaboration features.
    testomatio=tstmt_your_key_here
    ```
 
-5. Also provide run title in the `testomatio.run.title` property otherwise runs will have name "Default Test Run".
-
+4. Also provide run title in the `testomatio.run.title` property otherwise runs will have name "Default Test Run".
+5. IMPORTANT: The reporter will run automatically if the API_KEY is provided in any way!
 ---
 
 ## Framework specific setup
@@ -172,30 +168,30 @@ This lets you customize how the reporter works by overriding core classes:
    ```properties
       # Your Testomat.io project API key (find it in your project settings)
 testomatio=tstmt_your_key_here
-testomatio.listening=ture
    ```
-
+Or provide it as JVM property or ENV variable.
+IMPORTANT: The reporter will run automatically if the API_KEY is provided in any way!
 ### 🎨 Customization Options
 
 Make your test runs exactly how you want them:
 
-| Setting                    | What it does                          | Default             | Example                      |
-|----------------------------|---------------------------------------|---------------------|------------------------------|
-| **`testomatio.run.title`** | Custom name for your test run         | `default_run_title` | `"Nightly Regression Tests"` |
-| **`testomatio.env`**       | Environment name (dev, staging, prod) | _(none)_            | `"staging"`                  |
-| **`testomatio.run.group`** | Group related runs together           | _(none)_            | `"sprint-23"`                |
-| **`testomatio.publish`**   | Make results publicly shareable       | _(private)_         | `1`                          |
+| Setting                    | What it does                          | Default             | Example                                       |
+|----------------------------|---------------------------------------|---------------------|-----------------------------------------------|
+| **`testomatio.run.title`** | Custom name for your test run         | `default_run_title` | `"Nightly Regression Tests"`                  |
+| **`testomatio.env`**       | Environment name (dev, staging, prod) | _(none)_            | `"staging"`                                   |
+| **`testomatio.run.group`** | Group related runs together           | _(none)_            | `"sprint-23"`                                 |
+| **`testomatio.publish`**   | Make results publicly shareable       | _(private)_         | Any not null/empty/"0" string, "0" to disable |
 
 ### 🔗 Advanced Integration
 
-| Setting                             | What it does                             | Example                    |
-|-------------------------------------|------------------------------------------|----------------------------|
-| **`testomatio.url`**                | Custom Testomat.io URL (for enterprise)  | `https://app.testomat.io/` |
-| **`testomatio.run.id`**             | Add results to existing run              | `"run_abc123"`             |
-| **`testomatio.create`**             | Auto-create missing tests in Testomat.io | `true`                     |
-| **`testomatio.shared.run`**         | Shared run name for team collaboration   | `"team-integration-tests"` |
-| **`testomatio.shared.run.timeout`** | How long to wait for shared run          | `3600`                     |
-| **`testomatio.export.required`**    | Exports your tests code to Testomat.io   | `true`                     |
+| Setting                             | What it does                             | Example                                       |
+|-------------------------------------|------------------------------------------|-----------------------------------------------|
+| **`testomatio.url`**                | Custom Testomat.io URL (for enterprise)  | `https://app.testomat.io/`                    |
+| **`testomatio.run.id`**             | Add results to existing run              | `"run_abc123"`                                |
+| **`testomatio.create`**             | Auto-create missing tests in Testomat.io | `true`                                        |
+| **`testomatio.shared.run`**         | Shared run name for team collaboration   | Any not null/empty/"0" string, "0" to disable |
+| **`testomatio.shared.run.timeout`** | How long to wait for shared run          | `3600`                                        |
+| **`testomatio.export.required`**    | Exports your tests code to Testomat.io   | `true`                                        |
 
 ---
 
