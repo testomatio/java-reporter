@@ -338,7 +338,7 @@ public class MyTest {
     }
 }
 ```
-Multiple directories can be provided to the `Testomatio.artifact(String ...)` facade method.
+Multiple files can be provided to the `Testomatio.artifact(String ...)` method.
 Please, make sure you provide path to artifact file including its extension.
 
 ### How It Works
