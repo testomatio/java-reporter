@@ -290,7 +290,6 @@ Use these oneliners to **download jar and update** ids in one move
 The Java Reporter supports attaching files (screenshots, logs, videos, etc.) to your test results and uploading them to
 S3-compatible storage.  
 Artifacts handling is enabled by default, but it won't affect the run if there are no artifacts provided (see options below).
-> NOTE: Current version handles artifacts synchronously.
 
 ### Configuration
 
