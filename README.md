@@ -343,10 +343,9 @@ Please, make sure you provide path to artifact file including its extension.
 
 ### How It Works
 
-1. **File Validation**: Only existing files with valid paths are processed
-2. **S3 Upload**: Files are uploaded to your S3 bucket with organized folder structure
-3. **Link Generation**: Public URLs are generated and attached to test results
-4. **Thread Safety**: Multiple concurrent tests can safely attach artifacts
+1. **S3 Upload**: Files are uploaded to your S3 bucket with organized folder structure
+2. **Link Generation**: Public URLs are generated and attached to test results
+3. Artifacts are visible at the test info on UI
 
 
 As the result you will see something like this on UI after run completed:  
