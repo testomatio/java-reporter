@@ -244,7 +244,7 @@ class TestDataExtractorTest {
         String fileName = extractor.extractFileName(testCaseFinished);
 
         // Then
-        assertEquals("TestFeature.feature", fileName);
+        assertEquals("file:///path/to/test/TestFeature.feature", fileName);
     }
 
     @Test
@@ -258,7 +258,7 @@ class TestDataExtractorTest {
         String fileName = extractor.extractFileName(testCaseFinished);
 
         // Then
-        assertEquals("TestFeature.feature", fileName);
+        assertEquals("file:///C:/path/to/test/TestFeature.feature", fileName);
     }
 
     @Test
@@ -272,7 +272,7 @@ class TestDataExtractorTest {
         String fileName = extractor.extractFileName(testCaseFinished);
 
         // Then
-        assertEquals("TestFeature.feature", fileName);
+        assertEquals("file://C:/Users/test/features/TestFeature.feature", fileName);
     }
 
     @Test
@@ -431,5 +431,77 @@ class TestDataExtractorTest {
 
         // Then
         assertEquals("Unknown test", title);
+    }
+
+    @Test
+    void shouldExtractFileNameReturnsUriToString() {
+        // Given
+        URI testUri = URI.create("classpath:features/TestFeature.feature");
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getUri()).thenReturn(testUri);
+
+        // When
+        String fileName = extractor.extractFileName(testCaseFinished);
+
+        // Then
+        assertEquals("classpath:features/TestFeature.feature", fileName);
+    }
+
+    @Test
+    void shouldHandleHttpUriInExtractFileName() {
+        // Given
+        URI testUri = URI.create("http://example.com/test.feature");
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getUri()).thenReturn(testUri);
+
+        // When
+        String fileName = extractor.extractFileName(testCaseFinished);
+
+        // Then
+        assertEquals("http://example.com/test.feature", fileName);
+    }
+
+    @Test
+    void shouldHandleNullTestCaseInExtractFileName() {
+        // Given
+        when(testCaseFinished.getTestCase()).thenReturn(null);
+
+        // When
+        String fileName = extractor.extractFileName(testCaseFinished);
+
+        // Then
+        assertNull(fileName);
+    }
+
+    @Test
+    void shouldParseMultipleTypesFromSingleStep() {
+        // Given
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getTestSteps()).thenReturn(Collections.singletonList(pickleStepTestStep));
+        when(pickleStepTestStep.getStepText()).thenReturn("User enters \"test@example.com\" and password \"secret123\" and age 25 and amount 99.99");
+
+        // When
+        Map<Object, Object> example = extractor.createExample(testCaseFinished);
+
+        // Then
+        assertEquals("test@example.com", example.get("step_value_0"));
+        assertEquals("secret123", example.get("step_value_1"));
+        assertEquals(25L, example.get("step_value_2"));
+        assertEquals(99.99, example.get("step_value_3"));
+    }
+
+    @Test
+    void shouldCreateExampleWithBooleanValues() {
+        // Given
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getTestSteps()).thenReturn(Collections.singletonList(pickleStepTestStep));
+        when(pickleStepTestStep.getStepText()).thenReturn("Set active to 'true' and visible to 'false'");
+
+        // When
+        Map<Object, Object> example = extractor.createExample(testCaseFinished);
+
+        // Then
+        assertEquals("true", example.get("step_value_0"));
+        assertEquals("false", example.get("step_value_1"));
     }
 }

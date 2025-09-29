@@ -77,11 +77,12 @@ public class CucumberListener implements Plugin, EventListener {
         try {
             TestResult result = resultConstructor.constructTestRunResult(event);
             runManager.reportTest(result);
-            afterEach(event);
         } catch (Exception e) {
             String testName = event.getTestCase() != null ? event.getTestCase().getName()
                     : "Unknown Test";
             throw new ReportTestResultException("Failed to report test result for: " + testName, e);
+        } finally {
+            afterEach(event);
         }
     }
 
