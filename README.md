@@ -320,6 +320,7 @@ Environment variables take precedence over server-provided credentials.
 ### Usage
 
 Use the `Testomatio` facade to attach files to your tests:
+Multiple files can be provided to the `Testomatio.artifact(String ...)` method.
 
 ```java
 import io.testomat.core.facade.Testomatio;
@@ -328,17 +329,16 @@ public class MyTest {
 
     @Test
     public void testWithScreenshot() {
-        // Your test logic
+                // Your test logic
 
-        // Attach artifacts (screenshots, logs, etc.)
-        Testomatio.artifact(
+                // Attach artifacts (screenshots, logs, etc.)
+                Testomatio.artifact(
                 "/path/to/screenshot.png",
                 "/path/to/test.log"
         );
     }
 }
 ```
-Multiple files can be provided to the `Testomatio.artifact(String ...)` method.
 Please, make sure you provide path to artifact file including its extension.
 
 ### How It Works
