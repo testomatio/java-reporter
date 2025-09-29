@@ -33,8 +33,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         AfterAllCallback, AfterEachCallback, TestWatcher {
 
     private static final Logger log = LoggerFactory.getLogger(JunitListener.class);
-    private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
-    private Boolean artifactDisabled;
+    private boolean artifactDisabled = false;
 
     private final MethodExportManager methodExportManager;
     private final GlobalRunManager runManager;
