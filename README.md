@@ -288,25 +288,32 @@ Use these oneliners to **download jar and update** ids in one move
 ## 📎 Test Artifacts Support
 
 The Java Reporter supports attaching files (screenshots, logs, videos, etc.) to your test results and uploading them to
-S3-compatible storage.
+S3-compatible storage.  
+Artifacts handling is enabled by default, but it won't affect the run if there are no artifacts provided (see options below).
+> NOTE: Current version handles artifacts synchronously.
 
 ### Configuration
 
-Add these properties to your `testomatio.properties`:
+Artifact handling can be configured in **two different ways**:
 
-```properties
-# S3 Configuration (can also be provided by Testomat.io server)
-s3.bucket=your-bucket-name
-s3.access.key.id=your-access-key
-s3.secret.access.key.id=your-secret-key
-s3.region=us-east-1
-s3.endpoint=https://s3.amazonaws.com
-# Optional settings
-s3.force.path.style=false
-testomatio.private.artifacts=false
-testomatio.artifact.max.size=10485760
-testomatio.disable.artifacts=false
-```
+1. Make configurations on the [Testomat.io](https://app.testomat.io):  
+   Choose your project -> click **Settings** button on the left panel -> click **Artifacts** -> Toggle "**Share
+   credentials**..."  
+   <img src=img/artifactsOnServerTurnOn.png alt="artifact example" width=50% />
+
+2. Provide options as environment variables/jvm property/testomatio.properties file.
+
+> NOTE: Environment variables(env/jvm/testomatio.properties) take precedence over server-provided credentials.
+
+| Setting                       | Description                                      | Default     |
+|-------------------------------|--------------------------------------------------|-------------|
+| `testomatio.artifact.disable` | Completely disable artifact uploading            | `false`     |
+| `testomatio.artifact.private` | Keep artifacts private (no public URLs)          | `false`     |
+| `s3.force-path-style`         | Use path-style URLs for S3-compatible storage    | `false`     |
+| `s3.endpoint`                 | Custom endpoint ot be used with force-path-style | `false`     |
+| `s3.bucket`                   | Provides bucket name for configuration           |             |
+| `s3.access-key-id`            | Access key for the bucket                        |             |
+| `s3.region`                   | Bucket region                                    | `us-west-1` |
 
 **Note**: S3 credentials can be configured either in properties file or provided automatically on Testomat.io UI.
 Environment variables take precedence over server-provided credentials.
@@ -332,7 +339,8 @@ public class MyTest {
     }
 }
 ```
-Multiple directories can be provided ti the `Testomatio.artifact(String ...)` facade method.
+Multiple directories can be provided to the `Testomatio.artifact(String ...)` facade method.
+Please, make sure you provide path to artifact file including its extension.
 
 ### How It Works
 
@@ -341,20 +349,13 @@ Multiple directories can be provided ti the `Testomatio.artifact(String ...)` fa
 3. **Link Generation**: Public URLs are generated and attached to test results
 4. **Thread Safety**: Multiple concurrent tests can safely attach artifacts
 
-### Configuration Options
-
-| Setting                        | Description                                   | Default |
-|--------------------------------|-----------------------------------------------|---------|
-| `testomatio.disable.artifacts` | Completely disable artifact uploading         | `false` |
-| `testomatio.private.artifacts` | Keep artifacts private (no public URLs)       | `false` |
-| `s3.force.path.style`          | Use path-style URLs for S3-compatible storage | `false` |
 
 As the result you will see something like this on UI after run completed:  
 <img src=img/artifactExample.png alt="artifact example" width=50% />
 
 ---
 
-## 💡 Usage Examples
+## 💡 Library Usage Examples
 
 ### Basic Usage
 
