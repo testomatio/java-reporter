@@ -1,6 +1,7 @@
 package io.testomat.core.client;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.testomat.core.client.http.CustomHttpClient;
 import io.testomat.core.client.request.NativeRequestBodyBuilder;
@@ -16,27 +17,27 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("NativeApiClient Tests")
-class NativeApiClientTest {
+class TestomatioClientTest {
 
     @Mock
     private CustomHttpClient mockHttpClient;
-    
+
     @Mock
     private NativeRequestBodyBuilder mockRequestBodyBuilder;
 
-    private NativeApiClient apiClient;
+    private TestomatioClient apiClient;
     private final String apiKey = "test-api-key";
 
     @BeforeEach
     void setUp() {
-        apiClient = new NativeApiClient(apiKey, mockHttpClient, mockRequestBodyBuilder);
+        apiClient = new TestomatioClient(apiKey, mockHttpClient, mockRequestBodyBuilder);
     }
 
     @Test
     @DisplayName("Should handle createRun method call")
     void createRun_ValidTitle_ShouldHandleCall() {
         String title = "Test Run Title";
-        
+
         // Test will fail due to real UrlBuilder trying to load properties
         // Verifying the method handles calls gracefully  
         assertThrows(Exception.class, () -> apiClient.createRun(title));
@@ -87,7 +88,7 @@ class NativeApiClientTest {
     void finishTestRun_ValidInput_ShouldHandleCall() {
         String uid = "test-run-123";
         float duration = 45.5f;
-        
+
         // Test will fail due to property loading, verifying graceful handling
         assertThrows(Exception.class, () -> apiClient.finishTestRun(uid, duration));
     }

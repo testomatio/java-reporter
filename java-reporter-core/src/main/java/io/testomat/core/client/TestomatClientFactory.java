@@ -45,7 +45,7 @@ public class TestomatClientFactory implements ClientFactory {
             throw new ApiKeyNotFoundException(
                     "Api key should be set in properties file or in JVM params.");
         }
-        return new NativeApiClient(apiKey,
+        return new TestomatioClient(apiKey,
                 new NativeHttpClient(),
                 new NativeRequestBodyBuilder());
     }

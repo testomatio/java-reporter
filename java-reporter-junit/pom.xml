@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-junit</artifactId>
-    <version>0.7.5</version>
+    <version>0.7.9</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter JUnit</name>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.7.5</version>
+            <version>0.7.9</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

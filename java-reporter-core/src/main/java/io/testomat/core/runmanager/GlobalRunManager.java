@@ -1,8 +1,12 @@
 package io.testomat.core.runmanager;
 
 import static io.testomat.core.constants.PropertyNameConstants.CUSTOM_RUN_UID_PROPERTY_NAME;
+import static io.testomat.core.constants.PropertyNameConstants.DISABLE_REPORTING_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 
+import io.testomat.core.artifact.ArtifactLinkDataStorage;
+import io.testomat.core.artifact.ReportedTestStorage;
+import io.testomat.core.artifact.util.ArtifactKeyGenerator;
 import io.testomat.core.batch.BatchResultManager;
 import io.testomat.core.client.ApiInterface;
 import io.testomat.core.client.ClientFactory;
@@ -23,10 +27,11 @@ import org.slf4j.LoggerFactory;
  * Thread-safe implementation supporting concurrent test execution.
  */
 public class GlobalRunManager {
-    private static final GlobalRunManager INSTANCE = new GlobalRunManager();
     private static final Logger log = LoggerFactory.getLogger(GlobalRunManager.class);
-    private final PropertyProvider provider
-            = PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+    private static volatile GlobalRunManager INSTANCE;
+
+    private final PropertyProvider provider;
+    private final ClientFactory clientFactory;
     private final AtomicInteger activeSuites = new AtomicInteger(0);
     private final AtomicReference<String> runUid = new AtomicReference<>();
     private final AtomicReference<BatchResultManager> batchManager = new AtomicReference<>();
@@ -34,16 +39,64 @@ public class GlobalRunManager {
     private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
     private volatile long startTime;
 
+    /**
+     * Default constructor that initializes all dependencies internally.
+     * Used for normal application runtime.
+     */
     private GlobalRunManager() {
+        this.provider = PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+        this.clientFactory = TestomatClientFactory.getClientFactory();
+    }
+
+    /**
+     * Constructor for testing purposes that allows dependency injection.
+     * Package-private to allow testing while preventing external instantiation.
+     *
+     * @param provider      the property provider to use
+     * @param clientFactory the client factory to use
+     */
+    GlobalRunManager(PropertyProvider provider, ClientFactory clientFactory) {
+        this.provider = provider;
+        this.clientFactory = clientFactory;
     }
 
     /**
      * Returns the singleton instance of GlobalRunManager.
+     * Uses double-checked locking for thread-safe lazy initialization.
      *
      * @return the global run manager instance
      */
     public static GlobalRunManager getInstance() {
+        if (INSTANCE == null) {
+            synchronized (GlobalRunManager.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new GlobalRunManager();
+                }
+            }
+        }
         return INSTANCE;
+    }
+
+    /**
+     * Package-private method for testing to set a custom instance.
+     * Should only be used in test scenarios.
+     *
+     * @param instance the instance to set
+     */
+    static void setInstance(GlobalRunManager instance) {
+        synchronized (GlobalRunManager.class) {
+            INSTANCE = instance;
+        }
+    }
+
+    /**
+     * Package-private method for testing to reset the singleton instance.
+     * Should only be used in test scenarios.
+     */
+    static void resetInstance() {
+        synchronized (GlobalRunManager.class) {
+            INSTANCE = null;
+        }
     }
 
     /**
@@ -52,24 +105,37 @@ public class GlobalRunManager {
      * Thread-safe operation that ensures single initialization.
      */
     public synchronized void initializeIfNeeded() {
-        if (runUid.get() != null) {
+        if (runUid.get() != null || isReportingDisabled()) {
             return;
         }
 
         try {
-            ClientFactory clientFactory = TestomatClientFactory.getClientFactory();
-            ApiInterface client = clientFactory.createClient();
-            String uid = getCustomRunUid(client);
+            log.debug("Client factory initialized successfully");
+
+            ApiInterface client = this.clientFactory.createClient();
+            log.debug("Client created successfully");
+
+            String uid = defineRunId(client);
+            log.debug("Uid defined successfully: {}", uid);
+
+            ArtifactKeyGenerator.initializeRunId(uid);
+            log.debug("ArtifactKeyGenerator received uid: {}", uid);
 
             apiClient.set(client);
+            log.debug("Api client is set");
+
             runUid.set(uid);
 
             batchManager.set(new BatchResultManager(client, uid));
+            log.debug("Batch manager is set");
+
             startTime = System.currentTimeMillis();
+            log.debug("Start time = {}", startTime);
 
             registerShutdownHook();
+            log.debug("Shutdown hook registered");
 
-            log.debug("Global test run initialized with UID: {}", uid);
+            log.debug("Global run manger initialized with UID: {}", uid);
         } catch (Exception e) {
             log.error("Failed to initialize test run: {}", String.valueOf(e));
         }
@@ -129,27 +195,85 @@ public class GlobalRunManager {
     }
 
     /**
+     * Gets the current run UID if available.
+     *
+     * @return the current run UID or null if not initialized
+     */
+    public String getRunUid() {
+        return runUid.get();
+    }
+
+    /**
+     * Gets the number of currently active test suites.
+     *
+     * @return number of active suites
+     */
+    public int getActiveSuitesCount() {
+        return activeSuites.get();
+    }
+
+    /**
      * Finalizes test run by shutting down batch manager and closing API connection.
      * Calculates run duration and sends completion notification to Testomat.io.
      */
     private void finalizeRun() {
-        BatchResultManager manager = batchManager.getAndSet(null);
-        if (manager != null) {
-            manager.shutdown();
+        finalizeRun(false);
+    }
+
+    /**
+     * Finalizes test run with option to force finalization.
+     *
+     * @param force if true, forces finalization even if there are active suites
+     */
+    private synchronized void finalizeRun(boolean force) {
+        if (!force && activeSuites.get() > 0) {
+            log.debug("Skipping finalization - {} active suites remaining", activeSuites.get());
+            return;
         }
 
         String uid = runUid.getAndSet(null);
-        ApiInterface client = apiClient.getAndSet(null);
+        if (uid == null) {
+            log.debug("Test run already finalized or not initialized");
+            return;
+        }
 
-        if (uid != null && client != null) {
+        BatchResultManager manager = batchManager.getAndSet(null);
+        if (manager != null) {
+            try {
+                manager.shutdown();
+                log.debug("Batch manager shutdown completed");
+            } catch (Exception e) {
+                log.error("Error shutting down batch manager: {}", e.getMessage());
+            }
+        }
+
+        ApiInterface client = apiClient.getAndSet(null);
+        if (client != null) {
             try {
                 float duration = (System.currentTimeMillis() - startTime) / 1000.0f;
                 client.finishTestRun(uid, duration);
-                log.debug("Test run finished: {}", uid);
+                log.debug("Test run finished: {} (duration: {}s)", uid, duration);
+
+                ReportedTestStorage.linkArtifactsToTests(ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
+                log.info("Syncing artifacts with Testomat.io");
+                Thread.sleep(15000);
+                client.sendTestWithArtifacts(uid);
+                log.debug("Artifacts sent successfully for run: {}", uid);
             } catch (IOException e) {
-                log.error("Failed to finish test run{}", String.valueOf(e.getCause()));
+                log.error("Failed to finish test run {}: {}", uid, e.getMessage());
+            } catch (Exception e) {
+                log.error("Unexpected error during test run finalization {}: {}", uid, e.getMessage());
             }
         }
+    }
+
+    /**
+     * Forces immediate finalization of the test run.
+     * Should be used cautiously as it ignores active suites.
+     */
+    public void forceFinalize() {
+        log.warn("Forcing test run finalization");
+        finalizeRun(true);
     }
 
     /**
@@ -158,11 +282,10 @@ public class GlobalRunManager {
      * @return configured run title or null if not set
      */
     private String getRunTitle() {
-        return PropertyProviderFactoryImpl.getPropertyProviderFactory()
-                .getPropertyProvider().getProperty(RUN_TITLE_PROPERTY_NAME);
+        return this.provider.getProperty(RUN_TITLE_PROPERTY_NAME);
     }
 
-    private String getCustomRunUid(ApiInterface client) throws IOException {
+    private String defineRunId(ApiInterface client) throws IOException {
         String customUid;
         try {
             customUid = provider.getProperty(CUSTOM_RUN_UID_PROPERTY_NAME);
@@ -170,5 +293,16 @@ public class GlobalRunManager {
             customUid = client.createRun(getRunTitle());
         }
         return customUid;
+    }
+
+    private boolean isReportingDisabled() {
+        try {
+            return provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME) != null
+                    && !provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME).trim().isEmpty()
+                    && !provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME).equalsIgnoreCase("0");
+        } catch (Exception e) {
+            log.info("Reporting is disabled with testomatio.reporting.disabled=1");
+            return false;
+        }
     }
 }

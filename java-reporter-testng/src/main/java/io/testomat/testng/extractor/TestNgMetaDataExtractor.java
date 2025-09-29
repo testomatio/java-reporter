@@ -55,7 +55,7 @@ public class TestNgMetaDataExtractor {
     /**
      * Gets test ID from @TestId annotation.
      */
-    private String getTestId(Method method) {
+    public String getTestId(Method method) {
         TestId testIdAnnotation = method.getAnnotation(TestId.class);
         return testIdAnnotation != null ? testIdAnnotation.value() : null;
     }

@@ -1,639 +1,371 @@
 package io.testomat.junit.listener;
 
+import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_PROPERTY_NAME;
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.testomat.core.exception.PropertyNotFoundException;
+import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.methodexporter.MethodExportManager;
 import io.testomat.junit.reporter.JunitTestReporter;
+import java.lang.reflect.Method;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-@DisplayName("JunitListener Tests (Updated Version)")
 class JunitListenerTest {
 
     @Mock
-    private MethodExportManager mockMethodExportManager;
+    private MethodExportManager methodExportManager;
 
     @Mock
-    private GlobalRunManager mockRunManager;
+    private GlobalRunManager runManager;
 
     @Mock
-    private JunitTestReporter mockReporter;
+    private JunitTestReporter reporter;
 
     @Mock
-    private PropertyProvider mockPropertyProvider;
+    private PropertyProvider propertyProvider;
 
     @Mock
-    private ExtensionContext mockExtensionContext;
+    private AwsService awsService;
 
-    private JunitListener junitListener;
+    @Mock
+    private ExtensionContext context;
 
-    // Test classes for testing different scenarios
-    public static class TestClassA {
-    }
+    @Mock
+    private Method testMethod;
 
-    public static class TestClassB {
-    }
+    private JunitListener listener;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        
-        // Setup mock context with a valid unique ID to avoid NPE in cleanup methods
-        when(mockExtensionContext.getUniqueId()).thenReturn("test-unique-id-123");
-        
-        junitListener = new JunitListener(
-                mockMethodExportManager,
-                mockRunManager,
-                mockReporter,
-                mockPropertyProvider
-        );
+        listener = new JunitListener(methodExportManager, runManager, reporter, propertyProvider, awsService);
     }
 
-    @Nested
-    @DisplayName("Constructor Tests")
-    class ConstructorTests {
+    @Test
+    void beforeAll_WhenListeningNotRequired_ShouldSkipIncrement() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn(null);
 
-        @Test
-        @DisplayName("Should create instance with default constructor")
-        void shouldCreateInstanceWithDefaultConstructor() {
-            // When
-            JunitListener listener = new JunitListener();
+        listener.beforeAll(context);
 
-            // Then
-            assertNotNull(listener);
-        }
-
-        @Test
-        @DisplayName("Should create instance with parameterized constructor")
-        void shouldCreateInstanceWithParameterizedConstructor() {
-            // When
-            JunitListener listener = new JunitListener(
-                    mockMethodExportManager,
-                    mockRunManager,
-                    mockReporter,
-                    mockPropertyProvider
-            );
-
-            // Then
-            assertNotNull(listener);
-        }
+        verify(runManager, never()).incrementSuiteCounter();
     }
 
-    @Nested
-    @DisplayName("Listening Required Logic Tests")
-    class ListeningRequiredLogicTests {
+    @Test
+    void beforeAll_WhenListeningRequired_ShouldIncrementSuiteCounter() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
 
-        @Test
-        @DisplayName("Should return false when property throws PropertyNotFoundException")
-        void shouldReturnFalseWhenPropertyThrowsPropertyNotFoundException() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio"))
-                    .thenThrow(new PropertyNotFoundException("Property not found"));
+        listener.beforeAll(context);
 
-            // When
-            junitListener.beforeAll(mockExtensionContext);
-
-            // Then - should do early return, not call runManager
-            verify(mockRunManager, never()).incrementSuiteCounter();
-        }
-
-        @Test
-        @DisplayName("Should return false when property throws RuntimeException")
-        void shouldReturnFalseWhenPropertyThrowsRuntimeException() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio"))
-                    .thenThrow(new RuntimeException("Unexpected error"));
-
-            // When
-            junitListener.beforeAll(mockExtensionContext);
-
-            // Then - should do early return, not call runManager
-            verify(mockRunManager, never()).incrementSuiteCounter();
-        }
-
-        @Test
-        @DisplayName("Should return false when property returns null")
-        void shouldReturnFalseWhenPropertyReturnsNull() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
-
-            // When
-            junitListener.beforeAll(mockExtensionContext);
-
-            // Then - should do early return, not call runManager
-            verify(mockRunManager, never()).incrementSuiteCounter();
-        }
+        verify(runManager).incrementSuiteCounter();
     }
 
-    @Nested
-    @DisplayName("BeforeAll Tests")
-    class BeforeAllTests {
+    @Test
+    void beforeAll_WhenPropertyProviderThrowsException_ShouldSkipIncrement() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenThrow(new RuntimeException("Property error"));
 
-        @Test
-        @DisplayName("Should increment suite counter when listening is required")
-        void shouldIncrementSuiteCounterWhenListeningIsRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
+        listener.beforeAll(context);
 
-            // When
-            junitListener.beforeAll(mockExtensionContext);
-
-            // Then
-            verify(mockRunManager, times(1)).incrementSuiteCounter();
-        }
-
-        @Test
-        @DisplayName("Should not increment suite counter when listening is not required")
-        void shouldNotIncrementSuiteCounterWhenListeningIsNotRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
-
-            // When
-            junitListener.beforeAll(mockExtensionContext);
-
-            // Then
-            verify(mockRunManager, never()).incrementSuiteCounter();
-        }
-
-        @Test
-        @DisplayName("Should handle multiple beforeAll calls when listening is required")
-        void shouldHandleMultipleBeforeAllCallsWhenListeningIsRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("enabled");
-
-            // When
-            junitListener.beforeAll(mockExtensionContext);
-            junitListener.beforeAll(mockExtensionContext);
-            junitListener.beforeAll(mockExtensionContext);
-
-            // Then
-            verify(mockRunManager, times(3)).incrementSuiteCounter();
-        }
+        verify(runManager, never()).incrementSuiteCounter();
     }
 
-    @Nested
-    @DisplayName("AfterAll Tests")
-    class AfterAllTests {
+    @Test
+    void afterAll_WhenListeningNotRequired_ShouldSkipProcessing() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn(null);
 
-        @Test
-        @DisplayName("Should export test class and decrement suite counter when listening is required")
-        void shouldExportTestClassAndDecrementSuiteCounterWhenListeningIsRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
+        listener.afterAll(context);
 
-            // When
-            junitListener.afterAll(mockExtensionContext);
-
-            // Then
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-            verify(mockRunManager, times(1)).decrementSuiteCounter();
-        }
-
-        @Test
-        @DisplayName("Should not export or decrement when listening is not required")
-        void shouldNotExportOrDecrementWhenListeningIsNotRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
-
-            // When
-            junitListener.afterAll(mockExtensionContext);
-
-            // Then
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-            verify(mockRunManager, never()).decrementSuiteCounter();
-        }
-
-        @Test
-        @DisplayName("Should only decrement suite counter when no test class present")
-        void shouldOnlyDecrementSuiteCounterWhenNoTestClassPresent() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
-
-            // When
-            junitListener.afterAll(mockExtensionContext);
-
-            // Then
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-            verify(mockRunManager, times(1)).decrementSuiteCounter();
-        }
+        verify(runManager, never()).decrementSuiteCounter();
+        verifyNoInteractions(methodExportManager);
     }
 
-    @Nested
-    @DisplayName("BeforeEach Tests")
-    class BeforeEachTests {
+    @Test
+    void afterAll_WhenListeningRequired_ShouldDecrementCounterAndExportClass() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.of(String.class));
 
-        @Test
-        @DisplayName("Should not perform any operations in beforeEach regardless of listening status")
-        void shouldNotPerformAnyOperationsInBeforeEach() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
+        listener.afterAll(context);
 
-            // When
-            junitListener.beforeEach(mockExtensionContext);
-
-            // Then
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-            verify(mockRunManager, never()).incrementSuiteCounter();
-            verify(mockRunManager, never()).decrementSuiteCounter();
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-        }
+        verify(runManager).decrementSuiteCounter();
+        verify(methodExportManager).loadTestBodyForClass(String.class);
     }
 
-    @Nested
-    @DisplayName("Test Disabled Tests")
-    class TestDisabledTests {
+    @Test
+    void afterAll_WhenTestClassEmpty_ShouldDecrementCounterOnly() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.empty());
 
-        @Test
-        @DisplayName("Should report test as disabled when listening is required")
-        void shouldReportTestAsDisabledWhenListeningIsRequired() {
-            // Given
-            String reason = "Test disabled for maintenance";
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
+        listener.afterAll(context);
 
-            // When
-            junitListener.testDisabled(mockExtensionContext, Optional.of(reason));
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, reason);
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
-
-        @Test
-        @DisplayName("Should not report when listening is not required")
-        void shouldNotReportWhenListeningIsNotRequired() {
-            // Given
-            String reason = "Test disabled";
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
-
-            // When
-            junitListener.testDisabled(mockExtensionContext, Optional.of(reason));
-
-            // Then
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-        }
-
-        @Test
-        @DisplayName("Should use default message when no reason provided")
-        void shouldUseDefaultMessageWhenNoReasonProvided() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
-
-            // When
-            junitListener.testDisabled(mockExtensionContext, Optional.empty());
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, "Test disabled");
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
+        verify(runManager).decrementSuiteCounter();
+        verify(methodExportManager, never()).loadTestBodyForClass(any());
     }
 
-    @Nested
-    @DisplayName("Test Successful Tests")
-    class TestSuccessfulTests {
-
-        @Test
-        @DisplayName("Should report test as successful when listening is required")
-        void shouldReportTestAsSuccessfulWhenListeningIsRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
-
-            // When
-            junitListener.testSuccessful(mockExtensionContext);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, PASSED, null);
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
-
-        @Test
-        @DisplayName("Should not report when listening is not required")
-        void shouldNotReportWhenListeningIsNotRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
-
-            // When
-            junitListener.testSuccessful(mockExtensionContext);
-
-            // Then
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-        }
+    @Test
+    void beforeEach_ShouldNotPerformAnyActions() {
+        assertDoesNotThrow(() -> listener.beforeEach(context));
+        verifyNoInteractions(runManager, reporter, methodExportManager, awsService);
     }
 
-    @Nested
-    @DisplayName("Test Aborted Tests")
-    class TestAbortedTests {
+    @Test
+    void testDisabled_WhenListeningNotRequired_ShouldSkipReporting() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn(null);
 
-        @Test
-        @DisplayName("Should report test as aborted when listening is required")
-        void shouldReportTestAsAbortedWhenListeningIsRequired() {
-            // Given
-            Throwable cause = new RuntimeException("Test was aborted");
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
+        listener.testDisabled(context, Optional.of("Test disabled"));
 
-            // When
-            junitListener.testAborted(mockExtensionContext, cause);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, "Test was aborted");
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
-
-        @Test
-        @DisplayName("Should not report when listening is not required")
-        void shouldNotReportWhenListeningIsNotRequired() {
-            // Given
-            Throwable cause = new RuntimeException("Test was aborted");
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
-
-            // When
-            junitListener.testAborted(mockExtensionContext, cause);
-
-            // Then
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-        }
-
-        @Test
-        @DisplayName("Should handle null cause message")
-        void shouldHandleNullCauseMessage() {
-            // Given
-            Throwable cause = new RuntimeException(); // No message
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
-
-            // When
-            junitListener.testAborted(mockExtensionContext, cause);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, SKIPPED, null);
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
+        verifyNoInteractions(reporter, methodExportManager);
     }
 
-    @Nested
-    @DisplayName("Test Failed Tests")
-    class TestFailedTests {
+    @Test
+    void testDisabled_WhenListeningRequired_ShouldReportSkippedWithReason() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.of(String.class));
 
-        @Test
-        @DisplayName("Should report test as failed when listening is required")
-        void shouldReportTestAsFailedWhenListeningIsRequired() {
-            // Given
-            Throwable cause = new AssertionError("Expected <5> but was <3>");
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
+        listener.testDisabled(context, Optional.of("Test disabled"));
 
-            // When
-            junitListener.testFailed(mockExtensionContext, cause);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, FAILED, "Expected <5> but was <3>");
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
-
-        @Test
-        @DisplayName("Should not report when listening is not required")
-        void shouldNotReportWhenListeningIsNotRequired() {
-            // Given
-            Throwable cause = new AssertionError("Test failed");
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
-
-            // When
-            junitListener.testFailed(mockExtensionContext, cause);
-
-            // Then
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-        }
-
-        @Test
-        @DisplayName("Should handle null cause message")
-        void shouldHandleNullCauseMessage() {
-            // Given
-            Throwable cause = new AssertionError(); // No message
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
-
-            // When
-            junitListener.testFailed(mockExtensionContext, cause);
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, FAILED, null);
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
+        verify(reporter).reportTestResult(context, SKIPPED, "Test disabled");
+        verify(methodExportManager).loadTestBodyForClass(String.class);
     }
 
-    @Nested
-    @DisplayName("Export Test Class Tests")
-    class ExportTestClassTests {
+    @Test
+    void testDisabled_WhenReasonEmpty_ShouldReportSkippedWithDefaultMessage() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.of(String.class));
 
-        @Test
-        @DisplayName("Should export different test classes separately")
-        void shouldExportDifferentTestClassesSeparately() {
-            // Given
-            ExtensionContext contextA = org.mockito.Mockito.mock(ExtensionContext.class);
-            ExtensionContext contextB = org.mockito.Mockito.mock(ExtensionContext.class);
+        listener.testDisabled(context, Optional.empty());
 
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(contextA.getTestClass()).thenReturn(Optional.of(TestClassA.class));
-            when(contextA.getUniqueId()).thenReturn("test-context-A");
-            when(contextB.getTestClass()).thenReturn(Optional.of(TestClassB.class));
-            when(contextB.getUniqueId()).thenReturn("test-context-B");
-
-            // When
-            junitListener.testSuccessful(contextA);
-            junitListener.testSuccessful(contextB);
-            junitListener.testSuccessful(contextA); // Same class again
-
-            // Then - should export each class once
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassB.class);
-        }
-
-        @Test
-        @DisplayName("Should not export when listening is not required")
-        void shouldNotExportWhenListeningIsNotRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
-
-            // When
-            junitListener.testSuccessful(mockExtensionContext);
-            junitListener.testFailed(mockExtensionContext, new RuntimeException("Error"));
-
-            // Then
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-        }
-
-        @Test
-        @DisplayName("Should not export when test class is not present")
-        void shouldNotExportWhenTestClassIsNotPresent() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.empty());
-
-            // When
-            junitListener.testSuccessful(mockExtensionContext);
-
-            // Then
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-        }
+        verify(reporter).reportTestResult(context, SKIPPED, "Test disabled");
+        verify(methodExportManager).loadTestBodyForClass(String.class);
     }
 
-    @Nested
-    @DisplayName("Property Provider Exception Handling Tests")
-    class PropertyProviderExceptionHandlingTests {
+    @Test
+    void testSuccessful_WhenListeningNotRequired_ShouldSkipReporting() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn(null);
 
-        @Test
-        @DisplayName("Should handle PropertyNotFoundException gracefully in all callbacks")
-        void shouldHandlePropertyNotFoundExceptionGracefullyInAllCallbacks() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio"))
-                    .thenThrow(new PropertyNotFoundException("Property not found"));
+        listener.testSuccessful(context);
 
-            // When & Then - all callbacks should handle exception gracefully
-            junitListener.beforeAll(mockExtensionContext);
-            verify(mockRunManager, never()).incrementSuiteCounter();
-
-            junitListener.afterAll(mockExtensionContext);
-            verify(mockRunManager, never()).decrementSuiteCounter();
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-
-            junitListener.testSuccessful(mockExtensionContext);
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-
-            junitListener.testFailed(mockExtensionContext, new RuntimeException());
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-
-            junitListener.testDisabled(mockExtensionContext, Optional.of("disabled"));
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-
-            junitListener.testAborted(mockExtensionContext, new RuntimeException());
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-        }
-
-        @Test
-        @DisplayName("Should handle unexpected RuntimeException in property access")
-        void shouldHandleUnexpectedRuntimeExceptionInPropertyAccess() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio"))
-                    .thenThrow(new RuntimeException("Unexpected property access error"));
-
-            // When & Then - should not propagate exception
-            junitListener.beforeAll(mockExtensionContext);
-            verify(mockRunManager, never()).incrementSuiteCounter();
-
-            junitListener.testSuccessful(mockExtensionContext);
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-        }
-
-        @Test
-        @DisplayName("Should handle intermittent property provider failures")
-        void shouldHandleIntermittentPropertyProviderFailures() {
-            // Given - first call fails, second succeeds
-            when(mockPropertyProvider.getProperty("testomatio"))
-                    .thenThrow(new RuntimeException("Temporary failure"))
-                    .thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
-
-            // When
-            junitListener.testSuccessful(mockExtensionContext); // Should fail and not report
-            junitListener.testSuccessful(mockExtensionContext); // Should succeed and report
-
-            // Then
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, PASSED, null);
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
+        verifyNoInteractions(reporter, methodExportManager);
     }
 
-    @Nested
-    @DisplayName("Integration Tests")
-    class IntegrationTests {
+    @Test
+    void testSuccessful_WhenListeningRequired_ShouldReportPassed() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.of(String.class));
 
-        @Test
-        @DisplayName("Should handle complete test lifecycle when listening is required")
-        void shouldHandleCompleteTestLifecycleWhenListeningIsRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("enabled");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
+        listener.testSuccessful(context);
 
-            // When - simulate complete test lifecycle
-            junitListener.beforeAll(mockExtensionContext);
-            junitListener.beforeEach(mockExtensionContext);
-            junitListener.testSuccessful(mockExtensionContext);
-            junitListener.beforeEach(mockExtensionContext);
-            junitListener.testFailed(mockExtensionContext, new RuntimeException("Test failed"));
-            junitListener.afterAll(mockExtensionContext);
+        verify(reporter).reportTestResult(context, PASSED, null);
+        verify(methodExportManager).loadTestBodyForClass(String.class);
+    }
 
-            // Then
-            verify(mockRunManager, times(1)).incrementSuiteCounter();
-            verify(mockRunManager, times(1)).decrementSuiteCounter();
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, PASSED, null);
-            verify(mockReporter, times(1)).reportTestResult(mockExtensionContext, FAILED, "Test failed");
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
+    @Test
+    void testAborted_WhenListeningNotRequired_ShouldSkipReporting() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn(null);
+        Throwable cause = new RuntimeException("Test aborted");
 
-        @Test
-        @DisplayName("Should handle complete test lifecycle when listening is not required")
-        void shouldHandleCompleteTestLifecycleWhenListeningIsNotRequired() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn(null);
+        listener.testAborted(context, cause);
 
-            // When - simulate complete test lifecycle
-            junitListener.beforeAll(mockExtensionContext);
-            junitListener.beforeEach(mockExtensionContext);
-            junitListener.testSuccessful(mockExtensionContext);
-            junitListener.testFailed(mockExtensionContext, new RuntimeException("Test failed"));
-            junitListener.afterAll(mockExtensionContext);
+        verifyNoInteractions(reporter, methodExportManager);
+    }
 
-            // Then - nothing should be called
-            verify(mockRunManager, never()).incrementSuiteCounter();
-            verify(mockRunManager, never()).decrementSuiteCounter();
-            verify(mockReporter, never()).reportTestResult(any(), anyString(), anyString());
-            verify(mockMethodExportManager, never()).loadTestBodyForClass(any());
-        }
+    @Test
+    void testAborted_WhenListeningRequired_ShouldReportSkippedWithCauseMessage() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.of(String.class));
+        Throwable cause = new RuntimeException("Test aborted");
 
-        @Test
-        @DisplayName("Should be thread-safe for concurrent test execution")
-        void shouldBeThreadSafeForConcurrentTestExecution() {
-            // Given
-            when(mockPropertyProvider.getProperty("testomatio")).thenReturn("true");
-            when(mockExtensionContext.getTestClass()).thenReturn(Optional.of(TestClassA.class));
+        listener.testAborted(context, cause);
 
-            // When - simulate concurrent test execution
-            junitListener.testSuccessful(mockExtensionContext);
-            junitListener.testSuccessful(mockExtensionContext);
-            junitListener.testSuccessful(mockExtensionContext);
+        verify(reporter).reportTestResult(context, SKIPPED, "Test aborted");
+        verify(methodExportManager).loadTestBodyForClass(String.class);
+    }
 
-            // Then - should handle concurrent access to processedClasses set
-            verify(mockReporter, times(3)).reportTestResult(mockExtensionContext, PASSED, null);
-            verify(mockMethodExportManager, times(1)).loadTestBodyForClass(TestClassA.class);
-        }
+    @Test
+    void testFailed_WhenListeningNotRequired_ShouldSkipReporting() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn(null);
+        Throwable cause = new AssertionError("Test failed");
+
+        listener.testFailed(context, cause);
+
+        verifyNoInteractions(reporter, methodExportManager);
+    }
+
+    @Test
+    void testFailed_WhenListeningRequired_ShouldReportFailedWithCauseMessage() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.of(String.class));
+        Throwable cause = new AssertionError("Test failed");
+
+        listener.testFailed(context, cause);
+
+        verify(reporter).reportTestResult(context, FAILED, "Test failed");
+        verify(methodExportManager).loadTestBodyForClass(String.class);
+    }
+
+    @Test
+    void exportTestClassIfNotProcessed_WhenSameClassCalledMultipleTimes_ShouldExportOnlyOnce() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.of(String.class));
+
+        listener.testSuccessful(context);
+        listener.testSuccessful(context);
+        listener.testFailed(context, new Exception("Failed"));
+
+        verify(methodExportManager, times(1)).loadTestBodyForClass(String.class);
+    }
+
+    @Test
+    void afterEach_WhenArtifactsEnabled_ShouldUploadArtifacts() {
+        when(context.getDisplayName()).thenReturn("testName");
+        when(context.getUniqueId()).thenReturn("uniqueId");
+        when(context.getTestMethod()).thenReturn(Optional.of(testMethod));
+
+        listener.afterEach(context);
+
+        verify(awsService).uploadAllArtifactsForTest(eq("testName"), eq("uniqueId"), any());
+    }
+
+    @Test
+    void defineArtifactsDisabled_WhenPropertyIsNull_ShouldReturnFalse() {
+        when(propertyProvider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME)).thenReturn(null);
+
+        JunitListener testListener = new JunitListener(methodExportManager, runManager, reporter, propertyProvider, awsService);
+
+        when(context.getDisplayName()).thenReturn("testName");
+        when(context.getUniqueId()).thenReturn("uniqueId");
+        when(context.getTestMethod()).thenReturn(Optional.of(testMethod));
+
+        testListener.afterEach(context);
+
+        verify(awsService).uploadAllArtifactsForTest(anyString(), anyString(), any());
+    }
+
+    @Test
+    void defineArtifactsDisabled_WhenPropertyIsEmpty_ShouldReturnFalse() {
+        when(propertyProvider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME)).thenReturn("");
+
+        JunitListener testListener = new JunitListener(methodExportManager, runManager, reporter, propertyProvider, awsService);
+
+        when(context.getDisplayName()).thenReturn("testName");
+        when(context.getUniqueId()).thenReturn("uniqueId");
+        when(context.getTestMethod()).thenReturn(Optional.of(testMethod));
+
+        testListener.afterEach(context);
+
+        verify(awsService).uploadAllArtifactsForTest(anyString(), anyString(), any());
+    }
+
+    @Test
+    void defineArtifactsDisabled_WhenPropertyIsZero_ShouldReturnFalse() {
+        when(propertyProvider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME)).thenReturn("0");
+
+        JunitListener testListener = new JunitListener(methodExportManager, runManager, reporter, propertyProvider, awsService);
+
+        when(context.getDisplayName()).thenReturn("testName");
+        when(context.getUniqueId()).thenReturn("uniqueId");
+        when(context.getTestMethod()).thenReturn(Optional.of(testMethod));
+
+        testListener.afterEach(context);
+
+        verify(awsService).uploadAllArtifactsForTest(anyString(), anyString(), any());
+    }
+
+    @Test
+    void defineArtifactsDisabled_WhenPropertyIsTrue_ShouldReturnTrue() {
+        when(propertyProvider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME)).thenReturn("true");
+
+        JunitListener testListener = new JunitListener(methodExportManager, runManager, reporter, propertyProvider, awsService);
+
+        when(context.getDisplayName()).thenReturn("testName");
+        when(context.getUniqueId()).thenReturn("uniqueId");
+        when(context.getTestMethod()).thenReturn(Optional.of(testMethod));
+
+        testListener.afterEach(context);
+
+        verify(awsService).uploadAllArtifactsForTest(anyString(), anyString(), any());
+    }
+
+    @Test
+    void defineArtifactsDisabled_WhenPropertyIsAnyNonZeroValue_ShouldReturnTrue() {
+        when(propertyProvider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME)).thenReturn("disable");
+
+        JunitListener testListener = new JunitListener(methodExportManager, runManager, reporter, propertyProvider, awsService);
+
+        when(context.getDisplayName()).thenReturn("testName");
+        when(context.getUniqueId()).thenReturn("uniqueId");
+        when(context.getTestMethod()).thenReturn(Optional.of(testMethod));
+
+        testListener.afterEach(context);
+
+        verify(awsService).uploadAllArtifactsForTest(anyString(), anyString(), any());
+    }
+
+    @Test
+    void defineArtifactsDisabled_WhenPropertyProviderThrowsException_ShouldDefaultToFalse() {
+        when(propertyProvider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME)).thenThrow(new RuntimeException("Property error"));
+
+        JunitListener testListener = new JunitListener(methodExportManager, runManager, reporter, propertyProvider, awsService);
+
+        when(context.getDisplayName()).thenReturn("testName");
+        when(context.getUniqueId()).thenReturn("uniqueId");
+        when(context.getTestMethod()).thenReturn(Optional.of(testMethod));
+
+        testListener.afterEach(context);
+
+        verify(awsService).uploadAllArtifactsForTest(anyString(), anyString(), any());
+    }
+
+    @Test
+    void defaultConstructor_ShouldInitializeAllDependencies() {
+        JunitListener defaultListener = new JunitListener();
+
+        assertDoesNotThrow(() -> {
+            when(context.getTestClass()).thenReturn(Optional.of(String.class));
+            defaultListener.testSuccessful(context);
+        });
+    }
+
+    @Test
+    void testMethodReporting_WhenReporterThrowsException_ShouldPropagateException() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.of(String.class));
+        doThrow(new RuntimeException("Reporter error")).when(reporter).reportTestResult(any(), any(), any());
+
+        RuntimeException exception = org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
+            () -> listener.testSuccessful(context));
+
+        org.junit.jupiter.api.Assertions.assertEquals("Reporter error", exception.getMessage());
+    }
+
+    @Test
+    void testMethodExport_WhenMethodExportManagerThrowsException_ShouldPropagateException() {
+        when(propertyProvider.getProperty(API_KEY_PROPERTY_NAME)).thenReturn("test-api-key");
+        when(context.getTestClass()).thenReturn(Optional.of(String.class));
+        doThrow(new RuntimeException("Export error")).when(methodExportManager).loadTestBodyForClass(any());
+
+        RuntimeException exception = org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
+            () -> listener.testSuccessful(context));
+
+        org.junit.jupiter.api.Assertions.assertEquals("Export error", exception.getMessage());
+        verify(reporter).reportTestResult(context, PASSED, null);
     }
 }

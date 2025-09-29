@@ -28,7 +28,7 @@ and team collaboration features.
 | **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅     |
 | **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅     |
 | **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅     |
-| **Test artifacts support**         | Screenshots, logs, and file attachments            |   ⏳   |   ⏳    |    ⏳     |
+| **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅     |
 | **Step-by-step reporting**         | Detailed test step execution tracking              |   ⏳   |   ⏳    |    ⏳     |
 | **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |       |        |          |
 
@@ -100,7 +100,9 @@ Create the `cucumber.properties` file if you don't have one yet and add this lin
    ```properties
       cucumber.plugin=io.testomat.cucumber.listener.CucumberListener
    ```
+
 ---
+
 ### 🔧 Advanced Custom Setup
 
 > **⚠️ Only use this if you need custom behavior** - like adding extra logic to test lifecycle events.
@@ -279,7 +281,75 @@ Use these oneliners to **download jar and update** ids in one move
 
 ---
 
-## 💡 Usage Examples
+## 📎 Test Artifacts Support
+
+The Java Reporter supports attaching files (screenshots, logs, videos, etc.) to your test results and uploading them to
+S3-compatible storage.  
+Artifacts handling is enabled by default, but it won't affect the run if there are no artifacts provided (see options below).
+
+### Configuration
+
+Artifacts are stored in external S3 buckets. S3 Access can be configured in **two different ways**:
+
+1. Make configurations on the [Testomat.io](https://app.testomat.io):  
+   Choose your project -> click **Settings** button on the left panel -> click **Artifacts** -> Toggle "**Share
+   credentials**..."  
+   <img src=img/artifactsOnServerTurnOn.png alt="artifact example" width=50% />
+
+2. Provide options as environment variables/jvm property/testomatio.properties file.
+
+> NOTE: Environment variables(env/jvm/testomatio.properties) take precedence over server-provided credentials.
+
+| Setting                       | Description                                      | Default     |
+|-------------------------------|--------------------------------------------------|-------------|
+| `testomatio.artifact.disable` | Completely disable artifact uploading            | `false`     |
+| `testomatio.artifact.private` | Keep artifacts private (no public URLs)          | `false`     |
+| `s3.force-path-style`         | Use path-style URLs for S3-compatible storage    | `false`     |
+| `s3.endpoint`                 | Custom endpoint ot be used with force-path-style | `false`     |
+| `s3.bucket`                   | Provides bucket name for configuration           |             |
+| `s3.access-key-id`            | Access key for the bucket                        |             |
+| `s3.region`                   | Bucket region                                    | `us-west-1` |
+
+**Note**: S3 credentials can be configured either in properties file or provided automatically on Testomat.io UI.
+Environment variables take precedence over server-provided credentials.
+
+### Usage
+
+Use the `Testomatio` facade to attach files to your tests:
+Multiple files can be provided to the `Testomatio.artifact(String ...)` method.
+
+```java
+import io.testomat.core.facade.Testomatio;
+
+public class MyTest {
+
+    @Test
+    public void testWithScreenshot() {
+                // Your test logic
+
+                // Attach artifacts (screenshots, logs, etc.)
+                Testomatio.artifact(
+                "/path/to/screenshot.png",
+                "/path/to/test.log"
+        );
+    }
+}
+```
+Please, make sure you provide path to artifact file including its extension.
+
+### How It Works
+
+1. **S3 Upload**: Files are uploaded to your S3 bucket with organized folder structure
+2. **Link Generation**: Public URLs are generated and attached to test results
+3. Artifacts are visible at the test info on UI
+
+
+As the result you will see something like this on UI after run completed:  
+<img src=img/artifactExample.png alt="artifact example" width=50% />
+
+---
+
+## 💡 Library Usage Examples
 
 ### Basic Usage
 
