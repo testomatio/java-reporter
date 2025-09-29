@@ -40,7 +40,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
     public NativeRequestBodyBuilder() {
         this.publishParam = getPropertySafely(PUBLISH_PROPERTY_NAME);
-        this.sharedRun = getPropertySafely(SHARED_RUN_PROPERTY_NAME);
+        this.sharedRun = getSharedRun();
         this.sharedRunTimeout = getPropertySafely(SHARED_TIMEOUT_PROPERTY_NAME);
         this.objectMapper = new ObjectMapper();
         this.createParam = getCreateParam();
@@ -187,5 +187,21 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private String getSharedRun() {
+        String property;
+        try {
+            property = provider.getProperty(SHARED_RUN_PROPERTY_NAME);
+            if (property != null
+                    && !property.trim().isEmpty()
+                    && !property.equalsIgnoreCase("0")
+            ) {
+                return property;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return property;
     }
 }

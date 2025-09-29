@@ -4,6 +4,7 @@ import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
+import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
 import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -156,7 +157,7 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
 
     private boolean isListeningRequired() {
         try {
-            return provider.getProperty(LISTENING_REQUIRED_PROPERTY_NAME) != null;
+            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
         } catch (Exception e) {
             return false;
         }
