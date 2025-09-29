@@ -294,7 +294,7 @@ Artifacts handling is enabled by default, but it won't affect the run if there a
 
 ### Configuration
 
-Artifact handling can be configured in **two different ways**:
+Artifacts are stored in external S3 buckets. S3 Access can be configured in **two different ways**:
 
 1. Make configurations on the [Testomat.io](https://app.testomat.io):  
    Choose your project -> click **Settings** button on the left panel -> click **Artifacts** -> Toggle "**Share
