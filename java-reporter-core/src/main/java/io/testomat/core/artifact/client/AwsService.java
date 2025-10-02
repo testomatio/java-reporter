@@ -64,7 +64,6 @@ public class AwsService {
      * @throws IllegalArgumentException if any parameter is null
      */
     public void uploadAllArtifactsForTest(String testName, String rid, String testId) {
-        validateParameters(testName, rid, testId);
 
         List<String> artifactDirectories = TempArtifactDirectoriesStorage.DIRECTORIES.get();
         if (artifactDirectories.isEmpty()) {
@@ -76,12 +75,6 @@ public class AwsService {
         List<String> uploadedArtifactsLinks = processArtifacts(artifactDirectories, testName, rid, credentials);
 
         storeArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks);
-    }
-
-    private void validateParameters(String testName, String rid, String testId) {
-        Objects.requireNonNull(testName, "Test name cannot be null");
-        Objects.requireNonNull(rid, "Request ID cannot be null");
-        Objects.requireNonNull(testId, "Test ID cannot be null");
     }
 
     private List<String> processArtifacts(List<String> artifactDirectories, String testName, String rid, S3Credentials credentials) {
