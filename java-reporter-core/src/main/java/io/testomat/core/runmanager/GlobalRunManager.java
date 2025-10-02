@@ -256,7 +256,9 @@ public class GlobalRunManager {
 
                 ReportedTestStorage.linkArtifactsToTests(ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
                 log.info("Syncing artifacts with Testomat.io");
-                Thread.sleep(15000);
+                System.out.println("Getting ready to send artifacts");
+                Thread.sleep(10000);
+                System.out.println("Syncing artifacts");
                 client.sendTestWithArtifacts(uid);
                 log.debug("Artifacts sent successfully for run: {}", uid);
             } catch (IOException e) {
