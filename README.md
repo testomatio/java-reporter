@@ -29,7 +29,7 @@ and team collaboration features.
 | **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅     |
 | **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅     |
 | **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅     |
-| **Step-by-step reporting**         | Detailed test step execution tracking              |   ⏳   |   ⏳    |    ⏳     |
+| **Step-by-step reporting**         | Detailed test step execution tracking              |   ✅   |   ✅    |    ✅     |
 | **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |       |        |          |
 
 ## 🖥️ Supported test frameworks versions
@@ -346,6 +346,87 @@ Please, make sure you provide path to artifact file including its extension.
 
 As the result you will see something like this on UI after run completed:  
 <img src=img/artifactExample.png alt="artifact example" width=50% />
+
+---
+
+## 📝 Step-by-Step Reporting
+
+The Java Reporter supports detailed step-by-step test execution tracking using the `@Step` annotation. This feature allows you to break down your tests into logical steps that will be displayed in the Testomat.io report.
+
+### Prerequisites
+
+To use `@Step` annotation, you need to enable AspectJ Load-Time Weaving in your project.
+
+**Add the following configuration to your `pom.xml`:**
+
+```xml
+<properties>
+    <aspectj.version>1.9.24</aspectj.version>
+</properties>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.0.0</version>
+            <configuration>
+                <argLine>
+                    -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                </argLine>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+> **Note:** This configuration is similar to what Allure Framework requires for `@Step` annotations.
+
+### Usage
+
+Use `@Step` annotation on any method to track it as a test step:
+
+```java
+import io.testomat.core.annotation.Step;
+
+public class LoginTests {
+
+    @Test
+    @TestId("auth-001")
+    public void testUserLogin() {
+        navigateToLoginPage();
+        enterCredentials("user@example.com", "password123");
+        clickLoginButton();
+        verifyUserLoggedIn();
+    }
+
+    @Step("Navigate to login page")
+    private void navigateToLoginPage() {
+        // Implementation
+    }
+
+    @Step("Enter credentials")
+    private void enterCredentials(String email, String password) {
+        // Implementation
+    }
+
+    @Step("Click login button")
+    private void clickLoginButton() {
+        // Implementation
+    }
+
+    @Step("Verify user is logged in")
+    private void verifyUserLoggedIn() {
+        // Implementation
+    }
+}
+```
+
+**Step name options:**
+- With custom name: `@Step("Custom step description")`
+- Without name (uses method name): `@Step`
+
+Steps will be reported with their execution duration and will be visible in the Testomat.io test report.
 
 ---
 

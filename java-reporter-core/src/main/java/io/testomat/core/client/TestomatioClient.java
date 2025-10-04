@@ -90,7 +90,8 @@ public class TestomatioClient implements ApiInterface {
             String url = urlBuilder.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildSingleTestReportBody(result);
             log.debug("Request body: {}", requestBody);
-            client.post(url, requestBody, null);
+            Object response = client.post(url, requestBody, null);
+            log.info("API Response for test '{}': {}", result.getTitle(), response);
 
         } catch (Exception e) {
             throw new ReportingFailedException("Failed to report test /n" + e.getMessage());
@@ -111,7 +112,8 @@ public class TestomatioClient implements ApiInterface {
             String requestBody = requestBodyBuilder.buildBatchTestReportBody(results, apiKey);
             log.debug("Batch request body: {}", requestBody);
 
-            client.post(url, requestBody, null);
+            Object response = client.post(url, requestBody, null);
+            log.info("API Batch Response for {} tests: {}", results.size(), response);
         } catch (Exception e) {
             log.error("Failed to report batch test /n{}", e.getMessage());
             throw new ReportingFailedException("Failed to report batch /n" + e.getMessage());
@@ -125,8 +127,9 @@ public class TestomatioClient implements ApiInterface {
         try {
             String requestBody = requestBodyBuilder.buildBatchReportBodyWithArtifacts(
                     ReportedTestStorage.getStorage(), apiKey);
-            client.post(url, requestBody, null);
+            Object response = client.post(url, requestBody, null);
             log.debug("Sent requestBody: {}", requestBody);
+            log.info("API Response for artifacts batch: {}", response);
         } catch (Exception e) {
             log.error("Failed while secondary batch sending with artifacts");
         }

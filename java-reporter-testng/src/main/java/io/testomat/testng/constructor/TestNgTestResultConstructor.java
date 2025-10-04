@@ -1,9 +1,12 @@
 package io.testomat.testng.constructor;
 
+import io.testomat.core.StepStorage;
+import io.testomat.core.TestStep;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Optional;
 import org.testng.ITestResult;
 
@@ -52,11 +55,15 @@ public class TestNgTestResultConstructor {
 
     /**
      * Builds test result with provided message and stack trace.
-     * Enhanced to include parameterized test data (example and RID).
+     * Enhanced to include parameterized test data (example and RID) and test steps.
      */
     private TestResult buildTestResult(TestResultWrapper wrapper, String message, String stack) {
         var metadata = wrapper.getTestMetadata();
-        return TestResult.builder()
+
+        // Collect steps from ThreadLocal storage
+        List<TestStep> steps = StepStorage.getSteps();
+
+        TestResult.Builder builder = TestResult.builder()
                 .withTitle(metadata.getTitle())
                 .withTestId(metadata.getTestId())
                 .withSuiteTitle(metadata.getSuiteTitle())
@@ -65,8 +72,16 @@ public class TestNgTestResultConstructor {
                 .withMessage(message)
                 .withStack(stack)
                 .withExample(wrapper.getExample())
-                .withRid(wrapper.getRid())
-                .build();
+                .withRid(wrapper.getRid());
+
+        if (!steps.isEmpty()) {
+            builder.withSteps(steps);
+        }
+
+        // Clear steps after collecting them
+        StepStorage.clear();
+
+        return builder.build();
     }
 
     /**

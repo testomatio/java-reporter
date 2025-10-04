@@ -5,9 +5,9 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.testomat</groupId>
+    <groupId>coretest</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.8.1</version>
+    <version>coretest</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>

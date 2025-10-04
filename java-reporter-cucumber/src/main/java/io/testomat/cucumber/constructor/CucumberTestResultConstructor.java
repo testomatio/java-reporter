@@ -1,9 +1,12 @@
 package io.testomat.cucumber.constructor;
 
 import io.cucumber.plugin.event.TestCaseFinished;
+import io.testomat.core.StepStorage;
+import io.testomat.core.TestStep;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
 import io.testomat.cucumber.extractor.TestDataExtractor;
+import java.util.List;
 
 /**
  * Constructs test case results from Cucumber test case finished events.
@@ -31,7 +34,7 @@ public class CucumberTestResultConstructor {
 
     /**
      * Constructs a test result from a Cucumber test case finished event.
-     * Extracts test metadata, status, and error details from the event.
+     * Extracts test metadata, status, error details, and test steps from the event.
      *
      * @param event the Cucumber test case finished event
      * @return the constructed test result
@@ -43,7 +46,10 @@ public class CucumberTestResultConstructor {
         String fileName = testDataExtractor.extractFileName(event);
         System.out.println("CucumberTestResultConstructor: extractFileName returned: " + fileName);
 
-        return TestResult.builder()
+        // Collect steps from ThreadLocal storage
+        List<TestStep> steps = StepStorage.getSteps();
+
+        TestResult.Builder builder = TestResult.builder()
                 .withStatus(testDataExtractor.getNormalizedStatus(event))
                 .withSuiteTitle(event.getTestCase().getUri().toString())
                 .withExample(testDataExtractor.createExample(event))
@@ -52,7 +58,15 @@ public class CucumberTestResultConstructor {
                 .withTitle(testDataExtractor.extractTitle(event))
                 .withRid(event.getTestCase().getId().toString())
                 .withMessage(exceptionDetails.getMessage())
-                .withStack(exceptionDetails.getStack())
-                .build();
+                .withStack(exceptionDetails.getStack());
+
+        if (!steps.isEmpty()) {
+            builder.withSteps(steps);
+        }
+
+        // Clear steps after collecting them
+        StepStorage.clear();
+
+        return builder.build();
     }
 }

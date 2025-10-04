@@ -19,26 +19,38 @@ public class StepAspect {
 
     /**
      * Intercepts method execution for methods annotated with {@link Step}.
-     * Captures the step name and execution duration, then creates a {@link TestStep} object.
+     * Captures the step name and execution duration, then creates a {@link TestStep} object
+     * and stores it in ThreadLocal storage for later inclusion in test reports.
      *
      * @param joinPoint the join point representing the intercepted method
      * @param step      the Step annotation instance
-     * @return TestStep object containing step metadata
+     * @return the result of the intercepted method execution
      * @throws Throwable if the underlying method execution fails
      */
     @Around("@annotation(step)")
-    public TestStep aroundStep(ProceedingJoinPoint joinPoint, Step step) throws Throwable {
+    public Object aroundStep(ProceedingJoinPoint joinPoint, Step step) throws Throwable {
         String stepName = resolveStepName(joinPoint, step);
-        long startNanos = System.nanoTime();
+        long startMillis = System.currentTimeMillis();
+
+        log.info("Step aspect triggered for: {}", stepName);
 
         try {
-            joinPoint.proceed();
-            long durationNanos = System.nanoTime() - startNanos;
+            Object result = joinPoint.proceed();
+            long durationMillis = System.currentTimeMillis() - startMillis;
 
-            return createTestStep(stepName, durationNanos);
+            TestStep testStep = createTestStep(stepName, durationMillis);
+            StepStorage.addStep(testStep);
+
+            log.info("Step '{}' added to storage. Total steps: {}", stepName, StepStorage.getSteps().size());
+
+            return result;
         } catch (Throwable e) {
-            long durationNanos = System.nanoTime() - startNanos;
-            log.error("Step '{}' failed after {} ms", stepName, durationNanos / NANOS_IN_MILLISECOND, e);
+            long durationMillis = System.currentTimeMillis() - startMillis;
+            log.error("Step '{}' failed after {} ms", stepName, durationMillis, e);
+
+            TestStep testStep = createTestStep(stepName, durationMillis);
+            StepStorage.addStep(testStep);
+
             throw e;
         }
     }
@@ -62,16 +74,17 @@ public class StepAspect {
     /**
      * Creates a TestStep object with the provided metadata.
      *
-     * @param stepName      the name of the step
-     * @param durationNanos the execution duration in nanoseconds
+     * @param stepName       the name of the step
+     * @param durationMillis the execution duration in milliseconds
      * @return populated TestStep object
      */
-    private TestStep createTestStep(String stepName, long durationNanos) {
+    private TestStep createTestStep(String stepName, long durationMillis) {
         TestStep testStep = new TestStep();
+        testStep.setCategory("user");
         testStep.setStepTitle(stepName);
-        testStep.setDuration(durationNanos);
+        testStep.setDuration(durationMillis);
 
-        log.debug("Step '{}' completed in {} ms", stepName, durationNanos / NANOS_IN_MILLISECOND);
+        log.debug("Step '{}' completed in {} ms", stepName, durationMillis);
 
         return testStep;
     }
