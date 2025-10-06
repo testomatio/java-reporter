@@ -1,6 +1,6 @@
 package io.testomat.core.model;
 
-import io.testomat.core.TestStep;
+import io.testomat.core.step.TestStep;
 import java.util.List;
 
 /**

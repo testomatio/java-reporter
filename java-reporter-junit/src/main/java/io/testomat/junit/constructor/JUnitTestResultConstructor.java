@@ -1,7 +1,7 @@
 package io.testomat.junit.constructor;
 
-import io.testomat.core.StepStorage;
-import io.testomat.core.TestStep;
+import io.testomat.core.step.StepStorage;
+import io.testomat.core.step.TestStep;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;

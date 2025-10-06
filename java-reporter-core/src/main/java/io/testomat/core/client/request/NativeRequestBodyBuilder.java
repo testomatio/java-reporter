@@ -17,6 +17,7 @@ import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.step.TestStep;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -175,9 +176,9 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
      * Converts a list of TestStep objects to a list of maps for JSON serialization.
      * Each step is converted to match the API format with category, title, duration, and nested steps.
      */
-    private List<Map<String, Object>> convertStepsToMap(List<io.testomat.core.TestStep> steps) {
+    private List<Map<String, Object>> convertStepsToMap(List<TestStep> steps) {
         List<Map<String, Object>> stepMaps = new ArrayList<>();
-        for (io.testomat.core.TestStep step : steps) {
+        for (TestStep step : steps) {
             Map<String, Object> stepMap = new HashMap<>();
 
             if (step.getCategory() != null) {

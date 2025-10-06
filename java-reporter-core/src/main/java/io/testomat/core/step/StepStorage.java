@@ -1,4 +1,4 @@
-package io.testomat.core;
+package io.testomat.core.step;
 
 import java.util.ArrayList;
 import java.util.List;
