@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.testomat</groupId>
+    <groupId>testngtest</groupId>
     <artifactId>java-reporter-testng</artifactId>
-    <version>0.7.9</version>
+    <version>testngtest</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter TestNG</name>
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.8.1</version>
+            <version>0.8.3</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>

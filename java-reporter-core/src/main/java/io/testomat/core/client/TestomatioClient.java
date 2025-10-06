@@ -4,8 +4,8 @@ import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
 import io.testomat.core.artifact.ArtifactLinkDataStorage;
-import io.testomat.core.artifact.ReportedTestStorage;
 import io.testomat.core.artifact.LinkUploadBodyBuilder;
+import io.testomat.core.artifact.ReportedTestStorage;
 import io.testomat.core.artifact.credential.CredentialsManager;
 import io.testomat.core.artifact.credential.CredentialsValidationService;
 import io.testomat.core.client.http.CustomHttpClient;

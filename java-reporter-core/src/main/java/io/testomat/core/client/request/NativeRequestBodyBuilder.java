@@ -17,6 +17,7 @@ import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.step.TestStep;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -126,7 +127,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
     /**
      * Converts test result to map structure for JSON serialization.
-     * Includes all standard fields plus support for parameterized test data.
+     * Includes all standard fields plus support for parameterized test data and test steps.
      */
     private Map<String, Object> buildTestResultMap(TestResult result) {
         Map<String, Object> body = new HashMap<>();
@@ -156,6 +157,12 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put("rid", result.getRid());
         }
 
+        if (result.getSteps() != null && !result.getSteps().isEmpty()) {
+            List<Map<String, Object>> stepsMap = convertStepsToMap(result.getSteps());
+            body.put("steps", stepsMap);
+            System.out.println("DEBUG: Adding " + result.getSteps().size() + " steps to request body for test: " + result.getTitle());
+        }
+
         if (createParam) {
             body.put("create", TRUE);
         }
@@ -163,6 +170,34 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         body.put("overwrite", "true");
         ReportedTestStorage.store(body);
         return body;
+    }
+
+    /**
+     * Converts a list of TestStep objects to a list of maps for JSON serialization.
+     * Each step is converted to match the API format with category, title, duration, and nested steps.
+     */
+    private List<Map<String, Object>> convertStepsToMap(List<TestStep> steps) {
+        List<Map<String, Object>> stepMaps = new ArrayList<>();
+        for (TestStep step : steps) {
+            Map<String, Object> stepMap = new HashMap<>();
+
+            if (step.getCategory() != null) {
+                stepMap.put("category", step.getCategory());
+            }
+
+            if (step.getStepTitle() != null) {
+                stepMap.put("title", step.getStepTitle());
+            }
+
+            stepMap.put("duration", step.getDuration());
+
+            if (step.getSubsteps() != null && !step.getSubsteps().isEmpty()) {
+                stepMap.put("steps", convertStepsToMap(step.getSubsteps()));
+            }
+
+            stepMaps.add(stepMap);
+        }
+        return stepMaps;
     }
 
     /**

@@ -3,10 +3,13 @@ package io.testomat.junit.constructor;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.step.StepStorage;
+import io.testomat.core.step.TestStep;
 import io.testomat.junit.exception.ReporterException;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -96,6 +99,7 @@ public class JUnitTestResultConstructor {
 
     /**
      * Creates a TestResult object using the provided parameters.
+     * Collects any steps stored in ThreadLocal storage and includes them in the result.
      *
      * @param metadata the test metadata
      * @param message  the test message
@@ -113,6 +117,11 @@ public class JUnitTestResultConstructor {
                                         String rid) {
         Objects.requireNonNull(metadata, "metadata cannot be null");
 
+        // Collect steps from ThreadLocal storage
+        List<TestStep> steps = StepStorage.getSteps();
+        log.info("Collecting steps for test '{}': {} steps found",
+                metadata.getTitle(), steps.size());
+
         TestResult.Builder builder = TestResult.builder()
                 .withSuiteTitle(metadata.getSuiteTitle())
                 .withTestId(metadata.getTestId())
@@ -129,6 +138,13 @@ public class JUnitTestResultConstructor {
         if (rid != null) {
             builder.withRid(rid);
         }
+
+        if (!steps.isEmpty()) {
+            builder.withSteps(steps);
+        }
+
+        // Clear steps after collecting them
+        StepStorage.clear();
 
         return builder.build();
     }
@@ -213,8 +229,7 @@ public class JUnitTestResultConstructor {
      * @throws ReporterException if an error occurs while extracting the stack trace
      */
     private String getStackTrace(Throwable throwable) {
-        try (StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw)) {
+        try (StringWriter sw = new StringWriter(); PrintWriter pw = new PrintWriter(sw)) {
             throwable.printStackTrace(pw);
             String rawStackTrace = sw.toString();
             return sanitizeSensitiveContent(rawStackTrace);

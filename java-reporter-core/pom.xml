@@ -7,7 +7,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.8.1</version>
+    <version>0.8.3</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>
@@ -47,6 +47,7 @@
         <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
         <maven.javadoc.plugin.version>3.6.3</maven.javadoc.plugin.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+        <aspectj.version>1.9.24</aspectj.version>
     </properties>
 
     <dependencies>
@@ -67,11 +68,11 @@
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>software.amazon.awssdk</groupId>-->
-<!--            <artifactId>s3</artifactId>-->
-<!--            <version>2.33.4</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectj.version}</version>
+        </dependency>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>aws-sdk-java</artifactId>
@@ -132,6 +133,10 @@
                         <include>**/*Test.java</include>
                         <include>**/*Tests.java</include>
                     </includes>
+<!--                    required for tests-->
+                    <argLine>
+                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                    </argLine>
                 </configuration>
             </plugin>
 

@@ -1,9 +1,12 @@
 package io.testomat.core.model;
 
+import io.testomat.core.step.TestStep;
+import java.util.List;
+
 /**
  * Represents a test execution result with metadata for Testomat.io reporting.
  * Contains test outcome, diagnostic information, and optional parameterized test data.
- * 
+ *
  * <p>Use the {@link Builder} for convenient construction:
  * <pre>{@code
  * TestResult result = TestResult.builder()
@@ -17,30 +20,33 @@ package io.testomat.core.model;
 public class TestResult {
     /** Human-readable test method or scenario name */
     private String title;
-    
+
     /** Unique test identifier from Testomat.io test management system */
     private String testId;
-    
+
     /** Test suite or test class name containing this test */
     private String suiteTitle;
-    
+
     /** Source file path where the test is located */
     private String file;
-    
+
     /** Test execution status: "passed", "failed", or "skipped" */
     private String status;
-    
+
     /** Error or failure message for failed tests, null for passed tests */
     private String message;
-    
+
     /** Stack trace for failed tests, null for passed tests */
     private String stack;
-    
+
     /** Parameterized test data or example values for data-driven tests */
     private Object example;
-    
+
     /** Run identifier for associating results with specific test execution runs */
     private String rid;
+
+    /** Test steps executed during the test */
+    private List<TestStep> steps;
 
     public TestResult() {
     }
@@ -48,7 +54,7 @@ public class TestResult {
     public TestResult(String title, String testId,
                       String suiteTitle, String file,
                       String status, String message, String stack,
-                      Object example, String rid) {
+                      Object example, String rid, List<TestStep> steps) {
         this.title = title;
         this.testId = testId;
         this.suiteTitle = suiteTitle;
@@ -58,6 +64,7 @@ public class TestResult {
         this.stack = stack;
         this.example = example;
         this.rid = rid;
+        this.steps = steps;
     }
 
     /**
@@ -74,6 +81,7 @@ public class TestResult {
         private String stack;
         private Object example;
         private String rid;
+        private List<TestStep> steps;
 
         public Builder withTitle(String title) {
             this.title = title;
@@ -120,8 +128,13 @@ public class TestResult {
             return this;
         }
 
+        public Builder withSteps(List<TestStep> steps) {
+            this.steps = steps;
+            return this;
+        }
+
         public TestResult build() {
-            return new TestResult(title, testId, suiteTitle, file, status, message, stack, example, rid);
+            return new TestResult(title, testId, suiteTitle, file, status, message, stack, example, rid, steps);
         }
     }
 
@@ -204,5 +217,13 @@ public class TestResult {
 
     public void setRid(String rid) {
         this.rid = rid;
+    }
+
+    public List<TestStep> getSteps() {
+        return steps;
+    }
+
+    public void setSteps(List<TestStep> steps) {
+        this.steps = steps;
     }
 }
