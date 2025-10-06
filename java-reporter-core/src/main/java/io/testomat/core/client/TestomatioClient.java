@@ -4,8 +4,8 @@ import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
 import io.testomat.core.artifact.ArtifactLinkDataStorage;
-import io.testomat.core.artifact.ReportedTestStorage;
 import io.testomat.core.artifact.LinkUploadBodyBuilder;
+import io.testomat.core.artifact.ReportedTestStorage;
 import io.testomat.core.artifact.credential.CredentialsManager;
 import io.testomat.core.artifact.credential.CredentialsValidationService;
 import io.testomat.core.client.http.CustomHttpClient;
@@ -90,7 +90,7 @@ public class TestomatioClient implements ApiInterface {
             String url = urlBuilder.buildReportTestUrl(uid);
             String requestBody = requestBodyBuilder.buildSingleTestReportBody(result);
             log.debug("Request body: {}", requestBody);
-`            client.post(url, requestBody, null);
+            client.post(url, requestBody, null);
 
         } catch (Exception e) {
             throw new ReportingFailedException("Failed to report test /n" + e.getMessage());

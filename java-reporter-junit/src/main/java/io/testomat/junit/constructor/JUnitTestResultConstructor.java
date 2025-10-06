@@ -1,10 +1,10 @@
 package io.testomat.junit.constructor;
 
-import io.testomat.core.step.StepStorage;
-import io.testomat.core.step.TestStep;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.step.StepStorage;
+import io.testomat.core.step.TestStep;
 import io.testomat.junit.exception.ReporterException;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import java.io.PrintWriter;
@@ -229,8 +229,7 @@ public class JUnitTestResultConstructor {
      * @throws ReporterException if an error occurs while extracting the stack trace
      */
     private String getStackTrace(Throwable throwable) {
-        try (StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw)) {
+        try (StringWriter sw = new StringWriter(); PrintWriter pw = new PrintWriter(sw)) {
             throwable.printStackTrace(pw);
             String rawStackTrace = sw.toString();
             return sanitizeSensitiveContent(rawStackTrace);

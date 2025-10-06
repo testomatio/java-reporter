@@ -1,9 +1,9 @@
 package io.testomat.testng.constructor;
 
-import io.testomat.core.StepStorage;
-import io.testomat.core.TestStep;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.step.StepStorage;
+import io.testomat.core.step.TestStep;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
