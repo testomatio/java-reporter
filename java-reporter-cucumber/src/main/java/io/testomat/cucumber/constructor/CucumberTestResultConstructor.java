@@ -1,10 +1,10 @@
 package io.testomat.cucumber.constructor;
 
 import io.cucumber.plugin.event.TestCaseFinished;
-import io.testomat.core.StepStorage;
-import io.testomat.core.TestStep;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.step.StepStorage;
+import io.testomat.core.step.TestStep;
 import io.testomat.cucumber.extractor.TestDataExtractor;
 import java.util.List;
 
