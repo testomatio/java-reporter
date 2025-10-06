@@ -27,7 +27,7 @@ public class StepAspect {
      * @return the result of the intercepted method execution
      * @throws Throwable if the underlying method execution fails
      */
-    @Around("@annotation(step)")
+    @Around("execution(@io.testomat.core.annotation.Step * *(..)) && @annotation(step)")
     public Object aroundStep(ProceedingJoinPoint joinPoint, Step step) throws Throwable {
         String stepName = resolveStepName(joinPoint, step);
         long startMillis = System.currentTimeMillis();
