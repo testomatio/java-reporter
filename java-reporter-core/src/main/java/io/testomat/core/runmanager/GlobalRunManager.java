@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GlobalRunManager {
     private static final Logger log = LoggerFactory.getLogger(GlobalRunManager.class);
+    private static final int DELAY_BEFORE_ARTIFACTS_SENDING_MS = 10000;
     private static volatile GlobalRunManager INSTANCE;
 
     private final PropertyProvider provider;
@@ -237,6 +238,14 @@ public class GlobalRunManager {
             return;
         }
 
+        shutdownBatchManager();
+        finalizeTestRunWithApi(uid);
+    }
+
+    /**
+     * Shuts down the batch manager if it exists.
+     */
+    private void shutdownBatchManager() {
         BatchResultManager manager = batchManager.getAndSet(null);
         if (manager != null) {
             try {
@@ -246,27 +255,56 @@ public class GlobalRunManager {
                 log.error("Error shutting down batch manager: {}", e.getMessage());
             }
         }
+    }
 
+    /**
+     * Finalizes the test run via API and processes artifacts if present.
+     *
+     * @param uid the test run unique identifier
+     */
+    private void finalizeTestRunWithApi(String uid) {
         ApiInterface client = apiClient.getAndSet(null);
-        if (client != null) {
-            try {
-                float duration = (System.currentTimeMillis() - startTime) / 1000.0f;
-                client.finishTestRun(uid, duration);
-                log.debug("Test run finished: {} (duration: {}s)", uid, duration);
-
-                ReportedTestStorage.linkArtifactsToTests(ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
-                log.info("Syncing artifacts with Testomat.io");
-                System.out.println("Getting ready to send artifacts");
-                Thread.sleep(10000);
-                System.out.println("Syncing artifacts");
-                client.sendTestWithArtifacts(uid);
-                log.debug("Artifacts sent successfully for run: {}", uid);
-            } catch (IOException e) {
-                log.error("Failed to finish test run {}: {}", uid, e.getMessage());
-            } catch (Exception e) {
-                log.error("Unexpected error during test run finalization {}: {}", uid, e.getMessage());
-            }
+        if (client == null) {
+            return;
         }
+
+        try {
+            float duration = (System.currentTimeMillis() - startTime) / 1000.0f;
+            client.finishTestRun(uid, duration);
+            log.debug("Test run finished: {} (duration: {}s)", uid, duration);
+
+            processAndSendArtifacts(client, uid);
+        } catch (IOException e) {
+            log.error("Failed to finish test run {}: {}", uid, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error during test run finalization {}: {}", uid, e.getMessage());
+        }
+    }
+
+    /**
+     * Processes and sends artifacts to Testomat.io if any are present.
+     *
+     * @param client the API client
+     * @param uid the test run unique identifier
+     * @throws IOException if artifact sending fails
+     * @throws InterruptedException if thread is interrupted during artifact processing
+     */
+    private void processAndSendArtifacts(ApiInterface client, String uid)
+            throws IOException, InterruptedException {
+        if (ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE.isEmpty()) {
+            log.debug("No artifacts to send for run: {}", uid);
+            return;
+        }
+
+        ReportedTestStorage.linkArtifactsToTests(ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
+        log.info("Syncing artifacts with Testomat.io");
+        System.out.println("Getting ready to send artifacts");
+        Thread.sleep(DELAY_BEFORE_ARTIFACTS_SENDING_MS);
+        System.out.println("Syncing artifacts");
+        client.sendTestWithArtifacts(uid);
+        log.debug("Artifacts sent successfully for run: {}", uid);
+        ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE.clear();
+        log.debug("Artifact storage cleared");
     }
 
     /**
