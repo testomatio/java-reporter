@@ -4,6 +4,7 @@ import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
+import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
 import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -34,7 +35,6 @@ import org.testng.ITestResult;
 public class TestNgListener implements ISuiteListener, ITestListener,
         IInvokedMethodListener {
     private static final Logger log = LoggerFactory.getLogger(TestNgListener.class);
-    private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
 
     private final GlobalRunManager runManager;
     private final TestNgTestResultReporter reporter;
@@ -185,7 +185,7 @@ public class TestNgListener implements ISuiteListener, ITestListener,
 
     private boolean isListeningRequired() {
         try {
-            return provider.getProperty(LISTENING_REQUIRED_PROPERTY_NAME) != null;
+            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
         } catch (Exception e) {
             return false;
         }
