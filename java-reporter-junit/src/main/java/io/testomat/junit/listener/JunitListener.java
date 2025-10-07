@@ -22,15 +22,18 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestWatcher;
+import org.junit.platform.launcher.TestExecutionListener;
+import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * JUnit 5 extension for Testomat.io integration.
  * Reports JUnit test execution results to Testomat.io platform.
+ * Provides global execution lifecycle hooks via TestExecutionListener.
  */
 public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
-        AfterAllCallback, AfterEachCallback, TestWatcher {
+        AfterAllCallback, AfterEachCallback, TestWatcher, TestExecutionListener {
 
     private static final Logger log = LoggerFactory.getLogger(JunitListener.class);
     private boolean artifactDisabled = false;
@@ -183,5 +186,15 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
             return false;
         }
         return result;
+    }
+
+    @Override
+    public void testPlanExecutionStarted(TestPlan testPlan) {
+        log.info("JUnit test plan execution started - global initialization hook");
+    }
+
+    @Override
+    public void testPlanExecutionFinished(TestPlan testPlan) {
+        log.info("JUnit test plan execution finished - global cleanup hook");
     }
 }
