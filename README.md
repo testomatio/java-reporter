@@ -293,8 +293,9 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 
 1. Make configurations on the [Testomat.io](https://app.testomat.io):  
    Choose your project -> click **Settings** button on the left panel -> click **Artifacts** -> Toggle "**Share
-   credentials**..."  
-   <img src=img/artifactsOnServerTurnOn.png alt="artifact example" width=50% />
+   credentials**..."
+
+   ![artifact example](./img/artifactsOnServerTurnOn.png)
 
 2. Provide options as environment variables/jvm property/testomatio.properties file.
 
@@ -344,8 +345,9 @@ Please, make sure you provide path to artifact file including its extension.
 3. Artifacts are visible at the test info on UI
 
 
-As the result you will see something like this on UI after run completed:  
-<img src=img/artifactExample.png alt="artifact example" width=50% />
+As the result you will see something like this on UI after run completed:
+
+![artifact example](./img/artifactExample.png)
 
 ---
 
@@ -386,16 +388,16 @@ mvn test \
 
 When your tests start running, you'll see helpful output like this:
 
-![console img](img/console.png)
+![console img](./img/console.png)
 
 **You get two types of links:**
 
 - **🔒 Private Link**: Full access on Testomat.io platform (for your team)
 - **🌐 Public Link**: Shareable read-only view (only if you set `testomatio.publish=1`)
 
-And the dashboard - something like this:  
-<img src=img/platform.png alt="Description" width=50% />
+And the dashboard - something like this:
 
+![Description](./img/platform.png)
 
 ---
 
@@ -405,7 +407,7 @@ And the dashboard - something like this:
 >```properties
    >testomatio.export.required=true
    >```
->![export img](img/export.png)
+>![export img](./img/export.png)
 
 ## 🆘 Troubleshooting
 
