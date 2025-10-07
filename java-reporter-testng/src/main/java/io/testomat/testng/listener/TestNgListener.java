@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.IExecutionListener;
 import org.testng.IInvokedMethod;
 import org.testng.IInvokedMethodListener;
 import org.testng.ISuite;
@@ -31,9 +32,10 @@ import org.testng.ITestResult;
  * TestNG listener for Testomat.io integration.
  * Reports TestNG test execution results to Testomat.io platform.
  * Also exports test method bodies when required.
+ * Provides global execution lifecycle hooks via IExecutionListener.
  */
 public class TestNgListener implements ISuiteListener, ITestListener,
-        IInvokedMethodListener {
+        IInvokedMethodListener, IExecutionListener {
     private static final Logger log = LoggerFactory.getLogger(TestNgListener.class);
 
     private final GlobalRunManager runManager;
@@ -204,5 +206,15 @@ public class TestNgListener implements ISuiteListener, ITestListener,
             return false;
         }
         return result;
+    }
+
+    @Override
+    public void onExecutionStart() {
+        log.info("TestNG execution started - global initialization hook");
+    }
+
+    @Override
+    public void onExecutionFinish() {
+        log.info("TestNG execution finished - global cleanup hook");
     }
 }
