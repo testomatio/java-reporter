@@ -151,7 +151,7 @@ public class TestNgMethodExportManager {
         try {
             return provider.getProperty(EXPORT_REQUIRED_PROPERTY_NAME).equalsIgnoreCase("true");
         } catch (Exception e) {
-            log.error("Error checking export required property: {}", e.getMessage(), e);
+            log.debug("Method export is disabled");
             return false;
         }
     }
