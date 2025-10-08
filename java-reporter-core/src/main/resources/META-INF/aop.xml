@@ -4,7 +4,7 @@
         <aspect name="io.testomat.core.step.StepAspect"/>
     </aspects>
 
-    <weaver options="-verbose -showWeaveInfo">
+    <weaver>
         <!-- Weave all user classes -->
         <include within="*"/>
     </weaver>

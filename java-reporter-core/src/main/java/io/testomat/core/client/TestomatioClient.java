@@ -3,6 +3,7 @@ package io.testomat.core.client;
 import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
+import io.testomat.core.InfoDisplay;
 import io.testomat.core.artifact.ArtifactLinkDataStorage;
 import io.testomat.core.artifact.LinkUploadBodyBuilder;
 import io.testomat.core.artifact.ReportedTestStorage;
@@ -77,7 +78,7 @@ public class TestomatioClient implements ApiInterface {
             credentialsManager.populateCredentials(creds);
             credentialsValidationService.areCredentialsValid(CredentialsManager.getCredentials());
         }
-        logAndPrintUrls(responseBody);
+        InfoDisplay.logVersionAndPrintUrls(responseBody);
         log.debug("Created test run with UID: {}", responseBody.get(RESPONSE_UID_KEY));
         return responseBody.get(RESPONSE_UID_KEY).toString();
     }
@@ -160,17 +161,5 @@ public class TestomatioClient implements ApiInterface {
         } catch (IOException e) {
             throw new ArtifactManagementException("Failed to upload artifact links to Testomatio", e);
         }
-    }
-
-    private void logAndPrintUrls(Map<String, Object> responseBody) {
-        Object publicUrlObject = responseBody.get("public_url");
-
-        log.info("[TESTOMATIO] Testomat.io java core reporter version: [{}]", REPORTER_VERSION);
-
-        if (publicUrlObject != null) {
-            log.info("[TESTOMATIO] Public url: {}", publicUrlObject.toString());
-        }
-
-        log.info("[TESTOMATIO] See run aggregation at: {}", responseBody.get("url"));
     }
 }

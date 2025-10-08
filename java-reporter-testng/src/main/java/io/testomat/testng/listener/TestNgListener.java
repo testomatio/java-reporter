@@ -4,6 +4,7 @@ import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
+import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
 import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -18,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.IExecutionListener;
 import org.testng.IInvokedMethod;
 import org.testng.IInvokedMethodListener;
 import org.testng.ISuite;
@@ -30,11 +32,11 @@ import org.testng.ITestResult;
  * TestNG listener for Testomat.io integration.
  * Reports TestNG test execution results to Testomat.io platform.
  * Also exports test method bodies when required.
+ * Provides global execution lifecycle hooks via IExecutionListener.
  */
 public class TestNgListener implements ISuiteListener, ITestListener,
-        IInvokedMethodListener {
+        IInvokedMethodListener, IExecutionListener {
     private static final Logger log = LoggerFactory.getLogger(TestNgListener.class);
-    private static final String LISTENING_REQUIRED_PROPERTY_NAME = "testomatio.listening";
 
     private final GlobalRunManager runManager;
     private final TestNgTestResultReporter reporter;
@@ -185,7 +187,7 @@ public class TestNgListener implements ISuiteListener, ITestListener,
 
     private boolean isListeningRequired() {
         try {
-            return provider.getProperty(LISTENING_REQUIRED_PROPERTY_NAME) != null;
+            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
         } catch (Exception e) {
             return false;
         }
@@ -204,5 +206,15 @@ public class TestNgListener implements ISuiteListener, ITestListener,
             return false;
         }
         return result;
+    }
+
+    @Override
+    public void onExecutionStart() {
+        log.info("TestNG execution started - global initialization hook");
+    }
+
+    @Override
+    public void onExecutionFinish() {
+        log.info("TestNG execution finished - global cleanup hook");
     }
 }
