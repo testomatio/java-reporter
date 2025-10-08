@@ -109,6 +109,10 @@ public class GlobalRunManager {
         if (runUid.get() != null || isReportingDisabled()) {
             return;
         }
+        if (isReportingDisabled()) {
+            log.info("[TESTOMATIO] Testomat.io reporting is disabled");
+            return;
+        }
 
         try {
             log.debug("Client factory initialized successfully");
@@ -285,8 +289,8 @@ public class GlobalRunManager {
      * Processes and sends artifacts to Testomat.io if any are present.
      *
      * @param client the API client
-     * @param uid the test run unique identifier
-     * @throws IOException if artifact sending fails
+     * @param uid    the test run unique identifier
+     * @throws IOException          if artifact sending fails
      * @throws InterruptedException if thread is interrupted during artifact processing
      */
     private void processAndSendArtifacts(ApiInterface client, String uid)
@@ -297,10 +301,9 @@ public class GlobalRunManager {
         }
 
         ReportedTestStorage.linkArtifactsToTests(ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
-        log.info("Syncing artifacts with Testomat.io");
-        System.out.println("Getting ready to send artifacts");
+        log.info("Getting ready to send artifacts");
         Thread.sleep(DELAY_BEFORE_ARTIFACTS_SENDING_MS);
-        System.out.println("Syncing artifacts");
+        log.info("Syncing artifacts");
         client.sendTestWithArtifacts(uid);
         log.debug("Artifacts sent successfully for run: {}", uid);
         ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE.clear();
@@ -341,7 +344,6 @@ public class GlobalRunManager {
                     && !provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME).trim().isEmpty()
                     && !provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME).equalsIgnoreCase("0");
         } catch (Exception e) {
-            log.info("Reporting is disabled with testomatio.reporting.disabled=1");
             return false;
         }
     }
