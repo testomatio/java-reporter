@@ -54,7 +54,7 @@ public class CredentialsValidationService {
                     .build();
 
             client.headBucket(headBucketRequest);
-            log.info("S3 credentials validation successful for bucket: {} in region: {}",
+            log.debug("S3 credentials validation successful for bucket: {} in region: {}",
                     creds.getBucket(), creds.getRegion());
             return true;
         } catch (S3Exception e) {

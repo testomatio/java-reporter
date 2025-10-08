@@ -135,7 +135,7 @@ public class CredentialsManager {
     }
 
     private void logCredentialsInitializationResult() {
-        log.info("S3 credentials populated: bucket={}, region={}, presign={}, shared={}, iam={}",
+        log.debug("S3 credentials populated: bucket={}, region={}, presign={}, shared={}, iam={}",
                 credentials.getBucket(), credentials.getRegion(),
                 credentials.isPresign(), credentials.isShared(), credentials.isIam());
 
