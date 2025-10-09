@@ -49,6 +49,11 @@
             <version>0.8.6</version>
         </dependency>
         <dependency>
+            <groupId>io.testomat</groupId>
+            <artifactId>java-reporter-testng</artifactId>
+            <version>0.8.7</version>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
