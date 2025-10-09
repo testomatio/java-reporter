@@ -8,6 +8,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      TESTOMATIO: ${{ secrets.TESTOMATIO }}
+      TESTOMATIO_RUN_TITLE: ${{ secrets.TESTOMATIO_RUN_TITLE }}
+      TESTOMATIO_CREATE: ${{ secrets.TESTOMATIO_CREATE }}
+      TESTOMATIO_URL: ${{ secrets.TESTOMATIO_URL }}
 
     steps:
       - uses: actions/checkout@v4
