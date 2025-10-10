@@ -46,7 +46,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.8.6</version>
+            <version>0.8.7</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -55,6 +55,13 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-core</artifactId>
+            <version>3.27.0</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -73,12 +80,7 @@
             <version>5.18.0</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.javaparser</groupId>
-            <artifactId>javaparser-core</artifactId>
-            <version>3.27.0</version>
-            <scope>compile</scope>
-        </dependency>
+
     </dependencies>
 
     <build>
