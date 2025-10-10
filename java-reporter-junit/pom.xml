@@ -39,6 +39,7 @@
 
         <junit.version>5.9.2</junit.version>
         <slf4j.version>2.0.9</slf4j.version>
+        <jackson.version>2.16.0</jackson.version>
 
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
@@ -58,6 +59,11 @@
             <version>${slf4j.version}</version>
             <scope>compile</scope>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

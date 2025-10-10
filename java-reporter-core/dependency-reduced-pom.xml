@@ -4,7 +4,7 @@
   <groupId>io.testomat</groupId>
   <artifactId>java-reporter-core</artifactId>
   <name>Testomat.io Reporter Core</name>
-  <version>0.8.6</version>
+  <version>0.8.8</version>
   <description>Core functionality for Testomat.io Java test reporting library</description>
   <url>https://github.com/testomatio/java-reporter</url>
   <developers>
@@ -216,9 +216,9 @@
   <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
+      <artifactId>slf4j-simple</artifactId>
       <version>2.0.9</version>
-      <scope>provided</scope>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
