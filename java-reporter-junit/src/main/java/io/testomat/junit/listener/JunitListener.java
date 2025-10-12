@@ -78,65 +78,123 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) {
+    public final void beforeAll(ExtensionContext context) {
         if (!isListeningRequired()) {
             return;
         }
         runManager.incrementSuiteCounter();
+        onSuiteStartHook(context);
     }
 
     @Override
-    public void afterAll(ExtensionContext context) {
+    public final void afterAll(ExtensionContext context) {
         if (!isListeningRequired()) {
             return;
         }
 
         exportTestClassIfNotProcessed(context);
         runManager.decrementSuiteCounter();
+        onSuiteFinishHook(context);
     }
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) {
+    public final void beforeEach(ExtensionContext context) {
+        beforeEachHook(context);
     }
 
     @Override
-    public void testDisabled(ExtensionContext context, Optional<String> reason) {
+    public final void testDisabled(ExtensionContext context, Optional<String> reason) {
         if (!isListeningRequired()) {
             return;
         }
 
         reporter.reportTestResult(context, SKIPPED, reason.orElse("Test disabled"));
         exportTestClassIfNotProcessed(context);
+        onTestDisabledHook(context, reason);
     }
 
     @Override
-    public void testSuccessful(ExtensionContext context) {
+    public final void testSuccessful(ExtensionContext context) {
         if (!isListeningRequired()) {
             return;
         }
 
         reporter.reportTestResult(context, PASSED, null);
         exportTestClassIfNotProcessed(context);
+        onTestSuccessHook(context);
     }
 
     @Override
-    public void testAborted(ExtensionContext context, Throwable cause) {
+    public final void testAborted(ExtensionContext context, Throwable cause) {
         if (!isListeningRequired()) {
             return;
         }
 
         reporter.reportTestResult(context, SKIPPED, cause.getMessage());
         exportTestClassIfNotProcessed(context);
+        onTestAbortedHook(context, cause);
     }
 
     @Override
-    public void testFailed(ExtensionContext context, Throwable cause) {
+    public final void testFailed(ExtensionContext context, Throwable cause) {
         if (!isListeningRequired()) {
             return;
         }
 
         reporter.reportTestResult(context, FAILED, cause.getMessage());
         exportTestClassIfNotProcessed(context);
+        onTestFailureHook(context, cause);
+    }
+
+    @Override
+    public final void afterEach(ExtensionContext context) {
+        if (!artifactDisabled) {
+            awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
+                    JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
+        }
+        afterEachHook(context);
+    }
+
+    @Override
+    public final void testPlanExecutionStarted(TestPlan testPlan) {
+        log.info("JUnit test plan execution started - global initialization hook");
+        onExecutionStartHook();
+    }
+
+    @Override
+    public final void testPlanExecutionFinished(TestPlan testPlan) {
+        log.info("JUnit test plan execution finished - global cleanup hook");
+        onExecutionFinishHook();
+    }
+
+    protected void onSuiteStartHook(ExtensionContext context) {
+    }
+
+    protected void onSuiteFinishHook(ExtensionContext context) {
+    }
+
+    protected void beforeEachHook(ExtensionContext context) {
+    }
+
+    protected void onTestSuccessHook(ExtensionContext context) {
+    }
+
+    protected void onTestFailureHook(ExtensionContext context, Throwable cause) {
+    }
+
+    protected void onTestDisabledHook(ExtensionContext context, Optional<String> reason) {
+    }
+
+    protected void onTestAbortedHook(ExtensionContext context, Throwable cause) {
+    }
+
+    protected void afterEachHook(ExtensionContext context) {
+    }
+
+    protected void onExecutionStartHook() {
+    }
+
+    protected void onExecutionFinishHook() {
     }
 
     private void exportTestClassIfNotProcessed(ExtensionContext context) {
@@ -157,22 +215,6 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         }
     }
 
-    private boolean isListeningRequired() {
-        try {
-            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public void afterEach(ExtensionContext context) {
-        if (!artifactDisabled) {
-            awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
-                    JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
-        }
-    }
-
     private boolean defineArtifactsDisabled() {
         boolean result;
         String property;
@@ -188,13 +230,11 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         return result;
     }
 
-    @Override
-    public void testPlanExecutionStarted(TestPlan testPlan) {
-        log.info("JUnit test plan execution started - global initialization hook");
-    }
-
-    @Override
-    public void testPlanExecutionFinished(TestPlan testPlan) {
-        log.info("JUnit test plan execution finished - global cleanup hook");
+    private boolean isListeningRequired() {
+        try {
+            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

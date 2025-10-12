@@ -58,11 +58,21 @@ public class CucumberListener implements Plugin, EventListener {
     @Override
     public void setEventPublisher(EventPublisher eventPublisher) {
         eventPublisher.registerHandlerFor(
-                TestRunStarted.class, e -> runManager.incrementSuiteCounter());
+                TestRunStarted.class, this::handleTestRunStarted);
         eventPublisher.registerHandlerFor(
-                TestRunFinished.class, e -> runManager.decrementSuiteCounter());
+                TestRunFinished.class, this::handleTestRunFinished);
         eventPublisher.registerHandlerFor(
                 TestCaseFinished.class, this::handleTestCaseFinished);
+    }
+
+    void handleTestRunStarted(TestRunStarted event) {
+        runManager.incrementSuiteCounter();
+        onTestRunStartedHook(event);
+    }
+
+    void handleTestRunFinished(TestRunFinished event) {
+        runManager.decrementSuiteCounter();
+        onTestRunFinishedHook(event);
     }
 
     void handleTestCaseFinished(TestCaseFinished event) {
@@ -77,6 +87,7 @@ public class CucumberListener implements Plugin, EventListener {
         try {
             TestResult result = resultConstructor.constructTestRunResult(event);
             runManager.reportTest(result);
+            onTestCaseFinishedHook(event);
         } catch (Exception e) {
             String testName = event.getTestCase() != null ? event.getTestCase().getName()
                     : "Unknown Test";
@@ -96,5 +107,38 @@ public class CucumberListener implements Plugin, EventListener {
         awsService.uploadAllArtifactsForTest(dataExtractor.extractTitle(event),
                 event.getTestCase().getId().toString(),
                 dataExtractor.extractTestId(event));
+        afterEachHook(event);
+    }
+
+    /**
+     * Hook called when test run starts. Override to add custom logic.
+     *
+     * @param event the test run started event
+     */
+    protected void onTestRunStartedHook(TestRunStarted event) {
+    }
+
+    /**
+     * Hook called when test run finishes. Override to add custom logic.
+     *
+     * @param event the test run finished event
+     */
+    protected void onTestRunFinishedHook(TestRunFinished event) {
+    }
+
+    /**
+     * Hook called when test case finishes. Override to add custom logic.
+     *
+     * @param event the test case finished event
+     */
+    protected void onTestCaseFinishedHook(TestCaseFinished event) {
+    }
+
+    /**
+     * Hook called after each test case execution. Override to add custom logic.
+     *
+     * @param event the test case finished event
+     */
+    protected void afterEachHook(TestCaseFinished event) {
     }
 }

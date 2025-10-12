@@ -86,26 +86,28 @@ public class TestNgListener implements ISuiteListener, ITestListener,
     }
 
     @Override
-    public void onStart(ISuite suite) {
+    public final void onStart(ISuite suite) {
         if (!isListeningRequired()) {
             return;
         }
         log.debug("Suite started: {}", suite.getName());
         runManager.incrementSuiteCounter();
         reporter.reportTestResult(suite);
+        onSuiteStartHook(suite);
     }
 
     @Override
-    public void onFinish(ISuite suite) {
+    public final void onFinish(ISuite suite) {
         if (!isListeningRequired()) {
             return;
         }
         log.debug("Suite finished: {}", suite.getName());
         runManager.decrementSuiteCounter();
+        onSuiteFinishHook(suite);
     }
 
     @Override
-    public void onFinish(ITestContext context) {
+    public final void onFinish(ITestContext context) {
         if (!isListeningRequired()) {
             return;
         }
@@ -125,39 +127,110 @@ public class TestNgListener implements ISuiteListener, ITestListener,
     }
 
     @Override
-    public void onTestSuccess(ITestResult result) {
-        if (!isListeningRequired()) {
-            return;
-        }
-        reporter.reportTestResult(result, PASSED);
-        exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
-    }
-
-    @Override
-    public void onTestFailure(ITestResult result) {
-        if (!isListeningRequired()) {
-            return;
-        }
-        reporter.reportTestResult(result, FAILED);
-        exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
-    }
-
-    @Override
-    public void onTestStart(ITestResult result) {
+    public final void onTestStart(ITestResult result) {
         if (!isListeningRequired()) {
             return;
         }
 
         testIdFilter.filterTest(result);
+        onTestStartHook(result);
     }
 
     @Override
-    public void onTestSkipped(ITestResult result) {
+    public final void onTestSuccess(ITestResult result) {
+        if (!isListeningRequired()) {
+            return;
+        }
+        reporter.reportTestResult(result, PASSED);
+        exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
+        onTestSuccessHook(result);
+    }
+
+    @Override
+    public final void onTestFailure(ITestResult result) {
+        if (!isListeningRequired()) {
+            return;
+        }
+        reporter.reportTestResult(result, FAILED);
+        exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
+        onTestFailureHook(result);
+    }
+
+    @Override
+    public final void onTestSkipped(ITestResult result) {
         if (!isListeningRequired()) {
             return;
         }
         reporter.reportTestResult(result, SKIPPED);
         exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
+        onTestSkippedHook(result);
+    }
+
+    @Override
+    public final void afterInvocation(IInvokedMethod method, ITestResult testResult) {
+        if (method.isTestMethod() && !defineArtifactsDisabled()) {
+            awsService.uploadAllArtifactsForTest(testResult.getName(),
+                    testNgParameterExtractor.generateRid(testResult),
+                    metaDataExtractor.getTestId(
+                            method.getTestMethod().getConstructorOrMethod().getMethod())
+            );
+        }
+        afterInvocationHook(method, testResult);
+    }
+
+    @Override
+    public final void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
+        beforeInvocationHook(method, testResult);
+    }
+
+    private boolean isListeningRequired() {
+        try {
+            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public final void onExecutionStart() {
+        log.info("TestNG execution started - global initialization hook");
+        onExecutionStartHook();
+    }
+
+    @Override
+    public final void onExecutionFinish() {
+        log.info("TestNG execution finished - global cleanup hook");
+        onExecutionFinishHook();
+    }
+
+    protected void onSuiteStartHook(ISuite suite) {
+    }
+
+    protected void onSuiteFinishHook(ISuite suite) {
+    }
+
+    protected void onTestSuccessHook(ITestResult result) {
+    }
+
+    protected void onTestFailureHook(ITestResult result) {
+    }
+
+    protected void onTestSkippedHook(ITestResult result) {
+    }
+
+    protected void onTestStartHook(ITestResult result) {
+    }
+
+    protected void beforeInvocationHook(IInvokedMethod method, ITestResult testResult) {
+    }
+
+    protected void afterInvocationHook(IInvokedMethod method, ITestResult testResult) {
+    }
+
+    protected void onExecutionStartHook() {
+    }
+
+    protected void onExecutionFinishHook() {
     }
 
     private void exportTestClassIfNotProcessed(Class<?> testClass) {
@@ -174,25 +247,6 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         }
     }
 
-    @Override
-    public void afterInvocation(IInvokedMethod method, ITestResult testResult) {
-        if (method.isTestMethod() && !defineArtifactsDisabled()) {
-            awsService.uploadAllArtifactsForTest(testResult.getName(),
-                    testNgParameterExtractor.generateRid(testResult),
-                    metaDataExtractor.getTestId(
-                            method.getTestMethod().getConstructorOrMethod().getMethod())
-            );
-        }
-    }
-
-    private boolean isListeningRequired() {
-        try {
-            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     private boolean defineArtifactsDisabled() {
         boolean result;
         String property;
@@ -206,15 +260,5 @@ public class TestNgListener implements ISuiteListener, ITestListener,
             return false;
         }
         return result;
-    }
-
-    @Override
-    public void onExecutionStart() {
-        log.info("TestNG execution started - global initialization hook");
-    }
-
-    @Override
-    public void onExecutionFinish() {
-        log.info("TestNG execution finished - global cleanup hook");
     }
 }

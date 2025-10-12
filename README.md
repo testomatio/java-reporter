@@ -1,11 +1,8 @@
 # Testomat.io Java Reporter
 
-**Transform your test reporting experience - realtime + easy analytics!  
-Connect your Java tests directly to Testomat.io with minimal setup and maximum insight.**
-
 ---
 
-## 📖 What is this?
+## What is this?
 
 This is the **official Java reporter** for [Testomat.io](https://testomat.io/) - a powerful test management platform.  
 It automatically sends your test results to the platform, giving you comprehensive reports, analytics,  
@@ -14,6 +11,7 @@ and team collaboration features.
 ### 🔄 Current Status & Roadmap
 
 > 🚧 **Actively developed** - New features added regularly!
+---
 
 ## Features
 
@@ -27,10 +25,12 @@ and team collaboration features.
 | **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅     |
 | **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅     |
 | **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅     |
+| **Test filter by ID**              | Run tests filtered by IDs                          |   ✅   |   ✅    |    ✅     |
 | **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅     |
 | **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅     |
-| **Step-by-step reporting**         | Detailed test step execution tracking              |   ⏳   |   ⏳    |    ⏳     |
-| **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |       |        |          |
+| **Step-by-step reporting**         | Detailed test step execution tracking              |   ✅   |   ✅    |    ✅     |
+| **Custom hooks**                   | Allows user's own reporting enhancements           |   ✅   |   ✅    |    ✅     |
+| **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |   ⏳   |   ⏳    |    ⏳     |
 
 ## 🖥️ Supported test frameworks versions
 
@@ -40,26 +40,17 @@ and team collaboration features.
 | **TestNG**    |   7.x   |     7.7.1      |
 | **Cucumber**  |   7.x   |     7.14.0     |
 
-> - Supported Java 11+
-
-## The reporter depends on:
-
-- `jackson-databind 2.15.2`
-- `javaparser-core 3.27.0`
+> Supported Java 11+
 
 ---
 
 ## Common setup for all frameworks:
 
-1. **Add dependency** to your `pom.xml`:
+1. **Add the latest version** of the dependency to your POM.xml:  
+   [TestNG](https://central.sonatype.com/artifact/io.testomat/java-reporter-testng)  
+   [JUnit](https://central.sonatype.com/artifact/io.testomat/java-reporter-junit)  
+   [Cucumber](https://central.sonatype.com/artifact/io.testomat/java-reporter-cucumber)
 
-   ```xml
-   <dependency>
-       <groupId>io.testomat</groupId>
-       <artifactId>java-reporter-/frameworkName/</artifactId>
-       <version>0.x.x</version>
-   </dependency>
-   ``` 
 2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
 3. **Set your API key** as environment variable:
    ```bash
@@ -69,17 +60,16 @@ and team collaboration features.
    ```properties
    testomatio=tstmt_your_key_here
    ```
+   Or provide it as a JVM property on run via -D flag.
+4. Also provide run title in the `testomatio.run.title` property, otherwise runs will have the name "Default Test Run".
+5. IMPORTANT: The reporter will run automatically if the API_KEY is provided in any way! To disable, use
+   `testomatio.reporting.disable=1`.
 
-4. Also provide run title in the `testomatio.run.title` property otherwise runs will have name "Default Test Run".
-5. IMPORTANT: The reporter will run automatically if the API_KEY is provided in any way!
 ---
 
 ## Framework specific setup
 
 ### JUnit
-
-> - Supported versions: 5.x
-> - Tested on 5.9.2
 
 **Step 1:** Create file `src/main/resources/junit-platform.properties`
 
@@ -95,109 +85,90 @@ No additional actions needed as TestNG handles the extension implicitly.
 
 ### Cucumber
 
-Create the `cucumber.properties` file if you don't have one yet and add this line:
+Add `io.testomat.cucumber.listener.CucumberListener` as @ConfigurationParameter value to your TestRunner class.
+Like this:
 
-   ```properties
-      cucumber.plugin=io.testomat.cucumber.listener.CucumberListener
-   ```
-
----
-
-### 🔧 Advanced Custom Setup
-
-> **⚠️ Only use this if you need custom behavior** - like adding extra logic to test lifecycle events.
-
-This lets you customize how the reporter works by overriding core classes:
-
-- `CucumberListener` - Controls Cucumber test reporting
-- `TestNgListener` - Controls TestNG test reporting
-- `JunitListener` - Controls JUnit test reporting
-
-#### When would you need this?
-
-- Adding custom API calls during test execution
-- Integrating with other tools
-- Custom test result processing
-- Advanced filtering or modification of results
-
-#### Setup Steps:
-
-**Step 1:** Complete the Simple Setup first (except for Cucumber-only projects)
-
-**Step 2:** Create the `services` directory:
-
-   ```
-      📁 src/main/resources/META-INF/services/
-   ```
-
-**Step 3:** Create the right configuration file:
-
-| Framework    | Create this file:                                      |
-|--------------|--------------------------------------------------------|
-| **JUnit 5**  | `org.junit.jupiter.api.extension.Extension`            |
-| **TestNG**   | `org.testng.ITestNGListener io.cucumber.plugin.Plugin` |
-| **Cucumber** | `io.cucumber.plugin.Plugin`                            |
-
-**Step 4:** Add your custom class path to the file:
-
-   ```properties
-    com.yourcompany.yourproject.CustomListener
-   ```
-
-**Step 5:** For Cucumber, update your TestRunner to use your custom class instead of ours.
-
-#### Example Custom Listener:
-
-   ```java
-      public class CustomCucumberListener extends CucumberListener {
-    @Override
-    public void onTestStart(TestCase testCase) {
-        // Your custom logic here
-        super.onTestStart(testCase);
-        // More custom logic
-    }
-}
-   ```
+```java
+    @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, io.testomat.cucumber.listener.CucumberListener")
+```
 
 ---
 
-## 🎮 Configuration Options
+## Test codebase sync
+
+> For proper usage of this library it is **strongly recommended** to sync your test codebase with Testomat.io base.
+
+### JUnit, TestNG
+
+For this purpose you can use the [Java-Check-Tests CLI](https://github.com/testomatio/java-check-tests).
+What this is for:
+
+- Import your test source code to Testomat.io
+- Sync test IDs between Testomat.io project and your codebase
+- Remove test IDs and related imports if you need to
+
+Use these one-liners to **download jar and update** IDs in one move:
+
+UNIX, MACOS:  
+`export TESTOMATIO_URL=... && \export TESTOMATIO=... && curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar && java -jar java-check-tests.jar update-ids`
+
+WINDOWS cmd:  
+`set TESTOMATIO_URL=...&& set TESTOMATIO=...&& curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar&& java -jar java-check-tests.jar update-ids`
+
+**Where TESTOMATIO_URL is server URL and TESTOMATIO is your project API key.**  
+**Be careful with whitespaces in the Windows command.**
+
+> For more details please read the description of full CLI functionality here:  
+> https://github.com/testomatio/java-check-tests
+
+---
+**For most cases, the library is ready to use with this setup**
+
+---
+
+## Configuration Options
 
 ### Required Settings
 
    ```properties
-      # Your Testomat.io project API key (find it in your project settings)
+    # Your Testomat.io project API key (find it in your project settings)
 testomatio=tstmt_your_key_here
    ```
-Or provide it as JVM property or ENV variable.
+
+Or provide it as JVM property or ENV variable.  
 IMPORTANT: The reporter will run automatically if the API_KEY is provided in any way!
-### 🎨 Customization Options
 
-Make your test runs exactly how you want them:
+### Customization
 
-| Setting                    | What it does                          | Default             | Example                                       |
-|----------------------------|---------------------------------------|---------------------|-----------------------------------------------|
-| **`testomatio.run.title`** | Custom name for your test run         | `default_run_title` | `"Nightly Regression Tests"`                  |
-| **`testomatio.env`**       | Environment name (dev, staging, prod) | _(none)_            | `"staging"`                                   |
-| **`testomatio.run.group`** | Group related runs together           | _(none)_            | `"sprint-23"`                                 |
-| **`testomatio.publish`**   | Make results publicly shareable       | _(private)_         | Any not null/empty/"0" string, "0" to disable |
+Here are the options to customize the reporting in the way you need:
+
+| Setting                            | What it does                          | Default             | Example                                       |
+|------------------------------------|---------------------------------------|---------------------|-----------------------------------------------|
+| **`testomatio.reporting.disable`** | Disables reporting                    | none                | `true` / `1`                                  |
+| **`testomatio.run.title`**         | Custom name for your test run         | `default_run_title` | `"Nightly Regression Tests"`                  |
+| **`testomatio.env`**               | Environment name (dev, staging, prod) | _(none)_            | `"staging"`                                   |
+| **`testomatio.run.group`**         | Group related runs together           | _(none)_            | `"sprint-23"`                                 |
+| **`testomatio.publish`**           | Make results publicly shareable       | _(private)_         | Any not null/empty/"0" string, "0" to disable |
 
 ### 🔗 Advanced Integration
 
-| Setting                             | What it does                             | Example                                       |
-|-------------------------------------|------------------------------------------|-----------------------------------------------|
-| **`testomatio.url`**                | Custom Testomat.io URL (for enterprise)  | `https://app.testomat.io/`                    |
-| **`testomatio.run.id`**             | Add results to existing run              | `"run_abc123"`                                |
-| **`testomatio.create`**             | Auto-create missing tests in Testomat.io | `true`                                        |
-| **`testomatio.shared.run`**         | Shared run name for team collaboration   | Any not null/empty/"0" string, "0" to disable |
-| **`testomatio.shared.run.timeout`** | How long to wait for shared run          | `3600`                                        |
-| **`testomatio.export.required`**    | Exports your tests code to Testomat.io   | `true`                                        |
+| Setting                             | What it does                             | Example                    |
+|-------------------------------------|------------------------------------------|----------------------------|
+| **`testomatio.url`**                | Custom Testomat.io URL (for enterprise)  | `https://app.testomat.io/` |
+| **`testomatio.run.id`**             | Add results to existing run              | `"run_abc123"`             |
+| **`testomatio.create`**             | Auto-create missing tests in Testomat.io | `true` / `1`               |
+| **`testomatio.shared.run`**         | Shared run name for team collaboration   | `any_name`                 |
+| **`testomatio.shared.run.timeout`** | How long to wait for shared run          | `3600` / `1`               |
+| **`testomatio.export.required`**    | Exports your tests code to Testomat.io   | `true` / `1`               |
 
 ---
+
 
 ## 🏷️ Test Identification & Titles
 
 Connect your code tests directly to your Testomat.io test cases using simple annotations!
+As mentioned above, test IDs are recommended to be synced with Java-Check-Tests CLI.
+But @Title usage is up to you.
 
 ### 📋 For JUnit & TestNG
 
@@ -256,36 +227,12 @@ Feature: User Authentication
     When login fails
     Then error message should be displayed
 ```
-
-- **@TestId**: Links your code test to specific test case in Testomat.io
-
-**Result:** Your Testomat.io dashboard shows exactly which tests ran, with clear titles and perfect traceability! 🎯
-
-## Test ids import
-
-You can either add @TestId() annotations manually or import them from the testomat.io using the **Java-Chek-Tests**
-CLI.  
-Use these oneliners to **download jar and update** ids in one move
-
-> - UNIX, MACOS:  
-    `export TESTOMATIO_URL=... && \export TESTOMATIO=... && curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar && java -jar java-check-tests.jar update-ids`
-
-> - WINDOWS cdm:  
-    `set TESTOMATIO_URL=...&& set TESTOMATIO=...&& curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar&& java -jar java-check-tests.jar update-ids`
-
-**Where TESTOMATIO_URL is server url and TESTOMATIO is your porject api key.**  
-**Be patient to the whitespaces in the Windows command.**
-
-> For more details please read the description of full CLI functionality here:  
-> https://github.com/testomatio/java-check-tests
-
----
-
 ## 📎 Test Artifacts Support
 
 The Java Reporter supports attaching files (screenshots, logs, videos, etc.) to your test results and uploading them to
 S3-compatible storage.  
-Artifacts handling is enabled by default, but it won't affect the run if there are no artifacts provided (see options below).
+Artifacts handling is enabled by default, but it won't affect the run if there are no artifacts provided (see options
+below).
 
 ### Configuration
 
@@ -306,7 +253,7 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 | `testomatio.artifact.disable` | Completely disable artifact uploading            | `false`     |
 | `testomatio.artifact.private` | Keep artifacts private (no public URLs)          | `false`     |
 | `s3.force-path-style`         | Use path-style URLs for S3-compatible storage    | `false`     |
-| `s3.endpoint`                 | Custom endpoint ot be used with force-path-style | `false`     |
+| `s3.endpoint`                 | Custom endpoint to be used with force-path-style | `false`     |
 | `s3.bucket`                   | Provides bucket name for configuration           |             |
 | `s3.access-key-id`            | Access key for the bucket                        |             |
 | `s3.region`                   | Bucket region                                    | `us-west-1` |
@@ -316,7 +263,7 @@ Environment variables take precedence over server-provided credentials.
 
 ### Usage
 
-Use the `Testomatio` facade to attach files to your tests:
+Use the `Testomatio` facade to attach files to your tests.
 Multiple files can be provided to the `Testomatio.artifact(String ...)` method.
 
 ```java
@@ -326,17 +273,18 @@ public class MyTest {
 
     @Test
     public void testWithScreenshot() {
-                // Your test logic
+        // Your test logic
 
-                // Attach artifacts (screenshots, logs, etc.)
-                Testomatio.artifact(
+        // Attach artifacts (screenshots, logs, etc.)
+        Testomatio.artifact(
                 "/path/to/screenshot.png",
                 "/path/to/test.log"
         );
     }
 }
 ```
-Please, make sure you provide path to artifact file including its extension.
+
+Please make sure you provide the path to the artifact file including its extension.
 
 ### How It Works
 
@@ -344,8 +292,7 @@ Please, make sure you provide path to artifact file including its extension.
 2. **Link Generation**: Public URLs are generated and attached to test results
 3. Artifacts are visible at the test info on UI
 
-
-As the result you will see something like this on UI after run completed:
+As a result, you will see something like this in the UI after the run is completed:
 
 ![artifact example](./img/artifactExample.png)
 
@@ -401,13 +348,50 @@ And the dashboard - something like this:
 
 ---
 
-## 📤Method exporting
+## Advanced customization
 
-> You can turn on the method exporting from your code to the Testomat.io platform by adding
->```properties
-   >testomatio.export.required=true
-   >```
->![export img](./img/export.png)
+There are void hooks in the listeners that allow you to customize reporting much more.
+These hooks are located in the listeners' tests lifecycle methods according to their names.
+External API calls, logging, and any custom logic can be added to the hooks.
+The hooks are executed **after** the lifecycle method logic finishes and do not replace it.
+
+### JUnit, TestNG
+
+1. Complete the Simple Setup first
+2. Create a new class that extends JunitListener or TestNgListener, based on your needs.
+    Implement protected methods from the library listener and add custom logic to them.
+
+3. Create the `services` directory:
+
+   ```
+      📁 src/main/resources/META-INF/services/
+   ```
+
+4. Create the right configuration file:
+    
+    | Framework    | Create this file:                           |
+    |--------------|---------------------------------------------|
+    | **JUnit 5**  | `org.junit.jupiter.api.extension.Extension` |
+    | **TestNG**   | `org.testng.ITestNGListener`                |
+
+5. Add your custom class path to the file:
+
+   ```properties
+    com.yourcompany.yourproject.CustomListener
+   ```
+### Cucumber
+
+1. Complete the Simple Setup first
+2. Create a new class that extends CucumberListener.
+   Implement protected methods from the library listener and add custom logic to them.
+3. Add `com.yourcompany.yourproject.YOUR_CUSTOM_LISTENER` as @ConfigurationParameter value to your TestRunner class.
+   Like this:
+
+```java
+    @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, com.yourcompany.yourproject.YOUR_CUSTOM_LISTENER")
+```
+
+---
 
 ## 🆘 Troubleshooting
 
@@ -415,8 +399,7 @@ And the dashboard - something like this:
 
 1. **Check your API key** - it should start with `tstmt_` and be related to the project you're looking at.
 2. **Verify internet connection** - the reporter needs to reach `app.testomat.io`
-3. **Check test names** - make sure they match your Testomat.io project structure
-4. **Enable auto-creation** - add `-Dtestomatio.create=true` to create missing tests
+3. **Enable auto-creation** - add `-Dtestomatio.create=true` to create missing tests
 
 ### Framework not detected?
 
