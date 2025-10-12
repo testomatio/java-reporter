@@ -29,7 +29,7 @@ and team collaboration features.
 | **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅     |
 | **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅     |
 | **Step-by-step reporting**         | Detailed test step execution tracking              |   ✅   |   ✅    |    ✅     |
-| **Custom hooks**                   | Allows user's own reporting enhances               |   ✅   |   ✅    |    ✅     |
+| **Custom hooks**                   | Allows user's own reporting enhancements           |   ✅   |   ✅    |    ✅     |
 | **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |   ⏳   |   ⏳    |    ⏳     |
 
 ## 🖥️ Supported test frameworks versions
@@ -60,9 +60,9 @@ and team collaboration features.
    ```properties
    testomatio=tstmt_your_key_here
    ```
-   Or provide it as JVM property on run via -D flag.
-4. Also provide run title in the `testomatio.run.title` property otherwise runs will have name "Default Test Run".
-5. IMPORTANT: The reporter will run automatically if the API_KEY is provided in any way! To disable use
+   Or provide it as a JVM property on run via -D flag.
+4. Also provide run title in the `testomatio.run.title` property, otherwise runs will have the name "Default Test Run".
+5. IMPORTANT: The reporter will run automatically if the API_KEY is provided in any way! To disable, use
    `testomatio.reporting.disable=1`.
 
 ---
@@ -100,28 +100,29 @@ Like this:
 
 ### JUnit, TestNG
 
-For this purpose you can use the [Java-Check-Tests CLI](https://github.com/testomatio/java-check-tests).  
-What is this supposed for:
+For this purpose you can use the [Java-Check-Tests CLI](https://github.com/testomatio/java-check-tests).
+What this is for:
 
 - Import your test source code to Testomat.io
-- Sync test IDs between Testomat.io porject and your codebase
-- Remove test IDs and related imports if you need to.
-  Use these oneliners to **download jar and update** ids in one move
+- Sync test IDs between Testomat.io project and your codebase
+- Remove test IDs and related imports if you need to
+
+Use these one-liners to **download jar and update** IDs in one move:
 
 UNIX, MACOS:  
 `export TESTOMATIO_URL=... && \export TESTOMATIO=... && curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar && java -jar java-check-tests.jar update-ids`
 
-WINDOWS cdm:  
+WINDOWS cmd:  
 `set TESTOMATIO_URL=...&& set TESTOMATIO=...&& curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar&& java -jar java-check-tests.jar update-ids`
 
-**Where TESTOMATIO_URL is server url and TESTOMATIO is your porject api key.**  
-**Be patient to the whitespaces in the Windows command.**
+**Where TESTOMATIO_URL is server URL and TESTOMATIO is your project API key.**  
+**Be careful with whitespaces in the Windows command.**
 
 > For more details please read the description of full CLI functionality here:  
 > https://github.com/testomatio/java-check-tests
 
 ---
-**For most cases the lib is ready to use with this setup**
+**For most cases, the library is ready to use with this setup**
 
 ---
 
@@ -165,8 +166,8 @@ Here are the options to customize the reporting in the way you need:
 
 ## 🏷️ Test Identification & Titles
 
-Connect your code tests directly to your Testomat.io test cases using simple annotations!  
-As it's said above - test IDs are recommended to sync with Java-Check-Tests CLI.
+Connect your code tests directly to your Testomat.io test cases using simple annotations!
+As mentioned above, test IDs are recommended to be synced with Java-Check-Tests CLI.
 But @Title usage is up to you.
 
 ### 📋 For JUnit & TestNG
@@ -252,7 +253,7 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 | `testomatio.artifact.disable` | Completely disable artifact uploading            | `false`     |
 | `testomatio.artifact.private` | Keep artifacts private (no public URLs)          | `false`     |
 | `s3.force-path-style`         | Use path-style URLs for S3-compatible storage    | `false`     |
-| `s3.endpoint`                 | Custom endpoint ot be used with force-path-style | `false`     |
+| `s3.endpoint`                 | Custom endpoint to be used with force-path-style | `false`     |
 | `s3.bucket`                   | Provides bucket name for configuration           |             |
 | `s3.access-key-id`            | Access key for the bucket                        |             |
 | `s3.region`                   | Bucket region                                    | `us-west-1` |
@@ -262,7 +263,7 @@ Environment variables take precedence over server-provided credentials.
 
 ### Usage
 
-Use the `Testomatio` facade to attach files to your tests:
+Use the `Testomatio` facade to attach files to your tests.
 Multiple files can be provided to the `Testomatio.artifact(String ...)` method.
 
 ```java
@@ -283,7 +284,7 @@ public class MyTest {
 }
 ```
 
-Please, make sure you provide path to artifact file including its extension.
+Please make sure you provide the path to the artifact file including its extension.
 
 ### How It Works
 
@@ -291,7 +292,7 @@ Please, make sure you provide path to artifact file including its extension.
 2. **Link Generation**: Public URLs are generated and attached to test results
 3. Artifacts are visible at the test info on UI
 
-As the result you will see something like this on UI after run completed:
+As a result, you will see something like this in the UI after the run is completed:
 
 ![artifact example](./img/artifactExample.png)
 
@@ -349,16 +350,16 @@ And the dashboard - something like this:
 
 ## Advanced customization
 
-There are void hooks in the listeners that allow to customize reporting way more.
+There are void hooks in the listeners that allow you to customize reporting much more.
 These hooks are located in the listeners' tests lifecycle methods according to their names.
-External api calls, logging and any custom logic can be added to the hooks.
-The hooks are executed **after** the lifecycle method logic finishes and not replaces it.
+External API calls, logging, and any custom logic can be added to the hooks.
+The hooks are executed **after** the lifecycle method logic finishes and do not replace it.
 
 ### JUnit, TestNG
 
 1. Complete the Simple Setup first
-2. Create a new class that extends JunitListener or TestNgListener, based on your needs.  
-    Implement protected methods from library listener and add custom logic to them.
+2. Create a new class that extends JunitListener or TestNgListener, based on your needs.
+    Implement protected methods from the library listener and add custom logic to them.
 
 3. Create the `services` directory:
 
@@ -381,8 +382,8 @@ The hooks are executed **after** the lifecycle method logic finishes and not rep
 ### Cucumber
 
 1. Complete the Simple Setup first
-2. Create a new class that extends CucumberListener.  
-   Implement protected methods from library listener and add custom logic to them.
+2. Create a new class that extends CucumberListener.
+   Implement protected methods from the library listener and add custom logic to them.
 3. Add `com.yourcompany.yourproject.YOUR_CUSTOM_LISTENER` as @ConfigurationParameter value to your TestRunner class.
    Like this:
 
