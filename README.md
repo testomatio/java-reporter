@@ -174,6 +174,8 @@ But @Title usage is up to you.
 
 Use `@TestId` and `@Title` annotations to make your tests perfectly trackable:
 
+> 💡 **Tip**: With `@TestId` annotations in place, you can filter and run specific tests by their IDs - see [Test Filtering by ID](#-test-filtering-by-id) below.
+
 ```java
 import com.testomatio.reporter.annotation.TestId;
 import com.testomatio.reporter.annotation.Title;
@@ -295,6 +297,177 @@ Please make sure you provide the path to the artifact file including its extensi
 As a result, you will see something like this in the UI after the run is completed:
 
 ![artifact example](./img/artifactExample.png)
+
+---
+
+## 📝 Step-by-Step Reporting
+
+Track detailed test execution flow using the `@Step` annotation.  
+Steps provide granular visibility into test logic and help identify exactly where tests succeed or fail.
+
+
+### Setup
+
+Add AspectJ weaver to your test execution via maven-surefire-plugin:
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.2.2</version>
+            <configuration>
+                <argLine>
+                    -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.jar"
+                </argLine>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+### Basic Usage
+
+Annotate methods with `@Step` to track their execution:
+
+```java
+import io.testomat.core.annotation.Step;
+
+public class LoginTest {
+
+    @Test
+    public void testUserLogin() {
+        openLoginPage();
+        enterCredentials("user@example.com", "password123");
+        clickLoginButton();
+        verifyUserLoggedIn();
+    }
+
+    @Step("Open login page")
+    private void openLoginPage() {
+        driver.get("https://example.com/login");
+    }
+
+    @Step("Enter credentials")
+    private void enterCredentials(String email, String password) {
+        driver.findElement(By.id("email")).sendKeys(email);
+        driver.findElement(By.id("password")).sendKeys(password);
+    }
+
+    @Step("Click login button")
+    private void clickLoginButton() {
+        driver.findElement(By.id("login-btn")).click();
+    }
+
+    @Step("Verify user is logged in")
+    private void verifyUserLoggedIn() {
+        assertTrue(driver.findElement(By.id("user-profile")).isDisplayed());
+    }
+}
+```
+
+### Parameter Substitution
+
+Use placeholders to make step descriptions dynamic:
+
+**Indexed placeholders** (always work):
+```java
+@Step("Search for {0} in category {1}")
+private void search(String query, String category) {
+    // Step will show: "Search for laptop in category electronics"
+}
+```
+
+**Named placeholders** (require `-parameters` compiler flag):
+```java
+@Step("Login as {username} with {password}")
+private void login(String username, String password) {
+    // Step will show: "Login as admin with secret123"
+}
+```
+
+To enable named placeholders, add to `pom.xml`:
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <parameters>true</parameters>
+    </configuration>
+</plugin>
+```
+
+### What You'll See
+
+Steps appear in test reports with:
+- Step title
+- Execution duration
+- Order of execution
+
+This provides complete transparency into test flow and helps debug failures quickly.
+
+---
+
+## 🎯 Test Filtering by ID
+
+**JUnit & TestNG only**
+
+> **Note**: Cucumber tests can be filtered using native Cucumber tags functionality (`@tag` in feature files and `cucumber.filter.tags` property).
+
+Run specific tests by their `@TestId` values using the `-Dids` parameter. This is useful for:
+- Running smoke tests or critical path tests
+- Re-running failed tests from previous runs
+- Debugging specific test cases
+- CI/CD pipelines with test subsets
+
+### Usage
+
+Filter tests by comma-separated test IDs:
+
+```bash
+# Run single test
+mvn test -Dids=smoke-001
+
+# Run multiple tests
+mvn test -Dids=smoke-001,smoke-002,smoke-003
+
+# Combine with other parameters
+mvn test \
+  -Dids=smoke-001,smoke-002 \
+  -Dtestomatio=tstmt_your_key \
+  -Dtestomatio.run.title="Smoke Tests"
+```
+
+### Example
+
+```java
+public class LoginTests {
+
+    @Test
+    @TestId("smoke-001")
+    public void testValidLogin() {
+        // This test will run with -Dids=smoke-001
+    }
+
+    @Test
+    @TestId("smoke-002")
+    public void testInvalidPassword() {
+        // This test will run with -Dids=smoke-002
+    }
+
+    @Test
+    public void testOtherFeature() {
+        // This test will be skipped when filtering by IDs
+    }
+}
+```
+
+### Behavior
+
+- **Tests without `@TestId`**: Included when no filter is applied; skipped when `-Dids` is provided (TestNG only)
+- **Tests with matching IDs**: Always run when their ID is in the filter list
+- **Tests with non-matching IDs**: Skipped
 
 ---
 
