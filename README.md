@@ -298,6 +298,115 @@ As a result, you will see something like this in the UI after the run is complet
 
 ---
 
+## 📝 Step-by-Step Reporting
+
+Track detailed test execution flow using the `@Step` annotation.  
+Steps provide granular visibility into test logic and help identify exactly where tests succeed or fail.
+
+
+### Setup
+
+Add AspectJ weaver to your test execution via maven-surefire-plugin:
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.2.2</version>
+            <configuration>
+                <argLine>
+                    -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.jar"
+                </argLine>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+### Basic Usage
+
+Annotate methods with `@Step` to track their execution:
+
+```java
+import io.testomat.core.annotation.Step;
+
+public class LoginTest {
+
+    @Test
+    public void testUserLogin() {
+        openLoginPage();
+        enterCredentials("user@example.com", "password123");
+        clickLoginButton();
+        verifyUserLoggedIn();
+    }
+
+    @Step("Open login page")
+    private void openLoginPage() {
+        driver.get("https://example.com/login");
+    }
+
+    @Step("Enter credentials")
+    private void enterCredentials(String email, String password) {
+        driver.findElement(By.id("email")).sendKeys(email);
+        driver.findElement(By.id("password")).sendKeys(password);
+    }
+
+    @Step("Click login button")
+    private void clickLoginButton() {
+        driver.findElement(By.id("login-btn")).click();
+    }
+
+    @Step("Verify user is logged in")
+    private void verifyUserLoggedIn() {
+        assertTrue(driver.findElement(By.id("user-profile")).isDisplayed());
+    }
+}
+```
+
+### Parameter Substitution
+
+Use placeholders to make step descriptions dynamic:
+
+**Indexed placeholders** (always work):
+```java
+@Step("Search for {0} in category {1}")
+private void search(String query, String category) {
+    // Step will show: "Search for laptop in category electronics"
+}
+```
+
+**Named placeholders** (require `-parameters` compiler flag):
+```java
+@Step("Login as {username} with {password}")
+private void login(String username, String password) {
+    // Step will show: "Login as admin with secret123"
+}
+```
+
+To enable named placeholders, add to `pom.xml`:
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <parameters>true</parameters>
+    </configuration>
+</plugin>
+```
+
+### What You'll See
+
+Steps appear in test reports with:
+- Step title
+- Execution duration
+- Order of execution
+
+This provides complete transparency into test flow and helps debug failures quickly.
+
+---
+
 ## 💡 Library Usage Examples
 
 ### Basic Usage
