@@ -82,8 +82,9 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         if (!isListeningRequired()) {
             return;
         }
+        onSuiteStartHookBeforeExecution(context);
         runManager.incrementSuiteCounter();
-        onSuiteStartHook(context);
+        onSuiteStartHookAfterExecution(context);
     }
 
     @Override
@@ -91,15 +92,16 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         if (!isListeningRequired()) {
             return;
         }
-
+        onSuiteFinishHookBeforeExecution(context);
         exportTestClassIfNotProcessed(context);
         runManager.decrementSuiteCounter();
-        onSuiteFinishHook(context);
+        onSuiteFinishHookAfterExecution(context);
     }
 
     @Override
     public final void beforeEach(ExtensionContext context) {
-        beforeEachHook(context);
+        beforeEachHookBeforeExecution(context);
+        beforeEachHookAfterExecution(context);
     }
 
     @Override
@@ -107,10 +109,10 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         if (!isListeningRequired()) {
             return;
         }
-
+        onTestDisabledHookBeforeExecution(context, reason);
         reporter.reportTestResult(context, SKIPPED, reason.orElse("Test disabled"));
         exportTestClassIfNotProcessed(context);
-        onTestDisabledHook(context, reason);
+        onTestDisabledHookAfterExecution(context, reason);
     }
 
     @Override
@@ -118,10 +120,10 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         if (!isListeningRequired()) {
             return;
         }
-
+        onTestSuccessHookBeforeExecution(context);
         reporter.reportTestResult(context, PASSED, null);
         exportTestClassIfNotProcessed(context);
-        onTestSuccessHook(context);
+        onTestSuccessHookAfterExecution(context);
     }
 
     @Override
@@ -129,10 +131,10 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         if (!isListeningRequired()) {
             return;
         }
-
+        onTestAbortedHookBeforeExecution(context, cause);
         reporter.reportTestResult(context, SKIPPED, cause.getMessage());
         exportTestClassIfNotProcessed(context);
-        onTestAbortedHook(context, cause);
+        onTestAbortedHookAfterExecution(context, cause);
     }
 
     @Override
@@ -140,61 +142,96 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         if (!isListeningRequired()) {
             return;
         }
-
+        onTestFailureHookBeforeExecution(context, cause);
         reporter.reportTestResult(context, FAILED, cause.getMessage());
         exportTestClassIfNotProcessed(context);
-        onTestFailureHook(context, cause);
+        onTestFailureHookAfterExecution(context, cause);
     }
 
     @Override
     public final void afterEach(ExtensionContext context) {
+        afterEachHookBeforeExecution(context);
         if (!artifactDisabled) {
             awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
                     JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
         }
-        afterEachHook(context);
+        afterEachHookAfterExecution(context);
     }
 
     @Override
     public final void testPlanExecutionStarted(TestPlan testPlan) {
+        onExecutionStartHookBeforeExecution(testPlan);
         log.info("JUnit test plan execution started - global initialization hook");
-        onExecutionStartHook();
+        onExecutionStartHookAfterExecution(testPlan);
     }
 
     @Override
     public final void testPlanExecutionFinished(TestPlan testPlan) {
+        onExecutionFinishHookBeforeExecution(testPlan);
         log.info("JUnit test plan execution finished - global cleanup hook");
-        onExecutionFinishHook();
+        onExecutionFinishHookAfterExecution(testPlan);
     }
 
-    protected void onSuiteStartHook(ExtensionContext context) {
+    protected void onSuiteStartHookAfterExecution(ExtensionContext context) {
     }
 
-    protected void onSuiteFinishHook(ExtensionContext context) {
+    protected void onSuiteStartHookBeforeExecution(ExtensionContext context) {
     }
 
-    protected void beforeEachHook(ExtensionContext context) {
+    protected void onSuiteFinishHookAfterExecution(ExtensionContext context) {
     }
 
-    protected void onTestSuccessHook(ExtensionContext context) {
+    protected void onSuiteFinishHookBeforeExecution(ExtensionContext context) {
     }
 
-    protected void onTestFailureHook(ExtensionContext context, Throwable cause) {
+    protected void beforeEachHookAfterExecution(ExtensionContext context) {
     }
 
-    protected void onTestDisabledHook(ExtensionContext context, Optional<String> reason) {
+    protected void beforeEachHookBeforeExecution(ExtensionContext context) {
     }
 
-    protected void onTestAbortedHook(ExtensionContext context, Throwable cause) {
+    protected void onTestSuccessHookAfterExecution(ExtensionContext context) {
     }
 
-    protected void afterEachHook(ExtensionContext context) {
+    protected void onTestSuccessHookBeforeExecution(ExtensionContext context) {
     }
 
-    protected void onExecutionStartHook() {
+    protected void onTestFailureHookAfterExecution(ExtensionContext context, Throwable cause) {
     }
 
-    protected void onExecutionFinishHook() {
+    protected void onTestFailureHookBeforeExecution(ExtensionContext context, Throwable cause) {
+    }
+
+    protected void onTestDisabledHookAfterExecution(ExtensionContext context,
+                                                    Optional<String> reason) {
+    }
+
+    protected void onTestDisabledHookBeforeExecution(ExtensionContext context,
+                                                     Optional<String> reason) {
+    }
+
+    protected void onTestAbortedHookAfterExecution(ExtensionContext context, Throwable cause) {
+    }
+
+    protected void onTestAbortedHookBeforeExecution(ExtensionContext context, Throwable cause) {
+    }
+
+    protected void afterEachHookAfterExecution(ExtensionContext context) {
+    }
+
+    protected void afterEachHookBeforeExecution(ExtensionContext context) {
+    }
+
+    protected void onExecutionStartHookAfterExecution(TestPlan testPlan) {
+    }
+
+    protected void onExecutionStartHookBeforeExecution(TestPlan testPlan) {
+    }
+
+    protected void onExecutionFinishHookAfterExecution(TestPlan testPlan) {
+    }
+
+    protected void onExecutionFinishHookBeforeExecution(TestPlan testPlan) {
     }
 
     private void exportTestClassIfNotProcessed(ExtensionContext context) {
