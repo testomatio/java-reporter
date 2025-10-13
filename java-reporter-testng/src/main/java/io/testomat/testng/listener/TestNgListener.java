@@ -90,10 +90,11 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         if (!isListeningRequired()) {
             return;
         }
+        onSuiteStartHookBeforeExecution(suite);
         log.debug("Suite started: {}", suite.getName());
         runManager.incrementSuiteCounter();
         reporter.reportTestResult(suite);
-        onSuiteStartHook(suite);
+        onSuiteStartHookAfterExecution(suite);
     }
 
     @Override
@@ -101,9 +102,10 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         if (!isListeningRequired()) {
             return;
         }
+        onSuiteFinishHookBeforeExecution(suite);
         log.debug("Suite finished: {}", suite.getName());
         runManager.decrementSuiteCounter();
-        onSuiteFinishHook(suite);
+        onSuiteFinishHookAfterExecution(suite);
     }
 
     @Override
@@ -131,9 +133,9 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         if (!isListeningRequired()) {
             return;
         }
-
+        onTestStartHookBeforeExecution(result);
         testIdFilter.filterTest(result);
-        onTestStartHook(result);
+        onTestStartHookAfterExecution(result);
     }
 
     @Override
@@ -141,9 +143,10 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         if (!isListeningRequired()) {
             return;
         }
+        onTestSuccessHookBeforeExecution(result);
         reporter.reportTestResult(result, PASSED);
         exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
-        onTestSuccessHook(result);
+        onTestSuccessHookAfterExecution(result);
     }
 
     @Override
@@ -151,9 +154,10 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         if (!isListeningRequired()) {
             return;
         }
+        onTestFailureHookBeforeExecution(result);
         reporter.reportTestResult(result, FAILED);
         exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
-        onTestFailureHook(result);
+        onTestFailureHookAfterExecution(result);
     }
 
     @Override
@@ -161,13 +165,15 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         if (!isListeningRequired()) {
             return;
         }
+        onTestSkippedHookBeforeExecution(result);
         reporter.reportTestResult(result, SKIPPED);
         exportTestClassIfNotProcessed(result.getTestClass().getRealClass());
-        onTestSkippedHook(result);
+        onTestSkippedHookAfterExecution(result);
     }
 
     @Override
     public final void afterInvocation(IInvokedMethod method, ITestResult testResult) {
+        afterInvocationHookBeforeExecution(method, testResult);
         if (method.isTestMethod() && !defineArtifactsDisabled()) {
             awsService.uploadAllArtifactsForTest(testResult.getName(),
                     testNgParameterExtractor.generateRid(testResult),
@@ -175,62 +181,91 @@ public class TestNgListener implements ISuiteListener, ITestListener,
                             method.getTestMethod().getConstructorOrMethod().getMethod())
             );
         }
-        afterInvocationHook(method, testResult);
+        afterInvocationHookAfterExecution(method, testResult);
     }
 
     @Override
     public final void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
-        beforeInvocationHook(method, testResult);
-    }
-
-    private boolean isListeningRequired() {
-        try {
-            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
-        } catch (Exception e) {
-            return false;
-        }
+        beforeInvocationHookBeforeExecution(method, testResult);
+        beforeInvocationHookAfterExecution(method, testResult);
     }
 
     @Override
     public final void onExecutionStart() {
+        onExecutionStartHookBeforeExecution();
         log.info("TestNG execution started - global initialization hook");
-        onExecutionStartHook();
+        onExecutionStartHookAfterExecution();
     }
 
     @Override
     public final void onExecutionFinish() {
+        onExecutionFinishHookBeforeExecution();
         log.info("TestNG execution finished - global cleanup hook");
-        onExecutionFinishHook();
+        onExecutionFinishHookAfterExecution();
     }
 
-    protected void onSuiteStartHook(ISuite suite) {
+    protected void onSuiteStartHookAfterExecution(ISuite suite) {
     }
 
-    protected void onSuiteFinishHook(ISuite suite) {
+    protected void onSuiteStartHookBeforeExecution(ISuite suite) {
     }
 
-    protected void onTestSuccessHook(ITestResult result) {
+    protected void onSuiteFinishHookAfterExecution(ISuite suite) {
     }
 
-    protected void onTestFailureHook(ITestResult result) {
+    protected void onSuiteFinishHookBeforeExecution(ISuite suite) {
     }
 
-    protected void onTestSkippedHook(ITestResult result) {
+    protected void onTestSuccessHookAfterExecution(ITestResult result) {
     }
 
-    protected void onTestStartHook(ITestResult result) {
+    protected void onTestSuccessHookBeforeExecution(ITestResult result) {
     }
 
-    protected void beforeInvocationHook(IInvokedMethod method, ITestResult testResult) {
+    protected void onTestFailureHookAfterExecution(ITestResult result) {
     }
 
-    protected void afterInvocationHook(IInvokedMethod method, ITestResult testResult) {
+    protected void onTestFailureHookBeforeExecution(ITestResult result) {
     }
 
-    protected void onExecutionStartHook() {
+    protected void onTestSkippedHookAfterExecution(ITestResult result) {
     }
 
-    protected void onExecutionFinishHook() {
+    protected void onTestSkippedHookBeforeExecution(ITestResult result) {
+    }
+
+    protected void onTestStartHookAfterExecution(ITestResult result) {
+    }
+
+    protected void onTestStartHookBeforeExecution(ITestResult result) {
+    }
+
+    protected void beforeInvocationHookAfterExecution(IInvokedMethod method,
+                                                      ITestResult testResult) {
+    }
+
+    protected void beforeInvocationHookBeforeExecution(IInvokedMethod method,
+                                                       ITestResult testResult) {
+    }
+
+    protected void afterInvocationHookAfterExecution(IInvokedMethod method,
+                                                     ITestResult testResult) {
+    }
+
+    protected void afterInvocationHookBeforeExecution(IInvokedMethod method,
+                                                      ITestResult testResult) {
+    }
+
+    protected void onExecutionStartHookAfterExecution() {
+    }
+
+    protected void onExecutionStartHookBeforeExecution() {
+    }
+
+    protected void onExecutionFinishHookAfterExecution() {
+    }
+
+    protected void onExecutionFinishHookBeforeExecution() {
     }
 
     private void exportTestClassIfNotProcessed(Class<?> testClass) {
@@ -260,5 +295,13 @@ public class TestNgListener implements ISuiteListener, ITestListener,
             return false;
         }
         return result;
+    }
+
+    private boolean isListeningRequired() {
+        try {
+            return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

@@ -66,13 +66,15 @@ public class CucumberListener implements Plugin, EventListener {
     }
 
     void handleTestRunStarted(TestRunStarted event) {
+        onTestRunStartedHookBeforeExecution(event);
         runManager.incrementSuiteCounter();
-        onTestRunStartedHook(event);
+        onTestRunStartedHookAfterExecution(event);
     }
 
     void handleTestRunFinished(TestRunFinished event) {
+        onTestRunFinishedHookBeforeExecution(event);
         runManager.decrementSuiteCounter();
-        onTestRunFinishedHook(event);
+        onTestRunFinishedHookAfterExecution(event);
     }
 
     void handleTestCaseFinished(TestCaseFinished event) {
@@ -85,15 +87,17 @@ public class CucumberListener implements Plugin, EventListener {
         }
 
         try {
+            onTestCaseFinishedHookBeforeExecution(event);
             TestResult result = resultConstructor.constructTestRunResult(event);
             runManager.reportTest(result);
-            onTestCaseFinishedHook(event);
+            onTestCaseFinishedHookAfterExecution(event);
         } catch (Exception e) {
             String testName = event.getTestCase() != null ? event.getTestCase().getName()
                     : "Unknown Test";
             throw new ReportTestResultException("Failed to report test result for: " + testName, e);
         } finally {
             afterEach(event);
+            onTestCaseFinishedHookFinally(event);
         }
     }
 
@@ -104,10 +108,11 @@ public class CucumberListener implements Plugin, EventListener {
      * @param event the test case finished event
      */
     protected void afterEach(TestCaseFinished event) {
+        afterEachHookBeforeExecution(event);
         awsService.uploadAllArtifactsForTest(dataExtractor.extractTitle(event),
                 event.getTestCase().getId().toString(),
                 dataExtractor.extractTestId(event));
-        afterEachHook(event);
+        afterEachHookAfterExecution(event);
     }
 
     /**
@@ -115,7 +120,10 @@ public class CucumberListener implements Plugin, EventListener {
      *
      * @param event the test run started event
      */
-    protected void onTestRunStartedHook(TestRunStarted event) {
+    protected void onTestRunStartedHookAfterExecution(TestRunStarted event) {
+    }
+
+    protected void onTestRunStartedHookBeforeExecution(TestRunStarted event) {
     }
 
     /**
@@ -123,7 +131,10 @@ public class CucumberListener implements Plugin, EventListener {
      *
      * @param event the test run finished event
      */
-    protected void onTestRunFinishedHook(TestRunFinished event) {
+    protected void onTestRunFinishedHookAfterExecution(TestRunFinished event) {
+    }
+
+    protected void onTestRunFinishedHookBeforeExecution(TestRunFinished event) {
     }
 
     /**
@@ -131,7 +142,13 @@ public class CucumberListener implements Plugin, EventListener {
      *
      * @param event the test case finished event
      */
-    protected void onTestCaseFinishedHook(TestCaseFinished event) {
+    protected void onTestCaseFinishedHookAfterExecution(TestCaseFinished event) {
+    }
+
+    protected void onTestCaseFinishedHookBeforeExecution(TestCaseFinished event) {
+    }
+
+    protected void onTestCaseFinishedHookFinally(TestCaseFinished event) {
     }
 
     /**
@@ -139,6 +156,9 @@ public class CucumberListener implements Plugin, EventListener {
      *
      * @param event the test case finished event
      */
-    protected void afterEachHook(TestCaseFinished event) {
+    protected void afterEachHookAfterExecution(TestCaseFinished event) {
+    }
+
+    protected void afterEachHookBeforeExecution(TestCaseFinished event) {
     }
 }
