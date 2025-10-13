@@ -174,6 +174,8 @@ But @Title usage is up to you.
 
 Use `@TestId` and `@Title` annotations to make your tests perfectly trackable:
 
+> 💡 **Tip**: With `@TestId` annotations in place, you can filter and run specific tests by their IDs - see [Test Filtering by ID](#-test-filtering-by-id) below.
+
 ```java
 import com.testomatio.reporter.annotation.TestId;
 import com.testomatio.reporter.annotation.Title;
@@ -404,6 +406,68 @@ Steps appear in test reports with:
 - Order of execution
 
 This provides complete transparency into test flow and helps debug failures quickly.
+
+---
+
+## 🎯 Test Filtering by ID
+
+**JUnit & TestNG only**
+
+> **Note**: Cucumber tests can be filtered using native Cucumber tags functionality (`@tag` in feature files and `cucumber.filter.tags` property).
+
+Run specific tests by their `@TestId` values using the `-Dids` parameter. This is useful for:
+- Running smoke tests or critical path tests
+- Re-running failed tests from previous runs
+- Debugging specific test cases
+- CI/CD pipelines with test subsets
+
+### Usage
+
+Filter tests by comma-separated test IDs:
+
+```bash
+# Run single test
+mvn test -Dids=smoke-001
+
+# Run multiple tests
+mvn test -Dids=smoke-001,smoke-002,smoke-003
+
+# Combine with other parameters
+mvn test \
+  -Dids=smoke-001,smoke-002 \
+  -Dtestomatio=tstmt_your_key \
+  -Dtestomatio.run.title="Smoke Tests"
+```
+
+### Example
+
+```java
+public class LoginTests {
+
+    @Test
+    @TestId("smoke-001")
+    public void testValidLogin() {
+        // This test will run with -Dids=smoke-001
+    }
+
+    @Test
+    @TestId("smoke-002")
+    public void testInvalidPassword() {
+        // This test will run with -Dids=smoke-002
+    }
+
+    @Test
+    public void testOtherFeature() {
+        // This test will be skipped when filtering by IDs
+    }
+}
+```
+
+### Behavior
+
+- **Tests without `@TestId`**: Included when no filter is applied; skipped when `-Dids` is provided (TestNG only)
+- **Tests with matching IDs**: Always run when their ID is in the filter list
+- **Tests with non-matching IDs**: Skipped
 
 ---
 
