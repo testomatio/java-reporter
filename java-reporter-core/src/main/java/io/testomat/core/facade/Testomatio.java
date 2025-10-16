@@ -1,6 +1,9 @@
 package io.testomat.core.facade;
 
 import io.testomat.core.artifact.manager.ArtifactManager;
+import io.testomat.core.meta.MetaStorage;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Main public API facade for Testomat.io integration.
@@ -15,5 +18,13 @@ public class Testomatio {
      */
     public static void artifact(String... directories) {
         ServiceRegistryUtil.getService(ArtifactManager.class).storeDirectories(directories);
+    }
+
+    public static void meta(String key, String value) {
+        MetaStorage.TEMP_META_STORAGE.get().put(key, value);
+    }
+
+    public static void meta(Map<String, String> metaMap) {
+        MetaStorage.TEMP_META_STORAGE.get().putAll(metaMap);
     }
 }

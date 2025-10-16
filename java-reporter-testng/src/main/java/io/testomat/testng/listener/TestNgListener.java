@@ -7,6 +7,7 @@ import static io.testomat.core.constants.CommonConstants.SKIPPED;
 import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
 import io.testomat.core.artifact.client.AwsService;
+import io.testomat.core.meta.MetaStorage;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
@@ -15,8 +16,10 @@ import io.testomat.testng.extractor.TestNgParameterExtractor;
 import io.testomat.testng.filter.TestIdFilter;
 import io.testomat.testng.methodexporter.TestNgMethodExportManager;
 import io.testomat.testng.reporter.TestNgTestResultReporter;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.sound.midi.MetaEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.IExecutionListener;
@@ -303,5 +306,10 @@ public class TestNgListener implements ISuiteListener, ITestListener,
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private void handleMetaAfterInvocation(ITestResult testResult) {
+        MetaStorage.LINKED_META_STORAGE.put(
+                testNgParameterExtractor.generateRid(testResult), MetaStorage.TEMP_META_STORAGE.get());
     }
 }
