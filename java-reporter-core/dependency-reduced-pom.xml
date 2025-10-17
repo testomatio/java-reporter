@@ -4,7 +4,7 @@
   <groupId>io.testomat</groupId>
   <artifactId>java-reporter-core</artifactId>
   <name>Testomat.io Reporter Core</name>
-  <version>0.8.8</version>
+  <version>0.8.13</version>
   <description>Core functionality for Testomat.io Java test reporting library</description>
   <url>https://github.com/testomatio/java-reporter</url>
   <developers>
@@ -83,10 +83,6 @@
                   <shadedPattern>io.testomat.shaded.jackson</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>org.aspectj</pattern>
-                  <shadedPattern>io.testomat.shaded.aspectj</shadedPattern>
-                </relocation>
-                <relocation>
                   <pattern>org.apache.http</pattern>
                   <shadedPattern>io.testomat.shaded.apache.http</shadedPattern>
                 </relocation>
@@ -110,6 +106,9 @@
                 </transformer>
                 <transformer />
                 <transformer />
+                <transformer>
+                  <resource>META-INF/aop.xml</resource>
+                </transformer>
               </transformers>
             </configuration>
           </execution>
