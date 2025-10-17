@@ -168,7 +168,12 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put("create", TRUE);
         }
 
-        body.put("meta", MetaStorage.LINKED_META_STORAGE.get(result.getRid()));
+        if (result.getRid() != null) {
+            Map<String, String> meta = MetaStorage.LINKED_META_STORAGE.get(result.getRid());
+            if (meta != null) {
+                body.put("meta", meta);
+            }
+        }
 
         body.put("overwrite", "true");
         ReportedTestStorage.store(body);
