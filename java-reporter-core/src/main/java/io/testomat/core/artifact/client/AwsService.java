@@ -75,6 +75,9 @@ public class AwsService {
         List<String> uploadedArtifactsLinks = processArtifacts(artifactDirectories, testName, rid, credentials);
 
         storeArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks);
+
+        // Clear artifact directories after processing
+        TempArtifactDirectoriesStorage.DIRECTORIES.remove();
     }
 
     private List<String> processArtifacts(List<String> artifactDirectories, String testName, String rid, S3Credentials credentials) {
