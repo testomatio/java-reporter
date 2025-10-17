@@ -8,11 +8,13 @@ import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
 import io.testomat.core.artifact.client.AwsService;
 import io.testomat.core.exception.ReportTestResultException;
+import io.testomat.core.meta.MetaStorage;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.cucumber.constructor.CucumberTestResultConstructor;
 import io.testomat.cucumber.exception.CucumberListenerException;
 import io.testomat.cucumber.extractor.TestDataExtractor;
+import java.util.Map;
 
 /**
  * Cucumber plugin for Testomat.io integration.
@@ -112,6 +114,7 @@ public class CucumberListener implements Plugin, EventListener {
         awsService.uploadAllArtifactsForTest(dataExtractor.extractTitle(event),
                 event.getTestCase().getId().toString(),
                 dataExtractor.extractTestId(event));
+        handleMetaAfterEach(event);
         afterEachHookAfterExecution(event);
     }
 
@@ -160,5 +163,15 @@ public class CucumberListener implements Plugin, EventListener {
     }
 
     protected void afterEachHookBeforeExecution(TestCaseFinished event) {
+    }
+
+    private void handleMetaAfterEach(TestCaseFinished testCaseFinished) {
+        String rid = testCaseFinished.getTestCase().getId().toString();
+        Map<String, String> metaData = MetaStorage.TEMP_META_STORAGE.get();
+
+        if (!metaData.isEmpty()) {
+            MetaStorage.LINKED_META_STORAGE.put(rid, new java.util.HashMap<>(metaData));
+            MetaStorage.TEMP_META_STORAGE.remove();
+        }
     }
 }
