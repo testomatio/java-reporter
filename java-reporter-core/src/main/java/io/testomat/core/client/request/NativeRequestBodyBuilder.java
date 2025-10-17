@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.testomat.core.artifact.ReportedTestStorage;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
+import io.testomat.core.meta.MetaStorage;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
@@ -166,6 +167,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         if (createParam) {
             body.put("create", TRUE);
         }
+
+        body.put("meta", MetaStorage.LINKED_META_STORAGE.get(result.getRid()));
 
         body.put("overwrite", "true");
         ReportedTestStorage.store(body);

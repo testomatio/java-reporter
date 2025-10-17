@@ -19,7 +19,6 @@ import io.testomat.testng.reporter.TestNgTestResultReporter;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.sound.midi.MetaEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.IExecutionListener;
@@ -184,6 +183,7 @@ public class TestNgListener implements ISuiteListener, ITestListener,
                             method.getTestMethod().getConstructorOrMethod().getMethod())
             );
         }
+        handleMetaAfterInvocation(testResult);
         afterInvocationHookAfterExecution(method, testResult);
     }
 
@@ -309,7 +309,12 @@ public class TestNgListener implements ISuiteListener, ITestListener,
     }
 
     private void handleMetaAfterInvocation(ITestResult testResult) {
-        MetaStorage.LINKED_META_STORAGE.put(
-                testNgParameterExtractor.generateRid(testResult), MetaStorage.TEMP_META_STORAGE.get());
+        String rid = testNgParameterExtractor.generateRid(testResult);
+        Map<String, String> metaData = MetaStorage.TEMP_META_STORAGE.get();
+
+        if (!metaData.isEmpty()) {
+            MetaStorage.LINKED_META_STORAGE.put(rid, new java.util.HashMap<>(metaData));
+            MetaStorage.TEMP_META_STORAGE.remove();
+        }
     }
 }
