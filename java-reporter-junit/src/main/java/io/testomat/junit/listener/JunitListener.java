@@ -1,11 +1,5 @@
 package io.testomat.junit.listener;
 
-import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_PROPERTY_NAME;
-import static io.testomat.core.constants.CommonConstants.FAILED;
-import static io.testomat.core.constants.CommonConstants.PASSED;
-import static io.testomat.core.constants.CommonConstants.SKIPPED;
-import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
-
 import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -14,28 +8,34 @@ import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import io.testomat.junit.methodexporter.MethodExportManager;
 import io.testomat.junit.reporter.JunitTestReporter;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.TestWatcher;
+import org.junit.jupiter.api.extension.*;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_PROPERTY_NAME;
+import static io.testomat.core.constants.CommonConstants.*;
+import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
 /**
  * JUnit 5 extension for Testomat.io integration.
  * Reports JUnit test execution results to Testomat.io platform.
  * Provides global execution lifecycle hooks via TestExecutionListener.
  */
-public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
-        AfterAllCallback, AfterEachCallback, TestWatcher, TestExecutionListener {
+public class JunitListener
+        extends AbstractHookContainer
+        implements BeforeEachCallback,
+        BeforeAllCallback,
+        AfterAllCallback,
+        AfterEachCallback,
+        TestWatcher,
+        TestExecutionListener {
 
     private static final Logger log = LoggerFactory.getLogger(JunitListener.class);
     private boolean artifactDisabled = false;
@@ -173,68 +173,6 @@ public class JunitListener implements BeforeEachCallback, BeforeAllCallback,
         onExecutionFinishHookBeforeExecution(testPlan);
         log.info("JUnit test plan execution finished - global cleanup hook");
         onExecutionFinishHookAfterExecution(testPlan);
-    }
-
-    protected void onSuiteStartHookAfterExecution(ExtensionContext context) {
-    }
-
-    protected void onSuiteStartHookBeforeExecution(ExtensionContext context) {
-    }
-
-    protected void onSuiteFinishHookAfterExecution(ExtensionContext context) {
-    }
-
-    protected void onSuiteFinishHookBeforeExecution(ExtensionContext context) {
-    }
-
-    protected void beforeEachHookAfterExecution(ExtensionContext context) {
-    }
-
-    protected void beforeEachHookBeforeExecution(ExtensionContext context) {
-    }
-
-    protected void onTestSuccessHookAfterExecution(ExtensionContext context) {
-    }
-
-    protected void onTestSuccessHookBeforeExecution(ExtensionContext context) {
-    }
-
-    protected void onTestFailureHookAfterExecution(ExtensionContext context, Throwable cause) {
-    }
-
-    protected void onTestFailureHookBeforeExecution(ExtensionContext context, Throwable cause) {
-    }
-
-    protected void onTestDisabledHookAfterExecution(ExtensionContext context,
-                                                    Optional<String> reason) {
-    }
-
-    protected void onTestDisabledHookBeforeExecution(ExtensionContext context,
-                                                     Optional<String> reason) {
-    }
-
-    protected void onTestAbortedHookAfterExecution(ExtensionContext context, Throwable cause) {
-    }
-
-    protected void onTestAbortedHookBeforeExecution(ExtensionContext context, Throwable cause) {
-    }
-
-    protected void afterEachHookAfterExecution(ExtensionContext context) {
-    }
-
-    protected void afterEachHookBeforeExecution(ExtensionContext context) {
-    }
-
-    protected void onExecutionStartHookAfterExecution(TestPlan testPlan) {
-    }
-
-    protected void onExecutionStartHookBeforeExecution(TestPlan testPlan) {
-    }
-
-    protected void onExecutionFinishHookAfterExecution(TestPlan testPlan) {
-    }
-
-    protected void onExecutionFinishHookBeforeExecution(TestPlan testPlan) {
     }
 
     private void exportTestClassIfNotProcessed(ExtensionContext context) {
