@@ -17,7 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.testomat.core.artifact.client.AwsService;
+import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.junit.methodexporter.MethodExportManager;

@@ -1,4 +1,4 @@
-package io.testomat.core.artifact.client;
+package io.testomat.core.facade.methods.artifact.client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

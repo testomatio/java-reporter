@@ -1,6 +1,6 @@
-package io.testomat.core.artifact.util;
+package io.testomat.core.facade.methods.artifact.util;
 
-import io.testomat.core.artifact.client.AwsClient;
+import io.testomat.core.facade.methods.artifact.client.AwsClient;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 

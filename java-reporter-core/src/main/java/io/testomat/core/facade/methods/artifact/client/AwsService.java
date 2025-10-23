@@ -1,12 +1,12 @@
-package io.testomat.core.artifact.client;
+package io.testomat.core.facade.methods.artifact.client;
 
-import io.testomat.core.artifact.ArtifactLinkData;
-import io.testomat.core.artifact.ArtifactLinkDataStorage;
-import io.testomat.core.artifact.TempArtifactDirectoriesStorage;
-import io.testomat.core.artifact.credential.CredentialsManager;
-import io.testomat.core.artifact.credential.S3Credentials;
-import io.testomat.core.artifact.util.ArtifactKeyGenerator;
-import io.testomat.core.artifact.util.ArtifactUrlGenerator;
+import io.testomat.core.facade.methods.artifact.ArtifactLinkData;
+import io.testomat.core.facade.methods.artifact.ArtifactLinkDataStorage;
+import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
+import io.testomat.core.facade.methods.artifact.credential.CredentialsManager;
+import io.testomat.core.facade.methods.artifact.credential.S3Credentials;
+import io.testomat.core.facade.methods.artifact.util.ArtifactKeyGenerator;
+import io.testomat.core.facade.methods.artifact.util.ArtifactUrlGenerator;
 import io.testomat.core.exception.ArtifactManagementException;
 import java.io.IOException;
 import java.nio.file.Files;

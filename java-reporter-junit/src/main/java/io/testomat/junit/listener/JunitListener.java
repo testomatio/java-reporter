@@ -6,8 +6,8 @@ import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
-import io.testomat.core.artifact.client.AwsService;
-import io.testomat.core.meta.MetaStorage;
+import io.testomat.core.facade.methods.artifact.client.AwsService;
+import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;

@@ -1,8 +1,8 @@
 package io.testomat.core.facade;
 
-import io.testomat.core.artifact.manager.ArtifactManager;
-import io.testomat.core.meta.MetaStorage;
-import java.util.HashMap;
+import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
+import io.testomat.core.facade.methods.meta.MetaStorage;
+
 import java.util.Map;
 
 /**

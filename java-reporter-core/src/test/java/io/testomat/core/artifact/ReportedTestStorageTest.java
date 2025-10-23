@@ -9,6 +9,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.testomat.core.facade.methods.artifact.ArtifactLinkData;
+import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

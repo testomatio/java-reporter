@@ -1,4 +1,4 @@
-package io.testomat.core.artifact.credential;
+package io.testomat.core.facade.methods.artifact.credential;
 
 import static io.testomat.core.constants.ArtifactPropertyNames.ACCESS_KEY_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.BUCKET_PROPERTY_NAME;

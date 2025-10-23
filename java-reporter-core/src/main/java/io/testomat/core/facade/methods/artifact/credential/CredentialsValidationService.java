@@ -1,6 +1,6 @@
-package io.testomat.core.artifact.credential;
+package io.testomat.core.facade.methods.artifact.credential;
 
-import io.testomat.core.artifact.client.AwsClient;
+import io.testomat.core.facade.methods.artifact.client.AwsClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.S3Client;

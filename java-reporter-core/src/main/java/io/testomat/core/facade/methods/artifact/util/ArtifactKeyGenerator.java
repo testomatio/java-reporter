@@ -1,4 +1,4 @@
-package io.testomat.core.artifact.util;
+package io.testomat.core.facade.methods.artifact.util;
 
 import java.nio.file.Paths;
 

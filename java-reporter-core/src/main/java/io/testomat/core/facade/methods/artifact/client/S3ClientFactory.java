@@ -1,7 +1,7 @@
-package io.testomat.core.artifact.client;
+package io.testomat.core.facade.methods.artifact.client;
 
-import io.testomat.core.artifact.credential.CredentialsManager;
-import io.testomat.core.artifact.credential.S3Credentials;
+import io.testomat.core.facade.methods.artifact.credential.CredentialsManager;
+import io.testomat.core.facade.methods.artifact.credential.S3Credentials;
 import java.net.URI;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;

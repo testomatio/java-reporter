@@ -1,4 +1,4 @@
-package io.testomat.core.artifact.credential;
+package io.testomat.core.facade.methods.artifact.credential;
 
 /**
  * Data class holding S3 configuration including credentials, bucket, and connection settings.
