@@ -1,9 +1,8 @@
 package io.testomat.junit.listener;
 
+import java.util.Optional;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.launcher.TestPlan;
-
-import java.util.Optional;
 
 public abstract class AbstractHookContainer {
     protected void onSuiteStartHookAfterExecution(ExtensionContext context) {

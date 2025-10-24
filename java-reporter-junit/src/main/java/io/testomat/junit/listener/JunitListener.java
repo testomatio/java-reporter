@@ -1,27 +1,28 @@
 package io.testomat.junit.listener;
 
-import io.testomat.core.facade.methods.artifact.client.AwsService;
-import io.testomat.core.facade.methods.meta.MetaStorage;
+import static io.testomat.core.constants.CommonConstants.FAILED;
+import static io.testomat.core.constants.CommonConstants.PASSED;
+import static io.testomat.core.constants.CommonConstants.SKIPPED;
+import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
+
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
-import io.testomat.junit.extractor.JunitMetaDataExtractor;
 import io.testomat.junit.methodexporter.MethodExportManager;
 import io.testomat.junit.reporter.JunitTestReporter;
-import org.junit.jupiter.api.extension.*;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestWatcher;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_PROPERTY_NAME;
-import static io.testomat.core.constants.CommonConstants.*;
-import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
 /**
  * JUnit 5 extension for Testomat.io integration.
@@ -38,24 +39,22 @@ public class JunitListener
         TestExecutionListener {
 
     private static final Logger log = LoggerFactory.getLogger(JunitListener.class);
-    private boolean artifactDisabled = false;
 
     private final MethodExportManager methodExportManager;
     private final GlobalRunManager runManager;
     private final JunitTestReporter reporter;
     private final PropertyProvider provider;
-    private final AwsService awsService;
     private final Set<String> processedClasses;
+    private final FacadeFunctionsHandler functionsHandler;
 
     public JunitListener() {
+        this.functionsHandler = new FacadeFunctionsHandler();
         this.methodExportManager = new MethodExportManager();
         this.runManager = GlobalRunManager.getInstance();
         this.reporter = new JunitTestReporter();
         this.processedClasses = ConcurrentHashMap.newKeySet();
-        this.awsService = new AwsService();
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
-        this.artifactDisabled = defineArtifactsDisabled();
     }
 
     /**
@@ -70,13 +69,13 @@ public class JunitListener
                          GlobalRunManager runManager,
                          JunitTestReporter reporter,
                          PropertyProvider provider,
-                         AwsService awsService) {
+                         FacadeFunctionsHandler functionsHandler) {
         this.methodExportManager = methodExportManager;
         this.runManager = runManager;
         this.reporter = reporter;
         this.provider = provider;
+        this.functionsHandler = functionsHandler;
         this.processedClasses = ConcurrentHashMap.newKeySet();
-        this.awsService = awsService;
     }
 
     @Override
@@ -153,11 +152,7 @@ public class JunitListener
     @Override
     public final void afterEach(ExtensionContext context) {
         afterEachHookBeforeExecution(context);
-        if (!artifactDisabled) {
-            awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
-                    JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
-        }
-        handleMetaAfterEach(context);
+        functionsHandler.handleFacadeFunctions(context);
         afterEachHookAfterExecution(context);
     }
 
@@ -193,36 +188,11 @@ public class JunitListener
         }
     }
 
-    private boolean defineArtifactsDisabled() {
-        boolean result;
-        String property;
-        try {
-            property = provider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME);
-            result = property != null
-                    && !property.trim().isEmpty()
-                    && !property.equalsIgnoreCase("0");
-
-        } catch (Exception e) {
-            return false;
-        }
-        return result;
-    }
-
     private boolean isListeningRequired() {
         try {
             return provider.getProperty(API_KEY_PROPERTY_NAME) != null;
         } catch (Exception e) {
             return false;
-        }
-    }
-
-    private void handleMetaAfterEach(ExtensionContext context) {
-        String rid = JunitMetaDataExtractor.extractTestId(context.getTestMethod().get());
-        Map<String, String> metaData = MetaStorage.TEMP_META_STORAGE.get();
-
-        if (!metaData.isEmpty()) {
-            MetaStorage.LINKED_META_STORAGE.put(rid, new java.util.HashMap<>(metaData));
-            MetaStorage.TEMP_META_STORAGE.remove();
         }
     }
 }
