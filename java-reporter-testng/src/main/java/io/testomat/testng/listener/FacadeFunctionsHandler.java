@@ -15,17 +15,17 @@ import org.testng.IInvokedMethod;
 import org.testng.ITestResult;
 
 public class FacadeFunctionsHandler {
-    private static final LogStorage logStorage = LogStorage.getInstance();
     private final TestNgParameterExtractor testNgParameterExtractor;
     private final TestNgMetaDataExtractor metaDataExtractor;
     private final PropertyProvider provider;
     private final AwsService awsService;
 
     public FacadeFunctionsHandler() {
-        this.provider = PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
         this.testNgParameterExtractor = new TestNgParameterExtractor();
         this.metaDataExtractor = new TestNgMetaDataExtractor();
         this.awsService = new AwsService();
+        this.provider =
+                PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
     }
 
     public FacadeFunctionsHandler(TestNgParameterExtractor testNgParameterExtractor,
@@ -66,11 +66,11 @@ public class FacadeFunctionsHandler {
 
     private void handleLogsAfterInvocation(ITestResult testResult) {
         String rid = testNgParameterExtractor.generateRid(testResult);
-        List<String> storedLogs = logStorage.getTempLogStorage().get();
+        List<String> storedLogs = LogStorage.TEMP_LOG_STORAGE.get();
         if (!storedLogs.isEmpty()) {
             String[] logs = new String[storedLogs.size()];
             logs = storedLogs.toArray(logs);
-            logStorage.getLinkedLogStorage().put(rid, logs);
+            LogStorage.LINKED_LOG_STORAGE.put(rid, logs);
         }
     }
 

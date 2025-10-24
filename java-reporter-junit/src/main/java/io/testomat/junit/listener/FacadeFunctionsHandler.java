@@ -13,19 +13,20 @@ import java.util.Map;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 public class FacadeFunctionsHandler {
-    private static final LogStorage logStorage = LogStorage.getInstance();
     private final PropertyProvider provider;
     private final AwsService awsService;
     private boolean artifactDisabled = false;
 
-
     public FacadeFunctionsHandler() {
         this.awsService = new AwsService();
-        this.provider = PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+        this.provider =
+                PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
         this.artifactDisabled = defineArtifactsDisabled();
     }
 
-    public FacadeFunctionsHandler(boolean artifactDisabled, PropertyProvider provider, AwsService awsService) {
+    public FacadeFunctionsHandler(boolean artifactDisabled,
+                                  PropertyProvider provider,
+                                  AwsService awsService) {
         this.awsService = awsService;
         this.artifactDisabled = artifactDisabled;
         this.provider = provider;
@@ -49,11 +50,11 @@ public class FacadeFunctionsHandler {
 
     private void handleLogsAfterEach(ExtensionContext context) {
         String rid = context.getUniqueId();
-        List<String> storedLogs = logStorage.getTempLogStorage().get();
+        List<String> storedLogs = LogStorage.TEMP_LOG_STORAGE.get();
         if (!storedLogs.isEmpty()) {
             String[] logs = new String[storedLogs.size()];
             logs = storedLogs.toArray(logs);
-            logStorage.getLinkedLogStorage().put(rid, logs);
+            LogStorage.LINKED_LOG_STORAGE.put(rid, logs);
         }
     }
 
