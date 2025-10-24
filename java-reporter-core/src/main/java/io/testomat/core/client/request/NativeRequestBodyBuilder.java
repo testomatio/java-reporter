@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     private static final String TRUE = "true";
-    private static final LogStorage logStorage = LogStorage.getInstance();
+    private final LogStorage logStorage;
     private final Boolean createParam;
     private final String sharedRun;
     private final String sharedRunTimeout;
@@ -43,6 +43,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
 
     public NativeRequestBodyBuilder() {
+        this.logStorage = new LogStorage();
         this.publishParam = getPropertySafely(PUBLISH_PROPERTY_NAME);
         this.sharedRun = getSharedRun();
         this.sharedRunTimeout = getPropertySafely(SHARED_TIMEOUT_PROPERTY_NAME);
@@ -178,7 +179,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         }
 
         if (result.getRid() != null) {
-            String[] logs = logStorage.getLinkedLogStorage().get(result.getRid());
+            String[] logs = logStorage.LINKED_LOG_STORAGE.get(result.getRid());
             if (logs != null && logs.length > 0) {
                 body.put("logs", logs);
             }

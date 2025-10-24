@@ -6,33 +6,34 @@ import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
-import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.exception.ReportTestResultException;
-import io.testomat.core.facade.methods.meta.MetaStorage;
+import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.cucumber.constructor.CucumberTestResultConstructor;
 import io.testomat.cucumber.exception.CucumberListenerException;
 import io.testomat.cucumber.extractor.TestDataExtractor;
-import java.util.Map;
 
 /**
  * Cucumber plugin for Testomat.io integration.
  * Reports Cucumber test execution results to Testomat.io platform.
  */
-public class CucumberListener implements Plugin, EventListener {
-    private final GlobalRunManager runManager;
+public class CucumberListener extends AbstractHooksContainer
+        implements Plugin, EventListener {
     private final CucumberTestResultConstructor resultConstructor;
-    private final AwsService awsService;
+    private final FacadeFunctionsHandler functionsHandler;
     private final TestDataExtractor dataExtractor;
+    private final GlobalRunManager runManager;
+    private final AwsService awsService;
 
     /**
      * Creates a new listener with default dependencies.
      */
     public CucumberListener() {
-        this.dataExtractor = new TestDataExtractor();
-        this.runManager = GlobalRunManager.getInstance();
         this.resultConstructor = new CucumberTestResultConstructor();
+        this.functionsHandler = new FacadeFunctionsHandler();
+        this.runManager = GlobalRunManager.getInstance();
+        this.dataExtractor = new TestDataExtractor();
         this.awsService = new AwsService();
     }
 
@@ -45,11 +46,14 @@ public class CucumberListener implements Plugin, EventListener {
      */
     public CucumberListener(CucumberTestResultConstructor resultConstructor,
                             GlobalRunManager runManager,
-                            AwsService awsService, TestDataExtractor dataExtractor) {
-        this.runManager = runManager;
+                            AwsService awsService,
+                            TestDataExtractor dataExtractor,
+                            FacadeFunctionsHandler functionsHandler) {
         this.resultConstructor = resultConstructor;
-        this.awsService = awsService;
+        this.functionsHandler = functionsHandler;
         this.dataExtractor = dataExtractor;
+        this.runManager = runManager;
+        this.awsService = awsService;
     }
 
     /**
@@ -111,67 +115,7 @@ public class CucumberListener implements Plugin, EventListener {
      */
     protected void afterEach(TestCaseFinished event) {
         afterEachHookBeforeExecution(event);
-        awsService.uploadAllArtifactsForTest(dataExtractor.extractTitle(event),
-                event.getTestCase().getId().toString(),
-                dataExtractor.extractTestId(event));
-        handleMetaAfterEach(event);
+        functionsHandler.handleFacadeFunctions(event);
         afterEachHookAfterExecution(event);
-    }
-
-    /**
-     * Hook called when test run starts. Override to add custom logic.
-     *
-     * @param event the test run started event
-     */
-    protected void onTestRunStartedHookAfterExecution(TestRunStarted event) {
-    }
-
-    protected void onTestRunStartedHookBeforeExecution(TestRunStarted event) {
-    }
-
-    /**
-     * Hook called when test run finishes. Override to add custom logic.
-     *
-     * @param event the test run finished event
-     */
-    protected void onTestRunFinishedHookAfterExecution(TestRunFinished event) {
-    }
-
-    protected void onTestRunFinishedHookBeforeExecution(TestRunFinished event) {
-    }
-
-    /**
-     * Hook called when test case finishes. Override to add custom logic.
-     *
-     * @param event the test case finished event
-     */
-    protected void onTestCaseFinishedHookAfterExecution(TestCaseFinished event) {
-    }
-
-    protected void onTestCaseFinishedHookBeforeExecution(TestCaseFinished event) {
-    }
-
-    protected void onTestCaseFinishedHookFinally(TestCaseFinished event) {
-    }
-
-    /**
-     * Hook called after each test case execution. Override to add custom logic.
-     *
-     * @param event the test case finished event
-     */
-    protected void afterEachHookAfterExecution(TestCaseFinished event) {
-    }
-
-    protected void afterEachHookBeforeExecution(TestCaseFinished event) {
-    }
-
-    private void handleMetaAfterEach(TestCaseFinished testCaseFinished) {
-        String rid = testCaseFinished.getTestCase().getId().toString();
-        Map<String, String> metaData = MetaStorage.TEMP_META_STORAGE.get();
-
-        if (!metaData.isEmpty()) {
-            MetaStorage.LINKED_META_STORAGE.put(rid, new java.util.HashMap<>(metaData));
-            MetaStorage.TEMP_META_STORAGE.remove();
-        }
     }
 }

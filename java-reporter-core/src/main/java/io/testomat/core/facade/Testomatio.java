@@ -10,8 +10,6 @@ import java.util.Map;
  * Provides simple static methods for test artifact management and reporting.
  */
 public class Testomatio {
-    private final static LogStorage logStorage = LogStorage.getInstance();
-
     /**
      * Registers artifact files or directories to be uploaded for the current test.
      *
@@ -33,6 +31,6 @@ public class Testomatio {
         if (log == null || log.trim().isEmpty()) {
             return;
         }
-        logStorage.getTempLogStorage().get().add(log);
+        LogStorage.TEMP_LOG_STORAGE.get().add(log);
     }
 }
