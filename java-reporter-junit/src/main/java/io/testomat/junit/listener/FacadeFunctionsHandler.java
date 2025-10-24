@@ -49,7 +49,6 @@ public class FacadeFunctionsHandler {
 
     private void handleLogsAfterEach(ExtensionContext context) {
         String rid = context.getUniqueId();
-        System.out.println("RID => " + rid);
         List<String> storedLogs = logStorage.getTempLogStorage().get();
         if (!storedLogs.isEmpty()) {
             String[] logs = new String[storedLogs.size()];
