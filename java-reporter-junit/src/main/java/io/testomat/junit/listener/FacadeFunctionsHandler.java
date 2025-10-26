@@ -3,6 +3,7 @@ package io.testomat.junit.listener;
 import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_PROPERTY_NAME;
 
 import io.testomat.core.facade.methods.artifact.client.AwsService;
+import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -35,6 +36,7 @@ public class FacadeFunctionsHandler {
     public void handleFacadeFunctions(ExtensionContext context) {
         handleLogsAfterEach(context);
         handleMetaAfterEach(context);
+        handleLabels(context);
         handleArtifactsAfterEach(context);
     }
 
@@ -62,6 +64,14 @@ public class FacadeFunctionsHandler {
         if (!artifactDisabled) {
             awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
                     JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
+        }
+    }
+
+    private void handleLabels(ExtensionContext context) {
+        String rid = context.getUniqueId();
+        List<Map<String, String>> storedLabels = LabelStorage.TEMP_LABEL_STORAGE.get();
+        if (!storedLabels.isEmpty()) {
+            LabelStorage.LINKED_LABEL_STORAGE.put(rid, storedLabels);
         }
     }
 
