@@ -2,6 +2,7 @@ package io.testomat.cucumber.listener;
 
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.testomat.core.facade.methods.artifact.client.AwsService;
+import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.cucumber.extractor.TestDataExtractor;
@@ -23,13 +24,14 @@ public class FacadeFunctionsHandler {
     }
 
     public void handleFacadeFunctions(TestCaseFinished testCaseFinished) {
-        handleMetaAfterEach(testCaseFinished);
-        handleLogFunction(testCaseFinished);
+        String rid = testCaseFinished.getTestCase().getId().toString();
+        handleMetaAfterEach(rid);
+        handleLogFunction(rid);
+        handleLabels(rid);
         handleArtifactsAfterEach(testCaseFinished);
     }
 
-    private void handleMetaAfterEach(TestCaseFinished testCaseFinished) {
-        String rid = testCaseFinished.getTestCase().getId().toString();
+    private void handleMetaAfterEach(String rid) {
         Map<String, String> metaData = MetaStorage.TEMP_META_STORAGE.get();
 
         if (!metaData.isEmpty()) {
@@ -44,8 +46,14 @@ public class FacadeFunctionsHandler {
                 dataExtractor.extractTestId(testCaseFinished));
     }
 
-    private void handleLogFunction(TestCaseFinished testCaseFinished) {
-        String rid = testCaseFinished.getTestCase().getId().toString();
+    private void handleLabels(String rid) {
+        List<Map<String, String>> storedLabels = LabelStorage.TEMP_LABEL_STORAGE.get();
+        if (!storedLabels.isEmpty()) {
+            LabelStorage.LINKED_LABEL_STORAGE.put(rid, storedLabels);
+        }
+    }
+
+    private void handleLogFunction(String rid) {
         List<String> storedLogs = LogStorage.TEMP_LOG_STORAGE.get();
         if (!storedLogs.isEmpty()) {
             String[] logs = new String[storedLogs.size()];
