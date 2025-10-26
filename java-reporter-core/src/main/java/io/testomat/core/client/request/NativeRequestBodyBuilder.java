@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
+import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.core.model.TestResult;
@@ -32,7 +33,6 @@ import java.util.Map;
  */
 public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     private static final String TRUE = "true";
-    private final LogStorage logStorage;
     private final Boolean createParam;
     private final String sharedRun;
     private final String sharedRunTimeout;
@@ -43,7 +43,6 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
 
     public NativeRequestBodyBuilder() {
-        this.logStorage = new LogStorage();
         this.publishParam = getPropertySafely(PUBLISH_PROPERTY_NAME);
         this.sharedRun = getSharedRun();
         this.sharedRunTimeout = getPropertySafely(SHARED_TIMEOUT_PROPERTY_NAME);
@@ -157,10 +156,6 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put("example", result.getExample());
         }
 
-        if (result.getRid() != null) {
-            body.put("rid", result.getRid());
-        }
-
         if (result.getSteps() != null && !result.getSteps().isEmpty()) {
             List<Map<String, Object>> stepsMap = convertStepsToMap(result.getSteps());
             body.put("steps", stepsMap);
@@ -171,18 +166,13 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put("create", TRUE);
         }
 
-        if (result.getRid() != null) {
-            Map<String, String> meta = MetaStorage.LINKED_META_STORAGE.get(result.getRid());
-            if (meta != null) {
-                body.put("meta", meta);
-            }
-        }
+        String rid = result.getRid();
 
-        if (result.getRid() != null) {
-            String[] logs = logStorage.LINKED_LOG_STORAGE.get(result.getRid());
-            if (logs != null && logs.length > 0) {
-                body.put("logs", logs);
-            }
+        if (rid != null) {
+            body.put("rid", result.getRid());
+            addMeta(body, rid);
+            addLogs(body, rid);
+            addLinks(body, rid);
         }
 
         body.put("overwrite", "true");
@@ -256,5 +246,28 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             return null;
         }
         return property;
+    }
+
+    private void addLogs(Map<String, Object> body, String rid) {
+        String[] logs = LogStorage.LINKED_LOG_STORAGE.get(rid);
+        if (logs != null && logs.length > 0) {
+            body.put("logs", logs);
+        }
+    }
+
+    private void addMeta(Map<String, Object> body, String rid) {
+        Map<String, String> meta = MetaStorage.LINKED_META_STORAGE.get(rid);
+        if (meta != null) {
+            body.put("meta", meta);
+        }
+    }
+
+    private void addLinks(Map<String, Object> body, String rid) {
+        body.put("links", new ArrayList<>());
+        List<Object> links = (List<Object>) body.get("links");
+        List<Map<String, String>> labels = LabelStorage.LINKED_LABEL_STORAGE.get(rid);
+        if (labels != null && !labels.isEmpty()) {
+            links.addAll(labels);
+        }
     }
 }
