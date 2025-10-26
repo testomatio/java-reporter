@@ -4,6 +4,7 @@ import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_
 
 import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.facade.methods.label.LabelStorage;
+import io.testomat.core.facade.methods.linkjira.JiraLinkStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -40,14 +41,15 @@ public class FacadeFunctionsHandler {
     }
 
     public void handleFacadeFunctions(IInvokedMethod method, ITestResult testResult) {
-        handleMetaAfterInvocation(testResult);
-        handleLogsAfterInvocation(testResult);
+        String rid = testNgParameterExtractor.generateRid(testResult);
+        handleMetaAfterInvocation(rid);
+        handleLogsAfterInvocation(rid);
+        handleLabels(rid);
+        handleLinkJira(rid);
         handleArtifactsAfterInvocation(method, testResult);
-        handleLabels(testResult);
     }
 
-    private void handleMetaAfterInvocation(ITestResult testResult) {
-        String rid = testNgParameterExtractor.generateRid(testResult);
+    private void handleMetaAfterInvocation(String rid) {
         Map<String, String> metaData = MetaStorage.TEMP_META_STORAGE.get();
 
         if (!metaData.isEmpty()) {
@@ -66,8 +68,7 @@ public class FacadeFunctionsHandler {
         }
     }
 
-    private void handleLogsAfterInvocation(ITestResult testResult) {
-        String rid = testNgParameterExtractor.generateRid(testResult);
+    private void handleLogsAfterInvocation(String rid) {
         List<String> storedLogs = LogStorage.TEMP_LOG_STORAGE.get();
         if (!storedLogs.isEmpty()) {
             String[] logs = new String[storedLogs.size()];
@@ -76,11 +77,17 @@ public class FacadeFunctionsHandler {
         }
     }
 
-    private void handleLabels(ITestResult testResult) {
-        String rid = testNgParameterExtractor.generateRid(testResult);
+    private void handleLabels(String rid) {
         List<Map<String, String>> storedLabels = LabelStorage.TEMP_LABEL_STORAGE.get();
         if (!storedLabels.isEmpty()) {
             LabelStorage.LINKED_LABEL_STORAGE.put(rid, storedLabels);
+        }
+    }
+
+    private void handleLinkJira(String rid) {
+        List<String> storedLinks = JiraLinkStorage.TEMP_JIRA_LINK_STORAGE.get();
+        if (!storedLinks.isEmpty()) {
+            JiraLinkStorage.LINKED_JIRA_LINK_STORAGE.put(rid, storedLinks);
         }
     }
 

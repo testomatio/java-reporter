@@ -15,6 +15,7 @@ import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
 import io.testomat.core.facade.methods.label.LabelStorage;
+import io.testomat.core.facade.methods.linkjira.JiraLinkStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.core.model.TestResult;
@@ -268,6 +269,10 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         List<Map<String, String>> labels = LabelStorage.LINKED_LABEL_STORAGE.get(rid);
         if (labels != null && !labels.isEmpty()) {
             links.addAll(labels);
+        }
+        List<String> jiraLinks = JiraLinkStorage.LINKED_JIRA_LINK_STORAGE.get(rid);
+        if (jiraLinks != null && !jiraLinks.isEmpty()) {
+            links.addAll(jiraLinks);
         }
     }
 }

@@ -3,6 +3,7 @@ package io.testomat.cucumber.listener;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.facade.methods.label.LabelStorage;
+import io.testomat.core.facade.methods.linkjira.JiraLinkStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.cucumber.extractor.TestDataExtractor;
@@ -28,6 +29,7 @@ public class FacadeFunctionsHandler {
         handleMetaAfterEach(rid);
         handleLogFunction(rid);
         handleLabels(rid);
+        handleLinkJira(rid);
         handleArtifactsAfterEach(testCaseFinished);
     }
 
@@ -50,6 +52,13 @@ public class FacadeFunctionsHandler {
         List<Map<String, String>> storedLabels = LabelStorage.TEMP_LABEL_STORAGE.get();
         if (!storedLabels.isEmpty()) {
             LabelStorage.LINKED_LABEL_STORAGE.put(rid, storedLabels);
+        }
+    }
+
+    private void handleLinkJira(String rid) {
+        List<String> storedLinks = JiraLinkStorage.TEMP_JIRA_LINK_STORAGE.get();
+        if (!storedLinks.isEmpty()) {
+            JiraLinkStorage.LINKED_JIRA_LINK_STORAGE.put(rid, storedLinks);
         }
     }
 
