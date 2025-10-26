@@ -1,14 +1,13 @@
 package io.testomat.core.client;
 
-import static io.testomat.core.constants.CommonConstants.REPORTER_VERSION;
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
 import io.testomat.core.InfoDisplay;
-import io.testomat.core.artifact.ArtifactLinkDataStorage;
-import io.testomat.core.artifact.LinkUploadBodyBuilder;
-import io.testomat.core.artifact.ReportedTestStorage;
-import io.testomat.core.artifact.credential.CredentialsManager;
-import io.testomat.core.artifact.credential.CredentialsValidationService;
+import io.testomat.core.facade.methods.artifact.ArtifactLinkDataStorage;
+import io.testomat.core.facade.methods.artifact.LinkUploadBodyBuilder;
+import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
+import io.testomat.core.facade.methods.artifact.credential.CredentialsManager;
+import io.testomat.core.facade.methods.artifact.credential.CredentialsValidationService;
 import io.testomat.core.client.http.CustomHttpClient;
 import io.testomat.core.client.request.NativeRequestBodyBuilder;
 import io.testomat.core.client.request.RequestBodyBuilder;

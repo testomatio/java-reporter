@@ -11,10 +11,11 @@ import static io.testomat.core.constants.PropertyNameConstants.SHARED_TIMEOUT_PR
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.testomat.core.artifact.ReportedTestStorage;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
-import io.testomat.core.meta.MetaStorage;
+import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
+import io.testomat.core.facade.methods.logmethod.LogStorage;
+import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
@@ -31,6 +32,7 @@ import java.util.Map;
  */
 public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     private static final String TRUE = "true";
+    private final LogStorage logStorage;
     private final Boolean createParam;
     private final String sharedRun;
     private final String sharedRunTimeout;
@@ -41,6 +43,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
 
     public NativeRequestBodyBuilder() {
+        this.logStorage = new LogStorage();
         this.publishParam = getPropertySafely(PUBLISH_PROPERTY_NAME);
         this.sharedRun = getSharedRun();
         this.sharedRunTimeout = getPropertySafely(SHARED_TIMEOUT_PROPERTY_NAME);
@@ -130,7 +133,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
      * Converts test result to map structure for JSON serialization.
      * Includes all standard fields plus support for parameterized test data and test steps.
      */
-    private Map<String, Object> buildTestResultMap(TestResult result) {
+    private Map<String, Object> buildTestResultMap(TestResult result) throws JsonProcessingException {
         Map<String, Object> body = new HashMap<>();
         body.put(ApiRequestFields.TITLE, result.getTitle());
 
@@ -172,6 +175,13 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             Map<String, String> meta = MetaStorage.LINKED_META_STORAGE.get(result.getRid());
             if (meta != null) {
                 body.put("meta", meta);
+            }
+        }
+
+        if (result.getRid() != null) {
+            String[] logs = logStorage.LINKED_LOG_STORAGE.get(result.getRid());
+            if (logs != null && logs.length > 0) {
+                body.put("logs", logs);
             }
         }
 

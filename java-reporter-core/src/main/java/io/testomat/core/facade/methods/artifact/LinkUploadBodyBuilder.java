@@ -1,4 +1,4 @@
-package io.testomat.core.artifact;
+package io.testomat.core.facade.methods.artifact;
 
 /**
  * Builder for creating JSON request bodies containing artifact links for upload to the server.

@@ -1,4 +1,4 @@
-package io.testomat.core.meta;
+package io.testomat.core.facade.methods.meta;
 
 import java.util.HashMap;
 import java.util.Map;

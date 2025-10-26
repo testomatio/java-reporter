@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import io.testomat.core.facade.methods.artifact.ArtifactLinkData;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

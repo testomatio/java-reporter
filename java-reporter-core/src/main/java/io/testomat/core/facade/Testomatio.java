@@ -1,8 +1,8 @@
 package io.testomat.core.facade;
 
-import io.testomat.core.artifact.manager.ArtifactManager;
-import io.testomat.core.meta.MetaStorage;
-import java.util.HashMap;
+import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
+import io.testomat.core.facade.methods.logmethod.LogStorage;
+import io.testomat.core.facade.methods.meta.MetaStorage;
 import java.util.Map;
 
 /**
@@ -10,7 +10,6 @@ import java.util.Map;
  * Provides simple static methods for test artifact management and reporting.
  */
 public class Testomatio {
-
     /**
      * Registers artifact files or directories to be uploaded for the current test.
      *
@@ -26,5 +25,12 @@ public class Testomatio {
 
     public static void meta(Map<String, String> metaMap) {
         MetaStorage.TEMP_META_STORAGE.get().putAll(metaMap);
+    }
+
+    public static void log(String log) {
+        if (log == null || log.trim().isEmpty()) {
+            return;
+        }
+        LogStorage.TEMP_LOG_STORAGE.get().add(log);
     }
 }
