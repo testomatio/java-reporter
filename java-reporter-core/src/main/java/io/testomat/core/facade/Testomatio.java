@@ -1,8 +1,10 @@
 package io.testomat.core.facade;
 
 import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
+import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,5 +34,21 @@ public class Testomatio {
             return;
         }
         LogStorage.TEMP_LOG_STORAGE.get().add(log);
+    }
+
+    public static void label(String label) {
+        LabelStorage.TEMP_LABEL_STORAGE.get().add(Map.of("label", label));
+    }
+
+    public static void label(String labelName, String labelValue) {
+        LabelStorage.TEMP_LABEL_STORAGE.get().add(Map.of("label", labelName + ":" + labelValue));
+    }
+
+    public static void label(String labelName, List<String> labelValues) {
+        if (labelValues != null && !labelValues.isEmpty()) {
+            for (String labelValue : labelValues) {
+                label(labelName, labelValue);
+            }
+        }
     }
 }
