@@ -6,9 +6,11 @@ import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
 import com.intuit.karate.core.ScenarioResult;
 import com.intuit.karate.core.ScenarioRuntime;
+import io.testomat.core.facade.Testomatio;
 import io.testomat.core.model.ExceptionDetails;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -26,6 +28,7 @@ public class TestDataExtractor {
     private static final String TEST_ID_REGEX = "T[a-z0-9]{8}";
     private static final String UNKNOWN_TEST = "Unknown test";
     private static final String TITLE_PREFIX = "title:";
+    private static final String ATTACHMENTS_PREFIX = "attachments:";
 
     /**
      * Extracts exception details from test execution result.
@@ -64,10 +67,13 @@ public class TestDataExtractor {
      */
     public String extractTitle(ScenarioRuntime sr) {
         return sr.tags.getTags().stream()
-            .filter(tag -> tag != null && tag.toLowerCase().startsWith(TITLE_PREFIX))
-            .map(tag -> tag.substring(TITLE_PREFIX.length()).replace("_", " "))
+            .filter(Objects::nonNull)
+            .filter(tag -> tag.regionMatches(true, 0,
+                TITLE_PREFIX, 0, TITLE_PREFIX.length()))
+            .map(tag -> tag.substring(TITLE_PREFIX.length()))
+            .map(t -> t.replace('_', ' '))
             .findFirst()
-            .orElse(getTestName(sr));
+            .orElseGet(() -> getTestName(sr));
     }
 
     /**
@@ -81,6 +87,23 @@ public class TestDataExtractor {
             return sr.scenario.getFeature().getResource().getRelativePath();
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    public void extractAttachments(ScenarioRuntime sr) {
+        String[] attachments = sr.tags.getTags().stream()
+            .filter(Objects::nonNull)
+            .filter(tag -> tag.regionMatches(true, 0,
+                ATTACHMENTS_PREFIX, 0, ATTACHMENTS_PREFIX.length()))
+            .map(tag -> tag.substring(ATTACHMENTS_PREFIX.length()).trim())
+            .filter(s -> !s.isEmpty())
+            .flatMap(s -> Arrays.stream(s.split(",")))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .toArray(String[]::new);
+
+        if (attachments.length > 0) {
+            Testomatio.artifact(attachments);
         }
     }
 

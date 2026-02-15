@@ -46,6 +46,8 @@ public class KarateTestResultConstructor {
         String fileName = testDataExtractor.extractFileName(sr);
         System.out.println("CucumberTestResultConstructor: extractFileName returned: " + fileName);
 
+        testDataExtractor.extractAttachments(sr);
+
         // Collect steps from ThreadLocal storage
         List<TestStep> steps = StepStorage.getSteps();
 
