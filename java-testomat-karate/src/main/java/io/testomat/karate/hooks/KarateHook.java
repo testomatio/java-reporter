@@ -14,7 +14,8 @@ import io.testomat.karate.exception.KarateHookException;
 import io.testomat.karate.extractor.TestDataExtractor;
 
 /**
- * Karate hook for Testomat.io integration. Reports Karate test execution results to Testomat.io platform.
+ * Runtime hook for integrating Karate test execution with Testomat.io.
+ * Reports Karate test execution results to the Testomat.io platform.
  */
 public class KarateHook implements RuntimeHook {
 
@@ -25,7 +26,7 @@ public class KarateHook implements RuntimeHook {
     private final AwsService awsService;
 
     /**
-     * Creates a new hook with default dependencies.
+     * Creates a new Karate hook with default dependencies.
      */
     public KarateHook() {
         this.functionsHandler = new FacadeFunctionsHandler();
@@ -67,10 +68,12 @@ public class KarateHook implements RuntimeHook {
     }
 
     /**
-     * Called after each test case execution, similar to JUnit/TestNG afterEach.
+     * Called after each Karate test case execution, similar to
+     * {@code @AfterEach} in JUnit or {@code @AfterMethod} in TestNG.
+     * <p>
      * Override this method to add custom post-test logic.
      *
-     * @param sr the ScenarioRuntime
+     * @param sr the {@link ScenarioRuntime} representing the finished test case
      */
     protected void afterEach(ScenarioRuntime sr) {
         functionsHandler.handleFacadeFunctions(sr);

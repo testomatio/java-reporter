@@ -18,8 +18,9 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Extracts test metadata and parameters from Karate test case finished srs. Handles test identification, status
- * normalization, and parameter extraction.
+ * Extracts test metadata and execution details from finished Karate test cases.
+ * <p>
+ * Handles test identification, status normalization, and parameter extraction.
  */
 public class TestDataExtractor {
 
@@ -31,10 +32,10 @@ public class TestDataExtractor {
     private static final String ATTACHMENTS_PREFIX = "attachments:";
 
     /**
-     * Extracts exception details from test execution result.
+     * Extracts exception details from a Karate test case execution result.
      *
-     * @param sr the Karate test case finished scenario runtime
-     * @return exception details if error exists, empty details otherwise
+     * @param sr the {@link ScenarioRuntime} representing the finished Karate test case
+     * @return exception details if an error exists; otherwise, empty exception details
      */
     public ExceptionDetails extractExceptionDetails(ScenarioRuntime sr) {
         if (sr.result.isFailed()) {
@@ -44,10 +45,12 @@ public class TestDataExtractor {
     }
 
     /**
-     * Extracts test ID from Karate tags. Looks for tags matching the pattern @T[a-z0-9]{8}.
+     * Extracts the test ID from Karate tags.
+     * <p>
+     * Looks for tags matching the pattern {@code @T[a-z0-9]{8}}.
      *
-     * @param sr the Karate test case finished sr
-     * @return test ID if found, null otherwise
+     * @param sr the {@link ScenarioRuntime} representing the finished Karate test case
+     * @return the extracted test ID (including the {@code @} prefix), or {@code null} if not found
      */
     public String extractTestId(ScenarioRuntime sr) {
         return sr.tags.getTags().stream()
@@ -59,11 +62,13 @@ public class TestDataExtractor {
     }
 
     /**
-     * Extracts test title from Karate tags or scenario name. Looks for @title: tags first, falls back to scenario
-     * name.
+     * Extracts the test title from Karate tags or the scenario name.
+     * <p>
+     * Looks for {@code @title:} tags first and falls back to the scenario name
+     * if no title tag is found.
      *
-     * @param sr the Karate test case finished sr
-     * @return test title or scenario name
+     * @param sr the {@link ScenarioRuntime} representing the finished Karate test case
+     * @return the extracted test title or the scenario name if no title tag is present
      */
     public String extractTitle(ScenarioRuntime sr) {
         return sr.tags.getTags().stream()
@@ -77,10 +82,11 @@ public class TestDataExtractor {
     }
 
     /**
-     * Extracts feature file name from test case URI. Handles both Unix and Windows path formats.
+     * Extracts the feature file name from the test case resource path.
+     * Handles both Unix and Windows path formats.
      *
-     * @param sr the Karate test case finished sr
-     * @return feature file name, null if extraction fails
+     * @param sr the {@link ScenarioRuntime} representing the finished Karate test case
+     * @return the feature file name, or {@code null} if extraction fails
      */
     public String extractFileName(ScenarioRuntime sr) {
         try {
@@ -90,6 +96,18 @@ public class TestDataExtractor {
         }
     }
 
+    /**
+     * Extracts attachment references from Karate test case tags and registers them as test artifacts.
+     * <p>
+     * Attachment tags are expected to start with the configured attachments prefix
+     * (for example, {@code @attachments:}). The tag value may contain one or more
+     * comma-separated attachment identifiers.
+     * <p>
+     * Empty or blank attachment values are ignored. If at least one attachment is
+     * extracted, the attachments are registered via {@link Testomatio#artifact(String...)}.
+     *
+     * @param sr the {@link ScenarioRuntime} representing the finished Karate test case
+     */
     public void extractAttachments(ScenarioRuntime sr) {
         String[] attachments = sr.tags.getTags().stream()
             .filter(Objects::nonNull)
@@ -108,11 +126,10 @@ public class TestDataExtractor {
     }
 
     /**
-     * Normalizes Karate test status to standard format.
+     * Normalizes a Karate test case execution status to a standard format.
      *
-     * @param sr the Karate test case finished sr
-     * @return normalized status (PASSED, FAILED, or SKIPPED) //     * @throws StatusNormalizerException if result is
-     * null
+     * @param sr the {@link ScenarioRuntime} representing the finished Karate test case
+     * @return the normalized status: {@code PASSED}, {@code FAILED}, or {@code SKIPPED}
      */
     public String getNormalizedStatus(ScenarioRuntime sr) {
         ScenarioResult result = sr.result;

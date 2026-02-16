@@ -9,22 +9,22 @@ import io.testomat.karate.extractor.TestDataExtractor;
 import java.util.List;
 
 /**
- * Constructs test case results from Karate test case finished events. Extracts exception details from Karate result
- * errors when available.
+ * Constructs test results from Karate test case finished events.
+ * Extracts exception details from Karate execution errors when available.
  */
 public class KarateTestResultConstructor {
 
     private final TestDataExtractor testDataExtractor;
 
     /**
-     * Creates a new instance with default test data extractor.
+     * Creates a new instance using a default {@link TestDataExtractor} implementation.
      */
     public KarateTestResultConstructor() {
         this.testDataExtractor = new TestDataExtractor();
     }
 
     /**
-     * Creates a new instance with the specified test data extractor.
+     * Creates a new instance using the specified {@link TestDataExtractor}.
      *
      * @param testDataExtractor the test data extractor to use
      */
@@ -33,10 +33,11 @@ public class KarateTestResultConstructor {
     }
 
     /**
-     * Constructs a test result from a Karate test case finished event. Extracts test metadata, status, error details,
-     * and test steps from the event.
+     * Constructs a test result from a finished Karate test case.
+     * Extracts test metadata, execution status, error details,
+     * and test steps from the provided {@link ScenarioRuntime}.
      *
-     * @param sr the Karate test case finished ScenarioRuntime
+     * @param sr the {@link ScenarioRuntime} representing the finished Karate test case
      * @return the constructed test result
      */
     public TestResult constructTestRunResult(ScenarioRuntime sr) {
@@ -44,7 +45,7 @@ public class KarateTestResultConstructor {
         ExceptionDetails exceptionDetails = testDataExtractor.extractExceptionDetails(sr);
 
         String fileName = testDataExtractor.extractFileName(sr);
-        System.out.println("CucumberTestResultConstructor: extractFileName returned: " + fileName);
+        System.out.println("KarateTestResultConstructor: extractFileName returned: " + fileName);
 
         testDataExtractor.extractAttachments(sr);
 
