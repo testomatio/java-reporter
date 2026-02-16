@@ -8,10 +8,8 @@ import com.intuit.karate.core.ScenarioRuntime;
 import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.model.TestResult;
 import io.testomat.karate.constructor.KarateTestResultConstructor;
-import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.karate.exception.KarateHookException;
-import io.testomat.karate.extractor.TestDataExtractor;
 
 /**
  * Runtime hook for integrating Karate test execution with Testomat.io.
@@ -20,10 +18,8 @@ import io.testomat.karate.extractor.TestDataExtractor;
 public class KarateHook implements RuntimeHook {
 
     private final KarateTestResultConstructor resultConstructor;
-    private final TestDataExtractor dataExtractor;
     private final FacadeFunctionsHandler functionsHandler;
     private final GlobalRunManager runManager;
-    private final AwsService awsService;
 
     /**
      * Creates a new Karate hook with default dependencies.
@@ -32,8 +28,6 @@ public class KarateHook implements RuntimeHook {
         this.functionsHandler = new FacadeFunctionsHandler();
         this.resultConstructor = new KarateTestResultConstructor();
         this.runManager = GlobalRunManager.getInstance();
-        this.dataExtractor = new TestDataExtractor();
-        this.awsService = new AwsService();
     }
 
     @Override

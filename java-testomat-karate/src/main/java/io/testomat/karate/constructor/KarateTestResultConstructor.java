@@ -44,9 +44,6 @@ public class KarateTestResultConstructor {
 
         ExceptionDetails exceptionDetails = testDataExtractor.extractExceptionDetails(sr);
 
-        String fileName = testDataExtractor.extractFileName(sr);
-        System.out.println("KarateTestResultConstructor: extractFileName returned: " + fileName);
-
         testDataExtractor.extractAttachments(sr);
 
         // Collect steps from ThreadLocal storage
@@ -56,7 +53,7 @@ public class KarateTestResultConstructor {
             .withStatus(testDataExtractor.getNormalizedStatus(sr))
             .withSuiteTitle(sr.scenario.getFeature().getResource().getRelativePath())
             .withTestId(testDataExtractor.extractTestId(sr))
-            .withFile(fileName)
+            .withFile(testDataExtractor.extractFileName(sr))
             .withTitle(testDataExtractor.extractTitle(sr))
             .withRid(testDataExtractor.getRid(sr))
             .withMessage(exceptionDetails.getMessage())
