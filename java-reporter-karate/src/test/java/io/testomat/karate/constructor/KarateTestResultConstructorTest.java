@@ -3,6 +3,7 @@ package io.testomat.karate.constructor;
 import com.intuit.karate.core.Feature;
 import com.intuit.karate.core.Scenario;
 import com.intuit.karate.core.ScenarioRuntime;
+import com.intuit.karate.resource.Resource;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.step.StepStorage;
@@ -36,7 +37,7 @@ class KarateTestResultConstructorTest {
         when(extractor.extractExceptionDetails(sr))
             .thenReturn(ExceptionDetails.empty());
         when(extractor.getNormalizedStatus(sr))
-            .thenReturn("PASSED");
+            .thenReturn("passed");
         when(extractor.extractTestId(sr))
             .thenReturn("@T12345678");
         when(extractor.extractFileName(sr))
@@ -51,7 +52,7 @@ class KarateTestResultConstructorTest {
 
         TestResult result = constructor.constructTestRunResult(sr);
 
-        assertThat(result.getStatus()).isEqualTo("PASSED");
+        assertThat(result.getStatus()).isEqualTo("passed");
         assertThat(result.getTestId()).isEqualTo("@T12345678");
         assertThat(result.getFile()).isEqualTo("KarateTest.feature");
         assertThat(result.getTitle()).isEqualTo("karate test");
@@ -66,7 +67,7 @@ class KarateTestResultConstructorTest {
         when(extractor.extractExceptionDetails(sr))
             .thenReturn(ExceptionDetails.empty());
         when(extractor.getNormalizedStatus(sr))
-            .thenReturn("PASSED");
+            .thenReturn("passed");
 
         TestResult result = constructor.constructTestRunResult(sr);
 
@@ -83,11 +84,11 @@ class KarateTestResultConstructorTest {
         when(extractor.extractExceptionDetails(sr))
             .thenReturn(details);
         when(extractor.getNormalizedStatus(sr))
-            .thenReturn("FAILED");
+            .thenReturn("failed");
 
         TestResult result = constructor.constructTestRunResult(sr);
 
-        assertThat(result.getStatus()).isEqualTo("FAILED");
+        assertThat(result.getStatus()).isEqualTo("failed");
         assertThat(result.getMessage()).isEqualTo("exception");
         assertThat(result.getStack()).isEqualTo("stacktrace");
     }
@@ -99,7 +100,7 @@ class KarateTestResultConstructorTest {
         when(extractor.extractExceptionDetails(sr))
             .thenReturn(ExceptionDetails.empty());
         when(extractor.getNormalizedStatus(sr))
-            .thenReturn("PASSED");
+            .thenReturn("passed");
 
         constructor.constructTestRunResult(sr);
 
@@ -119,7 +120,7 @@ class KarateTestResultConstructorTest {
         when(extractor.extractExceptionDetails(sr))
             .thenReturn(ExceptionDetails.empty());
         when(extractor.getNormalizedStatus(sr))
-            .thenReturn("PASSED");
+            .thenReturn("passed");
         when(extractor.extractFileName(sr))
             .thenReturn(null);
 
@@ -137,7 +138,7 @@ class KarateTestResultConstructorTest {
         when(extractor.extractExceptionDetails(sr))
             .thenReturn(ExceptionDetails.empty());
         when(extractor.getNormalizedStatus(sr))
-            .thenReturn("PASSED");
+            .thenReturn("passed");
         when(extractor.extractFileName(sr))
             .thenReturn(null);
 
@@ -149,9 +150,12 @@ class KarateTestResultConstructorTest {
     private ScenarioRuntime mockScenarioRuntime() {
         ScenarioRuntime sr = mock(ScenarioRuntime.class);
 
-        Scenario scenario = mock(Scenario.class, RETURNS_DEEP_STUBS);
-        Feature feature = mock(Feature.class, RETURNS_DEEP_STUBS);
+        Scenario scenario = mock(Scenario.class);
+        Feature feature = mock(Feature.class);
+        Resource resource = mock(Resource.class);
 
+        when(feature.getResource())
+            .thenReturn(resource);
         when(feature.getResource().getRelativePath())
             .thenReturn("features/KarateTest.feature");
         when(scenario.getFeature()).thenReturn(feature);

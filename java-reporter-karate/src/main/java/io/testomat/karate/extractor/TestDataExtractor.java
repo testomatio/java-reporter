@@ -25,9 +25,7 @@ import org.slf4j.LoggerFactory;
 public class TestDataExtractor {
 
     private static final Logger log = LoggerFactory.getLogger(TestDataExtractor.class);
-    private static final String QUOTED_PATTERN = "[\"']([^\"']+)[\"']|\\b(\\d+(?:\\.\\d+)?)\\b";
     private static final String TEST_ID_REGEX = "T[a-z0-9]{8}";
-    private static final String UNKNOWN_TEST = "Unknown test";
     private static final String TITLE_PREFIX = "title:";
     private static final String ATTACHMENTS_PREFIX = "attachments:";
 

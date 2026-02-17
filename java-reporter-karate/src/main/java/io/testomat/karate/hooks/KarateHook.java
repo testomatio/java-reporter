@@ -21,13 +21,27 @@ public class KarateHook implements RuntimeHook {
     private final FacadeFunctionsHandler functionsHandler;
     private final GlobalRunManager runManager;
 
+    public KarateHook(
+        KarateTestResultConstructor resultConstructor,
+        FacadeFunctionsHandler functionsHandler,
+        GlobalRunManager runManager
+    ) {
+        this.resultConstructor = resultConstructor;
+        this.functionsHandler = functionsHandler;
+        this.runManager = runManager;
+    }
+
+
     /**
      * Creates a new Karate hook with default dependencies.
      */
+
     public KarateHook() {
-        this.functionsHandler = new FacadeFunctionsHandler();
-        this.resultConstructor = new KarateTestResultConstructor();
-        this.runManager = GlobalRunManager.getInstance();
+        this(
+            new KarateTestResultConstructor(),
+            new FacadeFunctionsHandler(),
+            GlobalRunManager.getInstance()
+        );
     }
 
     @Override
