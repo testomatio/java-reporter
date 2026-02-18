@@ -12,6 +12,8 @@ import io.testomat.core.model.ExceptionDetails;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
@@ -58,12 +60,80 @@ class TestDataExtractorTest {
     }
 
     @Test
-    void extractTestIdFound() {
-        ScenarioRuntime sr = mockScenarioRuntimeWithTags("@Tabc12345", "smoke");
+    void extractTestIdFromExampleDataHasPriorityOverTags() {
+        ScenarioRuntime sr = mockScenarioRuntimeWithTags("@testId:Taaaa1111");
+
+        Map<String, Object> exampleData = new HashMap<>();
+        exampleData.put("testId", "Tbbbb2222");
+
+        when(sr.scenario.getExampleData()).thenReturn(exampleData);
 
         String testId = extractor.extractTestId(sr);
 
-        assertThat(testId).isEqualTo("@Tabc12345");
+        assertThat(testId).isEqualTo("Tbbbb2222");
+    }
+
+    @Test
+    void extractTestIdFromExampleDataOnly() {
+        ScenarioRuntime sr = mockScenarioRuntime();
+
+        Map<String, Object> exampleData = new HashMap<>();
+        exampleData.put("testId", "Tabcd1234");
+
+        when(sr.scenario.getExampleData()).thenReturn(exampleData);
+
+        String testId = extractor.extractTestId(sr);
+
+        assertThat(testId).isEqualTo("Tabcd1234");
+    }
+
+    @Test
+    void extractTestIdFromTagsWhenExampleDataIsNull() {
+        ScenarioRuntime sr =
+            mockScenarioRuntimeWithTags("@testId:Tabc12345", "smoke");
+
+        when(sr.scenario.getExampleData()).thenReturn(null);
+
+        String testId = extractor.extractTestId(sr);
+
+        assertThat(testId).isEqualTo("Tabc12345");
+    }
+
+    @Test
+    void extractTestIdFromTagsWhenExampleDataDoesNotContainTestId() {
+        ScenarioRuntime sr =
+            mockScenarioRuntimeWithTags("@testId:Tcccc3333");
+
+        Map<String, Object> exampleData = new HashMap<>();
+        exampleData.put("other", "value");
+
+        when(sr.scenario.getExampleData()).thenReturn(exampleData);
+
+        String testId = extractor.extractTestId(sr);
+
+        assertThat(testId).isEqualTo("Tcccc3333");
+    }
+
+    @Test
+    void extractTestIdReturnsNullWhenNotFoundAnywhere() {
+        ScenarioRuntime sr =
+            mockScenarioRuntimeWithTags("smoke", "regression");
+
+        when(sr.scenario.getExampleData()).thenReturn(null);
+
+        assertThat(extractor.extractTestId(sr)).isNull();
+    }
+
+    @Test
+    void extractTestIdIgnoresInvalidFormat() {
+        ScenarioRuntime sr =
+            mockScenarioRuntimeWithTags("testId:@W11112222", "smoke");
+
+        when(sr.scenario.getExampleData()).thenReturn(null);
+
+        String testId = extractor.extractTestId(sr);
+
+        assertThat(testId).isNull();
     }
 
     @Test
@@ -196,5 +266,3 @@ class TestDataExtractorTest {
         }
     }
 }
-
-

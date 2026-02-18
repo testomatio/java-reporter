@@ -3,6 +3,7 @@ package io.testomat.karate.extractor;
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
+import static java.util.Objects.isNull;
 
 import com.intuit.karate.core.ScenarioResult;
 import com.intuit.karate.core.ScenarioRuntime;
@@ -11,8 +12,11 @@ import io.testomat.core.model.ExceptionDetails;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +30,7 @@ public class TestDataExtractor {
 
     private static final Logger log = LoggerFactory.getLogger(TestDataExtractor.class);
     private static final String TEST_ID_REGEX = "T[a-z0-9]{8}";
+    private static final String TEST_ID_PREFIX = "testid";
     private static final String TITLE_PREFIX = "title:";
     private static final String ATTACHMENTS_PREFIX = "attachments:";
 
@@ -43,20 +48,47 @@ public class TestDataExtractor {
     }
 
     /**
-     * Extracts the test ID from Karate tags.
+     * Extracts a test identifier from a Karate test execution context.
      * <p>
-     * Looks for tags matching the pattern {@code @T[a-z0-9]{8}}.
+     * The method attempts to resolve the test identifier using the following priority:
+     * <ol>
+     *   <li>
+     *     Scenario Outline {@code Examples} data — looks for an example column
+     *     whose name matches the configured test id prefix.
+     *   </li>
+     *   <li>
+     *     Scenario tags — looks for tags starting with the same prefix
+     *     (for example, {@code TestId:}).
+     *   </li>
+     * </ol>
+     * <p>
+     * The extracted value is validated against the configured test id format.
+     * No additional normalization is applied to the returned value.
+     * <p>
+     * If no valid test identifier is found in either source, the method returns {@code null}.
      *
-     * @param sr the {@link ScenarioRuntime} representing the finished Karate test case
-     * @return the extracted test ID (including the {@code @} prefix), or {@code null} if not found
+     * @param sr the {@link ScenarioRuntime} representing the executed Karate test case
+     * @return the extracted test identifier, or {@code null} if not found
      */
     public String extractTestId(ScenarioRuntime sr) {
-        return sr.tags.getTags().stream()
-            .filter(Objects::nonNull)
-            .filter(tag -> tag.matches(TEST_ID_REGEX))
-            .map(tag -> "@" + tag)
-            .findFirst()
-            .orElse(null);
+        String testId = findFirstValidTestId(
+            Optional.ofNullable(sr.scenario.getExampleData())
+                .stream()
+                .flatMap(m -> m.entrySet().stream())
+                .filter(e -> e.getKey().equalsIgnoreCase(TEST_ID_PREFIX))
+                .map(Map.Entry::getValue)
+                .map(Object::toString)
+        );
+
+        if (isNull(testId)) {
+            testId = findFirstValidTestId(sr.tags.getTags().stream()
+                .filter(Objects::nonNull)
+                .filter(tag -> tag.regionMatches(true, 0,
+                    TEST_ID_PREFIX, 0, TEST_ID_PREFIX.length()))
+                .map(tag -> tag.substring(TEST_ID_PREFIX.length() + 1)));
+        }
+
+        return testId;
     }
 
     /**
@@ -134,6 +166,21 @@ public class TestDataExtractor {
         return normalizeStatus(result);
     }
 
+    /**
+     * Generates a stable runtime identifier (rId) for a Karate test scenario execution.
+     * <p>
+     * The identifier is deterministically derived from the scenario location
+     * (feature file path and scenario line number). This ensures that the same
+     * scenario always produces the same rId across multiple test runs.
+     * <p>
+     * The rId is generated using a name-based UUID calculated from the string:
+     * <pre>
+     *     &lt;feature-relative-path&gt;:&lt;scenario-line-number&gt;
+     * </pre>
+     *
+     * @param sr the {@link ScenarioRuntime} representing the executed Karate test scenario
+     * @return a deterministic UUID string uniquely identifying the scenario execution
+     */
     public String getRid(ScenarioRuntime sr) {
         String raw = String.format("%s:%s",
             sr.scenario.getFeature().getResource().getRelativePath(),
@@ -141,6 +188,13 @@ public class TestDataExtractor {
         );
 
         return UUID.nameUUIDFromBytes(raw.getBytes()).toString();
+    }
+
+    private String findFirstValidTestId(Stream<String> ids) {
+        return ids
+            .filter(id -> id.matches(TEST_ID_REGEX))
+            .findFirst()
+            .orElse(null);
     }
 
     private ExceptionDetails createExceptionDetails(Throwable throwable) {
