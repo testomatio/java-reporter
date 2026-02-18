@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * Extracts test metadata and execution details from finished Karate test cases.
  * <p>
@@ -72,7 +71,7 @@ public class TestDataExtractor {
      */
     public String extractTestId(ScenarioRuntime sr) {
         String testId = findFirstValidTestId(
-            Optional.ofNullable(sr.scenario.getExampleData())
+                Optional.ofNullable(sr.scenario.getExampleData())
                 .stream()
                 .flatMap(m -> m.entrySet().stream())
                 .filter(e -> e.getKey().equalsIgnoreCase(TEST_ID_PREFIX))
@@ -127,7 +126,8 @@ public class TestDataExtractor {
     }
 
     /**
-     * Extracts attachment references from Karate test case tags and registers them as test artifacts.
+     * Extracts attachment references from Karate test case tags
+     * and registers them as test artifacts.
      * <p>
      * Attachment tags are expected to start with the configured attachments prefix
      * (for example, {@code @attachments:}). The tag value may contain one or more
@@ -183,8 +183,8 @@ public class TestDataExtractor {
      */
     public String getRid(ScenarioRuntime sr) {
         String raw = String.format("%s:%s",
-            sr.scenario.getFeature().getResource().getRelativePath(),
-            sr.scenario.getLine()
+                sr.scenario.getFeature().getResource().getRelativePath(),
+                sr.scenario.getLine()
         );
 
         return UUID.nameUUIDFromBytes(raw.getBytes()).toString();

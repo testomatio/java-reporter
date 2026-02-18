@@ -50,14 +50,14 @@ public class KarateTestResultConstructor {
         List<TestStep> steps = StepStorage.getSteps();
 
         TestResult.Builder builder = TestResult.builder()
-            .withStatus(testDataExtractor.getNormalizedStatus(sr))
-            .withSuiteTitle(sr.scenario.getFeature().getResource().getRelativePath())
-            .withTestId(testDataExtractor.extractTestId(sr))
-            .withFile(testDataExtractor.extractFileName(sr))
-            .withTitle(testDataExtractor.extractTitle(sr))
-            .withRid(testDataExtractor.getRid(sr))
-            .withMessage(exceptionDetails.getMessage())
-            .withStack(exceptionDetails.getStack());
+                .withStatus(testDataExtractor.getNormalizedStatus(sr))
+                .withSuiteTitle(sr.scenario.getFeature().getResource().getRelativePath())
+                .withTestId(testDataExtractor.extractTestId(sr))
+                .withFile(testDataExtractor.extractFileName(sr))
+                .withTitle(testDataExtractor.extractTitle(sr))
+                .withRid(testDataExtractor.getRid(sr))
+                .withMessage(exceptionDetails.getMessage())
+                .withStack(exceptionDetails.getStack());
 
         if (!steps.isEmpty()) {
             builder.withSteps(steps);

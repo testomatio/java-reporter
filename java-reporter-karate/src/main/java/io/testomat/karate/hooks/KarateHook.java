@@ -7,8 +7,8 @@ import com.intuit.karate.Suite;
 import com.intuit.karate.core.ScenarioRuntime;
 import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.model.TestResult;
-import io.testomat.karate.constructor.KarateTestResultConstructor;
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.karate.constructor.KarateTestResultConstructor;
 import io.testomat.karate.exception.KarateHookException;
 
 /**
@@ -22,15 +22,14 @@ public class KarateHook implements RuntimeHook {
     private final GlobalRunManager runManager;
 
     public KarateHook(
-        KarateTestResultConstructor resultConstructor,
-        FacadeFunctionsHandler functionsHandler,
-        GlobalRunManager runManager
+            KarateTestResultConstructor resultConstructor,
+            FacadeFunctionsHandler functionsHandler,
+            GlobalRunManager runManager
     ) {
         this.resultConstructor = resultConstructor;
         this.functionsHandler = functionsHandler;
         this.runManager = runManager;
     }
-
 
     /**
      * Creates a new Karate hook with default dependencies.
@@ -40,7 +39,7 @@ public class KarateHook implements RuntimeHook {
         this(
             new KarateTestResultConstructor(),
             new FacadeFunctionsHandler(),
-            GlobalRunManager.getInstance()
+                GlobalRunManager.getInstance()
         );
     }
 
@@ -64,7 +63,9 @@ public class KarateHook implements RuntimeHook {
             runManager.reportTest(result);
         } catch (Exception e) {
             String testName = sr.scenario.getName();
-            throw new ReportTestResultException(String.format("Failed to report test result for: %s", testName), e);
+            throw new ReportTestResultException(
+                String.format("Failed to report test result for: %s", testName),
+                e);
         } finally {
             afterEach(sr);
         }

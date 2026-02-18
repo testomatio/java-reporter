@@ -27,50 +27,49 @@ public class FacadeFunctionsHandler {
     }
 
     public void handleFacadeFunctions(ScenarioRuntime sr) {
-        String rId = dataExtractor.getRid(sr);
-        handleMetaAfterEach(rId);
-        handleLogFunction(rId);
-        handleLabels(rId);
-        handleArtifactsAfterEach(sr, rId);
+        String rid = dataExtractor.getRid(sr);
+        handleMetaAfterEach(rid);
+        handleLogFunction(rid);
+        handleLabels(rid);
+        handleArtifactsAfterEach(sr, rid);
     }
 
-    private void handleMetaAfterEach(String rId) {
+    private void handleMetaAfterEach(String rid) {
         Map<String, String> metaData =
-            Optional.ofNullable(MetaStorage.TEMP_META_STORAGE.get())
+                Optional.ofNullable(MetaStorage.TEMP_META_STORAGE.get())
                 .orElse(Map.of());
 
         if (!metaData.isEmpty()) {
-            MetaStorage.LINKED_META_STORAGE.put(rId, new HashMap<>(metaData));
+            MetaStorage.LINKED_META_STORAGE.put(rid, new HashMap<>(metaData));
             MetaStorage.TEMP_META_STORAGE.remove();
         }
     }
 
-
-    private void handleArtifactsAfterEach(ScenarioRuntime sr, String rId) {
+    private void handleArtifactsAfterEach(ScenarioRuntime sr, String rid) {
         awsService.uploadAllArtifactsForTest(
-            dataExtractor.extractTitle(sr),
-            rId,
-            dataExtractor.extractTestId(sr)
+                dataExtractor.extractTitle(sr),
+                rid,
+                dataExtractor.extractTestId(sr)
         );
     }
 
-    private void handleLabels(String rId) {
+    private void handleLabels(String rid) {
         List<Map<String, String>> storedLabels =
-            Optional.ofNullable(LabelStorage.TEMP_LABEL_STORAGE.get())
+                Optional.ofNullable(LabelStorage.TEMP_LABEL_STORAGE.get())
                 .orElse(List.of());
 
         if (!storedLabels.isEmpty()) {
-            LabelStorage.LINKED_LABEL_STORAGE.put(rId, List.copyOf(storedLabels));
+            LabelStorage.LINKED_LABEL_STORAGE.put(rid, List.copyOf(storedLabels));
         }
     }
 
-    private void handleLogFunction(String rId) {
+    private void handleLogFunction(String rid) {
         List<String> storedLogs =
-            Optional.ofNullable(LogStorage.TEMP_LOG_STORAGE.get())
+                Optional.ofNullable(LogStorage.TEMP_LOG_STORAGE.get())
                 .orElse(List.of());
 
         if (!storedLogs.isEmpty()) {
-            LogStorage.LINKED_LOG_STORAGE.put(rId, storedLogs.toArray(String[]::new));
+            LogStorage.LINKED_LOG_STORAGE.put(rid, storedLogs.toArray(String[]::new));
         }
     }
 }
