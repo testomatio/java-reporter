@@ -1,33 +1,36 @@
 package io.testomat.karate.hooks;
 
 import com.intuit.karate.RuntimeHook;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import com.intuit.karate.core.RuntimeHookFactory;
 import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class KarateHookFactoryTest {
 
     @Test
-    void shouldCreateKarateHook() {
-        KarateHookFactory factory = new KarateHookFactory();
+    void createShouldReturnRuntimeHookFactory() {
+        RuntimeHookFactory factory = KarateHookFactory.create();
 
-        RuntimeHook hook = factory.create();
-
-        assertThat(hook).isNotNull();
-        assertThat(hook).isInstanceOf(KarateHook.class);
+        assertThat(factory).isNotNull();
     }
 
     @Test
-    void shouldCreateNewInstanceEachTime() {
-        KarateHookFactory factory = new KarateHookFactory();
+    void factoryCreateShouldReturnDelegatingHook() {
+        RuntimeHookFactory factory = KarateHookFactory.create();
+
+        RuntimeHook hook = factory.create();
+
+        assertThat(hook)
+            .isNotNull()
+            .isInstanceOf(DelegatingHook.class);
+    }
+
+    @Test
+    void factoryCreateShouldCreateNewHookEachTime() {
+        RuntimeHookFactory factory = KarateHookFactory.create();
 
         RuntimeHook hook1 = factory.create();
         RuntimeHook hook2 = factory.create();
@@ -36,32 +39,58 @@ class KarateHookFactoryTest {
     }
 
     @Test
-    void shouldCreateNewInstanceInParallel() throws Exception {
-        KarateHookFactory factory = new KarateHookFactory();
+    void factoryCreateShouldAlwaysCreateNewKarateHook() {
+        RuntimeHookFactory factory = KarateHookFactory.create();
 
-        int threads = 20;
-        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        DelegatingHook hook1 = (DelegatingHook) factory.create();
+        DelegatingHook hook2 = (DelegatingHook) factory.create();
 
-        try {
-            List<Callable<RuntimeHook>> tasks = IntStream.range(0, threads)
-                .mapToObj(i -> (Callable<RuntimeHook>) factory::create)
-                .collect(Collectors.toList());
-
-            List<Future<RuntimeHook>> futures = executor.invokeAll(tasks);
-
-            List<RuntimeHook> hooks = new ArrayList<>();
-            for (Future<RuntimeHook> future : futures) {
-                hooks.add(future.get());
-            }
-
-            assertThat(hooks)
-                .hasSize(threads)
-                .doesNotHaveDuplicates()
-                .allMatch(h -> h instanceof KarateHook);
-        } finally {
-            executor.shutdownNow();
-        }
+        assertThat(hook1).isNotSameAs(hook2);
+        assertThat(hook1.getKarateHook())
+            .isNotSameAs(hook2.getKarateHook());
     }
 
-}
+    @Test
+    void createWithUserFactoriesShouldCreateCustomHooks() {
+        RuntimeHookFactory userFactory1 = UserHook::new;
+        RuntimeHookFactory userFactory2 = UserHook::new;
 
+        RuntimeHookFactory factory =
+            KarateHookFactory.create(userFactory1, userFactory2);
+
+        DelegatingHook hook = (DelegatingHook) factory.create();
+
+        assertThat(hook.getCustomHooks())
+            .hasSize(2)
+            .allMatch(h -> h instanceof UserHook);
+    }
+
+    @Test
+    void userFactoriesShouldBeInvokedOnEachCreateCall() {
+        AtomicInteger counter = new AtomicInteger();
+
+        RuntimeHookFactory userFactory = () -> {
+            counter.incrementAndGet();
+            return new UserHook();
+        };
+
+        RuntimeHookFactory factory =
+            KarateHookFactory.create(userFactory);
+
+        factory.create();
+        factory.create();
+
+        assertThat(counter.get()).isEqualTo(2);
+    }
+
+    @Test
+    void createWithNoUserFactoriesShouldCreateDelegatingHookWithEmptyCustomHooks() {
+        RuntimeHookFactory factory = KarateHookFactory.create();
+
+        DelegatingHook hook = (DelegatingHook) factory.create();
+
+        assertThat(hook.getCustomHooks()).isEmpty();
+    }
+
+    static class UserHook implements RuntimeHook {}
+}

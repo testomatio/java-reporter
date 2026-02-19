@@ -15,22 +15,22 @@ and team collaboration features.
 
 ## Features
 
-| Feature                            | Description                                        | JUnit | TestNG | Cucumber |
-|------------------------------------|----------------------------------------------------|:-----:|:------:|:--------:|
-| **Complete framework integration** | Full framework support and compatibility           |   ✅   |   ✅    |    ✅     |
-| **Autostart on tests run**         | Automatic integration with test execution          |   ✅   |   ✅    |    ✅     |
-| **Shared run**                     | Collaborative test execution sharing               |   ✅   |   ✅    |    ✅     |
-| **Test runs grouping**             | Organize and categorize test executions            |   ✅   |   ✅    |    ✅     |
-| **Public sharable link**           | Generate public URLs for test run results          |   ✅   |   ✅    |    ✅     |
-| **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅     |
-| **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅     |
-| **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅     |
-| **Test filter by ID**              | Run tests filtered by IDs                          |   ✅   |   ✅    |    ✅     |
-| **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅     |
-| **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅     |
-| **Step-by-step reporting**         | Detailed test step execution tracking              |   ✅   |   ✅    |    ✅     |
-| **Custom hooks**                   | Allows user's own reporting enhancements           |   ✅   |   ✅    |    ✅     |
-| **Other frameworks support**       | Karate, Gauge, etc. (Priority may change)          |   ⏳   |   ⏳    |    ⏳     |
+| Feature                            | Description                                        | JUnit | TestNG | Cucumber | Karate |
+|------------------------------------|----------------------------------------------------|:-----:|:------:|:--------:|:------:|
+| **Complete framework integration** | Full framework support and compatibility           |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Autostart on tests run**         | Automatic integration with test execution          |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Shared run**                     | Collaborative test execution sharing               |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Test runs grouping**             | Organize and categorize test executions            |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Public sharable link**           | Generate public URLs for test run results          |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅  |   ✅    |
+| **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Test filter by ID**              | Run tests filtered by IDs                          |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Step-by-step reporting**         | Detailed test step execution tracking              |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Custom hooks**                   | Allows user's own reporting enhancements           |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Other frameworks support**       | Gauge, etc. (Priority may change)                  |   ⏳   |   ⏳    |    ⏳  |   ⏳    |
 
 ## 🖥️ Supported test frameworks versions
 
@@ -39,6 +39,7 @@ and team collaboration features.
 | **JUnit**     |   5.x   |     5.9.2      |
 | **TestNG**    |   7.x   |     7.7.1      |
 | **Cucumber**  |   7.x   |     7.14.0     |
+| **Karate**    |   1.x   |     1.5.0      |
 
 > Supported Java 11+
 
@@ -92,6 +93,30 @@ Like this:
     @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, io.testomat.cucumber.listener.CucumberListener")
 ```
 
+### Karate
+
+Add `KarateHookFactory` as the hook factory `.hookFactory(new KarateHookFactory())` to your TestRunner class.
+
+```java
+class KarateTest {
+
+    @Test
+    void testParallel() {
+
+        Results results = Runner.path("classpath:karateTests")
+            .hookFactory(new KarateHookFactory())
+            .outputCucumberJson(true)
+            .outputJunitXml(true)
+            .parallel(4);
+
+        Assertions.assertEquals(
+            0,
+            results.getFailCount(),
+            results.getErrorMessages()
+        );
+    }
+}
+```
 ---
 
 ## Test codebase sync
@@ -229,6 +254,60 @@ Feature: User Authentication
     When login fails
     Then error message should be displayed
 ```
+
+### For Karate
+
+```gherkin
+Feature: Posts API
+
+  Background:
+    * url 'https://jsonplaceholder.typicode.com'
+    * def assertStatus = Java.type('helpers.AssertStatus')
+
+  @Title:Get_all_posts @TestId:Tpost0001 @Attachments:logs/karate.log
+  Scenario: Get all posts
+    Given path 'posts'
+    When method get
+    Then eval assertStatus.checkStatusCode(responseStatus, 200)
+    And match response[0].id != null
+
+  @Title:Get_single_post @TestId:Tpost0002
+  Scenario: Get single post
+    Given path 'posts', 1
+    When method get
+    Then eval assertStatus.checkStatusCode(responseStatus, 200)
+    And match response.id == 1
+
+  @Title:Get_comments_for_post @TestId:Tpost0003
+  Scenario: Get comments for post
+    Given path 'posts', 1, 'comments'
+    When method get
+    Then eval assertStatus.checkStatusCode(responseStatus, 200)
+    And match response[0].postId == 1
+
+  @Title:Validate_post_titles
+  Scenario Outline: Validate post titles <TestId>
+    Given path 'posts', <id>
+    When method get
+    Then eval assertStatus.checkStatusCode(responseStatus, 200)
+    And match response.title != null
+
+    Examples:
+      | id | TestId    |
+      | 1  | Tpost0041 |
+      | 2  | Tpost0042 |
+      | 3  | Tpost0043 |
+
+  @Title:Create_post @TestId:Tpost0005
+  Scenario: Create post
+    Given path 'posts'
+    And request { title: 'foo', body: 'bar', userId: 1 }
+    When method post
+    Then eval assertStatus.checkStatusCode(responseStatus, 200)
+    And match response.id != null
+
+```
+
 ## 📎 Test Artifacts Support
 
 The Java Reporter supports attaching files (screenshots, logs, videos, etc.) to your test results and uploading them to
@@ -284,6 +363,17 @@ public class MyTest {
         );
     }
 }
+```
+
+Karate
+
+```gherkin
+  @Attachments:logs/karate.log
+  Scenario: Get all posts
+    Given path 'posts'
+    When method get
+    Then eval assertStatus.checkStatusCode(responseStatus, 200)
+    And match response[0].id != null
 ```
 
 Please make sure you provide the path to the artifact file including its extension.
@@ -562,6 +652,29 @@ The hooks are executed **after** the lifecycle method logic finishes and do not 
 
 ```java
     @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, com.yourcompany.yourproject.YOUR_CUSTOM_LISTENER")
+```
+
+### Karate
+1. Create your custom karate hook that implements method of RuntimeHook `public class MyHook implements RuntimeHook {}`
+2. Implement and override necessary methods
+3. Register the hook using a factory
+```java
+   Runner.path("classpath:karateTests")
+      .hookFactory(KarateHookFactory.create(MyHook::new))
+      .outputCucumberJson(true)
+      .outputJunitXml(true)
+      .parallel(4);
+```
+4. You can register multiple hooks by passing multiple factories
+```java
+    Runner.path("classpath:karateTests")
+      .hookFactory(KarateHookFactory.create(
+            MyHook::new,
+            AnotherHook::new,
+            CustomHook::new))
+      .outputCucumberJson(true)
+      .outputJunitXml(true)
+      .parallel(4);
 ```
 
 ---
