@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-karate</artifactId>
-    <version>0.1.1</version>
+    <version>0.2.1</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter Karate</name>
@@ -32,8 +32,8 @@
     </developers>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
 
         <karate-core.version>1.5.2</karate-core.version>
         <junit.version>5.14.3</junit.version>

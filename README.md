@@ -34,14 +34,12 @@ and team collaboration features.
 
 ## 🖥️ Supported test frameworks versions
 
-| What you need | Version | We tested with |
-|---------------|:-------:|:--------------:|
-| **JUnit**     |   5.x   |     5.9.2      |
-| **TestNG**    |   7.x   |     7.7.1      |
-| **Cucumber**  |   7.x   |     7.14.0     |
-| **Karate**    |   1.x   |     1.5.0      |
-
-> Supported Java 11+
+| What you need | Version | We tested with | Supported java version |
+|---------------|:-------:|:--------------:|:----------------------:|
+| **JUnit**     |   5.x   |     5.9.2      |        Java 11+        |
+| **TestNG**    |   7.x   |     7.7.1      |        Java 11+        |
+| **Cucumber**  |   7.x   |     7.14.0     |        Java 11+        |
+| **Karate**    |   1.x   |     1.5.0      |        Java 17+        |
 
 ---
 
