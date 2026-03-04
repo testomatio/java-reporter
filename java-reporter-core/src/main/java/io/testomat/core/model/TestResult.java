@@ -48,13 +48,17 @@ public class TestResult {
     /** Test steps executed during the test */
     private List<TestStep> steps;
 
+    /** Test result is overwritten when the test is executed multiple times */
+    private Boolean overwrite;
+
     public TestResult() {
     }
 
     public TestResult(String title, String testId,
                       String suiteTitle, String file,
                       String status, String message, String stack,
-                      Object example, String rid, List<TestStep> steps) {
+                      Object example, String rid, Boolean overwrite,
+                        List<TestStep> steps) {
         this.title = title;
         this.testId = testId;
         this.suiteTitle = suiteTitle;
@@ -64,6 +68,7 @@ public class TestResult {
         this.stack = stack;
         this.example = example;
         this.rid = rid;
+        this.overwrite = overwrite;
         this.steps = steps;
     }
 
@@ -81,6 +86,7 @@ public class TestResult {
         private String stack;
         private Object example;
         private String rid;
+        private Boolean overwrite;
         private List<TestStep> steps;
 
         public Builder withTitle(String title) {
@@ -128,13 +134,18 @@ public class TestResult {
             return this;
         }
 
+        public Builder withOverwrite(Boolean overwrite) {
+            this.overwrite = overwrite;
+            return this;
+        }
+
         public Builder withSteps(List<TestStep> steps) {
             this.steps = steps;
             return this;
         }
 
         public TestResult build() {
-            return new TestResult(title, testId, suiteTitle, file, status, message, stack, example, rid, steps);
+            return new TestResult(title, testId, suiteTitle, file, status, message, stack, example, rid, overwrite, steps);
         }
     }
 
@@ -221,6 +232,14 @@ public class TestResult {
 
     public List<TestStep> getSteps() {
         return steps;
+    }
+
+    public void setOverwrite(Boolean overwrite) {
+        this.overwrite = overwrite;
+    }
+
+    public Boolean isOverwrite() {
+        return overwrite;
     }
 
     public void setSteps(List<TestStep> steps) {

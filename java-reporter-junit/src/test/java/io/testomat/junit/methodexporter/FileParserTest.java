@@ -12,11 +12,13 @@ import com.github.javaparser.ast.CompilationUnit;
 import io.testomat.junit.exception.MethodExporterException;
 import io.testomat.junit.methodexporter.parser.FileParser;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -347,19 +349,19 @@ class FileParserTest {
         @Test
         @DisplayName("Should handle relative paths")
         void shouldHandleRelativePaths(@TempDir Path tempDir) throws IOException {
-            // Given
             String javaContent = "public class RelativePathTest {}";
             Path testFile = tempDir.resolve("RelativePathTest.java");
-            java.nio.file.Files.write(testFile, javaContent.getBytes());
-
-            // Create relative path from current directory
+            Files.writeString(testFile, javaContent);
             Path currentDir = Paths.get("").toAbsolutePath();
-            Path relativePath = currentDir.relativize(testFile);
+            Path pathToUse;
 
-            // When
-            CompilationUnit result = fileParser.parseFile(relativePath.toString());
+            if (Objects.equals(currentDir.getRoot(), testFile.getRoot())) {
+                pathToUse = currentDir.relativize(testFile);
+            } else {
+                pathToUse = testFile.toAbsolutePath();
+            }
 
-            // Then
+            CompilationUnit result = fileParser.parseFile(pathToUse.toString());
             assertNotNull(result);
             assertTrue(result.toString().contains("RelativePathTest"));
         }

@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Default implementation of {@link RequestBodyBuilder} for Testomat.io API requests.
@@ -175,8 +176,13 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             addLinks(body, rid);
         }
 
-        body.put("overwrite", "true");
-        ReportedTestStorage.store(body);
+        body.put("overwrite", Optional.ofNullable(result.isOverwrite()).orElse(true));
+
+        Map<String, Object> storageEntry = new HashMap<>();
+        storageEntry.put(ApiRequestFields.TEST_ID, result.getTestId());
+        storageEntry.put(ApiRequestFields.RID, result.getRid());
+        ReportedTestStorage.store(storageEntry);
+
         return body;
     }
 

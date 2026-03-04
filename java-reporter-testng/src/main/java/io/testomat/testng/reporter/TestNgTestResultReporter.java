@@ -1,5 +1,7 @@
 package io.testomat.testng.reporter;
 
+import static io.testomat.core.constants.CommonConstants.FAILED;
+import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 
 import io.testomat.core.exception.ReportTestResultException;
@@ -13,7 +15,9 @@ import io.testomat.testng.extractor.TestNgMetaDataExtractor;
 import io.testomat.testng.extractor.TestNgParameterExtractor;
 import io.testomat.testng.extractor.TestNgTestWrapper;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.testng.ISuite;
 import org.testng.ITestResult;
@@ -31,14 +35,16 @@ public class TestNgTestResultReporter {
     private final TestNgMetaDataExtractor metaDataExtractor;
     private final TestNgParameterExtractor parameterExtractor;
     private final GlobalRunManager runManager;
-    private final Set<String> processedTests;
+    private final List<String> processedTests;
+    private final Set<String> testIds;
 
     public TestNgTestResultReporter() {
         this.resultConstructor = new TestNgTestResultConstructor();
         this.metaDataExtractor = new TestNgMetaDataExtractor();
         this.parameterExtractor = new TestNgParameterExtractor();
         this.runManager = GlobalRunManager.getInstance();
-        this.processedTests = new HashSet<>();
+        this.processedTests = new ArrayList<>();
+        this.testIds = new HashSet<>();
     }
 
     /**
@@ -52,7 +58,8 @@ public class TestNgTestResultReporter {
         this.metaDataExtractor = metaDataExtractor;
         this.parameterExtractor = parameterExtractor;
         this.runManager = runManager;
-        this.processedTests = new HashSet<>();
+        this.testIds = new HashSet<>();
+        this.processedTests = new ArrayList<>();
     }
 
     /**
@@ -71,13 +78,15 @@ public class TestNgTestResultReporter {
         String rid = parameterExtractor.generateRid(result);
         String methodKey = rid != null ? baseKey + "-" + rid : baseKey;
 
-        if (processedTests.contains(methodKey)) {
+        TestNgTestWrapper wrapper = TestNgTestWrapper.forRegularTest(result);
+        TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);
+
+        if (processedTests.contains(methodKey) && !testIds.contains(metadata.getTestId())) {
             return;
         }
 
         processedTests.add(methodKey);
-        TestNgTestWrapper wrapper = TestNgTestWrapper.forRegularTest(result);
-        TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);
+        testIds.add(metadata.getTestId());
 
         Object example = parameterExtractor.extractExample(result);
 
@@ -153,6 +162,15 @@ public class TestNgTestResultReporter {
 
             TestResultWrapper wrapper = builder.build();
             TestResult result = resultConstructor.constructTestRunResult(wrapper);
+
+            if (testIds.contains(result.getTestId())) {
+                result.setOverwrite(false);
+
+                if (!PASSED.equals(result.getStatus())) {
+                    result.setStatus(FAILED);
+                }
+            }
+
             runManager.reportTest(result);
 
         } catch (Exception e) {
