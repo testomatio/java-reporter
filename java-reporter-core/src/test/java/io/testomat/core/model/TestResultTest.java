@@ -30,6 +30,7 @@ class TestResultTest {
                 "stack trace",
                 "example data",
                 "rid-456",
+                true,
                 steps
         );
 

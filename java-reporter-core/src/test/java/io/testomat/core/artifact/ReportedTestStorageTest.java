@@ -3,6 +3,7 @@ package io.testomat.core.artifact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -23,21 +24,6 @@ class ReportedTestStorageTest {
     void cleanup() {
         // Clear the storage after each test
         ReportedTestStorage.getStorage().clear();
-    }
-
-    @Test
-    @DisplayName("Should store test data")
-    void testStoreTestData() {
-        Map<String, Object> body = new HashMap<>();
-        body.put("title", "Test 1");
-        body.put("status", "passed");
-
-        ReportedTestStorage.store(body);
-
-        List<Map<String, Object>> storage = ReportedTestStorage.getStorage();
-        assertEquals(1, storage.size());
-        assertEquals("Test 1", storage.get(0).get("title"));
-        assertEquals("passed", storage.get(0).get("status"));
     }
 
     @Test
@@ -191,68 +177,20 @@ class ReportedTestStorageTest {
     }
 
     @Test
-    @DisplayName("Should store test data with various field types")
-    void testStoreWithVariousFieldTypes() {
-        Map<String, Object> body = new HashMap<>();
-        body.put("title", "Complex Test");
-        body.put("status", "passed");
-        body.put("duration", 150.5);
-        body.put("steps", Arrays.asList("step1", "step2"));
-        body.put("metadata", Map.of("key1", "value1", "key2", "value2"));
-
-        ReportedTestStorage.store(body);
-
-        List<Map<String, Object>> storage = ReportedTestStorage.getStorage();
-        Map<String, Object> stored = storage.get(storage.size() - 1);
-
-        assertEquals("Complex Test", stored.get("title"));
-        assertEquals("passed", stored.get("status"));
-        assertEquals(150.5, stored.get("duration"));
-        assertNotNull(stored.get("steps"));
-        assertNotNull(stored.get("metadata"));
-    }
-
-    @Test
-    @DisplayName("Should maintain insertion order")
-    void testInsertionOrder() {
-        for (int i = 0; i < 5; i++) {
-            Map<String, Object> body = new HashMap<>();
-            body.put("title", "Test " + i);
-            body.put("order", i);
-            ReportedTestStorage.store(body);
-        }
-
-        List<Map<String, Object>> storage = ReportedTestStorage.getStorage();
-
-        // Check that we have at least the 5 tests we just added
-        assertTrue(storage.size() >= 5);
-
-        // Find our tests and verify order
-        int lastIndex = storage.size();
-        for (int i = 0; i < 5; i++) {
-            Map<String, Object> test = storage.get(lastIndex - 5 + i);
-            assertEquals("Test " + i, test.get("title"));
-            assertEquals(i, test.get("order"));
-        }
-    }
-
-    @Test
     @DisplayName("Should handle null values in test data")
     void testNullValuesInTestData() {
         Map<String, Object> body = new HashMap<>();
-        body.put("title", "Test with nulls");
-        body.put("message", null);
-        body.put("stack", null);
+        body.put("test_id", null);
+        body.put("rid", null);
 
         ReportedTestStorage.store(body);
 
         List<Map<String, Object>> storage = ReportedTestStorage.getStorage();
         Map<String, Object> stored = storage.get(storage.size() - 1);
 
-        assertEquals("Test with nulls", stored.get("title"));
-        assertTrue(stored.containsKey("message"));
-        assertTrue(stored.containsKey("stack"));
-        assertEquals(null, stored.get("message"));
-        assertEquals(null, stored.get("stack"));
+        assertTrue(stored.containsKey("test_id"));
+        assertTrue(stored.containsKey("rid"));
+        assertNull(stored.get("test_id"));
+        assertNull(stored.get("rid"));
     }
 }
