@@ -6,11 +6,11 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <packaging>pom</packaging>
 
     <name>Testomat.io Java Reporter</name>
-    <description>Java reporter library for Testomat.io integration with JUnit 5, TestNG, and Cucumber support
+    <description>Java reporter library for Testomat.io integration with JUnit 5, TestNG, Cucumber, and Karate support
     </description>
     <url>https://github.com/testomatio/java-reporter</url>
 

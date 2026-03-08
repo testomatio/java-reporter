@@ -5,30 +5,49 @@ import static java.util.Objects.isNull;
 import com.intuit.karate.RuntimeHook;
 import com.intuit.karate.Suite;
 import com.intuit.karate.core.ScenarioRuntime;
+import com.intuit.karate.core.Step;
+import com.intuit.karate.core.StepResult;
 import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.core.step.StepStorage;
+import io.testomat.core.step.StepTimer;
+import io.testomat.core.step.TestStep;
+import io.testomat.karate.adapter.CustomKarateEngineAdapter;
+import io.testomat.karate.adapter.KarateEngineAdapter;
 import io.testomat.karate.constructor.KarateTestResultConstructor;
 import io.testomat.karate.exception.KarateHookException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Runtime hook for integrating Karate test execution with Testomat.io.
- * Reports Karate test execution results to the Testomat.io platform.
+ * Reports Karate test execution results to the
+ * Testomat.io platform.
  */
 public class KarateHook implements RuntimeHook {
+
+    private static final Logger log = LoggerFactory.getLogger(KarateHook.class);
+
+    private static final String LOG_NEXT_STEP = "log_next_step";
+    private static final String LOG_NEXT_STEP_TITLE = "log_next_step_title";
+    private static final String LOG_STEPS = "LogSteps";
 
     private final KarateTestResultConstructor resultConstructor;
     private final FacadeFunctionsHandler functionsHandler;
     private final GlobalRunManager runManager;
+    private final KarateEngineAdapter engine;
 
     public KarateHook(
             KarateTestResultConstructor resultConstructor,
             FacadeFunctionsHandler functionsHandler,
-            GlobalRunManager runManager
+            GlobalRunManager runManager,
+            KarateEngineAdapter engine
     ) {
         this.resultConstructor = resultConstructor;
         this.functionsHandler = functionsHandler;
         this.runManager = runManager;
+        this.engine = engine;
     }
 
     /**
@@ -39,13 +58,59 @@ public class KarateHook implements RuntimeHook {
         this(
             new KarateTestResultConstructor(),
             new FacadeFunctionsHandler(),
-                GlobalRunManager.getInstance()
+                GlobalRunManager.getInstance(),
+            new CustomKarateEngineAdapter()
         );
     }
 
     @Override
     public void beforeSuite(Suite suite) {
         runManager.incrementSuiteCounter();
+    }
+
+    @Override
+    public boolean beforeStep(Step step, ScenarioRuntime sr) {
+        boolean isMarked = Boolean.TRUE.equals(engine.getVariable(LOG_NEXT_STEP));
+
+        boolean isDslStep = switch (step.getPrefix() == null ? "" : step.getPrefix()) {
+            case "Given", "When", "Then", "And", "But" -> true;
+            default -> false;
+        };
+
+        boolean logAllSteps = isDslStep && sr.tags.getTags().contains(LOG_STEPS);
+
+        if (logAllSteps || isMarked) {
+            engine.setVariable(LOG_NEXT_STEP, false);
+            String stepId = Thread.currentThread().getId() + ":" + System.identityHashCode(step);
+            StepTimer.start(stepId);
+        }
+        return true;
+    }
+
+    @Override
+    public void afterStep(StepResult result, ScenarioRuntime sr) {
+        Step step = result.getStep();
+        String stepId = Thread.currentThread().getId() + ":" + System.identityHashCode(step);
+        long durationMillis = StepTimer.stop(stepId);
+
+        if (durationMillis != -1) {
+            String stepName = step.getText();
+            Object title = engine.getVariable(LOG_NEXT_STEP_TITLE);
+
+            if (title != null) {
+                stepName = title.toString();
+                engine.setVariable(LOG_NEXT_STEP_TITLE, null);
+            }
+
+            TestStep testStep = new TestStep();
+            testStep.setCategory("user");
+            testStep.setStepTitle(stepName);
+            testStep.setDuration(durationMillis);
+
+            StepStorage.addStep(testStep);
+
+            log.debug("Step '{}' completed in {} ms", stepName, durationMillis);
+        }
     }
 
     @Override
