@@ -3,7 +3,6 @@ package io.testomat.karate.extractor;
 import static io.testomat.core.constants.CommonConstants.FAILED;
 import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
-import static java.util.Objects.isNull;
 
 import com.intuit.karate.core.ScenarioResult;
 import com.intuit.karate.core.ScenarioRuntime;
@@ -12,9 +11,7 @@ import io.testomat.core.model.ExceptionDetails;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -47,47 +44,21 @@ public class TestDataExtractor {
     }
 
     /**
-     * Extracts a test identifier from a Karate test execution context.
+     * Extracts a test identifier from scenario tags.
      * <p>
-     * The method attempts to resolve the test identifier using the following priority:
-     * <ol>
-     *   <li>
-     *     Scenario Outline {@code Examples} data — looks for an example column
-     *     whose name matches the configured test id prefix.
-     *   </li>
-     *   <li>
-     *     Scenario tags — looks for tags starting with the same prefix
-     *     (for example, {@code TestId:}).
-     *   </li>
-     * </ol>
-     * <p>
-     * The extracted value is validated against the configured test id format.
-     * No additional normalization is applied to the returned value.
-     * <p>
-     * If no valid test identifier is found in either source, the method returns {@code null}.
+     * Searches for the first tag that starts with the configured {@code TEST_ID_PREFIX}
+     * (case-insensitive), removes the prefix, and validates the remaining value.
      *
-     * @param sr the {@link ScenarioRuntime} representing the executed Karate test case
-     * @return the extracted test identifier, or {@code null} if not found
+     * @param sr the {@link ScenarioRuntime} of the executed Karate scenario
+     * @return the extracted test identifier, or {@code null} if none is found
      */
     public String extractTestId(ScenarioRuntime sr) {
-        String testId = findFirstValidTestId(
-                Optional.ofNullable(sr.scenario.getExampleData())
-                .stream()
-                .flatMap(m -> m.entrySet().stream())
-                .filter(e -> e.getKey().equalsIgnoreCase(TEST_ID_PREFIX))
-                .map(Map.Entry::getValue)
-                .map(Object::toString)
-        );
+        return findFirstValidTestId(sr.tags.getTags().stream()
+            .filter(Objects::nonNull)
+            .filter(tag -> tag.regionMatches(true, 0,
+                TEST_ID_PREFIX, 0, TEST_ID_PREFIX.length()))
+            .map(tag -> tag.substring(TEST_ID_PREFIX.length() + 1)));
 
-        if (isNull(testId)) {
-            testId = findFirstValidTestId(sr.tags.getTags().stream()
-                .filter(Objects::nonNull)
-                .filter(tag -> tag.regionMatches(true, 0,
-                    TEST_ID_PREFIX, 0, TEST_ID_PREFIX.length()))
-                .map(tag -> tag.substring(TEST_ID_PREFIX.length() + 1)));
-        }
-
-        return testId;
     }
 
     /**

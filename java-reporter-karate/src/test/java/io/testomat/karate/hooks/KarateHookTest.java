@@ -1,28 +1,48 @@
 package io.testomat.karate.hooks;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.intuit.karate.Suite;
 import com.intuit.karate.core.Scenario;
+import com.intuit.karate.core.ScenarioEngine;
 import com.intuit.karate.core.ScenarioRuntime;
+import com.intuit.karate.core.Step;
+import com.intuit.karate.core.StepResult;
+import com.intuit.karate.core.Tags;
 import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.core.step.StepStorage;
+import io.testomat.core.step.StepTimer;
+import io.testomat.core.step.TestStep;
+import io.testomat.karate.adapter.CustomKarateEngineAdapter;
+import io.testomat.karate.adapter.KarateEngineAdapter;
 import io.testomat.karate.constructor.KarateTestResultConstructor;
 import io.testomat.karate.exception.KarateHookException;
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 class KarateHookTest {
 
     KarateTestResultConstructor constructor = mock(KarateTestResultConstructor.class);
     FacadeFunctionsHandler functionsHandler = mock(FacadeFunctionsHandler.class);
     GlobalRunManager runManager = mock(GlobalRunManager.class);
+    CustomKarateEngineAdapter engine = mock(CustomKarateEngineAdapter.class);
 
     ScenarioRuntime sr = mock(ScenarioRuntime.class);
     TestResult testResult = mock(TestResult.class);
@@ -31,7 +51,7 @@ class KarateHookTest {
 
     @BeforeEach
     void setUp() {
-        hook = new KarateHook(constructor, functionsHandler, runManager);
+        hook = new KarateHook(constructor, functionsHandler, runManager, engine);
     }
 
     @Test
@@ -95,6 +115,154 @@ class KarateHookTest {
         verify(functionsHandler).handleFacadeFunctions(sr);
     }
 
+    @Test
+    void shouldStartTimerWhenLogNextStepIsTrue() {
+        Step step = mock(Step.class);
+        when(step.getPrefix()).thenReturn("Given");
+
+        ScenarioRuntime sr = mock(ScenarioRuntime.class);
+
+        Tags tags = mock(Tags.class);
+        when(tags.getTags()).thenReturn(Collections.emptyList());
+        injectFinalField(sr, "tags", tags);
+
+        KarateEngineAdapter engine = mock(KarateEngineAdapter.class);
+        when(engine.getVariable("log_next_step")).thenReturn(true);
+
+        injectFinalField(hook, "engine", engine);
+
+        try (MockedStatic<StepTimer> timer = mockStatic(StepTimer.class)) {
+            boolean result = hook.beforeStep(step, sr);
+
+            assertTrue(result);
+
+            verify(engine).setVariable("log_next_step", false);
+            timer.verify(() -> StepTimer.start(any()), times(1));
+        }
+    }
+
+    @Test
+    void shouldStartTimerWhenLogStepsTagPresent() {
+        Step step = mock(Step.class);
+        when(step.getPrefix()).thenReturn("When");
+
+        ScenarioRuntime sr = mock(ScenarioRuntime.class);
+
+        Tags tags = mock(Tags.class);
+        when(tags.getTags()).thenReturn(List.of("LogSteps"));
+        injectFinalField(sr, "tags", tags);
+
+        KarateEngineAdapter engine = mock(KarateEngineAdapter.class);
+        when(engine.getVariable("log_next_step")).thenReturn(false);
+
+        injectFinalField(hook, "engine", engine);
+
+        try (MockedStatic<StepTimer> timer = mockStatic(StepTimer.class)) {
+
+            hook.beforeStep(step, sr);
+
+            verify(engine).setVariable("log_next_step", false);
+            timer.verify(() -> StepTimer.start(any()), times(1));
+        }
+    }
+
+    @Test
+    void shouldNotStartTimerWhenStepIsNotDslAndNoFlags() {
+        Step step = mock(Step.class);
+        ScenarioRuntime sr = mock(ScenarioRuntime.class);
+
+        when(step.getPrefix()).thenReturn("*");
+
+        ScenarioEngine engine = mock(ScenarioEngine.class);
+
+        try (MockedStatic<ScenarioEngine> mocked = mockStatic(ScenarioEngine.class)) {
+            mocked.when(ScenarioEngine::get).thenReturn(engine);
+
+            boolean result = hook.beforeStep(step, sr);
+
+            assertTrue(result);
+            verify(engine, never()).setVariable(eq("log_next_step"), any());
+        }
+    }
+
+    @Test
+    void shouldSkipStepIfTimerNotStarted() {
+        StepResult result = mock(StepResult.class);
+        Step step = mock(Step.class);
+        ScenarioRuntime sr = mock(ScenarioRuntime.class);
+
+        when(result.getStep()).thenReturn(step);
+
+        try (MockedStatic<StepTimer> timer = mockStatic(StepTimer.class)) {
+            timer.when(() -> StepTimer.stop(any())).thenReturn(-1L);
+
+            hook.afterStep(result, sr);
+
+            timer.verify(() -> StepTimer.stop(any()));
+        }
+    }
+
+    @Test
+    void shouldStoreStepWhenTimerStopped() {
+        StepResult result = mock(StepResult.class);
+        Step step = mock(Step.class);
+        ScenarioRuntime sr = mock(ScenarioRuntime.class);
+
+        when(result.getStep()).thenReturn(step);
+        when(step.getText()).thenReturn("Some step");
+
+        ScenarioEngine engine = mock(ScenarioEngine.class);
+
+        try (MockedStatic<ScenarioEngine> mockedEngine = mockStatic(ScenarioEngine.class);
+            MockedStatic<StepTimer> mockedTimer = mockStatic(StepTimer.class);
+            MockedStatic<StepStorage> storage = mockStatic(StepStorage.class)) {
+
+            mockedEngine.when(ScenarioEngine::get).thenReturn(engine);
+            mockedTimer.when(() -> StepTimer.stop(any())).thenReturn(100L);
+
+            hook.afterStep(result, sr);
+
+            storage.verify(() -> StepStorage.addStep(any(TestStep.class)));
+        }
+    }
+
+    @Test
+    void shouldUseCustomStepTitle() {
+
+        StepResult result = mock(StepResult.class);
+        Step step = mock(Step.class);
+        ScenarioRuntime sr = mock(ScenarioRuntime.class);
+
+        when(result.getStep()).thenReturn(step);
+        when(step.getText()).thenReturn("Original");
+
+        KarateEngineAdapter engine = mock(KarateEngineAdapter.class);
+
+        when(engine.getVariable("log_next_step_title"))
+            .thenReturn("Custom title");
+
+        try (MockedStatic<StepTimer> timer = mockStatic(StepTimer.class);
+            MockedStatic<StepStorage> storage = mockStatic(StepStorage.class)) {
+
+            timer.when(() -> StepTimer.stop(any())).thenReturn(50L);
+
+            KarateHook hook = new KarateHook(
+                constructor,
+                functionsHandler,
+                runManager,
+                engine
+            );
+
+            hook.afterStep(result, sr);
+
+            storage.verify(() -> StepStorage.addStep(
+                argThat(s -> s.getStepTitle().equals("Custom title"))
+            ));
+
+            verify(engine).setVariable("log_next_step_title", null);
+        }
+    }
+
     static void injectFinalField(Object target, String fieldName, Object value) {
         try {
             Field field = target.getClass().getDeclaredField(fieldName);
@@ -104,8 +272,4 @@ class KarateHookTest {
             throw new RuntimeException(e);
         }
     }
-
-
-
 }
-

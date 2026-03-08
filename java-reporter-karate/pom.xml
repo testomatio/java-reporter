@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-karate</artifactId>
-    <version>0.2.2</version>
+    <version>0.2.3</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter Karate</name>
@@ -52,7 +52,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.9.0</version>
+            <version>0.9.1</version>
         </dependency>
         <dependency>
             <groupId>io.karatelabs</groupId>
@@ -117,7 +117,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${maven-javadoc-plugin.version}</version>
                 <configuration>
-                    <source>11</source>
+                    <source>17</source>
                     <quiet>true</quiet>
                     <doclint>none</doclint>
                 </configuration>
