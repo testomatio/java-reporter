@@ -22,9 +22,9 @@ and team collaboration features.
 | **Shared run**                     | Collaborative test execution sharing               |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Test runs grouping**             | Organize and categorize test executions            |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Public sharable link**           | Generate public URLs for test run results          |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅  |   ✅    |
+| **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅  |   ⏳    |
 | **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅  |   ✅    |
-| **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅  |   ✅    |
+| **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅  |   ⏳    |
 | **Test filter by ID**              | Run tests filtered by IDs                          |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅  |   ✅    |
@@ -49,6 +49,7 @@ and team collaboration features.
    [TestNG](https://central.sonatype.com/artifact/io.testomat/java-reporter-testng)  
    [JUnit](https://central.sonatype.com/artifact/io.testomat/java-reporter-junit)  
    [Cucumber](https://central.sonatype.com/artifact/io.testomat/java-reporter-cucumber)
+   [Karate](https://central.sonatype.com/artifact/io.testomat/java-reporter-karate)
 
 2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
 3. **Set your API key** as environment variable:
@@ -283,7 +284,7 @@ Feature: Posts API
     Then eval assertStatus.checkStatusCode(responseStatus, 200)
     And match response[0].postId == 1
 
-  @Title:Validate_post_titles
+  @Title:Validate_post_titles @TestId:Tpost0004
   Scenario Outline: Validate post titles <TestId>
     Given path 'posts', <id>
     When method get
@@ -291,10 +292,10 @@ Feature: Posts API
     And match response.title != null
 
     Examples:
-      | id | TestId    |
-      | 1  | Tpost0041 |
-      | 2  | Tpost0042 |
-      | 3  | Tpost0043 |
+      | id |
+      | 1  |
+      | 2  |
+      | 3  |
 
   @Title:Create_post @TestId:Tpost0005
   Scenario: Create post
@@ -486,6 +487,56 @@ To enable named placeholders, add to `pom.xml`:
 </plugin>
 ```
 
+### Setup step logging for Karate tests
+
+```gherkin
+  Background
+    * def stepMarker = Java.type('io.testomat.karate.marker.StepMarker')
+    * def step = stepMarker.mark
+```
+After this, step() can be used as a regular Karate function.
+#### Usage without a title
+```gherkin
+    * step()
+    Given path 'posts'
+```
+Log example: ```path 'posts'```
+#### Usage with a title
+```gherkin
+    * step('Send get request')
+    When method get
+```
+Log example: ``` Send get request```
+
+#### Logging all steps with @LogSteps
+If a scenario is annotated with the @LogSteps tag, all Karate steps in that scenario will be logged automatically.
+
+#### Example
+```gherkin
+  Background:
+      * url 'https://jsonplaceholder.typicode.com'
+      * def assertStatus = Java.type('helpers.AssertStatus')
+      * def stepMarker = Java.type('io.testomat.karate.marker.StepMarker')
+      * def step = stepMarker.mark
+
+  @Title:Get_all_posts @TestId:Tpost0001 @attachments:logs/karate.log
+  Scenario: Get all posts
+    * step()
+    Given path 'posts'
+    * step('Send get request')
+    When method get
+    Then eval assertStatus.checkStatusCode(responseStatus, 200)
+    * step("Check response id is not null")
+    And match response[0].id != null
+
+  @Title:Get_single_post @TestId:Tpost0002 @LogSteps
+  Scenario: Get single post
+    Given path 'posts', 1
+    When method get
+    Then eval assertStatus.checkStatusCode(responseStatus, 200)
+    And match response.id == 1
+```
+
 ### What You'll See
 
 Steps appear in test reports with:
@@ -501,7 +552,9 @@ This provides complete transparency into test flow and helps debug failures quic
 
 **JUnit & TestNG only**
 
-> **Note**: Cucumber tests can be filtered using native Cucumber tags functionality (`@tag` in feature files and `cucumber.filter.tags` property).
+> **Note**: 
+> <p>Cucumber tests can be filtered using native Cucumber tags functionality (`@tag` in feature files and `cucumber.filter.tags` property).
+> <p>Karate supports tagging of features and scenarios using the standard Gherkin tag syntax (@tag). Tags allow you to organize, group, and selectively run tests. 
 
 Run specific tests by their `@TestId` values using the `-Dids` parameter. This is useful for:
 - Running smoke tests or critical path tests
@@ -653,9 +706,11 @@ The hooks are executed **after** the lifecycle method logic finishes and do not 
 ```
 
 ### Karate
+
 1. Create your custom karate hook that implements method of RuntimeHook `public class MyHook implements RuntimeHook {}`
 2. Implement and override necessary methods
 3. Register the hook using a factory
+
 ```java
    Runner.path("classpath:karateTests")
       .hookFactory(KarateHookFactory.create(MyHook::new))
@@ -663,7 +718,9 @@ The hooks are executed **after** the lifecycle method logic finishes and do not 
       .outputJunitXml(true)
       .parallel(4);
 ```
+
 4. You can register multiple hooks by passing multiple factories
+
 ```java
     Runner.path("classpath:karateTests")
       .hookFactory(KarateHookFactory.create(
@@ -690,6 +747,7 @@ The hooks are executed **after** the lifecycle method logic finishes and do not 
 1. **JUnit 5**: Make sure `junit-platform.properties` exists with autodetection enabled
 2. **Cucumber**: Verify the listener is in your `@CucumberOptions` plugins
 3. **TestNG**: Should work automatically if nothing is overridden - check your TestNG version (need 7.x)
+4. **Karate**: **Karate**: Verify that the KarateHookFactory is installed `.hookFactory(KarateHookFactory.create())`
 
 ---
 
