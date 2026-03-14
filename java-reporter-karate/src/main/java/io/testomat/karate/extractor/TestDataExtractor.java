@@ -13,7 +13,6 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +25,6 @@ public class TestDataExtractor {
 
     private static final Logger log = LoggerFactory.getLogger(TestDataExtractor.class);
     private static final String TEST_ID_REGEX = "T[a-z0-9]{8}";
-    private static final String TEST_ID_PREFIX = "testid";
     private static final String TITLE_PREFIX = "title:";
     private static final String ATTACHMENTS_PREFIX = "attachments:";
 
@@ -46,19 +44,18 @@ public class TestDataExtractor {
     /**
      * Extracts a test identifier from scenario tags.
      * <p>
-     * Searches for the first tag that starts with the configured {@code TEST_ID_PREFIX}
-     * (case-insensitive), removes the prefix, and validates the remaining value.
+     * Searches for the first tag that starts with the configured {@code TEST_ID_REGEX}
      *
      * @param sr the {@link ScenarioRuntime} of the executed Karate scenario
      * @return the extracted test identifier, or {@code null} if none is found
      */
     public String extractTestId(ScenarioRuntime sr) {
-        return findFirstValidTestId(sr.tags.getTags().stream()
+        return sr.tags.getTags().stream()
             .filter(Objects::nonNull)
-            .filter(tag -> tag.regionMatches(true, 0,
-                TEST_ID_PREFIX, 0, TEST_ID_PREFIX.length()))
-            .map(tag -> tag.substring(TEST_ID_PREFIX.length() + 1)));
-
+            .filter(id -> id.matches(TEST_ID_REGEX))
+            .map(id -> "@" + id)
+            .findFirst()
+            .orElse(null);
     }
 
     /**
@@ -159,13 +156,6 @@ public class TestDataExtractor {
         );
 
         return UUID.nameUUIDFromBytes(raw.getBytes()).toString();
-    }
-
-    private String findFirstValidTestId(Stream<String> ids) {
-        return ids
-            .filter(id -> id.matches(TEST_ID_REGEX))
-            .findFirst()
-            .orElse(null);
     }
 
     private ExceptionDetails createExceptionDetails(Throwable throwable) {

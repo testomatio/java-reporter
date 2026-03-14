@@ -22,9 +22,9 @@ and team collaboration features.
 | **Shared run**                     | Collaborative test execution sharing               |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Test runs grouping**             | Organize and categorize test executions            |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Public sharable link**           | Generate public URLs for test run results          |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅  |   ⏳    |
+| **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅  |   ✅    |
-| **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅  |   ⏳    |
+| **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Test filter by ID**              | Run tests filtered by IDs                          |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅  |   ✅    |
 | **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅  |   ✅    |
@@ -37,7 +37,6 @@ and team collaboration features.
 | What you need | Version | We tested with | Supported java version |
 |---------------|:-------:|:--------------:|:----------------------:|
 | **JUnit**     |   5.x   |     5.9.2      |        Java 11+        |
-| **TestNG**    |   7.x   |     7.7.1      |        Java 11+        |
 | **Cucumber**  |   7.x   |     7.14.0     |        Java 11+        |
 | **Karate**    |   1.x   |     1.5.0      |        Java 17+        |
 
@@ -48,7 +47,7 @@ and team collaboration features.
 1. **Add the latest version** of the dependency to your POM.xml:  
    [TestNG](https://central.sonatype.com/artifact/io.testomat/java-reporter-testng)  
    [JUnit](https://central.sonatype.com/artifact/io.testomat/java-reporter-junit)  
-   [Cucumber](https://central.sonatype.com/artifact/io.testomat/java-reporter-cucumber)
+   [Cucumber](https://central.sonatype.com/artifact/io.testomat/java-reporter-cucumber)  
    [Karate](https://central.sonatype.com/artifact/io.testomat/java-reporter-karate)
 
 2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
@@ -255,7 +254,7 @@ Feature: User Authentication
 ```
 
 ### For Karate
-
+Test ID format: ```@T + 8 alphanumeric characters.```
 ```gherkin
 Feature: Posts API
 
@@ -263,29 +262,29 @@ Feature: Posts API
     * url 'https://jsonplaceholder.typicode.com'
     * def assertStatus = Java.type('helpers.AssertStatus')
 
-  @Title:Get_all_posts @TestId:Tpost0001 @Attachments:logs/karate.log
+  @Title:Get_all_posts @Tpost0001 @Attachments:logs/karate.log
   Scenario: Get all posts
     Given path 'posts'
     When method get
     Then eval assertStatus.checkStatusCode(responseStatus, 200)
     And match response[0].id != null
 
-  @Title:Get_single_post @TestId:Tpost0002
+  @Title:Get_single_post @Tpost0002
   Scenario: Get single post
     Given path 'posts', 1
     When method get
     Then eval assertStatus.checkStatusCode(responseStatus, 200)
     And match response.id == 1
 
-  @Title:Get_comments_for_post @TestId:Tpost0003
+  @Title:Get_comments_for_post @Tpost0003
   Scenario: Get comments for post
     Given path 'posts', 1, 'comments'
     When method get
     Then eval assertStatus.checkStatusCode(responseStatus, 200)
     And match response[0].postId == 1
 
-  @Title:Validate_post_titles @TestId:Tpost0004
-  Scenario Outline: Validate post titles <TestId>
+  @Title:Validate_post_titles @Tpost0004
+  Scenario Outline: Validate post titles
     Given path 'posts', <id>
     When method get
     Then eval assertStatus.checkStatusCode(responseStatus, 200)
@@ -297,7 +296,7 @@ Feature: Posts API
       | 2  |
       | 3  |
 
-  @Title:Create_post @TestId:Tpost0005
+  @Title:Create_post @Tpost0005
   Scenario: Create post
     Given path 'posts'
     And request { title: 'foo', body: 'bar', userId: 1 }
