@@ -57,7 +57,8 @@ public class KarateTestResultConstructor {
                 .withTitle(testDataExtractor.extractTitle(sr))
                 .withRid(testDataExtractor.getRid(sr))
                 .withMessage(exceptionDetails.getMessage())
-                .withStack(exceptionDetails.getStack());
+                .withStack(exceptionDetails.getStack())
+                .withOverwrite(false);
 
         if (!steps.isEmpty()) {
             builder.withSteps(steps);
