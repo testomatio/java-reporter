@@ -4,8 +4,10 @@ import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
+import io.testomat.core.step.StepLifecycle;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Main public API facade for Testomat.io integration.
@@ -19,6 +21,15 @@ public class Testomatio {
      */
     public static void artifact(String... directories) {
         ServiceRegistryUtil.getService(ArtifactManager.class).storeDirectories(directories);
+    }
+
+    public static void stepArtifact(String... directories) {
+        UUID stepId = StepLifecycle.current();
+        ServiceRegistryUtil.getService(ArtifactManager.class).storeStepDirectories(stepId, directories);
+    }
+
+    public static void stepArtifact(UUID stepId, String... directories) {
+        ServiceRegistryUtil.getService(ArtifactManager.class).storeStepDirectories(stepId, directories);
     }
 
     public static void meta(String key, String value) {

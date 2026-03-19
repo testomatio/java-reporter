@@ -1,6 +1,9 @@
 package io.testomat.core.step;
 
+import static io.testomat.core.facade.Testomatio.stepArtifact;
+
 import io.testomat.core.annotation.Step;
+import java.util.UUID;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -29,40 +32,45 @@ public class StepAspect {
     @Around("execution(@io.testomat.core.annotation.Step * *(..)) && @annotation(step)")
     public Object aroundStep(ProceedingJoinPoint joinPoint, Step step) throws Throwable {
         String stepName = resolveStepName(joinPoint, step);
+        String[] artifacts = resolveAttachments(step);
         long startTime = System.currentTimeMillis();
 
         log.info("Step aspect triggered for: {}", stepName);
-
+        StepLifecycle.start(UUID.randomUUID());
+        Object result;
         try {
-            return executeStepSuccessfully(joinPoint, stepName, startTime);
+            result = executeStepSuccessfully(joinPoint, stepName, artifacts, startTime);
         } catch (Throwable e) {
-            handleStepFailure(stepName, startTime, e);
+            handleStepFailure(stepName, artifacts, startTime, e);
             throw e;
+        } finally {
+            StepLifecycle.finish();
         }
+        return result;
     }
 
-    private Object executeStepSuccessfully(ProceedingJoinPoint joinPoint, String stepName, long startTime) throws Throwable {
+    private Object executeStepSuccessfully(ProceedingJoinPoint joinPoint, String stepName, String[] artifacts, long startTime) throws Throwable {
         Object result = joinPoint.proceed();
         long duration = calculateDuration(startTime);
 
-        recordStep(stepName, duration);
+        recordStep(stepName, artifacts, StepStatus.passed, duration);
         log.info("Step '{}' added to storage. Total steps: {}", stepName, StepStorage.getSteps().size());
 
         return result;
     }
 
-    private void handleStepFailure(String stepName, long startTime, Throwable e) {
+    private void handleStepFailure(String stepName, String[] artifacts, long startTime, Throwable e) {
         long duration = calculateDuration(startTime);
         log.error("Step '{}' failed after {} ms", stepName, duration, e);
-        recordStep(stepName, duration);
+        recordStep(stepName, artifacts, StepStatus.failed, duration);
     }
 
     private long calculateDuration(long startTime) {
         return System.currentTimeMillis() - startTime;
     }
 
-    private void recordStep(String stepName, long duration) {
-        TestStep testStep = createTestStep(stepName, duration);
+    private void recordStep(String stepName, String[] artifacts, StepStatus stepStatus, long duration) {
+        TestStep testStep = createTestStep(stepName, artifacts, stepStatus, duration);
         StepStorage.addStep(testStep);
     }
 
@@ -85,6 +93,13 @@ public class StepAspect {
         }
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         return signature.getName();
+    }
+
+    private String[] resolveAttachments(Step step) {
+        if (step.artifacts() != null && step.artifacts().length > 0) {
+            return step.artifacts();
+        }
+        return null;
     }
 
     /**
@@ -157,12 +172,17 @@ public class StepAspect {
      * @param durationMillis the execution duration in milliseconds
      * @return populated TestStep object
      */
-    private TestStep createTestStep(String stepName, long durationMillis) {
+    private TestStep createTestStep(String stepName, String[] artifacts, StepStatus stepStatus, long durationMillis) {
         TestStep testStep = new TestStep();
+        testStep.setId(StepLifecycle.current());
         testStep.setCategory("user");
         testStep.setStepTitle(stepName);
+        testStep.setStatus(stepStatus);
         testStep.setDuration(durationMillis);
 
+        if (artifacts != null) {
+            stepArtifact(testStep.getId(), artifacts);
+        }
         log.debug("Step '{}' completed in {} ms", stepName, durationMillis);
 
         return testStep;

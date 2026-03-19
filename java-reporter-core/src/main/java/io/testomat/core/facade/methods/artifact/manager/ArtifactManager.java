@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,12 +20,25 @@ public class ArtifactManager {
     private static final Logger log = LoggerFactory.getLogger(ArtifactManager.class);
 
     public void storeDirectories(String... directories) {
+        store(directories,
+            TempArtifactDirectoriesStorage::store,
+            "Invalid artifact path provided: {}");
+    }
+
+    public void storeStepDirectories(UUID stepId, String... directories) {
+        store(directories,
+            dir -> TempArtifactDirectoriesStorage.stepStore(stepId, dir),
+            "Invalid step artifact path provided: {}");
+    }
+
+    private void store(String[] directories, Consumer<String> storage, String logMessage) {
+
         for (String dir : directories) {
-            if (isValidFilePath(dir)) {
-                TempArtifactDirectoriesStorage.store(dir);
-            } else {
-                log.info("Invalid artifact path provided: {}", dir);
+            if (!isValidFilePath(dir)) {
+                log.info(logMessage, dir);
+                continue;
             }
+            storage.accept(dir);
         }
     }
 
