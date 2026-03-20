@@ -4,6 +4,7 @@ import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_
 
 import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.facade.methods.label.LabelStorage;
+import io.testomat.core.facade.methods.linkjira.JiraLinkStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -34,14 +35,15 @@ public class FacadeFunctionsHandler {
     }
 
     public void handleFacadeFunctions(ExtensionContext context) {
-        handleLogsAfterEach(context);
-        handleMetaAfterEach(context);
-        handleLabels(context);
+        String rid = context.getUniqueId();
+        handleLogsAfterEach(rid);
+        handleMetaAfterEach(rid);
+        handleLabels(rid);
+        handleLinkJira(rid);
         handleArtifactsAfterEach(context);
     }
 
-    private void handleMetaAfterEach(ExtensionContext context) {
-        String rid = context.getUniqueId();
+    private void handleMetaAfterEach(String rid) {
         Map<String, String> metaData = MetaStorage.TEMP_META_STORAGE.get();
 
         if (!metaData.isEmpty()) {
@@ -50,8 +52,7 @@ public class FacadeFunctionsHandler {
         }
     }
 
-    private void handleLogsAfterEach(ExtensionContext context) {
-        String rid = context.getUniqueId();
+    private void handleLogsAfterEach(String rid) {
         List<String> storedLogs = LogStorage.TEMP_LOG_STORAGE.get();
         if (!storedLogs.isEmpty()) {
             String[] logs = new String[storedLogs.size()];
@@ -67,11 +68,17 @@ public class FacadeFunctionsHandler {
         }
     }
 
-    private void handleLabels(ExtensionContext context) {
-        String rid = context.getUniqueId();
+    private void handleLabels(String rid) {
         List<Map<String, String>> storedLabels = LabelStorage.TEMP_LABEL_STORAGE.get();
         if (!storedLabels.isEmpty()) {
             LabelStorage.LINKED_LABEL_STORAGE.put(rid, storedLabels);
+        }
+    }
+
+    private void handleLinkJira(String rid) {
+        List<String> storedLinks = JiraLinkStorage.TEMP_JIRA_LINK_STORAGE.get();
+        if (!storedLinks.isEmpty()) {
+            JiraLinkStorage.LINKED_JIRA_LINK_STORAGE.put(rid, storedLinks);
         }
     }
 
