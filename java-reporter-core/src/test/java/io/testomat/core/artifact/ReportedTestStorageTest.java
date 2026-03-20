@@ -3,7 +3,6 @@ package io.testomat.core.artifact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -177,20 +176,33 @@ class ReportedTestStorageTest {
     }
 
     @Test
-    @DisplayName("Should handle null values in test data")
-    void testNullValuesInTestData() {
+    @DisplayName("Should not store duplicate entries with same test_id and rid")
+    void testNoDuplicateEntries() {
         Map<String, Object> body = new HashMap<>();
-        body.put("test_id", null);
+        body.put("test_id", "test-1");
+        body.put("rid", "rid-1");
+
+        ReportedTestStorage.store(body);
+        ReportedTestStorage.store(body);
+
+        List<Map<String, Object>> storage = ReportedTestStorage.getStorage();
+
+        assertEquals(1, storage.size());
+    }
+
+    @Test
+    @DisplayName("Should not store entry with null rid")
+    void testRidNullNotStored() {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("test_id", "test-1");
         body.put("rid", null);
 
         ReportedTestStorage.store(body);
 
-        List<Map<String, Object>> storage = ReportedTestStorage.getStorage();
-        Map<String, Object> stored = storage.get(storage.size() - 1);
+        List<Map<String, Object>> storage =
+            ReportedTestStorage.getStorage();
 
-        assertTrue(stored.containsKey("test_id"));
-        assertTrue(stored.containsKey("rid"));
-        assertNull(stored.get("test_id"));
-        assertNull(stored.get("rid"));
+        assertEquals(0, storage.size());
     }
 }
