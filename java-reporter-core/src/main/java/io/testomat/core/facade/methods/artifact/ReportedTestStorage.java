@@ -21,18 +21,24 @@ public class ReportedTestStorage {
     /**
      * Stores test execution metadata in the internal storage.
      * <p>
-     * The method adds a new entry containing {@code test_id} and {@code rid}
-     * only if an entry with the same values does not already exist.
-     * The check and insertion are performed atomically using synchronization
-     * to prevent duplicates in concurrent environments.
+     * The method extracts {@code test_id} and {@code rid} from the provided body
+     * and stores them as a new entry if an identical pair does not already exist.
+     * If {@code rid} is {@code null}, the entry is ignored and nothing is stored.
+     * <p>
+     * The existence check and insertion are performed inside a synchronized block
+     * to guarantee atomicity and prevent duplicate entries in concurrent environments.
      *
-     * @param body a map containing test execution data; expected to include
-     *             {@code "test_id"} and {@code "rid"} keys
+     * @param body a map containing test execution data. Expected to contain
+     *             {@code "rid"} and optionally {@code "test_id"}.
      */
     public static void store(Map<String, Object> body) {
 
         Object testId = body.get("test_id");
         Object rid = body.get("rid");
+
+        if (rid == null) {
+            return;
+        }
 
         synchronized (STORAGE) {
 

@@ -9,9 +9,11 @@ import com.intuit.karate.core.Tag;
 import com.intuit.karate.core.Tags;
 import com.intuit.karate.resource.Resource;
 import io.testomat.core.model.ExceptionDetails;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
@@ -143,11 +145,105 @@ class TestDataExtractorTest {
         ScenarioRuntime sr = mockScenarioRuntime();
 
         when(sr.scenario.getLine()).thenReturn(4);
+        when(sr.scenario.getExampleIndex()).thenReturn(-1);
 
         String rid1 = extractor.getRid(sr);
         String rid2 = extractor.getRid(sr);
 
+        assertThat(rid1)
+            .isNotNull()
+            .isEqualTo(rid2);
+    }
+
+    @Test
+    void getRidSameWithoutExampleIndex() {
+        ScenarioRuntime sr1 = mockScenarioRuntime();
+        ScenarioRuntime sr2 = mockScenarioRuntime();
+
+        when(sr1.scenario.getLine()).thenReturn(5);
+        when(sr2.scenario.getLine()).thenReturn(5);
+
+        when(sr1.scenario.getExampleIndex()).thenReturn(-1);
+        when(sr2.scenario.getExampleIndex()).thenReturn(-1);
+
+        String rid1 = extractor.getRid(sr1);
+        String rid2 = extractor.getRid(sr2);
+
         assertThat(rid1).isEqualTo(rid2);
+    }
+
+    @Test
+    void getRidDifferentLinesProduceDifferentRid() {
+        ScenarioRuntime sr1 = mockScenarioRuntime();
+        ScenarioRuntime sr2 = mockScenarioRuntime();
+
+        when(sr1.scenario.getLine()).thenReturn(1);
+        when(sr2.scenario.getLine()).thenReturn(2);
+
+        when(sr1.scenario.getExampleIndex()).thenReturn(-1);
+        when(sr2.scenario.getExampleIndex()).thenReturn(-1);
+
+        String rid1 = extractor.getRid(sr1);
+        String rid2 = extractor.getRid(sr2);
+
+        assertThat(rid1).isNotEqualTo(rid2);
+    }
+
+    @Test
+    void getRidIncludesExampleIndex() {
+        ScenarioRuntime sr1 = mockScenarioRuntime();
+        ScenarioRuntime sr2 = mockScenarioRuntime();
+
+        when(sr1.scenario.getLine()).thenReturn(10);
+        when(sr2.scenario.getLine()).thenReturn(10);
+
+        when(sr1.scenario.getExampleIndex()).thenReturn(0);
+        when(sr2.scenario.getExampleIndex()).thenReturn(1);
+
+        String rid1 = extractor.getRid(sr1);
+        String rid2 = extractor.getRid(sr2);
+
+        assertThat(rid1).isNotEqualTo(rid2);
+    }
+
+    @Test
+    void getRidDifferentFeatureFilesProduceDifferentRid() {
+        ScenarioRuntime sr1 = mockScenarioRuntime();
+        ScenarioRuntime sr2 = mockScenarioRuntime();
+
+        when(sr1.scenario.getLine()).thenReturn(1);
+        when(sr2.scenario.getLine()).thenReturn(1);
+
+        when(sr1.scenario.getExampleIndex()).thenReturn(-1);
+        when(sr2.scenario.getExampleIndex()).thenReturn(-1);
+
+        when(sr2.scenario.getFeature()
+            .getResource()
+            .getRelativePath())
+            .thenReturn("features/Other.feature");
+
+        String rid1 = extractor.getRid(sr1);
+        String rid2 = extractor.getRid(sr2);
+
+        assertThat(rid1).isNotEqualTo(rid2);
+    }
+
+    @Test
+    void getRidMatchesExpectedUuid() {
+        ScenarioRuntime sr = mockScenarioRuntime();
+
+        when(sr.scenario.getLine()).thenReturn(4);
+        when(sr.scenario.getExampleIndex()).thenReturn(-1);
+
+        String expected =
+            UUID.nameUUIDFromBytes(
+                "features/KarateTest.feature:4"
+                    .getBytes(StandardCharsets.UTF_8)
+            ).toString();
+
+        String rid = extractor.getRid(sr);
+
+        assertThat(rid).isEqualTo(expected);
     }
 
     private ScenarioRuntime mockScenarioRuntime() {

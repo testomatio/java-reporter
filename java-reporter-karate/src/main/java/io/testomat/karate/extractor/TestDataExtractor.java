@@ -10,6 +10,7 @@ import io.testomat.core.facade.Testomatio;
 import io.testomat.core.model.ExceptionDetails;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
@@ -135,27 +136,25 @@ public class TestDataExtractor {
     }
 
     /**
-     * Generates a stable runtime identifier (rId) for a Karate test scenario execution.
-     * <p>
-     * The identifier is deterministically derived from the scenario location
-     * (feature file path and scenario line number). This ensures that the same
-     * scenario always produces the same rId across multiple test runs.
-     * <p>
-     * The rId is generated using a name-based UUID calculated from the string:
-     * <pre>
-     *     &lt;feature-relative-path&gt;:&lt;scenario-line-number&gt;
-     * </pre>
+     * Generates a report identifier (rId) for a Karate scenario.
+     * The identifier is based on the feature path, scenario line, and example index
+     * (if the scenario is a Scenario Outline).
      *
-     * @param sr the {@link ScenarioRuntime} representing the executed Karate test scenario
-     * @return a deterministic UUID string uniquely identifying the scenario execution
+     * @param sr scenario runtime
+     * @return stable UUID identifying this scenario execution
      */
     public String getRid(ScenarioRuntime sr) {
-        String raw = String.format("%s:%s",
-                sr.scenario.getFeature().getResource().getRelativePath(),
-                sr.scenario.getLine()
-        );
+        StringBuilder raw = new StringBuilder()
+                .append(sr.scenario.getFeature().getResource().getRelativePath())
+                .append(":")
+                .append(sr.scenario.getLine());
 
-        return UUID.nameUUIDFromBytes(raw.getBytes()).toString();
+        int exampleIndex = sr.scenario.getExampleIndex();
+        if (exampleIndex >= 0) {
+            raw.append(":").append(exampleIndex);
+        }
+
+        return UUID.nameUUIDFromBytes(raw.toString().getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     private ExceptionDetails createExceptionDetails(Throwable throwable) {
