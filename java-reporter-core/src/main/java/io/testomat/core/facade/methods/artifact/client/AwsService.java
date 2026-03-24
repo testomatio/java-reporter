@@ -97,7 +97,6 @@ public class AwsService {
     }
 
     private void processStepArtifacts(String testName, String rid, S3Credentials credentials) {
-
         TempArtifactDirectoriesStorage.STEP_DIRECTORIES
             .forEach((stepId, list) -> list.replaceAll(dir -> {
                 if (dir.startsWith("http")) {

@@ -3,7 +3,7 @@ package io.testomat.core.step;
 import static io.testomat.core.facade.Testomatio.stepArtifact;
 
 import io.testomat.core.annotation.Step;
-import java.util.UUID;
+import java.util.Arrays;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -33,10 +33,10 @@ public class StepAspect {
     public Object aroundStep(ProceedingJoinPoint joinPoint, Step step) throws Throwable {
         String stepName = resolveStepName(joinPoint, step);
         String[] artifacts = resolveAttachments(step);
+        createTestStep();
         long startTime = System.currentTimeMillis();
 
         log.info("Step aspect triggered for: {}", stepName);
-        StepLifecycle.start(UUID.randomUUID());
         Object result;
         try {
             result = executeStepSuccessfully(joinPoint, stepName, artifacts, startTime);
@@ -62,16 +62,17 @@ public class StepAspect {
     private void handleStepFailure(String stepName, String[] artifacts, long startTime, Throwable e) {
         long duration = calculateDuration(startTime);
         log.error("Step '{}' failed after {} ms", stepName, duration, e);
-        recordStep(stepName, artifacts, StepStatus.failed, duration);
+        TestStep testStep = recordStep(stepName, artifacts, StepStatus.failed, duration);
+        testStep.setError(e.getMessage());
+        testStep.setLog(Arrays.toString(e.getStackTrace()));
     }
 
     private long calculateDuration(long startTime) {
         return System.currentTimeMillis() - startTime;
     }
 
-    private void recordStep(String stepName, String[] artifacts, StepStatus stepStatus, long duration) {
-        TestStep testStep = createTestStep(stepName, artifacts, stepStatus, duration);
-        StepStorage.addStep(testStep);
+    private TestStep recordStep(String stepName, String[] artifacts, StepStatus stepStatus, long duration) {
+        return initTestStep(stepName, artifacts, stepStatus, duration);
     }
 
     /**
@@ -166,15 +167,24 @@ public class StepAspect {
     }
 
     /**
-     * Creates a TestStep object with the provided metadata.
-     *
-     * @param stepName       the name of the step
-     * @param durationMillis the execution duration in milliseconds
-     * @return populated TestStep object
+     * Initializes and starts a new {@link TestStep}.
      */
-    private TestStep createTestStep(String stepName, String[] artifacts, StepStatus stepStatus, long durationMillis) {
+    private void createTestStep() {
         TestStep testStep = new TestStep();
-        testStep.setId(StepLifecycle.current());
+        StepLifecycle.start(testStep);
+    }
+
+    /**
+     * Initializes the current test step with metadata and optional artifacts.
+     *
+     * @param stepName step name
+     * @param artifacts artifact directories (optional)
+     * @param stepStatus step execution status
+     * @param durationMillis step duration in milliseconds
+     * @return initialized test step
+     */
+    private TestStep initTestStep(String stepName, String[] artifacts, StepStatus stepStatus, long durationMillis) {
+        TestStep testStep = StepLifecycle.current();
         testStep.setCategory("user");
         testStep.setStepTitle(stepName);
         testStep.setStatus(stepStatus);

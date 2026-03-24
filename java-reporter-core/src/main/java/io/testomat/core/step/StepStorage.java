@@ -33,6 +33,6 @@ public class StepStorage {
      * Should be called after reporting test results.
      */
     public static void clear() {
-        STEPS.get().clear();
+        STEPS.remove();
     }
 }

@@ -5,8 +5,13 @@ import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
 import io.testomat.core.step.StepLifecycle;
+import io.testomat.core.step.StepStatus;
+import io.testomat.core.step.StepTimer;
+import io.testomat.core.step.TestStep;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -23,13 +28,69 @@ public class Testomatio {
         ServiceRegistryUtil.getService(ArtifactManager.class).storeDirectories(directories);
     }
 
+    /**
+     * Attaches artifact directories to the current or last finished test step.
+     *
+     * @param directories artifact directories to attach (ignored if null or empty)
+     */
     public static void stepArtifact(String... directories) {
-        UUID stepId = StepLifecycle.current();
+        TestStep testStep = StepLifecycle.current();
+
+        if(directories == null || directories.length == 0){
+            return;
+        }
+
+        if (testStep == null) {
+            testStep = StepLifecycle.lastFinished();
+        }
+        if (testStep == null || testStep.getId() == null) {
+            return;
+        }
+
+        ServiceRegistryUtil.getService(ArtifactManager.class).storeStepDirectories(testStep.getId(), directories);
+    }
+
+    /**
+     * Attaches artifact directories to the specified test step.
+     *
+     * @param stepId      step identifier
+     * @param directories artifact directories to attach
+     */
+    public static void stepArtifact(UUID stepId, String... directories) {
         ServiceRegistryUtil.getService(ArtifactManager.class).storeStepDirectories(stepId, directories);
     }
 
-    public static void stepArtifact(UUID stepId, String... directories) {
-        ServiceRegistryUtil.getService(ArtifactManager.class).storeStepDirectories(stepId, directories);
+    /**
+     * Executes a named test step and tracks its status, duration and errors.
+     *
+     * @param stepName step display name
+     * @param action   code to execute inside the step
+     */
+    public static void step(String stepName, Runnable action) {
+        TestStep step = new TestStep();
+        step.setCategory("user");
+        step.setStepTitle(stepName);
+
+        long durationMillis;
+        StepLifecycle.start(step);
+
+        try {
+            StepTimer.start(step.getId().toString());
+            action.run();
+            step.setStatus(StepStatus.passed);
+        } catch (Throwable t) {
+            step.setStatus(StepStatus.failed);
+            step.setLog(Arrays.toString(t.getStackTrace()));
+            step.setError(
+                Optional.ofNullable(t.getMessage())
+                    .orElse(t.getClass().getSimpleName())
+            );
+            throw new RuntimeException(t);
+        } finally {
+            durationMillis = StepTimer.stop(step.getId().toString());
+            step.setDuration(durationMillis);
+            StepLifecycle.finish();
+        }
     }
 
     public static void meta(String key, String value) {

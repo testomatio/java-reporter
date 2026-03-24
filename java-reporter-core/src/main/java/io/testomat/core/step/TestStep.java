@@ -9,9 +9,15 @@ public class TestStep {
     private String category;
     private String stepTitle;
     private StepStatus status;
+    private String log;
+    private String error;
     private double duration;
     private List<TestStep> substeps = new ArrayList<>();
     private String[] artifacts;
+
+    public TestStep() {
+        this.id = UUID.randomUUID();
+    }
 
     public String getCategory() {
         return category;
@@ -67,5 +73,21 @@ public class TestStep {
 
     public void setStatus(StepStatus status) {
         this.status = status;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public String getLog() {
+        return log;
+    }
+
+    public void setLog(String log) {
+        this.log = log;
     }
 }

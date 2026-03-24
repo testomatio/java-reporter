@@ -2,6 +2,7 @@ package io.testomat.testng.constructor;
 
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.StepStorage;
 import io.testomat.core.step.TestStep;
 import java.io.PrintWriter;
@@ -80,6 +81,7 @@ public class TestNgTestResultConstructor {
 
         // Clear steps after collecting them
         StepStorage.clear();
+        StepLifecycle.reset();
 
         return builder.build();
     }
