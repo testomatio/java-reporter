@@ -536,6 +536,57 @@ If a scenario is annotated with the @LogSteps tag, all Karate steps in that scen
     And match response.id == 1
 ```
 
+Steps can also be created using `Testomatio.step(stepName, Runnable action)`.
+
+```java
+    Testomatio.step("Login", () -> {
+        // actions
+    });
+```
+
+If executed inside another step (including methods annotated with `@Step`) a substep will be created automatically.
+
+```java
+    Testomatio.step("Login", () -> {
+        // actions
+        Testomatio.step("Check page", () -> {
+            // actions
+        });
+    });
+```
+
+```java
+    @Step("Open login page")
+    private void openLoginPage() {
+        Testomatio.step("Check page", () -> {
+            driver.get("https://example.com/login");
+        });
+    }
+```
+
+### Adding artifacts to steps
+
+Artifacts can be attached to a step using the `artifacts` attribute of the `@Step` annotation.
+
+```java
+@Step(value = "Login", artifacts = {"path_to_artifact1", "path_to_artifact2"})
+public void login() {
+    // test logic
+}
+```
+
+Artifacts will be automatically collected after the step execution.
+
+You can also attach artifacts to a step programmatically:
+
+```java
+    Testomatio.stepArtifact("path_to_attachment1", "path_to_attachment2");
+```
+
+If called inside a step, the artifacts will be attached to the current step.
+
+If called after a step finishes, it will be attached to the last completed step.
+
 ### What You'll See
 
 Steps appear in test reports with:
