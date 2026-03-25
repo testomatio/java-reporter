@@ -235,4 +235,70 @@ class StepAspectTest {
             return "User{name='" + name + "', age=" + age + "}";
         }
     }
+
+    @Test
+    void testFailureStatus(){
+        assertThrows(RuntimeException.class, this::stepThatThrows);
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals(StepStatus.failed, step.getStatus());
+    }
+
+    @Test
+    void testErrorMessageStored(){
+        assertThrows(RuntimeException.class, this::stepThatThrows);
+        TestStep step= StepStorage.getSteps().get(0);
+        assertEquals("Test exception", step.getError());
+    }
+
+    @Test
+    void testNoParameters(){
+        simpleStep();
+
+        TestStep step= StepStorage.getSteps().get(0);
+        assertEquals("No params", step.getStepTitle());
+    }
+
+    @Test
+    void testReturnValue(){
+        String result= stepReturningValue();
+        assertEquals("ok",result);
+    }
+
+    @Test
+    void testParameterMismatch(){
+        methodWithVarArgs("a","b");
+        assertEquals(1, StepStorage.getSteps().size());
+    }
+
+    @Test
+    void testNoArtifacts(){
+        stepWithoutArtifacts();
+
+        TestStep step = StepStorage.getSteps().get(0);
+        assertNull(step.getArtifacts());
+    }
+
+    @Test
+    void testLifecycleCleanup(){
+        try {
+            stepThatThrows();
+        } catch (Exception ignored) {
+        }
+        assertNull(StepLifecycle.current());
+    }
+
+    @Step("no artifacts")
+    private void stepWithoutArtifacts(){}
+
+    @Step("test {0}")
+    private void methodWithVarArgs(String... args){}
+
+    @Step("return")
+    private String stepReturningValue(){
+        return "ok";
+    }
+
+    @Step("No params")
+    private void simpleStep(){}
+
 }

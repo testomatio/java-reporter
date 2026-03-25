@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
+import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
@@ -158,6 +159,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         }
 
         if (result.getSteps() != null && !result.getSteps().isEmpty()) {
+            result.getSteps().forEach(this::processStepArtifacts);
             List<Map<String, Object>> stepsMap = convertStepsToMap(result.getSteps());
             body.put("steps", stepsMap);
             System.out.println("DEBUG: Adding " + result.getSteps().size() + " steps to request body for test: " + result.getTitle());
@@ -201,6 +203,22 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
             if (step.getStepTitle() != null) {
                 stepMap.put("title", step.getStepTitle());
+            }
+
+            if (step.getArtifacts() != null) {
+                stepMap.put("artifacts", step.getArtifacts());
+            }
+
+            if (step.getError() != null) {
+                stepMap.put("error", step.getError());
+            }
+
+            if (step.getLog() != null) {
+                stepMap.put("log", step.getLog());
+            }
+
+            if (step.getStatus() != null) {
+                stepMap.put("status", step.getStatus());
             }
 
             stepMap.put("duration", step.getDuration());
@@ -274,6 +292,25 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         List<Map<String, String>> labels = LabelStorage.LINKED_LABEL_STORAGE.get(rid);
         if (labels != null && !labels.isEmpty()) {
             links.addAll(labels);
+        }
+    }
+
+    /**
+     * Recursively attaches stored artifacts to a step and its substeps.
+     *
+     * @param step step to process
+     */
+    private void processStepArtifacts(TestStep step) {
+        List<String> links =
+            TempArtifactDirectoriesStorage.STEP_DIRECTORIES
+                .remove(step.getId());
+
+        if (links != null && !links.isEmpty()) {
+            step.setArtifacts(links.toArray(new String[0]));
+        }
+
+        if (step.getSubsteps() != null && !step.getSubsteps().isEmpty()) {
+            step.getSubsteps().forEach(this::processStepArtifacts);
         }
     }
 }

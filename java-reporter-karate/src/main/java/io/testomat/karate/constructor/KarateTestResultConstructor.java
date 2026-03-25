@@ -3,6 +3,7 @@ package io.testomat.karate.constructor;
 import com.intuit.karate.core.ScenarioRuntime;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.StepStorage;
 import io.testomat.core.step.TestStep;
 import io.testomat.karate.extractor.TestDataExtractor;
@@ -66,6 +67,7 @@ public class KarateTestResultConstructor {
 
         // Clear steps after collecting them
         StepStorage.clear();
+        StepLifecycle.reset();
 
         return builder.build();
     }

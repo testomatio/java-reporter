@@ -74,6 +74,10 @@ public class AwsService {
         S3Credentials credentials = CredentialsManager.getCredentials();
         List<String> uploadedArtifactsLinks = processArtifacts(artifactDirectories, testName, rid, credentials);
 
+        if (!TempArtifactDirectoriesStorage.STEP_DIRECTORIES.isEmpty()) {
+            processStepArtifacts(testName, rid, credentials);
+        }
+
         storeArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks);
 
         // Clear artifact directories after processing
@@ -90,6 +94,18 @@ public class AwsService {
         }
 
         return uploadedLinks;
+    }
+
+    private void processStepArtifacts(String testName, String rid, S3Credentials credentials) {
+        TempArtifactDirectoriesStorage.STEP_DIRECTORIES
+            .forEach((stepId, list) -> list.replaceAll(dir -> {
+                if (dir.startsWith("http")) {
+                    return dir;
+                }
+                String key = keyGenerator.generateKey(dir, rid, testName);
+                uploadArtifact(dir, key, credentials);
+                return urlGenerator.generateUrl(credentials.getBucket(), key);
+            }));
     }
 
     private void storeArtifactLinkData(String testName, String rid, String testId, List<String> uploadedLinks) {

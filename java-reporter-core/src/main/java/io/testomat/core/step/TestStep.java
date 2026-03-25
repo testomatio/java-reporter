@@ -2,12 +2,22 @@ package io.testomat.core.step;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class TestStep {
+    private UUID id;
     private String category;
     private String stepTitle;
+    private StepStatus status;
+    private String log;
+    private String error;
     private double duration;
     private List<TestStep> substeps = new ArrayList<>();
+    private String[] artifacts;
+
+    public TestStep() {
+        this.id = UUID.randomUUID();
+    }
 
     public String getCategory() {
         return category;
@@ -39,5 +49,45 @@ public class TestStep {
 
     public void setSubsteps(List<TestStep> substeps) {
         this.substeps = substeps;
+    }
+
+    public String[] getArtifacts() {
+        return artifacts;
+    }
+
+    public void setArtifacts(String[] artifacts) {
+        this.artifacts = artifacts;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public StepStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(StepStatus status) {
+        this.status = status;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public String getLog() {
+        return log;
+    }
+
+    public void setLog(String log) {
+        this.log = log;
     }
 }
