@@ -3,10 +3,12 @@ package io.testomat.junit.filter;
 import io.testomat.core.annotation.TestId;
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
-import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
 import org.junit.platform.engine.FilterResult;
 import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.TestSource;
+import org.junit.platform.engine.support.descriptor.MethodSource;
 import org.junit.platform.launcher.PostDiscoveryFilter;
 
 public class TestIdFilter implements PostDiscoveryFilter {
@@ -34,31 +36,36 @@ public class TestIdFilter implements PostDiscoveryFilter {
             return FilterResult.included("No ids filter specified");
         }
 
-        if (testDescriptor instanceof TestMethodTestDescriptor) {
-            TestMethodTestDescriptor methodDescriptor = (TestMethodTestDescriptor) testDescriptor;
-            Method testMethod = methodDescriptor.getTestMethod();
+        Optional<TestSource> optionalTestSource = testDescriptor.getSource();
 
-            TestId testIdAnnotation = testMethod.getAnnotation(TestId.class);
-
-            if (testIdAnnotation != null) {
-                return getFilterResult(testIdAnnotation);
-            } else {
-                return FilterResult.included(
-                "Test method without @TestId annotation is allowed when filtering by IDs");
-            }
+        if (optionalTestSource.isEmpty()) {
+            return FilterResult.included("No source specified");
         }
 
-        return FilterResult.included("Not a test method");
+        TestSource source = optionalTestSource.get();
+
+        if (!(source instanceof MethodSource)) {
+            return FilterResult.included("No method specified");
+        }
+
+        return resolve((MethodSource) source);
     }
 
-    private FilterResult getFilterResult(TestId testIdAnnotation) {
-        String testId = testIdAnnotation.value();
-        boolean isAllowed = allowedIds.contains(testId);
+    private FilterResult resolve(MethodSource methodSource) {
 
-        if (isAllowed) {
-            return FilterResult.included("Test ID " + testId + " is in allowed list");
-        } else {
-            return FilterResult.excluded("Test ID " + testId + " is not in allowed list");
+        Method method = methodSource.getJavaMethod();
+        if (method == null) {
+            return FilterResult.included("No Java method");
         }
+
+        TestId testId = method.getAnnotation(TestId.class);
+
+        if (testId == null) {
+            return FilterResult.excluded("No TestId annotation found");
+        }
+
+        return allowedIds.contains(testId.value())
+            ? FilterResult.included("Allowed " + testId.value())
+            : FilterResult.excluded("Not allowed " + testId.value());
     }
 }
