@@ -656,7 +656,7 @@ public class LoginTests {
 
 ### Behavior
 
-- **Tests without `@TestId`**: Included when no filter is applied; skipped when `-Dids` is provided (TestNG only)
+- **Tests without `@TestId`**: Included when no filter is applied; skipped when `-Dids` is provided
 - **Tests with matching IDs**: Always run when their ID is in the filter list
 - **Tests with non-matching IDs**: Skipped
 

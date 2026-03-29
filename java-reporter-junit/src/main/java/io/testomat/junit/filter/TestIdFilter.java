@@ -45,17 +45,16 @@ public class TestIdFilter implements PostDiscoveryFilter {
         TestSource source = optionalTestSource.get();
 
         if (!(source instanceof MethodSource)) {
-            return FilterResult.included("No method specified");
+            return FilterResult.included("No method source specified");
         }
 
         return resolve((MethodSource) source);
     }
 
     private FilterResult resolve(MethodSource methodSource) {
-
         Method method = methodSource.getJavaMethod();
         if (method == null) {
-            return FilterResult.included("No Java method");
+            return FilterResult.included("No Java method specified");
         }
 
         TestId testId = method.getAnnotation(TestId.class);
