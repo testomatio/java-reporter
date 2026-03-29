@@ -8,7 +8,8 @@ import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.StepStatus;
 import io.testomat.core.step.StepTimer;
 import io.testomat.core.step.TestStep;
-import java.util.Arrays;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -80,12 +81,12 @@ public class Testomatio {
             step.setStatus(StepStatus.passed);
         } catch (Throwable t) {
             step.setStatus(StepStatus.failed);
-            step.setLog(Arrays.toString(t.getStackTrace()));
+            step.setLog(getStackTrace(t));
             step.setError(
                 Optional.ofNullable(t.getMessage())
                     .orElse(t.getClass().getSimpleName())
             );
-            throw new RuntimeException(t);
+            throwUnchecked(t);
         } finally {
             durationMillis = StepTimer.stop(step.getId().toString());
             step.setDuration(durationMillis);
@@ -122,5 +123,21 @@ public class Testomatio {
                 label(labelName, labelValue);
             }
         }
+    }
+
+    private static String getStackTrace(Throwable t) {
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
+    }
+
+    private static void throwUnchecked(Throwable t) {
+        if (t instanceof RuntimeException) {
+            throw (RuntimeException) t;
+        }
+        if (t instanceof Error) {
+            throw (Error) t;
+        }
+        throw new RuntimeException(t);
     }
 }
