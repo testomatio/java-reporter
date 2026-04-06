@@ -784,6 +784,45 @@ The hooks are executed **after** the lifecycle method logic finishes and do not 
 
 ---
 
+## Testomat Allure Adapter
+
+Testomat Allure Reporter is a Java integration library that bridges Allure reporting with Testomat.io test management system.
+
+The library automatically captures test metadata, titles, steps, and attachments from Allure and sends them to Testomat.io, providing seamless synchronization between test execution and test management.
+
+Key features:
+- Automatic test title synchronization
+- Allure step reporting
+- Attachment upload support
+- JUnit and TestNG integration
+- Minimal configuration required
+
+To enable Testomat Allure integration, add the following dependency:
+```xml
+<dependencies>
+    <dependency>
+        <groupId>io.testomat</groupId>
+        <artifactId>testomat-allure-adapter</artifactId>
+        <version>${testomat-allure-adapter-version}</version>
+    </dependency>
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.2.2</version>
+            <configuration>
+                <argLine>
+                    -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.jar"
+                </argLine>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
 ## 🆘 Troubleshooting
 
 ### Tests not appearing in Testomat.io?

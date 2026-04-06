@@ -1,0 +1,3 @@
+io.testomat.resolver.TestomatTitleResolver
+io.testomat.resolver.JUnitDisplayNameResolver
+io.testomat.resolver.TestNgResolver

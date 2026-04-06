@@ -191,7 +191,7 @@ public class StepAspect {
         testStep.setDuration(durationMillis);
 
         if (artifacts != null) {
-            stepArtifact(testStep.getId(), artifacts);
+            stepArtifact(artifacts);
         }
         log.debug("Step '{}' completed in {} ms", stepName, durationMillis);
 
