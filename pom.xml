@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter</artifactId>
-    <version>0.2.3</version>
+    <version>0.3.0</version>
     <packaging>pom</packaging>
 
     <name>Testomat.io Java Reporter</name>
