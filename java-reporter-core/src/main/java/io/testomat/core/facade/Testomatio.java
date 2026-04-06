@@ -13,7 +13,6 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Main public API facade for Testomat.io integration.
@@ -49,16 +48,6 @@ public class Testomatio {
         }
 
         ServiceRegistryUtil.getService(ArtifactManager.class).storeStepDirectories(testStep.getId(), directories);
-    }
-
-    /**
-     * Attaches artifact directories to the specified test step.
-     *
-     * @param stepId      step identifier
-     * @param directories artifact directories to attach
-     */
-    public static void stepArtifact(UUID stepId, String... directories) {
-        ServiceRegistryUtil.getService(ArtifactManager.class).storeStepDirectories(stepId, directories);
     }
 
     /**

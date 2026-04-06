@@ -1,0 +1,15 @@
+<aspectj>
+
+<aspects>
+    <aspect name="io.testomat.aspect.TitleAspect"/>
+    <aspect name="io.testomat.aspect.AllureAttachmentAspect"/>
+</aspects>
+
+<weaver options="-verbose -showWeaveInfo">
+
+    <include within="io.testomat..*"/>
+    <include within="io.qameta..*"/>
+
+</weaver>
+
+</aspectj>
