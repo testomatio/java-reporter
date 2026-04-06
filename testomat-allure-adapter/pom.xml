@@ -149,6 +149,45 @@
                 </configuration>
             </plugin>
         </plugins>
-
     </build>
+
+    <scm>
+        <connection>scm:git:git://github.com/testomatio/java-reporter.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/testomatio/java-reporter.git</developerConnection>
+        <url>https://github.com/testomatio/java-reporter/tree/1.1</url>
+    </scm>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <configuration>
+                            <executable>gpg</executable>
+                            <passphrase>${env.GPG_PASSPHRASE}</passphrase>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                                <arg>--batch</arg>
+                                <arg>--yes</arg>
+                            </gpgArguments>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
