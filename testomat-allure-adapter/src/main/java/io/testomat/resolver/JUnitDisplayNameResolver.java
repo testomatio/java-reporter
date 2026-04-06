@@ -1,9 +1,20 @@
 package io.testomat.resolver;
 
 import java.lang.reflect.Method;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Resolves test display name from JUnit @DisplayName annotation.
+ */
 public class JUnitDisplayNameResolver implements TestMetadataResolver {
+    private static final Logger log = LoggerFactory.getLogger(JUnitDisplayNameResolver.class);
 
+    /**
+     * Extracts display name from method annotations.
+     * @param method test method
+     * @return display name or null if not present
+     */
     @Override
     public String resolve(Method method) {
         for (var a : method.getAnnotations()) {
@@ -14,8 +25,9 @@ public class JUnitDisplayNameResolver implements TestMetadataResolver {
                     if (value != null && !value.isBlank()) {
                         return value;
                     }
+                } catch (Exception ignored) {
+                    log.debug("Failed to resolve JUnit DisplayName");
                 }
-                catch (Exception ignored) {}
             }
         }
 

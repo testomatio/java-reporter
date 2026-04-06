@@ -28,7 +28,7 @@ jobs:
       - name: Validate project structure
         run: |
           set -e
-          REQUIRED_DIRS=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate")
+          REQUIRED_DIRS=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate" "testomat-allure-adapter")
           for dir in "${REQUIRED_DIRS[@]}"; do
             if [[ ! -d "$dir" ]] || [[ ! -f "$dir/pom.xml" ]]; then
               echo "❌ Missing: $dir"
@@ -108,7 +108,7 @@ jobs:
           echo "🔄 Setting version $VERSION in all modules individually..."
           
           # List of all modules (each has its own pom.xml)
-          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate")
+          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate" "testomat-allure-adapter")
           
           for module in "${MODULES[@]}"; do
             if [[ -d "$module" && -f "$module/pom.xml" ]]; then
@@ -137,7 +137,7 @@ jobs:
           echo "🔄 Updating internal dependencies to version $VERSION..."
           
           # Only modules that have internal dependencies (excluding Core)
-          MODULES_WITH_DEPS=("java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate")
+          MODULES_WITH_DEPS=("java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate" "testomat-allure-adapter")
           
           for module in "${MODULES_WITH_DEPS[@]}"; do
             if [[ -d "$module" && -f "$module/pom.xml" ]]; then
@@ -170,7 +170,7 @@ jobs:
           VERSION=${{ steps.version.outputs.version }}
           echo "🔍 Verifying all module versions are set to $VERSION..."
           
-          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate")
+          MODULES=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate" "testomat-allure-adapter")
           FAILED_MODULES=()
           
           for module in "${MODULES[@]}"; do
@@ -340,6 +340,8 @@ jobs:
           CUCUMBER_PID=$!
           deploy_framework_module "java-reporter-karate" &
           KARATE_PID=$!
+          deploy_framework_module "testomat-allure-adapter" &
+          TAADAPTER_PID=$!
           
           # Wait for all modules and collect results
           FAILED_MODULES=()
@@ -375,6 +377,13 @@ jobs:
             echo "✅ Karate deployed"
           fi
           
+          if ! wait $TAADAPTER_PID; then
+            FAILED_MODULES+=("taadapter")
+            cat /tmp/deploy_logs/testomat-allure-adapter.log
+          else
+            echo "✅ Testomat Allure adapter deployed"
+          fi
+          
           # Cleanup logs
           rm -rf /tmp/deploy_logs
           
@@ -395,7 +404,7 @@ jobs:
           VERSION=${{ steps.version.outputs.version }}
           GROUP_PATH=$(echo "${{ env.GROUP_ID }}" | tr '.' '/')
           
-          modules=("java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate")
+          modules=("java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate" "testomat-allure-adapter")
           echo "⏳ Waiting for Framework modules availability..."
           
           WAIT_ITERATIONS=$((MAVEN_CENTRAL_WAIT_TIMEOUT / 120 / 3))
@@ -432,7 +441,7 @@ jobs:
         run: |
           set -e
           VERSION=${{ steps.version.outputs.version }}
-          modules=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate")
+          modules=("java-reporter-core" "java-reporter-junit" "java-reporter-testng" "java-reporter-cucumber" "java-reporter-karate" "testomat-allure-adapter")
           
           echo "🔍 Verifying deployment..."
           echo "Waiting 5 minutes for Maven Central propagation..."

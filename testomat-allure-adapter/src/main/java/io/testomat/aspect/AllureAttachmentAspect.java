@@ -1,23 +1,26 @@
 package io.testomat.aspect;
 
-import io.qameta.allure.Allure;
 import io.testomat.allure.AllureClient;
-import io.testomat.allure.AllureClientImpl;
 import io.testomat.resolver.AttachmentFileResolver;
-import io.testomat.resolver.AttachmentFileResolverImpl;
 import io.testomat.testomat.TestomatClient;
-import io.testomat.testomat.TestomatClientImpl;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Aspect for intercepting Allure attachments and forwarding them to Testomat.
+ * Captures user-created attachments, collects metadata and sends files
+ * to Testomat depending on their level (test or step).
+ */
 @Aspect
 public class AllureAttachmentAspect {
+    private static final Logger log = LoggerFactory.getLogger(AllureAttachmentAspect.class);
 
     private static final Map<String, AttachmentMeta> attachments = new ConcurrentHashMap<>();
     private static final ThreadLocal<Boolean> userAttachment = ThreadLocal.withInitial(() -> false);
@@ -25,29 +28,28 @@ public class AllureAttachmentAspect {
     private final TestomatClient testomatio;
     private final AttachmentFileResolver resolver;
 
-    public AllureAttachmentAspect(AllureClient allure, TestomatClient testomatio, AttachmentFileResolver resolver) {
+    public AllureAttachmentAspect(AllureClient allure,
+            TestomatClient testomatio, AttachmentFileResolver resolver) {
         this.allure = allure;
         this.testomatio = testomatio;
         this.resolver = resolver;
 
     }
 
+    /** Marks user attachments created via Allure API. */
     @Around("execution(* io.qameta.allure.Allure.addAttachment(..))")
     public Object interceptUserAttachment(ProceedingJoinPoint joinPoint) throws Throwable {
         userAttachment.set(true);
         try {
             return joinPoint.proceed();
-        }
-        finally {
+        } finally {
             userAttachment.remove();
         }
     }
 
+    /** Collects attachment metadata during preparation phase. */
     @Around("execution(* io.qameta.allure.AllureLifecycle.prepareAttachment(..))")
     public Object interceptPrepare(ProceedingJoinPoint joinPoint) throws Throwable {
-        Optional<String> testUuid = allure.getCurrentTest();
-        Optional<String> parentUuid = allure.getCurrentTestOrStep();
-        Object[] args = joinPoint.getArgs();
         Object result = joinPoint.proceed();
         String uuid = (String) result;
 
@@ -55,23 +57,26 @@ public class AllureAttachmentAspect {
             return result;
         }
 
-        AttachmentMeta meta =
-            attachments.computeIfAbsent(
-                uuid,
-                k -> new AttachmentMeta()
-            );
+        AttachmentMeta meta = attachments.computeIfAbsent(uuid, k -> new AttachmentMeta());
 
-        meta.uuid = uuid;
-        meta.testUuid = testUuid.orElse(null);
-        meta.parentUuid = parentUuid.orElse(null);
+        Object[] args = joinPoint.getArgs();
         meta.name = (String) args[0];
         meta.type = (String) args[1];
+
+        Optional<String> testUuid = allure.getCurrentTest();
+        meta.testUuid = testUuid.orElse(null);
+
+        Optional<String> parentUuid = allure.getCurrentTestOrStep();
+        meta.parentUuid = parentUuid.orElse(null);
+
+        meta.uuid = uuid;
         meta.level = resolveLevel(meta).name();
         meta.thread = Thread.currentThread().getName();
 
         return result;
     }
 
+    /** Finalizes metadata after attachment is written. */
     @Around("execution(* io.qameta.allure.AllureLifecycle.writeAttachment(..))")
     public Object interceptWrite(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
@@ -100,6 +105,7 @@ public class AllureAttachmentAspect {
         return result;
     }
 
+    /** Resolves attachment level (fixture, test, step). */
     private Nodes resolveLevel(AttachmentMeta meta) {
         if (meta.testUuid == null) {
             return Nodes.fixture;
@@ -112,6 +118,7 @@ public class AllureAttachmentAspect {
         return Nodes.step;
     }
 
+    /** Sends attachment to Testomat. */
     private void sendToTestomat(AttachmentMeta meta) {
         if (meta.level.equals(Nodes.step.name())) {
             testomatio.stepArtifact(meta.path);
@@ -119,27 +126,30 @@ public class AllureAttachmentAspect {
             testomatio.artifact(meta.path);
         }
 
-        System.out.println("===== TESTOMAT ATTACHMENT =====");
-        System.out.println("level: " + meta.level);
-        System.out.println("name: " + meta.name);
-        System.out.println("file: " + meta.path);
-        System.out.println("thread: " + meta.thread);
-        System.out.println("==============================");
+        log.debug("===== TESTOMAT ATTACHMENT =====");
+        log.debug("uuid: {}", meta.uuid);
+        log.debug("level: {}", meta.level);
+        log.debug("name: {}", meta.name);
+        log.debug("type: {}", meta.type);
+        log.debug("file: {}", meta.path);
+        log.debug("size: {}", meta.size);
+        log.debug("stream: {}", meta.stream);
+        log.debug("thread: {}", meta.thread);
+        log.debug("==============================");
     }
 
     static class AttachmentMeta {
-        String uuid;
-        String testUuid;
-        String parentUuid;
-        String name;
-        String type;
-        String path;
-        int size;
-        boolean stream;
-        String level;
-        String thread;
-
+        private String uuid;
+        private String testUuid;
+        private String parentUuid;
+        private String name;
+        private String type;
+        private String path;
+        private int size;
+        private boolean stream;
+        private String level;
+        private String thread;
     }
 
-    enum Nodes {step, test, fixture}
+    enum Nodes { step, test, fixture }
 }

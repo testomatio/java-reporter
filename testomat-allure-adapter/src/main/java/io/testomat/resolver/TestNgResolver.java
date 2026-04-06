@@ -1,9 +1,20 @@
 package io.testomat.resolver;
 
 import java.lang.reflect.Method;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Resolves TestNG test description from @Test annotation.
+ */
 public class TestNgResolver implements TestMetadataResolver {
+    private static final Logger log = LoggerFactory.getLogger(TestNgResolver.class);
 
+    /**
+     * Extracts test description via reflection.
+     * @param method test method
+     * @return description or null if not present
+     */
     @Override
     public String resolve(Method method) {
         for (var a : method.getAnnotations()) {
@@ -14,8 +25,9 @@ public class TestNgResolver implements TestMetadataResolver {
                     if (value != null && !value.isBlank()) {
                         return value;
                     }
+                } catch (Exception ignored) {
+                    log.trace("Failed to resolve TestNG description for {}", method.getName());
                 }
-                catch (Exception ignored) {}
             }
         }
         return null;
