@@ -13,11 +13,17 @@ import java.util.Map;
 import io.testomat.core.facade.methods.artifact.ArtifactLinkData;
 import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("ReportedTestStorage Tests")
 class ReportedTestStorageTest {
+
+    @BeforeEach
+    void setup() {
+        ReportedTestStorage.getStorage().clear();
+    }
 
     @AfterEach
     void cleanup() {
