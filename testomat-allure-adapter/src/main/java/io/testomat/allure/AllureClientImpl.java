@@ -1,5 +1,6 @@
 package io.testomat.allure;
 
+import io.qameta.allure.Allure;
 import io.qameta.allure.AllureLifecycle;
 import java.util.Optional;
 
@@ -9,6 +10,10 @@ import java.util.Optional;
 public class AllureClientImpl implements AllureClient {
 
     private final AllureLifecycle lifecycle;
+
+    public AllureClientImpl() {
+        this.lifecycle = Allure.getLifecycle();
+    }
 
     /**
      * @param lifecycle Allure lifecycle instance
