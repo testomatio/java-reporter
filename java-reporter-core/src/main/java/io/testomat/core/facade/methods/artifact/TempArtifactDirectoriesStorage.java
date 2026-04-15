@@ -3,6 +3,7 @@ package io.testomat.core.facade.methods.artifact;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -12,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TempArtifactDirectoriesStorage {
     public static final ThreadLocal<List<String>> DIRECTORIES = ThreadLocal.withInitial(ArrayList::new);
-    public static final ConcurrentHashMap<UUID, List<String>> STEP_DIRECTORIES = new ConcurrentHashMap<>();
+    public static final Map<UUID, List<String>> STEP_DIRECTORIES = new ConcurrentHashMap<>();
 
     public static void store(String dir) {
         DIRECTORIES.get().add(dir);

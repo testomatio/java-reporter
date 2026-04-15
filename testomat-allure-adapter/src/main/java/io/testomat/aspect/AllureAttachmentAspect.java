@@ -1,8 +1,11 @@
 package io.testomat.aspect;
 
 import io.testomat.allure.AllureClient;
+import io.testomat.allure.AllureClientImpl;
 import io.testomat.resolver.AttachmentFileResolver;
+import io.testomat.resolver.AttachmentFileResolverImpl;
 import io.testomat.testomat.TestomatClient;
+import io.testomat.testomat.TestomatClientImpl;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +30,12 @@ public class AllureAttachmentAspect {
     private final AllureClient allure;
     private final TestomatClient testomatio;
     private final AttachmentFileResolver resolver;
+
+    public AllureAttachmentAspect() {
+        this(new AllureClientImpl(),
+            new TestomatClientImpl(),
+            new AttachmentFileResolverImpl());
+    }
 
     public AllureAttachmentAspect(AllureClient allure,
             TestomatClient testomatio, AttachmentFileResolver resolver) {

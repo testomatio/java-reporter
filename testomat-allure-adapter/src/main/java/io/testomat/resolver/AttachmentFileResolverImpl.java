@@ -13,6 +13,13 @@ public class AttachmentFileResolverImpl implements AttachmentFileResolver {
 
     private final String resultsDir;
 
+    public AttachmentFileResolverImpl() {
+        this.resultsDir = System.getProperty(
+            "allure.results.directory",
+            "allure-results"
+        );
+    }
+
     public AttachmentFileResolverImpl(String resultsDir) {
         this.resultsDir = resultsDir;
     }

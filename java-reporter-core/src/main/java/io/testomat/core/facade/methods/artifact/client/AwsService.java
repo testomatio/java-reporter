@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,9 @@ public class AwsService {
     public void uploadAllArtifactsForTest(String testName, String rid, String testId) {
 
         List<String> artifactDirectories = TempArtifactDirectoriesStorage.DIRECTORIES.get();
-        if (artifactDirectories.isEmpty()) {
+        Map<UUID, List<String>> stepArtifactDirectories = TempArtifactDirectoriesStorage.STEP_DIRECTORIES;
+
+        if (artifactDirectories.isEmpty() && stepArtifactDirectories.isEmpty()) {
             log.debug("Artifact list is empty for test: {}", testName);
             return;
         }
