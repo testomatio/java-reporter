@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GlobalRunManager {
     private static final Logger log = LoggerFactory.getLogger(GlobalRunManager.class);
-    private static final int DELAY_BEFORE_ARTIFACTS_SENDING_MS = 10000;
+    private static final int DELAY_BEFORE_ARTIFACTS_SENDING_MS = getDelayBeforeArtifactsSendingMs();
     private static volatile GlobalRunManager INSTANCE;
 
     private final PropertyProvider provider;
@@ -345,6 +345,27 @@ public class GlobalRunManager {
                     && !provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME).equalsIgnoreCase("0");
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    /**
+     * Returns the delay before sending artifacts in milliseconds.
+     *
+     * <p>Reads the value from the {@code artifacts.sending.delay} system property.
+     * If the property is missing, non-numeric, or not positive, a default value is used.</p>
+     */
+    private static int getDelayBeforeArtifactsSendingMs() {
+        int defaultDelayMs = 10000;
+        String value = System.getProperty("artifacts.sending.delay");
+        if (value == null) {
+            return defaultDelayMs;
+        }
+        try {
+            int delayMs = Integer.parseInt(value.trim());
+            return delayMs > 0 ? delayMs : defaultDelayMs;
+        } catch (NumberFormatException nfe) {
+            log.warn("Invalid artifacts.sending.delay value: {}, using default {}", value, defaultDelayMs);
+            return defaultDelayMs;
         }
     }
 }

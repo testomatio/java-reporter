@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of {@link RequestBodyBuilder} for Testomat.io API requests.
@@ -34,6 +36,8 @@ import java.util.Optional;
  * with support for parameterized tests, shared runs, and configurable properties.
  */
 public class NativeRequestBodyBuilder implements RequestBodyBuilder {
+    private static final Logger log = LoggerFactory.getLogger(NativeRequestBodyBuilder.class);
+
     private static final String TRUE = "true";
     private final Boolean createParam;
     private final String sharedRun;
@@ -162,7 +166,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             result.getSteps().forEach(this::processStepArtifacts);
             List<Map<String, Object>> stepsMap = convertStepsToMap(result.getSteps());
             body.put("steps", stepsMap);
-            System.out.println("DEBUG: Adding " + result.getSteps().size() + " steps to request body for test: " + result.getTitle());
+            log.debug("Adding {} steps to request body for test: {}", result.getSteps().size(), result.getTitle());
         }
 
         if (createParam) {

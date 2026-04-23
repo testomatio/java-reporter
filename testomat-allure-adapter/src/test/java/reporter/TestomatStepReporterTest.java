@@ -8,14 +8,17 @@ import io.testomat.core.step.StepStatus;
 import io.testomat.core.step.TestStep;
 import io.testomat.reporter.TestomatStepReporter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.MockedStatic;
-
+import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 class TestomatStepReporterTest {
 
-    TestomatStepReporter reporter = new TestomatStepReporter();
+    private final TestomatStepReporter reporter = new TestomatStepReporter();
 
     @Test
     void shouldStartStep() {
@@ -24,51 +27,40 @@ class TestomatStepReporterTest {
         try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
             reporter.afterStepStart(result);
 
-            lifecycle.verify(() -> StepLifecycle.start(any(TestStep.class)));
+            lifecycle.verify(() ->
+                StepLifecycle.start(argThat(Objects::nonNull))
+            );
         }
     }
 
     @Test
     void shouldHandlePassedStep() {
-        StepResult result =
-            new StepResult()
-                .setName("step")
-                .setStart(10L)
-                .setStop(20L)
-                .setStatus(Status.PASSED);
+        StepResult result = createStep(Status.PASSED, 10, 20);
+        TestStep step = new TestStep();
 
-        TestStep step = mock(TestStep.class);
-
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
-            lifecycle.when(StepLifecycle::current).thenReturn(step);
-
+        try (MockedStatic<StepLifecycle> lifecycle = mockLifecycle(step)) {
             reporter.afterStepStop(result);
 
-            verify(step).setCategory("user");
-            verify(step).setStepTitle("step");
-            verify(step).setDuration(10);
-            verify(step).setStatus(StepStatus.passed);
+            assertEquals("user", step.getCategory());
+            assertEquals("step", step.getStepTitle());
+            assertEquals(10, step.getDuration());
+            assertEquals(StepStatus.passed, step.getStatus());
 
             lifecycle.verify(StepLifecycle::finish);
         }
     }
 
-    @Test
-    void shouldHandleFailedStep() {
-        StepResult result =
-            new StepResult()
-                .setName("step")
-                .setStart(0L)
-                .setStop(50L)
-                .setStatus(Status.FAILED)
-                .setStatusDetails(new StatusDetails()
-                    .setMessage("error")
-                    .setTrace("stack"));
+    @ParameterizedTest
+    @EnumSource(value = Status.class, names = {"FAILED", "BROKEN"})
+    void shouldHandleFailedAndBrokenSteps(Status status) {
+        StepResult result = createStep(status, 0, 50)
+            .setStatusDetails(new StatusDetails()
+                .setMessage("error")
+                .setTrace("stack"));
 
         TestStep step = new TestStep();
 
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
-            lifecycle.when(StepLifecycle::current).thenReturn(step);
+        try (MockedStatic<StepLifecycle> lifecycle = mockLifecycle(step)) {
             reporter.afterStepStop(result);
 
             assertEquals("user", step.getCategory());
@@ -83,49 +75,11 @@ class TestomatStepReporterTest {
     }
 
     @Test
-    void shouldHandleBrokenStep() {
-        StepResult result =
-            new StepResult()
-                .setName("step")
-                .setStart(0L)
-                .setStop(1L)
-                .setStatus(Status.BROKEN)
-                .setStatusDetails(
-                    new StatusDetails()
-                        .setMessage("error")
-                        .setTrace("stack")
-                );
-
-        TestStep step = new TestStep();
-
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
-            lifecycle.when(StepLifecycle::current).thenReturn(step);
-            reporter.afterStepStop(result);
-
-            assertEquals("user", step.getCategory());
-            assertEquals("step", step.getStepTitle());
-            assertEquals(1, step.getDuration());
-            assertEquals(StepStatus.failed, step.getStatus());
-            assertEquals("error", step.getError());
-            assertEquals("stack", step.getLog());
-
-            lifecycle.verify(StepLifecycle::finish);
-        }
-    }
-
-    @Test
     void shouldHandleUnknownStatus() {
-        StepResult result =
-            new StepResult()
-                .setName("step")
-                .setStart(0L)
-                .setStop(1L)
-                .setStatus(Status.SKIPPED);
-
+        StepResult result = createStep(Status.SKIPPED, 0, 1);
         TestStep step = new TestStep();
 
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
-            lifecycle.when(StepLifecycle::current).thenReturn(step);
+        try (MockedStatic<StepLifecycle> lifecycle = mockLifecycle(step)) {
             reporter.afterStepStop(result);
 
             assertEquals("user", step.getCategory());
@@ -137,4 +91,36 @@ class TestomatStepReporterTest {
         }
     }
 
+    @Test
+    void shouldHandleNullTimestampsGracefully() {
+        StepResult result = new StepResult()
+            .setName("step")
+            .setStatus(Status.PASSED);
+
+        TestStep step = new TestStep();
+
+        try (MockedStatic<StepLifecycle> lifecycle = mockLifecycle(step)) {
+            reporter.afterStepStop(result);
+
+            assertEquals("user", step.getCategory());
+            assertEquals("step", step.getStepTitle());
+            assertEquals(StepStatus.passed, step.getStatus());
+
+            lifecycle.verify(StepLifecycle::finish);
+        }
+    }
+
+    private StepResult createStep(Status status, long start, long stop) {
+        return new StepResult()
+            .setName("step")
+            .setStart(start)
+            .setStop(stop)
+            .setStatus(status);
+    }
+
+    private MockedStatic<StepLifecycle> mockLifecycle(TestStep step) {
+        MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class);
+        lifecycle.when(StepLifecycle::current).thenReturn(step);
+        return lifecycle;
+    }
 }

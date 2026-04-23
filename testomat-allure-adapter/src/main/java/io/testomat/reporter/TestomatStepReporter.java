@@ -1,10 +1,12 @@
 package io.testomat.reporter;
 
 import io.qameta.allure.listener.StepLifecycleListener;
+import io.qameta.allure.model.StatusDetails;
 import io.qameta.allure.model.StepResult;
 import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.StepStatus;
 import io.testomat.core.step.TestStep;
+import java.util.Objects;
 
 /**
  * Step lifecycle listener that reports Allure steps to Testomat.
@@ -21,11 +23,19 @@ public class TestomatStepReporter implements StepLifecycleListener {
     @Override
     public void afterStepStop(StepResult result) {
         TestStep testStep = StepLifecycle.current();
-        testStep.setCategory("user");
-        testStep.setStepTitle(result.getName());
 
-        long durationMillis = result.getStop() - result.getStart();
-        testStep.setDuration(durationMillis);
+        if (testStep == null) {
+            return;
+        }
+
+        testStep.setCategory("user");
+        testStep.setStepTitle(Objects.requireNonNullElse(result.getName(), ""));
+
+        Long start = result.getStart();
+        Long stop = result.getStop();
+        long duration = (start != null && stop != null) ? (stop - start) : 0L;
+
+        testStep.setDuration(duration);
 
         switch (result.getStatus()) {
             case PASSED:
@@ -34,8 +44,16 @@ public class TestomatStepReporter implements StepLifecycleListener {
             case FAILED:
             case BROKEN:
                 testStep.setStatus(StepStatus.failed);
-                testStep.setError(result.getStatusDetails().getMessage());
-                testStep.setLog(result.getStatusDetails().getTrace());
+
+                StatusDetails details = result.getStatusDetails();
+                if (details != null) {
+                    if (details.getMessage() != null) {
+                        testStep.setError(details.getMessage());
+                    }
+                    if (details.getTrace() != null) {
+                        testStep.setLog(details.getTrace());
+                    }
+                }
                 break;
             default:
                 testStep.setStatus(StepStatus.none);
