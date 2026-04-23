@@ -75,16 +75,19 @@ public class AwsService {
         }
 
         S3Credentials credentials = CredentialsManager.getCredentials();
-        List<String> uploadedArtifactsLinks = processArtifacts(artifactDirectories, testName, rid, credentials);
 
         if (!TempArtifactDirectoriesStorage.STEP_DIRECTORIES.isEmpty()) {
-            processStepArtifacts(testName, rid, credentials);
+            List<String> directories = prepareStepArtifactsForUpload(testName, rid, credentials);
+            processArtifacts(directories, testName, rid, credentials);
         }
 
-        storeArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks);
+        if (!artifactDirectories.isEmpty()) {
+            List<String> uploadedArtifactsLinks = processArtifacts(artifactDirectories, testName, rid, credentials);
+            storeArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks);
 
-        // Clear artifact directories after processing
-        TempArtifactDirectoriesStorage.DIRECTORIES.remove();
+            // Clear artifact directories after processing
+            TempArtifactDirectoriesStorage.DIRECTORIES.remove();
+        }
     }
 
     private List<String> processArtifacts(List<String> artifactDirectories, String testName, String rid, S3Credentials credentials) {
@@ -99,16 +102,30 @@ public class AwsService {
         return uploadedLinks;
     }
 
-    private void processStepArtifacts(String testName, String rid, S3Credentials credentials) {
-        TempArtifactDirectoriesStorage.STEP_DIRECTORIES
-            .forEach((stepId, list) -> list.replaceAll(dir -> {
-                if (dir.startsWith("http")) {
-                    return dir;
+    /**
+     * Replaces local artifact paths with S3 URLs in STEP_DIRECTORIES
+     * and returns the list of directories that need to be uploaded.
+     *
+     * <p>Only non-HTTP paths are processed, since HTTP entries are already uploaded.</p>
+     *
+     * <p>Mutates underlying lists by updating entries in place.</p>
+     */
+    private List<String> prepareStepArtifactsForUpload(String testName, String rid, S3Credentials credentials) {
+        List<String> artifactDirectories = new ArrayList<>();
+
+        for (List<String> list : TempArtifactDirectoriesStorage.STEP_DIRECTORIES.values()) {
+            for (int i = 0; i < list.size(); i++) {
+                String dir = list.get(i);
+
+                if (!dir.startsWith("http")) {
+                    artifactDirectories.add(dir);
+                    String key = keyGenerator.generateKey(dir, rid, testName);
+                    list.set(i, urlGenerator.generateUrl(credentials.getBucket(), key));
                 }
-                String key = keyGenerator.generateKey(dir, rid, testName);
-                uploadArtifact(dir, key, credentials);
-                return urlGenerator.generateUrl(credentials.getBucket(), key);
-            }));
+            }
+        }
+
+        return artifactDirectories;
     }
 
     private void storeArtifactLinkData(String testName, String rid, String testId, List<String> uploadedLinks) {
