@@ -20,6 +20,7 @@ public class ApiRequestFields {
     public static final String DURATION = "duration";
     public static final String ENVIRONMENT = "environment";
     public static final String GROUP_TITLE = "group_title";
+    public static final String BUILD_URL = "ci_build_url";
 
     private ApiRequestFields() {
     }

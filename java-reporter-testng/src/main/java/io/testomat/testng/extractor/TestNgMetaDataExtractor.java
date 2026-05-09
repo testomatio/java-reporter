@@ -1,9 +1,15 @@
 package io.testomat.testng.extractor;
 
+import io.testomat.core.annotation.LinkTest;
 import io.testomat.core.annotation.TestId;
 import io.testomat.core.annotation.Title;
+import io.testomat.core.model.Link;
 import io.testomat.core.model.TestMetadata;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.testng.ITestResult;
 
 /**
@@ -36,8 +42,9 @@ public class TestNgMetaDataExtractor {
         String title = getTestTitle(method);
         String testId = getTestId(method);
         String filePath = getFilePath(testClass);
+        List<Link> link = getLinks(method);
 
-        return new TestMetadata(title, testId, suiteTitle, filePath);
+        return new TestMetadata(title, testId, suiteTitle, filePath, link);
     }
 
     /**
@@ -66,5 +73,20 @@ public class TestNgMetaDataExtractor {
     private String getTestTitle(Method method) {
         Title titleAnnotation = method.getAnnotation(Title.class);
         return titleAnnotation != null ? titleAnnotation.value() : method.getName();
+    }
+
+    /**
+     * Gets test ids from @LinkTest annotation.
+     */
+    private List<Link> getLinks(Method method) {
+        LinkTest annotation = method.getAnnotation(LinkTest.class);
+
+        if (annotation == null || annotation.value().length == 0) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(annotation.value())
+            .map(Link::test)
+            .collect(Collectors.toList());
     }
 }

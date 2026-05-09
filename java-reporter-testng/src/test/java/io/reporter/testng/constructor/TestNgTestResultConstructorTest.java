@@ -10,10 +10,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+import io.testomat.core.model.Link;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.step.StepStorage;
+import io.testomat.core.step.TestStep;
 import io.testomat.testng.constructor.TestNgTestResultConstructor;
 import io.testomat.testng.constructor.TestResultWrapper;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -402,5 +407,81 @@ class TestNgTestResultConstructorTest {
         assertNotNull(result);
         assertEquals("", result.getMessage());
         assertNull(result.getStack());
+    }
+
+    @Test
+    @DisplayName("Should copy links from metadata")
+    void shouldCopyLinksFromMetadata() {
+        List<Link> links = Arrays.asList(
+            Link.test("T-1"),
+            Link.label("Smoke")
+        );
+
+        when(mockMetadata.getLinks()).thenReturn(links);
+        when(mockWrapper.getMessage()).thenReturn("message");
+
+        TestResult result = constructor.constructTestRunResult(mockWrapper);
+
+        assertNotNull(result.getLinks());
+        assertEquals(2, result.getLinks().size());
+
+        assertEquals("T-1", result.getLinks().get(0).getTest());
+        assertEquals("Smoke", result.getLinks().get(1).getLabel());
+    }
+
+    @Test
+    @DisplayName("Should copy example data")
+    void shouldCopyExampleData() {
+        Object[] example = {"user", 123};
+
+        when(mockWrapper.getExample()).thenReturn(example);
+        when(mockWrapper.getMessage()).thenReturn("message");
+
+        TestResult result = constructor.constructTestRunResult(mockWrapper);
+
+        assertEquals(example, result.getExample());
+    }
+
+    @Test
+    @DisplayName("Should copy rid")
+    void shouldCopyRid() {
+        when(mockWrapper.getRid()).thenReturn("rid-123");
+        when(mockWrapper.getMessage()).thenReturn("message");
+
+        TestResult result = constructor.constructTestRunResult(mockWrapper);
+
+        assertEquals("rid-123", result.getRid());
+    }
+
+    @Test
+    @DisplayName("Should collect steps from StepStorage")
+    void shouldCollectSteps() {
+        TestStep step = new TestStep();
+        step.setStepTitle("Open page");
+
+        StepStorage.addStep(step);
+
+        when(mockWrapper.getMessage()).thenReturn("message");
+
+        TestResult result = constructor.constructTestRunResult(mockWrapper);
+
+        assertNotNull(result.getSteps());
+        assertEquals(1, result.getSteps().size());
+        assertEquals("Open page", result.getSteps().get(0).getStepTitle());
+    }
+
+    @Test
+    @DisplayName("Should clear StepStorage after result construction")
+    void shouldClearStepStorage() {
+        TestStep step = new TestStep();
+        step.setStepTitle("Step");
+
+        StepStorage.addStep(step);
+
+        when(mockWrapper.getMessage()).thenReturn("message");
+
+        constructor.constructTestRunResult(mockWrapper);
+
+        assertTrue(StepStorage.getSteps().isEmpty());
     }
 }

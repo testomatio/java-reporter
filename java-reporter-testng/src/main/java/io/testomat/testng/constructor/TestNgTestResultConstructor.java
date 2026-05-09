@@ -73,7 +73,8 @@ public class TestNgTestResultConstructor {
                 .withMessage(message)
                 .withStack(stack)
                 .withExample(wrapper.getExample())
-                .withRid(wrapper.getRid());
+                .withRid(wrapper.getRid())
+                .withLinks(metadata.getLinks());
 
         if (!steps.isEmpty()) {
             builder.withSteps(steps);

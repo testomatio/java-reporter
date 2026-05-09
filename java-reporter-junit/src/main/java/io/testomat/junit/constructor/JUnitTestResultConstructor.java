@@ -130,7 +130,8 @@ public class JUnitTestResultConstructor {
                 .withFile(metadata.getFile())
                 .withMessage(message)
                 .withStatus(status)
-                .withStack(stack);
+                .withStack(stack)
+                .withLinks(metadata.getLinks());;
 
         if (example != null) {
             builder.withExample(example);
