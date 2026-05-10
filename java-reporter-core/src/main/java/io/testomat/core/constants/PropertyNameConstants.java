@@ -17,6 +17,4 @@ public class PropertyNameConstants {
 
     public static final String SHARED_RUN_PROPERTY_NAME = "testomatio.shared.run";
     public static final String SHARED_TIMEOUT_PROPERTY_NAME = "testomatio.shared.run.timeout";
-
-    public static final String UPLOAD_STEP_ARTIFACTS = "testomatio.step.artifacts.enabled";
 }

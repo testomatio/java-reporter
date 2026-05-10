@@ -343,6 +343,7 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 |-------------------------------|--------------------------------------------------|-------------|
 | `testomatio.artifact.disable` | Completely disable artifact uploading            | `false`     |
 | `testomatio.artifact.private` | Keep artifacts private (no public URLs)          | `false`     |
+| `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps | `false`     |
 | `s3.force-path-style`         | Use path-style URLs for S3-compatible storage    | `false`     |
 | `s3.endpoint`                 | Custom endpoint to be used with force-path-style | `false`     |
 | `s3.bucket`                   | Provides bucket name for configuration           |             |

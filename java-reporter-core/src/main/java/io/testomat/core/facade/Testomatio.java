@@ -1,6 +1,6 @@
 package io.testomat.core.facade;
 
-import static io.testomat.core.constants.PropertyNameConstants.UPLOAD_STEP_ARTIFACTS;
+import static io.testomat.core.constants.ArtifactPropertyNames.STEP_ARTIFACT_ENABLED_PROPERTY_NAME;
 
 import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
 import io.testomat.core.facade.methods.label.LabelStorage;
@@ -40,7 +40,7 @@ public class Testomatio {
      * @param directories artifact directories to attach (ignored if null or empty)
      */
     public static void stepArtifact(String... directories) {
-        if (!provider.getBooleanProperty(UPLOAD_STEP_ARTIFACTS)) {
+        if (!provider.getBooleanProperty(STEP_ARTIFACT_ENABLED_PROPERTY_NAME)) {
             return;
         }
         TestStep testStep = StepLifecycle.current();
