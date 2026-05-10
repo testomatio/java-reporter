@@ -226,6 +226,18 @@ public class LoginTests {
     }
 }
 ```
+## LinkTest
+
+Links test IDs to the current test in the report. This allows you to associate multiple test cases with the current test execution.
+
+```java
+    @TestId("aba4b142")
+    @LinkTest({"aba4b144", "aba4b144"})
+    @Test
+    public void test() {
+        // Your test code here
+    }
+```
 
 ### 🥒 For Cucumber
 
