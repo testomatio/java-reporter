@@ -1,6 +1,7 @@
 package io.testomat.core.propertyconfig.interf;
 
 import io.testomat.core.exception.PropertyNotFoundException;
+import io.testomat.core.propertyconfig.util.StringUtils;
 
 /**
  * Property provider interface supporting chain of responsibility pattern.
@@ -28,6 +29,20 @@ public interface PropertyProvider {
      * @throws PropertyNotFoundException if property not found in this provider or any chained providers
      */
     String getProperty(String key);
+
+    /**
+     * Returns a boolean property value or {@code false} if unavailable.
+     *
+     * @param key the property key
+     * @return parsed boolean value
+     */
+    default boolean getBooleanProperty(String key) {
+        try {
+            return Boolean.parseBoolean(getProperty(key));
+        } catch (PropertyNotFoundException ignored) {
+            return false;
+        }
+    }
 
     /**
      * Sets the next provider in the chain for fallback property resolution.

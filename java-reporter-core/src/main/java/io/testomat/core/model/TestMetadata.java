@@ -1,5 +1,7 @@
 package io.testomat.core.model;
 
+import java.util.List;
+
 /**
  * Basic test identification metadata without execution results.
  * Contains essential information for test discovery and organization.
@@ -10,6 +12,7 @@ public class TestMetadata {
     private String testId;
     private String suiteTitle;
     private String file;
+    private List<Link> links;
 
     /**
      * Creates test metadata with identification information.
@@ -20,11 +23,12 @@ public class TestMetadata {
      * @param file source file path where test is located
      */
     public TestMetadata(String title, String testId,
-                        String suiteTitle, String file) {
+                        String suiteTitle, String file, List<Link> links) {
         this.title = title;
         this.testId = testId;
         this.suiteTitle = suiteTitle;
         this.file = file;
+        this.links = links;
     }
 
     public String getTitle() {
@@ -57,5 +61,13 @@ public class TestMetadata {
 
     public void setFile(String file) {
         this.file = file;
+    }
+
+    public List<Link> getLinks() {
+        return links;
+    }
+
+    public void setLinks(List<Link> links) {
+        this.links = links;
     }
 }

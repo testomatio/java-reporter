@@ -287,6 +287,71 @@ class StepAspectTest {
         assertNull(StepLifecycle.current());
     }
 
+    @Test
+    @DisplayName("Should set passed status for successful step")
+    void testPassedStatus() {
+        simpleStep();
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals(StepStatus.passed, step.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should store stack trace log for failed step")
+    void testFailureLogStored() {
+        assertThrows(RuntimeException.class, this::stepThatThrows);
+        TestStep step = StepStorage.getSteps().get(0);
+        assertNotNull(step.getLog());
+        assertTrue(step.getLog().contains("stepThatThrows"));
+    }
+
+    @Test
+    @DisplayName("Should set user category by default")
+    void testDefaultCategory() {
+        simpleStep();
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("user", step.getCategory());
+    }
+
+    @Test
+    @DisplayName("Should store duration for failed step")
+    void testFailedStepDuration() {
+        assertThrows(RuntimeException.class, this::stepThatThrows);
+        TestStep step = StepStorage.getSteps().get(0);
+        assertTrue(step.getDuration() >= 0);
+    }
+
+    @Test
+    @DisplayName("Should keep unresolved placeholders")
+    void testUnresolvedPlaceholder() {
+        unresolvedPlaceholderStep("John");
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("User John {1}", step.getStepTitle());
+    }
+
+    @Test
+    @DisplayName("Should support repeated placeholders")
+    void testRepeatedPlaceholders() {
+        repeatedPlaceholderStep("Bob");
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("User Bob again Bob", step.getStepTitle());
+    }
+
+    @Test
+    @DisplayName("Should handle empty string parameter")
+    void testEmptyStringParameter() {
+        stepWithNullableParameter("");
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("Process value: ", step.getStepTitle());
+    }
+
+    @Step("User {0} {1}")
+    private void unresolvedPlaceholderStep(String name) {
+    }
+
+    @Step("User {0} again {0}")
+    private void repeatedPlaceholderStep(String value) {
+    }
+
     @Step("no artifacts")
     private void stepWithoutArtifacts(){}
 

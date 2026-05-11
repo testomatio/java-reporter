@@ -79,7 +79,7 @@ class JunitTestReporterTest {
         String message = "Test passed successfully";
         String uniqueId = "test-unique-id-123";
 
-        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java");
+        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java", null);
         TestResult expectedResult = TestResult.builder()
                 .withTitle("Test Title")
                 .withStatus(status)
@@ -105,7 +105,7 @@ class JunitTestReporterTest {
     @Test
     void reportTestResult_WhenResultConstructionFails_ShouldThrowException() {
         // Given
-        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java");
+        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java", null);
 
         when(runManager.isActive()).thenReturn(true);
         when(context.getUniqueId()).thenReturn("test-id");
@@ -126,7 +126,7 @@ class JunitTestReporterTest {
     @Test
     void reportTestResult_WhenReportingFails_ShouldThrowException() {
         // Given
-        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java");
+        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java", null);
         TestResult result = TestResult.builder().withTitle("Test Title").build();
 
         when(runManager.isActive()).thenReturn(true);
@@ -153,7 +153,7 @@ class JunitTestReporterTest {
         ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
         AtomicInteger successCount = new AtomicInteger(0);
 
-        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java");
+        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java", null);
         TestResult result = TestResult.builder().withTitle("Test Title").build();
 
         when(runManager.isActive()).thenReturn(true);
@@ -191,8 +191,8 @@ class JunitTestReporterTest {
         ExtensionContext context1 = mock(ExtensionContext.class);
         ExtensionContext context2 = mock(ExtensionContext.class);
 
-        TestMetadata metadata1 = new TestMetadata("Test 1", "id-1", "Suite1", "file1.java");
-        TestMetadata metadata2 = new TestMetadata("Test 2", "id-2", "Suite2", "file2.java");
+        TestMetadata metadata1 = new TestMetadata("Test 1", "id-1", "Suite1", "file1.java", null);
+        TestMetadata metadata2 = new TestMetadata("Test 2", "id-2", "Suite2", "file2.java", null);
 
         TestResult result1 = TestResult.builder().withTitle("Test 1").build();
         TestResult result2 = TestResult.builder().withTitle("Test 2").build();
@@ -251,7 +251,7 @@ class JunitTestReporterTest {
         // Given
         String status = "failed";
         String message = "Custom failure message";
-        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java");
+        TestMetadata metadata = new TestMetadata("Test Title", "test-id", "TestSuite", "test/file.java", null);
         TestResult result = TestResult.builder().withTitle("Test Title").build();
 
         when(runManager.isActive()).thenReturn(true);

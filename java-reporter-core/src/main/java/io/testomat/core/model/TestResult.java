@@ -48,6 +48,8 @@ public class TestResult {
     /** Test steps executed during the test */
     private List<TestStep> steps;
 
+    private List<Link> links;
+
     /** Test result is overwritten when the test is executed multiple times */
     private Boolean overwrite;
 
@@ -58,7 +60,7 @@ public class TestResult {
                       String suiteTitle, String file,
                       String status, String message, String stack,
                       Object example, String rid, Boolean overwrite,
-                        List<TestStep> steps) {
+                        List<TestStep> steps, List<Link> links) {
         this.title = title;
         this.testId = testId;
         this.suiteTitle = suiteTitle;
@@ -70,6 +72,7 @@ public class TestResult {
         this.rid = rid;
         this.overwrite = overwrite;
         this.steps = steps;
+        this.links = links;
     }
 
     /**
@@ -88,6 +91,7 @@ public class TestResult {
         private String rid;
         private Boolean overwrite;
         private List<TestStep> steps;
+        private List<Link> links;
 
         public Builder withTitle(String title) {
             this.title = title;
@@ -144,8 +148,13 @@ public class TestResult {
             return this;
         }
 
+        public Builder withLinks(List<Link> links) {
+            this.links = links;
+            return this;
+        }
+
         public TestResult build() {
-            return new TestResult(title, testId, suiteTitle, file, status, message, stack, example, rid, overwrite, steps);
+            return new TestResult(title, testId, suiteTitle, file, status, message, stack, example, rid, overwrite, steps, links);
         }
     }
 
@@ -244,5 +253,13 @@ public class TestResult {
 
     public void setSteps(List<TestStep> steps) {
         this.steps = steps;
+    }
+
+    public List<Link> getLinks() {
+        return links;
+    }
+
+    public void setLinks(List<Link> links) {
+        this.links = links;
     }
 }

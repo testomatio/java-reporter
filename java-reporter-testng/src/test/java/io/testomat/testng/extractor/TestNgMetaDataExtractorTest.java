@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.testng.AssertJUnit.assertTrue;
 
+import io.testomat.core.annotation.LinkTest;
 import io.testomat.core.annotation.TestId;
 import io.testomat.core.annotation.Title;
 import io.testomat.core.model.TestMetadata;
@@ -179,6 +181,46 @@ class TestNgMetaDataExtractorTest {
         assertEquals("java/lang/String.java", metadata.getFile());
     }
 
+    @Test
+    @DisplayName("Should extract links from LinkTest annotation")
+    void shouldExtractLinksFromAnnotation() throws Exception {
+        Method method = TestClassForTesting.class
+            .getDeclaredMethod("testMethodWithLinks");
+
+        TestNgTestWrapper wrapper =
+            new TestNgTestWrapper(method, TestClassForTesting.class);
+
+        TestMetadata metadata = extractor.extractTestMetadata(wrapper);
+
+        assertNotNull(metadata.getLinks());
+        assertEquals(2, metadata.getLinks().size());
+
+        assertEquals(
+            "T-1",
+            metadata.getLinks().get(0).getTest()
+        );
+
+        assertEquals(
+            "T-2",
+            metadata.getLinks().get(1).getTest()
+        );
+    }
+
+    @Test
+    @DisplayName("Should return empty links when LinkTest annotation absent")
+    void shouldReturnEmptyLinksWhenNoAnnotation() throws Exception {
+        Method method = TestClassForTesting.class
+            .getDeclaredMethod("testMethodWithoutAnnotations");
+
+        TestNgTestWrapper wrapper =
+            new TestNgTestWrapper(method, TestClassForTesting.class);
+
+        TestMetadata metadata = extractor.extractTestMetadata(wrapper);
+
+        assertNotNull(metadata.getLinks());
+        assertTrue(metadata.getLinks().isEmpty());
+    }
+
     // Test class with annotations for testing
     static class TestClassForTesting {
 
@@ -192,6 +234,10 @@ class TestNgMetaDataExtractorTest {
         }
 
         public void testMethodWithoutAnnotations() {
+        }
+
+        @LinkTest({"T-1", "T-2"})
+        public void testMethodWithLinks() {
         }
     }
 }

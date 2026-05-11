@@ -2,15 +2,16 @@ package io.testomat.junit.constructor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.testomat.core.model.Link;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
 import io.testomat.junit.extractor.JunitMetaDataExtractor;
-import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -332,5 +333,61 @@ class JUnitTestResultConstructorTest {
         when(mockMetadata.getTestId()).thenReturn("test-1");
         when(mockMetadata.getTitle()).thenReturn("TestMethod");
         when(mockMetadata.getFile()).thenReturn("TestClass.java");
+    }
+
+    @Test
+    @DisplayName("Should copy links from metadata to result")
+    void shouldCopyLinksFromMetadataToResult() {
+        List<Link> links = Arrays.asList(
+            Link.test("T-123"),
+            Link.label("Smoke")
+        );
+
+        when(mockMetadata.getSuiteTitle()).thenReturn("Suite");
+        when(mockMetadata.getTestId()).thenReturn("test-1");
+        when(mockMetadata.getTitle()).thenReturn("Test");
+        when(mockMetadata.getFile()).thenReturn("Test.java");
+        when(mockMetadata.getLinks()).thenReturn(links);
+
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.empty());
+
+        TestResult result = constructor.constructTestRunResult(
+            mockMetadata,
+            "message",
+            "passed",
+            mockContext
+        );
+
+        assertThat(result.getLinks()).isNotNull();
+        assertThat(result.getLinks()).hasSize(2);
+
+        assertThat(result.getLinks().get(0).getTest())
+            .isEqualTo("T-123");
+
+        assertThat(result.getLinks().get(1).getLabel())
+            .isEqualTo("Smoke");
+    }
+
+    @Test
+    @DisplayName("Should handle null links")
+    void shouldHandleNullLinks() {
+        when(mockMetadata.getSuiteTitle()).thenReturn("Suite");
+        when(mockMetadata.getTestId()).thenReturn("test-1");
+        when(mockMetadata.getTitle()).thenReturn("Test");
+        when(mockMetadata.getFile()).thenReturn("Test.java");
+        when(mockMetadata.getLinks()).thenReturn(null);
+
+        when(mockExtractor.isParameterizedTest(mockContext)).thenReturn(false);
+        when(mockContext.getExecutionException()).thenReturn(Optional.empty());
+
+        TestResult result = constructor.constructTestRunResult(
+            mockMetadata,
+            "message",
+            "passed",
+            mockContext
+        );
+
+        assertThat(result.getLinks()).isNull();
     }
 }

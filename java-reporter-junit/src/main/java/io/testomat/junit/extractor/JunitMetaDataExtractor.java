@@ -1,12 +1,18 @@
 package io.testomat.junit.extractor;
 
+import io.testomat.core.annotation.LinkTest;
 import io.testomat.core.annotation.TestId;
 import io.testomat.core.annotation.Title;
 import io.testomat.core.exception.NoMethodInContextException;
+import io.testomat.core.model.Link;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.junit.extractor.strategy.ParameterExtractorService;
 import io.testomat.junit.util.ParameterizedTestSupport;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
@@ -46,7 +52,8 @@ public class JunitMetaDataExtractor {
                 buildTestTitle(method, context),
                 extractTestId(method),
                 testClass.getSimpleName(),
-                buildFilePath(testClass)
+                buildFilePath(testClass),
+                getLinks(method)
         );
     }
 
@@ -132,6 +139,21 @@ public class JunitMetaDataExtractor {
     public static String extractTestId(Method method) {
         TestId annotation = method.getAnnotation(TestId.class);
         return annotation != null ? annotation.value() : null;
+    }
+
+    /**
+     * Gets test ids from @LinkTest annotation.
+     */
+    private List<Link> getLinks(Method method) {
+        LinkTest annotation = method.getAnnotation(LinkTest.class);
+
+        if (annotation == null || annotation.value().length == 0) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(annotation.value())
+            .map(Link::test)
+            .collect(Collectors.toList());
     }
 
     private String buildFilePath(Class<?> testClass) {

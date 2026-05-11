@@ -1,5 +1,6 @@
 package io.testomat.resolver;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ public class TestNgResolver implements TestMetadataResolver {
      */
     @Override
     public String resolve(Method method) {
-        for (var a : method.getAnnotations()) {
+        for (Annotation a : method.getAnnotations()) {
             if (a.annotationType().getName().equals("org.testng.annotations.Test")) {
                 try {
                     Method m = a.annotationType().getMethod("description");

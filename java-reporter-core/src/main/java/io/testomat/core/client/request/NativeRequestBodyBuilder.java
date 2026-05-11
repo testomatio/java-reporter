@@ -18,15 +18,20 @@ import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
+import io.testomat.core.model.Link;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.step.TestStep;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +72,10 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             String groupTitle = getPropertySafely(RUN_GROUP_PROPERTY_NAME);
             if (groupTitle != null) {
                 body.put(ApiRequestFields.GROUP_TITLE, groupTitle);
+            }
+            String buildUrl = resolveBuildUrl();
+            if (buildUrl != null) {
+                body.put(ApiRequestFields.BUILD_URL, buildUrl);
             }
             if (this.sharedRun != null) {
                 body.put("shared_run", sharedRun);
@@ -179,9 +188,10 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put("rid", result.getRid());
             addMeta(body, rid);
             addLogs(body, rid);
-            addLinks(body, rid);
+            addLinks(result, rid);
         }
 
+        body.put("links", result.getLinks());
         body.put("overwrite", Optional.ofNullable(result.isOverwrite()).orElse(true));
 
         Map<String, Object> storageEntry = new HashMap<>();
@@ -252,6 +262,68 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         }
     }
 
+    /**
+     * Resolves the CI/CD build URL from supported environment variables
+     * (Jenkins, GitLab CI, CircleCI, GitHub Actions, Azure DevOps).
+     *
+     * <p>Returns only valid HTTP/HTTPS URLs.
+     *
+     * @return build URL or {@code null} if unavailable or invalid
+     */
+    private String resolveBuildUrl() {
+        String buildUrl = getEnv(
+            "BUILD_URL",        // Jenkins
+            "CI_JOB_URL",       // GitLab
+            "CIRCLE_BUILD_URL"  // CircleCI
+        );
+
+        // GitHub Actions
+        if (buildUrl == null && System.getenv("GITHUB_RUN_ID") != null) {
+            String server = System.getenv("GITHUB_SERVER_URL");
+            String repo = System.getenv("GITHUB_REPOSITORY");
+            String runId = System.getenv("GITHUB_RUN_ID");
+
+            if (server != null && repo != null && runId != null) {
+                buildUrl = String.format("%s/%s/actions/runs/%s", server, repo, runId);
+            }
+        }
+
+        // Azure DevOps
+        if (buildUrl == null && System.getenv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") != null) {
+            String collection = System.getenv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI");
+            String project = System.getenv("SYSTEM_TEAMPROJECT");
+            String buildId = System.getenv("BUILD_BUILDID");
+
+            if (collection != null && project != null && buildId != null) {
+                buildUrl = String.format("%s/%s/_build/results?buildId=%s", collection, project, buildId);
+            }
+        }
+
+        if (buildUrl != null && !(buildUrl.startsWith("http://") || buildUrl.startsWith("https://"))) {
+            return null;
+        }
+
+        try {
+            if (buildUrl != null) {
+                new java.net.URI(buildUrl);
+            }
+        } catch (Exception e) {
+            return null;
+        }
+
+        return buildUrl;
+    }
+
+    private String getEnv(String... keys) {
+        for (String key : keys) {
+            String value = System.getenv(key);
+            if (value != null && !value.isEmpty()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
     private boolean getCreateParam() {
         try {
             return provider.getProperty(CREATE_TEST_PROPERTY_NAME).equalsIgnoreCase(TRUE);
@@ -290,13 +362,30 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         }
     }
 
-    private void addLinks(Map<String, Object> body, String rid) {
-        body.put("links", new ArrayList<>());
-        List<Object> links = (List<Object>) body.get("links");
+    private void addLinks(TestResult result, String rid) {
         List<Map<String, String>> labels = LabelStorage.LINKED_LABEL_STORAGE.get(rid);
-        if (labels != null && !labels.isEmpty()) {
-            links.addAll(labels);
+        if (labels == null || labels.isEmpty()) {
+            return;
         }
+
+        List<Link> links = new ArrayList<>(
+            Optional.ofNullable(result.getLinks())
+                .orElse(Collections.emptyList())
+        );
+
+        Set<String> existingLabels = links.stream()
+            .map(Link::getLabel)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+
+        labels.stream()
+            .map(m -> m.get("label"))
+            .filter(Objects::nonNull)
+            .filter(existingLabels::add)
+            .map(Link::label)
+            .forEach(links::add);
+
+        result.setLinks(links);
     }
 
     /**
