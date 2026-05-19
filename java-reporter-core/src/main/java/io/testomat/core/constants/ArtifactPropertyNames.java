@@ -3,7 +3,7 @@ package io.testomat.core.constants;
 public class ArtifactPropertyNames {
     public static final String BUCKET_PROPERTY_NAME = "s3.bucket";
     public static final String ACCESS_KEY_PROPERTY_NAME = "s3.access-key-id";
-    public static final String SECRET_ACCESS_KEY_PROPERTY_NAME = " s3.secret.access-key-id";
+    public static final String SECRET_ACCESS_KEY_PROPERTY_NAME = "s3.secret.access-key-id";
     public static final String REGION_PROPERTY_NAME = "s3.region";
     public static final String ENDPOINT_PROPERTY_NAME = "s3.endpoint";
 
