@@ -339,16 +339,20 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 
 > NOTE: Environment variables(env/jvm/testomatio.properties) take precedence over server-provided credentials.
 
-| Setting                       | Description                                      | Default     |
-|-------------------------------|--------------------------------------------------|-------------|
-| `testomatio.artifact.disable` | Completely disable artifact uploading            | `false`     |
-| `testomatio.artifact.private` | Keep artifacts private (no public URLs)          | `false`     |
-| `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps | `false`     |
-| `s3.force-path-style`         | Use path-style URLs for S3-compatible storage    | `false`     |
-| `s3.endpoint`                 | Custom endpoint to be used with force-path-style | `false`     |
-| `s3.bucket`                   | Provides bucket name for configuration           |             |
-| `s3.access-key-id`            | Access key for the bucket                        |             |
-| `s3.region`                   | Bucket region                                    | `us-west-1` |
+| Setting                                          | Description                                                         | Default     |
+|--------------------------------------------------|---------------------------------------------------------------------|-------------|
+| `testomatio.artifact.disable`                    | Completely disable artifact uploading                               | `false`     |
+| `testomatio.artifact.private`                    | Keep artifacts private (no public URLs)                             | `false`     |
+| `testomatio.step.artifacts.enabled`              | Enables uploading artifacts for test steps                          | `false`     |
+| `s3.force-path-style`                            | Use path-style URLs for S3-compatible storage                       | `false`     |
+| `s3.endpoint`                                    | Custom endpoint to be used with force-path-style                    | `false`     |
+| `s3.bucket`                                      | Provides bucket name for configuration                              |             |
+| `s3.access-key-id`                               | Access key for the bucket                                           |             |
+| `s3.region`                                      | Bucket region                                                       | `us-west-1` |
+| `testomatio.artifacts.executor.workers`          | Configuration parameters for asynchronous parallel artifact uploads | `5`         |
+| `testomatio.artifacts.executor.queue`            | Maximum number of upload tasks allowed in the queue                 | `10000`     |
+| `testomatio.artifacts.executor.shutdown.timeout` | Maximum time in sec to wait for graceful shutdown completion        | `30`        |
+| `testomatio.artifacts.concurrency`               | Maximum number of concurrent HTTP requests                          | `50`        |
 
 **Note**: S3 credentials can be configured either in properties file or provided automatically on Testomat.io UI.
 Environment variables take precedence over server-provided credentials.
@@ -615,7 +619,7 @@ This provides complete transparency into the test flow and helps debug failures 
 
 Configuration parameters for asynchronous parallel artifact uploads.
 
-### `WORKERS_COUNT`
+### `testomatio.artifacts.executor.workers`
 
 Number of worker threads that consume upload tasks from the queue and initiate asynchronous S3 uploads.
 
@@ -625,7 +629,7 @@ Number of worker threads that consume upload tasks from the queue and initiate a
 
 ---
 
-### `MAX_QUEUE_SIZE`
+### `testomatio.artifacts.executor.queue`
 
 Maximum number of upload tasks allowed in the queue.
 
@@ -636,13 +640,19 @@ Maximum number of upload tasks allowed in the queue.
 
 ---
 
-### `SHUTDOWN_TIMEOUT_SECONDS`
+### `testomatio.artifacts.executor.shutdown.timeout`
 
-Maximum time to wait for graceful shutdown completion.
+Maximum time in sec to wait for graceful shutdown completion.
 
 - During shutdown, the manager waits for active asynchronous uploads to finish.
 - Increasing the value improves the chance that all uploads complete successfully.
 - Smaller values allow faster application shutdown but may interrupt unfinished uploads.
+
+### `testomatio.artifacts.concurrency`
+
+Maximum number of concurrent HTTP requests.
+
+- Controls how many HTTP requests can be executed simultaneously.
     
 ---
 
