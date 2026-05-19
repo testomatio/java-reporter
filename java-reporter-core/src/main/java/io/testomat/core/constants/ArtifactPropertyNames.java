@@ -14,4 +14,9 @@ public class ArtifactPropertyNames {
     public static final String MAX_SIZE_ARTIFACTS_PROPERTY_NAME = "testomatio.artifact.max-size";
 
     public static final String STEP_ARTIFACT_ENABLED_PROPERTY_NAME = "testomatio.step.artifacts.enabled";
+
+    public static final String ARTIFACT_EXECUTOR_WORKERS_COUNT = "testomatio.artifacts.executor.workers";
+    public static final String ARTIFACT_EXECUTOR_MAX_QUEUE = "testomatio.artifacts.executor.queue";
+    public static final String ARTIFACT_EXECUTOR_SHUTDOWN_TIMEOUT = "testomatio.artifacts.executor.shutdown.timeout";
+    public static final String ARTIFACT_MAX_CONCURRENCY = "testomatio.artifacts.concurrency";
 }

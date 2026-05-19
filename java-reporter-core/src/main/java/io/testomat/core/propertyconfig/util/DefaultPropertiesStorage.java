@@ -1,7 +1,15 @@
 package io.testomat.core.propertyconfig.util;
 
+import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_EXECUTOR_MAX_QUEUE;
+import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_EXECUTOR_SHUTDOWN_TIMEOUT;
+import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_EXECUTOR_WORKERS_COUNT;
+import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_MAX_CONCURRENCY;
 import static io.testomat.core.constants.PropertyNameConstants.HOST_URL_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
+import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_ARTIFACT_MAX_CONCURRENCY;
+import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_EXECUTOR_MAX_QUEUE;
+import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_EXECUTOR_SHUTDOWN_TIMEOUT;
+import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_EXECUTOR_WORKERS_COUNT;
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_RUN_TITLE;
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_URL;
 
@@ -28,6 +36,10 @@ public class DefaultPropertiesStorage {
     static {
         DEFAULTS = Map.of(
                 HOST_URL_PROPERTY_NAME, DEFAULT_URL,
-                RUN_TITLE_PROPERTY_NAME, DEFAULT_RUN_TITLE);
+                RUN_TITLE_PROPERTY_NAME, DEFAULT_RUN_TITLE,
+                ARTIFACT_EXECUTOR_WORKERS_COUNT, DEFAULT_EXECUTOR_WORKERS_COUNT,
+                ARTIFACT_EXECUTOR_MAX_QUEUE, DEFAULT_EXECUTOR_MAX_QUEUE,
+                ARTIFACT_EXECUTOR_SHUTDOWN_TIMEOUT, DEFAULT_EXECUTOR_SHUTDOWN_TIMEOUT,
+                ARTIFACT_MAX_CONCURRENCY, DEFAULT_ARTIFACT_MAX_CONCURRENCY);
     }
 }

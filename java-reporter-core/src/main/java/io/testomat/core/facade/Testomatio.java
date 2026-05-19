@@ -2,6 +2,7 @@ package io.testomat.core.facade;
 
 import static io.testomat.core.constants.ArtifactPropertyNames.STEP_ARTIFACT_ENABLED_PROPERTY_NAME;
 
+import io.testomat.core.facade.methods.artifact.client.UploadPipeline;
 import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
@@ -45,7 +46,7 @@ public class Testomatio {
         }
         TestStep testStep = StepLifecycle.current();
 
-        if (directories == null || directories.length == 0){
+        if (directories == null || directories.length == 0) {
             return;
         }
 
@@ -56,6 +57,7 @@ public class Testomatio {
             return;
         }
 
+        UploadPipeline.publish(testStep.getId(), directories);
         ServiceRegistryUtil.getService(ArtifactManager.class).storeStepDirectories(testStep.getId(), directories);
     }
 

@@ -4,6 +4,7 @@ import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_BATCH_S
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_FLUSH_INTERVAL_SECONDS;
 
 import io.testomat.core.client.ApiInterface;
+import io.testomat.core.facade.methods.artifact.client.UploadPipeline;
 import io.testomat.core.model.TestResult;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -138,6 +139,7 @@ public class BatchResultManager {
         isActive.set(false);
         flushPendingResults();
 
+        UploadPipeline.shutdown();
         scheduler.shutdown();
         try {
             if (!scheduler.awaitTermination(TERMINATION_AWAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {

@@ -607,8 +607,43 @@ Steps appear in test reports with:
 - Execution duration
 - Order of execution
 
-This provides complete transparency into test flow and helps debug failures quickly.
+This provides complete transparency into the test flow and helps debug failures quickly.
 
+---
+
+## Parallel Artifact Upload Configuration
+
+Configuration parameters for asynchronous parallel artifact uploads.
+
+### `WORKERS_COUNT`
+
+Number of worker threads that consume upload tasks from the queue and initiate asynchronous S3 uploads.
+
+- Increasing this value allows more uploads to be processed in parallel.
+- Higher values may improve upload throughput for large test runs.
+- Too many workers may increase CPU, memory, and network usage.
+
+---
+
+### `MAX_QUEUE_SIZE`
+
+Maximum number of upload tasks allowed in the queue.
+
+- Defines how many artifacts can wait for upload before new tasks are rejected.
+- Protects the application from excessive memory usage.
+- Increasing the value reduces the chance of skipped uploads during traffic spikes.
+- Too large values may increase heap memory consumption.
+
+---
+
+### `SHUTDOWN_TIMEOUT_SECONDS`
+
+Maximum time to wait for graceful shutdown completion.
+
+- During shutdown, the manager waits for active asynchronous uploads to finish.
+- Increasing the value improves the chance that all uploads complete successfully.
+- Smaller values allow faster application shutdown but may interrupt unfinished uploads.
+    
 ---
 
 ## 🎯 Test Filtering by ID

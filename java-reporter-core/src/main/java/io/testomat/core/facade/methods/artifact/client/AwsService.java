@@ -77,8 +77,7 @@ public class AwsService {
         S3Credentials credentials = CredentialsManager.getCredentials();
 
         if (!TempArtifactDirectoriesStorage.STEP_DIRECTORIES.isEmpty()) {
-            List<String> directories = prepareStepArtifactsForUpload(testName, rid, credentials);
-            processArtifacts(directories, testName, rid, credentials);
+            prepareStepArtifactsForUpload(credentials);
         }
 
         if (!artifactDirectories.isEmpty()) {
@@ -110,17 +109,22 @@ public class AwsService {
      *
      * <p>Mutates underlying lists by updating entries in place.</p>
      */
-    private List<String> prepareStepArtifactsForUpload(String testName, String rid, S3Credentials credentials) {
+    private List<String> prepareStepArtifactsForUpload(S3Credentials credentials) {
         List<String> artifactDirectories = new ArrayList<>();
 
-        for (List<String> list : TempArtifactDirectoriesStorage.STEP_DIRECTORIES.values()) {
+        for (Map.Entry<UUID, List<String>> entry : TempArtifactDirectoriesStorage.STEP_DIRECTORIES.entrySet()) {
+            UUID stepId = entry.getKey();
+            List<String> list = entry.getValue();
+
             for (int i = 0; i < list.size(); i++) {
                 String dir = list.get(i);
-
                 if (!dir.startsWith("http")) {
                     artifactDirectories.add(dir);
-                    String key = keyGenerator.generateKey(dir, rid, testName);
-                    list.set(i, urlGenerator.generateUrl(credentials.getBucket(), key));
+                    String key = keyGenerator.generateKey(dir, stepId.toString(), "step");
+                    list.set(i, urlGenerator.generateUrl(
+                        credentials.getBucket(),
+                        key
+                    ));
                 }
             }
         }
