@@ -7,7 +7,9 @@ import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_EXECUTOR
 import io.testomat.core.facade.methods.artifact.credential.CredentialsManager;
 import io.testomat.core.facade.methods.artifact.credential.S3Credentials;
 import io.testomat.core.facade.methods.artifact.util.ArtifactKeyGenerator;
-import io.testomat.core.propertyconfig.util.DefaultPropertiesStorage;
+import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
+import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.propertyconfig.interf.PropertyProviderFactory;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -37,23 +39,27 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 public class ArtifactUploadManager {
     private static final Logger log = LoggerFactory.getLogger(ArtifactUploadManager.class);
 
+    private final PropertyProviderFactory factory =
+        PropertyProviderFactoryImpl.getPropertyProviderFactory();
+    private final PropertyProvider provider = factory.getPropertyProvider();
+
     /**
      * Workers only consume queue and start async uploads.
      */
-    private static final int WORKERS_COUNT =
-        Integer.parseInt(DefaultPropertiesStorage.DEFAULTS.get(ARTIFACT_EXECUTOR_WORKERS_COUNT));
+    private final int WORKERS_COUNT =
+        Integer.parseInt(provider.getProperty(ARTIFACT_EXECUTOR_WORKERS_COUNT));
 
     /**
      * Protection from OOM.
      */
-    private static final int MAX_QUEUE_SIZE =
-        Integer.parseInt(DefaultPropertiesStorage.DEFAULTS.get(ARTIFACT_EXECUTOR_MAX_QUEUE));
+    private final int MAX_QUEUE_SIZE =
+        Integer.parseInt(provider.getProperty(ARTIFACT_EXECUTOR_MAX_QUEUE));
 
     /**
      * Maximum graceful shutdown wait time.
      */
-    private static final int SHUTDOWN_TIMEOUT_SECONDS =
-        Integer.parseInt(DefaultPropertiesStorage.DEFAULTS.get(ARTIFACT_EXECUTOR_SHUTDOWN_TIMEOUT));
+    private final int SHUTDOWN_TIMEOUT_SECONDS =
+        Integer.parseInt(provider.getProperty(ARTIFACT_EXECUTOR_SHUTDOWN_TIMEOUT));
 
     /**
      * Upload task queue.

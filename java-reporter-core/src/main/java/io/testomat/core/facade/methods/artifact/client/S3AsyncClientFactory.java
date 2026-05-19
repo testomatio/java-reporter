@@ -2,7 +2,9 @@ package io.testomat.core.facade.methods.artifact.client;
 
 import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_MAX_CONCURRENCY;
 
-import io.testomat.core.propertyconfig.util.DefaultPropertiesStorage;
+import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
+import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.propertyconfig.interf.PropertyProviderFactory;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3AsyncClientBuilder;
@@ -12,11 +14,15 @@ import software.amazon.awssdk.services.s3.S3AsyncClientBuilder;
  */
 public class S3AsyncClientFactory {
 
+    private final PropertyProviderFactory factory =
+        PropertyProviderFactoryImpl.getPropertyProviderFactory();
+    private final PropertyProvider provider = factory.getPropertyProvider();
+
     /**
      * Maximum number of concurrent HTTP requests.
      */
-    private static final int MAX_CONCURRENCY =
-        Integer.parseInt(DefaultPropertiesStorage.DEFAULTS.get(ARTIFACT_MAX_CONCURRENCY));
+    private final int MAX_CONCURRENCY =
+        Integer.parseInt(provider.getProperty(ARTIFACT_MAX_CONCURRENCY));
 
     /**
      * Creates a configured asynchronous S3 client.
