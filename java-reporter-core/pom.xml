@@ -7,7 +7,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.12.1</version>
+    <version>0.12.2-rc1</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>
