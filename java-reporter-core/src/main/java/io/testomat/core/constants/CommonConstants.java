@@ -1,7 +1,7 @@
 package io.testomat.core.constants;
 
 public class CommonConstants {
-    public static final String REPORTER_VERSION = "0.12.1";
+    public static final String REPORTER_VERSION = "0.13.0";
 
     public static final String TESTS_STRING = "tests";
     public static final String API_KEY_STRING = "api_key";

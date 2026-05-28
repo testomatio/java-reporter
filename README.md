@@ -339,16 +339,19 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 
 > NOTE: Environment variables(env/jvm/testomatio.properties) take precedence over server-provided credentials.
 
-| Setting                       | Description                                      | Default     |
-|-------------------------------|--------------------------------------------------|-------------|
-| `testomatio.artifact.disable` | Completely disable artifact uploading            | `false`     |
-| `testomatio.artifact.private` | Keep artifacts private (no public URLs)          | `false`     |
-| `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps | `false`     |
-| `s3.force-path-style`         | Use path-style URLs for S3-compatible storage    | `false`     |
-| `s3.endpoint`                 | Custom endpoint to be used with force-path-style | `false`     |
-| `s3.bucket`                   | Provides bucket name for configuration           |             |
-| `s3.access-key-id`            | Access key for the bucket                        |             |
-| `s3.region`                   | Bucket region                                    | `us-west-1` |
+| Setting                             | Description                                           | Default     |
+|-------------------------------------|-------------------------------------------------------|-------------|
+| `testomatio.artifact.disable`       | Completely disable artifact uploading                 | `false`     |
+| `testomatio.artifact.private`       | Keep artifacts private (no public URLs)               | `false`     |
+| `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps            | `false`     |
+| `s3.force-path-style`               | Use path-style URLs for S3-compatible storage         | `false`     |
+| `s3.endpoint`                       | Custom endpoint to be used with force-path-style      | `false`     |
+| `s3.bucket`                         | Provides bucket name for configuration                |             |
+| `s3.access-key-id`                  | Access key for the bucket                             |             |
+| `s3.secret.access-key-id`           | Secret access key for the bucket                      |             |
+| `s3.region`                         | Bucket region                                         | `us-west-1` |
+| `s3.assume.role.arn`                | AWS IAM role ARN used for AssumeRole authentication   |             |
+| `s3.assume.role.external.id`        | External ID for AssumeRole authentication             |             |
 
 **Note**: S3 credentials can be configured either in properties file or provided automatically on Testomat.io UI.
 Environment variables take precedence over server-provided credentials.

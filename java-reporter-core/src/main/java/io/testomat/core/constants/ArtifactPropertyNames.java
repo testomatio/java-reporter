@@ -6,6 +6,8 @@ public class ArtifactPropertyNames {
     public static final String SECRET_ACCESS_KEY_PROPERTY_NAME = "s3.secret.access-key-id";
     public static final String REGION_PROPERTY_NAME = "s3.region";
     public static final String ENDPOINT_PROPERTY_NAME = "s3.endpoint";
+    public static final String ASSUME_ROLE_ARN_PROPERTY_NAME = "s3.assume.role.arn";
+    public static final String ASSUME_ROLE_EXTERNAL_ID_PROPERTY_NAME = "s3.assume.role.external.id";
 
     public static final String FORCE_PATH_PROPERTY_NAME = "s3.force-path-style";
 
