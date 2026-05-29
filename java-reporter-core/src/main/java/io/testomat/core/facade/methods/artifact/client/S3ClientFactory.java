@@ -20,8 +20,10 @@ import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
 public class S3ClientFactory {
 
     /**
-     * Creates a configured S3Client based on current credentials and settings. Priority: 1. IAM Role (if roleArn
-     * configured) 2. Static access key / secret key
+     * Creates a configured S3Client based on current credentials and settings.
+     * Priority:
+     * 1. IAM Role (if roleArn configured);
+     * 2. Static access key / secret key.
      *
      * @return configured S3Client instance
      * @throws IllegalArgumentException if credentials are invalid or missing
