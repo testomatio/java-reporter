@@ -7,7 +7,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.12.1</version>
+    <version>0.13.0</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>
@@ -79,6 +79,10 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sts</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
