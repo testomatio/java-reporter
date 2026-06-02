@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-testng</artifactId>
-    <version>0.7.15</version>
+    <version>0.7.16</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter TestNG</name>
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.13.0</version>
+            <version>0.13.1</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
