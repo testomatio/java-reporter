@@ -3,6 +3,8 @@ package io.testomat.core.step;
 import static io.testomat.core.facade.Testomatio.stepArtifact;
 
 import io.testomat.core.annotation.Step;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import org.aspectj.lang.JoinPoint;
@@ -95,10 +97,10 @@ public class StepAspect {
      * and completes the step lifecycle.
      *
      * @param joinPoint intercepted method invocation
-     * @param e thrown exception
+     * @param t thrown exception
      */
-    @AfterThrowing(pointcut = "stepAnnotation()", throwing = "e")
-    public void afterFailure(JoinPoint joinPoint, Throwable e) {
+    @AfterThrowing(pointcut = "stepAnnotation()", throwing = "t")
+    public void afterFailure(JoinPoint joinPoint, Throwable t) {
         Step step = resolveStepAnnotation(joinPoint);
         TestStep testStep = StepLifecycle.current();
 
@@ -113,20 +115,24 @@ public class StepAspect {
 
         testStep.setStatus(StepStatus.failed);
         testStep.setDuration(duration);
-        testStep.setError(e.getMessage());
-        testStep.setLog(Arrays.toString(e.getStackTrace()));
+        testStep.setError(
+            t.getMessage() == null || t.getMessage().isBlank()
+                ? t.getClass().getSimpleName()
+                : t.getClass().getSimpleName() + ": " + t.getMessage()
+        );
+        testStep.setLog(getStackTrace(t));
 
         if (artifacts != null) {
             stepArtifact(artifacts);
         }
 
-        log.debug("Step '{}' failed in {} ms", stepName, duration, e);
+        log.debug("Step '{}' failed in {} ms", stepName, duration, t);
 
         StepLifecycle.finish();
     }
 
     private long calculateDuration(String stepId) {
-        return System.currentTimeMillis() - StepTimer.stop(stepId);
+        return StepTimer.stop(stepId);
     }
 
     private Step resolveStepAnnotation(JoinPoint joinPoint) {
@@ -214,5 +220,11 @@ public class StepAspect {
 
     private String format(Object value) {
         return value == null ? "null" : value.toString();
+    }
+
+    private static String getStackTrace(Throwable t) {
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
     }
 }

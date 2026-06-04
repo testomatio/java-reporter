@@ -81,8 +81,9 @@ public class Testomatio {
             step.setStatus(StepStatus.failed);
             step.setLog(getStackTrace(t));
             step.setError(
-                Optional.ofNullable(t.getMessage())
-                    .orElse(t.getClass().getSimpleName())
+                t.getMessage() == null || t.getMessage().isBlank()
+                    ? t.getClass().getSimpleName()
+                    : t.getClass().getSimpleName() + ": " + t.getMessage()
             );
             throwUnchecked(t);
         } finally {
@@ -90,6 +91,10 @@ public class Testomatio {
             step.setDuration(durationMillis);
             StepLifecycle.finish();
         }
+    }
+
+    static void step(String stepName, String passedLog, Runnable action) {
+
     }
 
     public static void meta(String key, String value) {
