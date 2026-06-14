@@ -7,9 +7,12 @@ import io.testomat.resolver.AttachmentFileResolverImpl;
 import io.testomat.testomat.TestomatClient;
 import io.testomat.testomat.TestomatClientImpl;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.tika.mime.MimeTypes;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -26,7 +29,6 @@ public class AllureAttachmentAspect {
     private static final Logger log = LoggerFactory.getLogger(AllureAttachmentAspect.class);
 
     private static final Map<String, AttachmentMeta> attachments = new ConcurrentHashMap<>();
-    private static final ThreadLocal<Boolean> userAttachment = ThreadLocal.withInitial(() -> false);
     private final AllureClient allure;
     private final TestomatClient testomatio;
     private final AttachmentFileResolver resolver;
@@ -45,26 +47,11 @@ public class AllureAttachmentAspect {
 
     }
 
-    /** Marks user attachments created via Allure API. */
-    @Around("execution(* io.qameta.allure.Allure.addAttachment(..))")
-    public Object interceptUserAttachment(ProceedingJoinPoint joinPoint) throws Throwable {
-        userAttachment.set(true);
-        try {
-            return joinPoint.proceed();
-        } finally {
-            userAttachment.remove();
-        }
-    }
-
     /** Collects attachment metadata during preparation phase. */
     @Around("execution(* io.qameta.allure.AllureLifecycle.prepareAttachment(..))")
     public Object interceptPrepare(ProceedingJoinPoint joinPoint) throws Throwable {
         Object result = joinPoint.proceed();
         String uuid = (String) result;
-
-        if (!userAttachment.get()) {
-            return result;
-        }
 
         AttachmentMeta meta = attachments.computeIfAbsent(uuid, k -> new AttachmentMeta());
 
@@ -129,10 +116,11 @@ public class AllureAttachmentAspect {
 
     /** Sends attachment to Testomat. */
     private void sendToTestomat(AttachmentMeta meta) {
+        String filePath = addExtension(meta.path, meta.type);
         if (meta.level.equals(Nodes.step.name())) {
-            testomatio.stepArtifact(meta.path);
+            testomatio.stepArtifact(filePath);
         } else if (meta.level.equals(Nodes.test.name())) {
-            testomatio.artifact(meta.path);
+            testomatio.artifact(filePath);
         }
 
         log.debug("===== TESTOMAT ATTACHMENT =====");
@@ -145,6 +133,41 @@ public class AllureAttachmentAspect {
         log.debug("stream: {}", meta.stream);
         log.debug("thread: {}", meta.thread);
         log.debug("==============================");
+    }
+
+    private String addExtension(String fileName, String mimeType) {
+        try {
+            String extension = MimeTypes.getDefaultMimeTypes()
+                    .forName(mimeType)
+                    .getExtension();
+
+            if (fileName.endsWith(extension)) {
+                return fileName;
+            }
+
+            Path source = Path.of(fileName);
+            Path target = Path.of(fileName + extension);
+
+            if (!Files.exists(source)) {
+                log.debug("Attachment file not found: {}", source);
+                return fileName;
+            }
+
+            if (Files.exists(target)) {
+                log.debug("Attachment copy already exists: {}", target);
+                return target.toString();
+            }
+
+            Files.copy(source, target);
+
+            log.debug("Created attachment copy with extension: {} -> {}", source, target);
+
+            return target.toString();
+
+        } catch (Exception e) {
+            log.debug("Failed to add extension '{}' to attachment '{}'", mimeType, fileName, e);
+            return fileName;
+        }
     }
 
     static class AttachmentMeta {

@@ -7,7 +7,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.13.1</version>
+    <version>0.14.0</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>
@@ -103,6 +103,12 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>5.8.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.22.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

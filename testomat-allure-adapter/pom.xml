@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>testomat-allure-adapter</artifactId>
-    <version>0.0.7</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Testomat Allure adapter</name>
@@ -43,6 +43,7 @@
         <testng.version>7.12.0</testng.version>
         <assertj.core.version>3.27.7</assertj.core.version>
         <slf4j.api.version>2.0.17</slf4j.api.version>
+        <tika.core.version>3.3.1</tika.core.version>
 
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
@@ -66,7 +67,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.13.1</version>
+            <version>0.14.0</version>
         </dependency>
         <dependency>
             <groupId>io.qameta.allure</groupId>
@@ -125,6 +126,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>${tika.core.version}</version>
         </dependency>
     </dependencies>
 
