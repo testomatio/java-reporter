@@ -29,9 +29,52 @@ Run tests with JUnit, TestNG, Cucumber, Karate and automatically publish results
 
 ## Quick Start
 
-### 1. Add the Reporter Dependency
+### 1. Install Reporter
 
 Add the Testomat reporter dependency that matches your test framework. Detailed setup instructions for JUnit, TestNG, Cucumber, and Karate are provided below.
+
+### JUnit 5
+
+```xml
+<dependency>
+    <groupId>io.testomat</groupId>
+    <artifactId>java-reporter-junit</artifactId>
+    <version><LATEST_STABLE_VERSION></version>
+</dependency>
+```
+
+### TestNG
+
+```xml
+<dependency>
+    <groupId>io.testomat</groupId>
+    <artifactId>java-reporter-testng</artifactId>
+    <version><LATEST_STABLE_VERSION></version>
+</dependency>
+```
+
+### Cucumber
+
+```xml
+<dependency>
+    <groupId>io.testomat</groupId>
+    <artifactId>java-reporter-cucumber</artifactId>
+    <version><LATEST_STABLE_VERSION></version>
+</dependency>
+```
+
+### Karate
+
+```xml
+<dependency>
+    <groupId>io.testomat</groupId>
+    <artifactId>java-reporter-karate</artifactId>
+    <version><LATEST_STABLE_VERSION></version>
+</dependency>
+```
+Choose only one dependency corresponding to your test framework.
+
+After adding the dependency continue with the framework-specific setup instructions below.
 
 ### 2. Configure API Key
 
@@ -108,7 +151,7 @@ Register the listener:
 Register the hook factory:
 
 ```java
-.hookFactory(new KarateHookFactory())
+.hookFactory(KarateHookFactory.create())
 ```
 
 ---
