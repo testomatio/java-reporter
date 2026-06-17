@@ -16,7 +16,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Main public API facade for Testomat.io integration.
@@ -44,10 +43,6 @@ public class Testomatio {
             return;
         }
         TestStep testStep = StepLifecycle.current();
-
-        if (directories == null || directories.length == 0){
-            return;
-        }
 
         if (testStep == null) {
             testStep = StepLifecycle.lastFinished();
@@ -81,8 +76,9 @@ public class Testomatio {
             step.setStatus(StepStatus.failed);
             step.setLog(getStackTrace(t));
             step.setError(
-                Optional.ofNullable(t.getMessage())
-                    .orElse(t.getClass().getSimpleName())
+                t.getMessage() == null || t.getMessage().isBlank()
+                    ? t.getClass().getSimpleName()
+                    : t.getClass().getSimpleName() + ": " + t.getMessage()
             );
             throwUnchecked(t);
         } finally {

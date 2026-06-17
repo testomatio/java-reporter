@@ -2,6 +2,7 @@
 <aspectj>
     <aspects>
         <aspect name="io.testomat.core.step.StepAspect"/>
+        <aspect name="io.testomat.core.facade.methods.artifact.ArtifactAspect"/>
     </aspects>
 
     <weaver>
