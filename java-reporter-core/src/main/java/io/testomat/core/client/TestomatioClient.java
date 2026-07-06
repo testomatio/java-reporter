@@ -1,5 +1,6 @@
 package io.testomat.core.client;
 
+import static io.testomat.core.constants.ArtifactPropertyNames.JSONL_PATH_PROPERTY_NAME;
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
 import io.testomat.core.InfoDisplay;
@@ -17,8 +18,16 @@ import io.testomat.core.exception.ArtifactManagementException;
 import io.testomat.core.exception.FinishReportFailedException;
 import io.testomat.core.exception.ReportingFailedException;
 import io.testomat.core.exception.RunCreationFailedException;
+import io.testomat.core.facade.methods.artifact.model.AddTestsBatchRequest;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
+import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.runmanager.GlobalRunManager;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -40,6 +49,7 @@ public class TestomatioClient implements ApiInterface {
     private final CredentialsManager credentialsManager = new CredentialsManager();
     private final LinkUploadBodyBuilder linkUploadBodyBuilder = new LinkUploadBodyBuilder();
     private final CredentialsValidationService credentialsValidationService = new CredentialsValidationService();
+    private final PropertyProvider provider;
 
     /**
      * Creates API client with injectable dependencies.
@@ -55,6 +65,8 @@ public class TestomatioClient implements ApiInterface {
         this.apiKey = apiKey;
         this.client = client;
         this.requestBodyBuilder = requestBodyBuilder;
+        this.provider =
+            PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
     }
 
     @Override
@@ -129,6 +141,35 @@ public class TestomatioClient implements ApiInterface {
             log.debug("Sent requestBody: {}", requestBody);
         } catch (Exception e) {
             log.error("Failed while secondary batch sending with artifacts");
+        }
+    }
+
+    @Override
+    public void writeArtifactsToJsonl(String uid) {
+        AddTestsBatchRequest request =
+            GlobalRunManager.getInstance().buildBatchRequest();
+        if (request == null || request.getTests() == null || request.getTests().isEmpty()) {
+            return;
+        }
+        String filePath = provider.getProperty(JSONL_PATH_PROPERTY_NAME);
+        Path path = Path.of(filePath);
+        try {
+            Files.createDirectories(path.getParent());
+            try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(path))) {
+                writer.println(toJson(request));
+                log.debug("Wrote {} entries to {}", request.getTests().size(), path);
+            }
+        } catch (IOException e) {
+            log.error("Failed to write JSON file {}", path, e);
+        }
+    }
+
+    private String toJson(Object value) {
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(value);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            log.error("Failed to serialize JSON", e);
+            return "{}";
         }
     }
 

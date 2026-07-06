@@ -41,6 +41,8 @@ public interface ApiInterface {
 
     void sendTestWithArtifacts(String uid);
 
+    void writeArtifactsToJsonl(String uid);
+
     /**
      * Finalizes the test run and marks it as completed.
      *

@@ -5,6 +5,8 @@ import static org.mockito.Mockito.when;
 
 import com.intuit.karate.core.ScenarioRuntime;
 import io.testomat.core.facade.methods.artifact.client.AwsService;
+import io.testomat.core.facade.methods.artifact.client.JsonlService;
+import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.karate.extractor.TestDataExtractor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,15 +20,19 @@ class FacadeFunctionsHandlerTest {
     @Mock
     AwsService awsService;
     @Mock
+    JsonlService jsonlService;
+    @Mock
     TestDataExtractor dataExtractor;
     @Mock
     ScenarioRuntime sr;
+    @Mock
+    PropertyProvider provider;
 
     FacadeFunctionsHandler handler;
 
     @BeforeEach
     void init() {
-        handler = new FacadeFunctionsHandler(awsService, dataExtractor);
+        handler = new FacadeFunctionsHandler(provider, awsService, jsonlService, dataExtractor);
     }
 
     @Test

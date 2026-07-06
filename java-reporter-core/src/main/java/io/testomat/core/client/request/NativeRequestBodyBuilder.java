@@ -15,6 +15,7 @@ import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
 import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
+import io.testomat.core.facade.methods.artifact.model.Step;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
@@ -22,8 +23,11 @@ import io.testomat.core.model.Link;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.core.step.StepData;
 import io.testomat.core.step.TestStep;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,7 +180,15 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             result.getSteps().forEach(this::processStepArtifacts);
             List<Map<String, Object>> stepsMap = convertStepsToMap(result.getSteps());
             body.put("steps", stepsMap);
-            log.debug("Adding {} steps to request body for test: {}", result.getSteps().size(), result.getTitle());
+
+            GlobalRunManager.getInstance().updateTestSteps(
+                result.getRid(),
+                convertToJsonlSteps(result.getSteps())
+            );
+
+            log.debug("Adding {} steps to request body for test: {}",
+                result.getSteps().size(),
+                result.getTitle());
         }
 
         if (createParam) {
@@ -394,16 +407,54 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
      * @param step step to process
      */
     private void processStepArtifacts(TestStep step) {
-        List<String> links =
-            TempArtifactDirectoriesStorage.STEP_DIRECTORIES
-                .remove(step.getId());
+        StepData stepData = null;
 
-        if (links != null && !links.isEmpty()) {
-            step.setArtifacts(links.toArray(new String[0]));
+        for (Map<UUID, StepData> steps : TempArtifactDirectoriesStorage.STEP_DATA.values()) {
+            stepData = steps.get(step.getId());
+            if (stepData != null) {
+                break;
+            }
+        }
+
+        if (stepData != null && !stepData.getArtifacts().isEmpty()) {
+            step.setArtifacts(stepData.getArtifacts().toArray(new String[0]));
         }
 
         if (step.getSubsteps() != null && !step.getSubsteps().isEmpty()) {
             step.getSubsteps().forEach(this::processStepArtifacts);
         }
+    }
+
+    private List<Step> convertToJsonlSteps(List<TestStep> steps) {
+        return steps.stream()
+            .map(this::convertToJsonlStep)
+            .collect(Collectors.toList());
+    }
+
+    private Step convertToJsonlStep(TestStep step) {
+        StepData stepData = null;
+
+        for (Map<UUID, StepData> steps : TempArtifactDirectoriesStorage.STEP_DATA.values()) {
+            stepData = steps.remove(step.getId());
+            if (stepData != null) {
+                break;
+            }
+        }
+
+        List<Step> substeps = null;
+        if (step.getSubsteps() != null && !step.getSubsteps().isEmpty()) {
+            substeps = convertToJsonlSteps(step.getSubsteps());
+        }
+
+        return new Step(
+            step.getStepTitle(),
+            step.getStatus(),
+            step.getLog(),
+            step.getError(),
+            step.getDuration(),
+            step.getCategory(),
+            stepData != null ? stepData.getDirectories() : null,
+            substeps
+        );
     }
 }
