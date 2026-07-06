@@ -382,19 +382,21 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 
 > NOTE: Environment variables(env/jvm/testomatio.properties) take precedence over server provided credentials.
 
-| Setting                             | Description                                           | Default     |
-|-------------------------------------|-------------------------------------------------------|-------------|
-| `testomatio.artifact.disable`       | Completely disable artifact uploading                 | `false`     |
-| `testomatio.artifact.private`       | Keep artifacts private (no public URLs)               | `false`     |
-| `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps            | `false`     |
-| `s3.force-path-style`               | Use path-style URLs for S3-compatible storage         | `false`     |
-| `s3.endpoint`                       | Custom endpoint to be used with force-path-style      | `false`     |
-| `s3.bucket`                         | Provides bucket name for configuration                |             |
-| `s3.access-key-id`                  | Access key for the bucket                             |             |
-| `s3.secret.access-key-id`           | Secret access key for the bucket                      |             |
-| `s3.region`                         | Bucket region                                         | `us-west-1` |
-| `s3.assume.role.arn`                | AWS IAM role ARN used for AssumeRole authentication   |             |
-| `s3.assume.role.external.id`        | External ID for AssumeRole authentication             |             |
+| Setting                             | Description                                         | Default                                   |
+|-------------------------------------|-----------------------------------------------------|-------------------------------------------|
+| `testomatio.artifact.disable`       | Completely disable artifact uploading               | `false`                                   |
+| `testomatio.artifact.private`       | Keep artifacts private (no public URLs)             | `false`                                   |
+| `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps          | `false`                                   |
+| `s3.force-path-style`               | Use path-style URLs for S3-compatible storage       | `false`                                   |
+| `s3.endpoint`                       | Custom endpoint to be used with force-path-style    | `false`                                   |
+| `s3.bucket`                         | Provides bucket name for configuration              |                                           |
+| `s3.access-key-id`                  | Access key for the bucket                           |                                           |
+| `s3.secret.access-key-id`           | Secret access key for the bucket                    |                                           |
+| `s3.region`                         | Bucket region                                       | `us-west-1`                               |
+| `s3.assume.role.arn`                | AWS IAM role ARN used for AssumeRole authentication |                                           |
+| `s3.assume.role.external.id`        | External ID for AssumeRole authentication           |                                           |
+| `testomatio.artifact.json.path`     | Custom path to the JSONL export file                | `target/testomat/testomat-artifacts.json` |
+| `testomatio.artifact.json.disable`  | Disable JSONL artifact export                       | `false`                                   |
 
 **Note**: S3 credentials can be configured either in properties file or provided automatically on Testomat.io UI.
 Environment variables take precedence over server-provided credentials.
@@ -503,6 +505,18 @@ public Path attachTestomatScreenshot(Path screenshot) {
 As a result you will see something like this in the UI after the run is completed:
 
 ![artifact example](./img/artifactExample.png)
+
+---
+
+## Artifact Export
+
+In addition to uploading artifacts directly to Testomat.io the reporter automatically exports artifact metadata to a JSONL file.
+
+The generated file can later be uploaded using the Testomat CLI:
+
+```bash
+npx @testomatio/reporter upload-artifacts <json_path>
+```
 
 ---
 
@@ -834,10 +848,36 @@ And the dashboard something like this:
 
 ## Advanced Customization
 
-There are void hooks in the listeners that allow you to customize reporting much more.
-These hooks are located in the listeners' tests lifecycle methods according to their names.
-External API calls, logging and any custom logic can be added to the hooks.
-The hooks are executed **after** the lifecycle method logic finishes and do not replace it.
+The TestomatHook interface allows you to customize reporting by implementing hooks for the listeners' lifecycle methods.
+Each hook corresponds to a specific test lifecycle event. Override only the methods you need—all hook methods have default empty implementations.
+External API calls, logging, artifact uploads and any other custom logic can be added to the hooks.
+Hooks with the *BeforeExecution suffix are executed before the listener's default logic, while hooks with the *AfterExecution suffix are executed after it. They extend the default behavior and do not replace it.
+
+Example:
+
+```java
+import io.testomat.testng.listener.TestomatHook;
+import org.testng.ITestResult;
+
+public class CustomHook implements TestomatHook {
+
+    @Override
+    public void onTestFailureHookBeforeExecution(ITestResult result) {
+        // Your custom logic
+    }
+}
+```
+
+Register your implementation via Java ServiceLoader by creating the following file in the resources directory:
+```
+META-INF/services/io.testomat.junit.listener.TestomatHook
+```
+
+with the fully qualified name of your implementation:
+
+   ```properties
+    com.yourcompany.yourproject.CustomListener
+   ```
 
 ### JUnit, TestNG
 
