@@ -1,7 +1,9 @@
 package io.testomat.core.propertyconfig.util;
 
+import static io.testomat.core.constants.ArtifactPropertyNames.JSONL_PATH_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.HOST_URL_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
+import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_JSONL_PATH;
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_RUN_TITLE;
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_URL;
 
@@ -28,6 +30,8 @@ public class DefaultPropertiesStorage {
     static {
         DEFAULTS = Map.of(
                 HOST_URL_PROPERTY_NAME, DEFAULT_URL,
-                RUN_TITLE_PROPERTY_NAME, DEFAULT_RUN_TITLE);
+                RUN_TITLE_PROPERTY_NAME, DEFAULT_RUN_TITLE,
+                JSONL_PATH_PROPERTY_NAME, DEFAULT_JSONL_PATH
+            );
     }
 }

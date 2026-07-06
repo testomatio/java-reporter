@@ -1,13 +1,9 @@
 package io.testomat.core.facade;
 
-import static io.testomat.core.constants.ArtifactPropertyNames.STEP_ARTIFACT_ENABLED_PROPERTY_NAME;
-
 import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
-import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
-import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.StepStatus;
 import io.testomat.core.step.StepTimer;
@@ -22,8 +18,6 @@ import java.util.Map;
  * Provides simple static methods for test artifact management and reporting.
  */
 public class Testomatio {
-    private static final PropertyProvider provider =
-        PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
     /**
      * Registers artifact files or directories to be uploaded for the current test.
      *
@@ -39,9 +33,6 @@ public class Testomatio {
      * @param directories artifact directories to attach (ignored if null or empty)
      */
     public static void stepArtifact(String... directories) {
-        if (!provider.getBooleanProperty(STEP_ARTIFACT_ENABLED_PROPERTY_NAME)) {
-            return;
-        }
         TestStep testStep = StepLifecycle.current();
 
         if (testStep == null) {

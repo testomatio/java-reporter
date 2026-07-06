@@ -18,10 +18,13 @@ import static org.mockito.Mockito.when;
 import io.testomat.core.batch.BatchResultManager;
 import io.testomat.core.client.ApiInterface;
 import io.testomat.core.client.ClientFactory;
+import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.step.StepData;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -426,5 +429,51 @@ class GlobalRunManagerTest {
             assertFalse(globalRunManager.isActive());
             assertNull(globalRunManager.getRunUid());
         }
+    }
+
+    @Test
+    void shouldIsolateStepDataBetweenThreads() throws InterruptedException {
+        UUID stepId = UUID.randomUUID();
+
+        Thread t1 = new Thread(() ->
+            TempArtifactDirectoriesStorage.stepStore(stepId, "thread1"));
+
+        Thread t2 = new Thread(() ->
+            TempArtifactDirectoriesStorage.stepStore(stepId, "thread2"));
+
+        t1.start();
+        t2.start();
+
+        t1.join();
+        t2.join();
+
+        long count = TempArtifactDirectoriesStorage.STEP_DATA.values().stream()
+            .filter(map -> map.containsKey(stepId))
+            .count();
+
+        assertEquals(2, count);
+    }
+
+    @Test
+    @DisplayName("Should reuse StepData for same step")
+    void shouldReuseStepData() {
+        UUID stepId = UUID.randomUUID();
+
+        TempArtifactDirectoriesStorage.stepStore(stepId, "dir1");
+
+        StepData first =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
+
+        TempArtifactDirectoriesStorage.stepStore(stepId, "dir2");
+
+        StepData second =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
+
+        assertSame(first, second);
+        assertEquals(2, first.getDirectories().size());
     }
 }

@@ -1,8 +1,11 @@
 package io.testomat.junit.listener;
 
 import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_PROPERTY_NAME;
+import static io.testomat.core.constants.ArtifactPropertyNames.JSONL_EXPORT_PROPERTY_NAME;
 
+import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.facade.methods.artifact.client.AwsService;
+import io.testomat.core.facade.methods.artifact.client.JsonlService;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
@@ -16,20 +19,27 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public class FacadeFunctionsHandler {
     private final PropertyProvider provider;
     private final AwsService awsService;
+    private final JsonlService jsonlService;
     private boolean artifactDisabled = false;
+    private boolean jsonlDisabled = false;
 
     public FacadeFunctionsHandler() {
         this.awsService = new AwsService();
+        this.jsonlService = new JsonlService();
         this.provider =
                 PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
         this.artifactDisabled = defineArtifactsDisabled();
+        this.jsonlDisabled = defineJsonlExportEnabled();
     }
 
     public FacadeFunctionsHandler(boolean artifactDisabled,
                                   PropertyProvider provider,
-                                  AwsService awsService) {
+                                  AwsService awsService,
+                                  JsonlService jsonlService) {
         this.awsService = awsService;
+        this.jsonlService = jsonlService;
         this.artifactDisabled = artifactDisabled;
+        this.jsonlDisabled = defineJsonlExportEnabled();
         this.provider = provider;
     }
 
@@ -37,6 +47,7 @@ public class FacadeFunctionsHandler {
         handleLogsAfterEach(context);
         handleMetaAfterEach(context);
         handleLabels(context);
+        handleJsonlAfterEach(context);
         handleArtifactsAfterEach(context);
     }
 
@@ -65,6 +76,14 @@ public class FacadeFunctionsHandler {
             awsService.uploadAllArtifactsForTest(context.getDisplayName(), context.getUniqueId(),
                     JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
         }
+        TempArtifactDirectoriesStorage.DIRECTORIES.remove();
+    }
+
+    private void handleJsonlAfterEach(ExtensionContext context) {
+        if (!jsonlDisabled) {
+            jsonlService.saveTestArtifacts(context.getDisplayName(), context.getUniqueId(),
+                    JunitMetaDataExtractor.extractTestId(context.getTestMethod().get()));
+        }
     }
 
     private void handleLabels(ExtensionContext context) {
@@ -88,5 +107,15 @@ public class FacadeFunctionsHandler {
             return false;
         }
         return result;
+    }
+
+    private boolean defineJsonlExportEnabled() {
+        try {
+            return Boolean.parseBoolean(
+                provider.getProperty(JSONL_EXPORT_PROPERTY_NAME)
+            );
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

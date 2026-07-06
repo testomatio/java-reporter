@@ -49,7 +49,7 @@ public class S3ClientFactory {
      * Builds AWS credentials provider.
      */
     private AwsCredentialsProvider buildCredentialsProvider(S3Credentials s3, Region region) {
-        boolean useIamRole = s3.getRoleArn() != null && !s3.getRoleArn().isBlank();
+        boolean useIamRole = s3.isIam() && s3.getRoleArn() != null && !s3.getRoleArn().isBlank();
 
         if (useIamRole) {
             return buildIamRoleProvider(s3, region);

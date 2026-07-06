@@ -1,5 +1,7 @@
 package io.testomat.core.facade.methods.artifact.client;
 
+import static io.testomat.core.constants.ArtifactPropertyNames.STEP_ARTIFACT_ENABLED_PROPERTY_NAME;
+
 import io.testomat.core.facade.methods.artifact.ArtifactLinkData;
 import io.testomat.core.facade.methods.artifact.ArtifactLinkDataStorage;
 import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
@@ -8,6 +10,9 @@ import io.testomat.core.facade.methods.artifact.credential.S3Credentials;
 import io.testomat.core.facade.methods.artifact.util.ArtifactKeyGenerator;
 import io.testomat.core.facade.methods.artifact.util.ArtifactUrlGenerator;
 import io.testomat.core.exception.ArtifactManagementException;
+import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
+import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.step.StepData;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +35,8 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
  */
 public class AwsService {
     private static final Logger log = LoggerFactory.getLogger(AwsService.class);
+    private static final PropertyProvider provider =
+        PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
     private static final Map<String, Boolean> bucketAclSupport = new ConcurrentHashMap<>();
 
     private static final String ACL_PRIVATE = "private";
@@ -67,7 +74,7 @@ public class AwsService {
     public void uploadAllArtifactsForTest(String testName, String rid, String testId) {
 
         List<String> artifactDirectories = TempArtifactDirectoriesStorage.DIRECTORIES.get();
-        Map<UUID, List<String>> stepArtifactDirectories = TempArtifactDirectoriesStorage.STEP_DIRECTORIES;
+        Map<UUID, StepData> stepArtifactDirectories = TempArtifactDirectoriesStorage.STEP_DATA.get(Thread.currentThread().getId());
 
         if (artifactDirectories.isEmpty() && stepArtifactDirectories.isEmpty()) {
             log.debug("Artifact list is empty for test: {}", testName);
@@ -76,7 +83,8 @@ public class AwsService {
 
         S3Credentials credentials = CredentialsManager.getCredentials();
 
-        if (!TempArtifactDirectoriesStorage.STEP_DIRECTORIES.isEmpty()) {
+        if (!stepArtifactDirectories.isEmpty() &&
+            provider.getBooleanProperty(STEP_ARTIFACT_ENABLED_PROPERTY_NAME)) {
             List<String> directories = prepareStepArtifactsForUpload(testName, rid, credentials);
             processArtifacts(directories, testName, rid, credentials);
         }
@@ -84,9 +92,6 @@ public class AwsService {
         if (!artifactDirectories.isEmpty()) {
             List<String> uploadedArtifactsLinks = processArtifacts(artifactDirectories, testName, rid, credentials);
             storeArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks);
-
-            // Clear artifact directories after processing
-            TempArtifactDirectoriesStorage.DIRECTORIES.remove();
         }
     }
 
@@ -113,14 +118,19 @@ public class AwsService {
     private List<String> prepareStepArtifactsForUpload(String testName, String rid, S3Credentials credentials) {
         List<String> artifactDirectories = new ArrayList<>();
 
-        for (List<String> list : TempArtifactDirectoriesStorage.STEP_DIRECTORIES.values()) {
-            for (int i = 0; i < list.size(); i++) {
-                String dir = list.get(i);
+        for (StepData stepData : TempArtifactDirectoriesStorage.STEP_DATA.get(Thread.currentThread().getId()).values()) {
+            stepData.getArtifacts().clear();
 
+            for (String dir : stepData.getDirectories()) {
                 if (!dir.startsWith("http")) {
                     artifactDirectories.add(dir);
+
                     String key = keyGenerator.generateKey(dir, rid, testName);
-                    list.set(i, urlGenerator.generateUrl(credentials.getBucket(), key));
+                    stepData.getArtifacts().add(
+                        urlGenerator.generateUrl(credentials.getBucket(), key)
+                    );
+                } else {
+                    stepData.getArtifacts().add(dir);
                 }
             }
         }

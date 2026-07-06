@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
+import io.testomat.core.step.StepData;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,14 +25,14 @@ class TempArtifactDirectoriesStorageTest {
     void setUp() {
         // Clean storage before each test
         TempArtifactDirectoriesStorage.DIRECTORIES.get().clear();
-        TempArtifactDirectoriesStorage.STEP_DIRECTORIES.clear();
+        TempArtifactDirectoriesStorage.STEP_DATA.clear();
     }
 
     @AfterEach
     void tearDown() {
         // Clean storage after each test
         TempArtifactDirectoriesStorage.DIRECTORIES.remove();
-        TempArtifactDirectoriesStorage.STEP_DIRECTORIES.clear();
+        TempArtifactDirectoriesStorage.STEP_DATA.clear();
     }
 
     @Test
@@ -305,11 +307,14 @@ class TempArtifactDirectoriesStorageTest {
 
         TempArtifactDirectoriesStorage.stepStore(stepId,"dir1");
 
-        List<String> dirs = TempArtifactDirectoriesStorage.STEP_DIRECTORIES.get(stepId);
+        StepData stepData =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
 
-        assertNotNull(dirs);
-        assertEquals(1,dirs.size());
-        assertEquals("dir1",dirs.get(0));
+        assertNotNull(stepData);
+        assertEquals(1, stepData.getDirectories().size());
+        assertEquals("dir1", stepData.getDirectories().get(0));
     }
 
     @Test
@@ -320,11 +325,14 @@ class TempArtifactDirectoriesStorageTest {
         TempArtifactDirectoriesStorage.stepStore(stepId,"dir1");
         TempArtifactDirectoriesStorage.stepStore(stepId,"dir2");
 
-        List<String> dirs = TempArtifactDirectoriesStorage.STEP_DIRECTORIES.get(stepId);
+        StepData stepData =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
 
-        assertEquals(2,dirs.size());
-        assertTrue(dirs.contains("dir1"));
-        assertTrue(dirs.contains("dir2"));
+        assertEquals(2, stepData.getDirectories().size());
+        assertTrue(stepData.getDirectories().contains("dir1"));
+        assertTrue(stepData.getDirectories().contains("dir2"));
     }
 
     @Test
@@ -336,17 +344,16 @@ class TempArtifactDirectoriesStorageTest {
         TempArtifactDirectoriesStorage.stepStore(step1,"dir1");
         TempArtifactDirectoriesStorage.stepStore(step2,"dir2");
 
-        assertEquals(1,
-            TempArtifactDirectoriesStorage
-                .STEP_DIRECTORIES.get(step1).size());
+        Map<UUID, StepData> stepData =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId());
 
-        assertEquals(1,
-            TempArtifactDirectoriesStorage
-                .STEP_DIRECTORIES.get(step2).size());
+        assertEquals(1, stepData.get(step1).getDirectories().size());
+        assertEquals(1, stepData.get(step2).getDirectories().size());
 
         assertFalse(
-            TempArtifactDirectoriesStorage
-                .STEP_DIRECTORIES.get(step1)
+            stepData.get(step1)
+                .getDirectories()
                 .contains("dir2")
         );
     }
@@ -374,9 +381,16 @@ class TempArtifactDirectoriesStorageTest {
         t1.join();
         t2.join();
 
-        List<String> dirs= TempArtifactDirectoriesStorage.STEP_DIRECTORIES.get(stepId);
+        assertEquals(2, TempArtifactDirectoriesStorage.STEP_DATA.size());
 
-        assertEquals(200,dirs.size());
+        for (Map<UUID, StepData> stepData :
+            TempArtifactDirectoriesStorage.STEP_DATA.values()) {
+
+            assertEquals(
+                100,
+                stepData.get(stepId).getDirectories().size()
+            );
+        }
     }
 
     @Test
@@ -387,18 +401,19 @@ class TempArtifactDirectoriesStorageTest {
         TempArtifactDirectoriesStorage
             .stepStore(stepId,"dir1");
 
-        List<String> first=
-            TempArtifactDirectoriesStorage
-                .STEP_DIRECTORIES.get(stepId);
+        StepData first =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
 
-        TempArtifactDirectoriesStorage
-            .stepStore(stepId,"dir2");
+        TempArtifactDirectoriesStorage.stepStore(stepId, "dir2");
 
-        List<String> second=
-            TempArtifactDirectoriesStorage
-                .STEP_DIRECTORIES.get(stepId);
+        StepData second =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
 
-        assertSame(first,second);
+        assertSame(first, second);
     }
 
     @Test
@@ -408,26 +423,29 @@ class TempArtifactDirectoriesStorageTest {
         TempArtifactDirectoriesStorage
             .stepStore(stepId,null);
 
-        List<String> dirs=
-            TempArtifactDirectoriesStorage
-                .STEP_DIRECTORIES.get(stepId);
+        StepData stepData =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
 
-        assertEquals(1,dirs.size());
-        assertNull(dirs.get(0));
+        assertEquals(1, stepData.getDirectories().size());
+        assertNull(stepData.getDirectories().get(0));
     }
 
     @Test
-    void stepDirectoriesShouldAllowRemoval(){
-        UUID stepId=UUID.randomUUID();
+    void stepDataShouldAllowRemoval() {
+        UUID stepId = UUID.randomUUID();
 
-        TempArtifactDirectoriesStorage
-            .stepStore(stepId,"dir");
+        TempArtifactDirectoriesStorage.stepStore(stepId, "dir");
 
-        TempArtifactDirectoriesStorage
-            .STEP_DIRECTORIES.remove(stepId);
+        TempArtifactDirectoriesStorage.STEP_DATA
+            .get(Thread.currentThread().getId())
+            .remove(stepId);
 
         assertNull(
-            TempArtifactDirectoriesStorage
-                .STEP_DIRECTORIES.get(stepId));
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId)
+        );
     }
 }
