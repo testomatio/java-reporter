@@ -32,6 +32,9 @@ public class ArtifactManager {
     }
 
     private void store(String[] directories, Consumer<String> storage, String logMessage) {
+        if (directories == null) {
+            return;
+        }
 
         for (String dir : directories) {
             if (!isValidFilePath(dir)) {

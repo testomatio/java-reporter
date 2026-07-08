@@ -1,5 +1,6 @@
 package io.testomat.core.client.request;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -15,13 +16,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.constants.PropertyNameConstants;
+import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.model.Link;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.propertyconfig.interf.PropertyProviderFactory;
+import io.testomat.core.step.StepData;
+import io.testomat.core.step.TestStep;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,6 +61,9 @@ class NativeRequestBodyBuilderTest {
 
             requestBodyBuilder = new NativeRequestBodyBuilder();
         }
+
+        TempArtifactDirectoriesStorage.STEP_DATA.clear();
+        TempArtifactDirectoriesStorage.DIRECTORIES.remove();
     }
 
     @Test
@@ -382,5 +392,91 @@ class NativeRequestBodyBuilderTest {
         String finishResult = requestBodyBuilder.buildFinishRunBody(30.0f);
 
         assertDoesNotThrow(() -> objectMapper.readTree(finishResult));
+    }
+
+    @Test
+    @DisplayName("Should attach step artifacts from storage")
+    void shouldAttachStepArtifactsFromStorage() throws Exception {
+        UUID stepId = UUID.randomUUID();
+
+        StepData stepData = new StepData();
+        stepData.getArtifacts().add("https://artifact");
+
+        TempArtifactDirectoriesStorage.STEP_DATA
+            .computeIfAbsent(Thread.currentThread().getId(), k -> new ConcurrentHashMap<>())
+            .put(stepId, stepData);
+
+        TestStep step = new TestStep();
+        step.setId(stepId);
+
+        TestResult result = new TestResult.Builder()
+            .withTitle("Test")
+            .withSuiteTitle("Suite")
+            .withFile("Test.java")
+            .withStatus("passed")
+            .withSteps(Collections.singletonList(step))
+            .build();
+
+        requestBodyBuilder.buildSingleTestReportBody(result);
+
+        assertArrayEquals(
+            new String[]{"https://artifact"},
+            step.getArtifacts()
+        );
+    }
+
+    @Test
+    @DisplayName("Should convert step directories to jsonl")
+    void shouldConvertDirectoriesToJsonl() throws Exception {
+        UUID stepId = UUID.randomUUID();
+
+        StepData stepData = new StepData();
+        stepData.getDirectories().add("dir1");
+
+        TempArtifactDirectoriesStorage.STEP_DATA
+            .computeIfAbsent(Thread.currentThread().getId(), k -> new ConcurrentHashMap<>())
+            .put(stepId, stepData);
+
+        TestStep step = new TestStep();
+        step.setId(stepId);
+        step.setStepTitle("Step");
+
+        TestResult result = new TestResult.Builder()
+            .withTitle("Test")
+            .withSuiteTitle("Suite")
+            .withFile("Test.java")
+            .withStatus("passed")
+            .withRid("rid")
+            .withSteps(Collections.singletonList(step))
+            .build();
+
+        requestBodyBuilder.buildSingleTestReportBody(result);
+
+        assertTrue(
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .isEmpty()
+        );
+    }
+
+    @Test
+    @DisplayName("Should handle missing step data")
+    void shouldHandleMissingStepData() {
+        UUID stepId = UUID.randomUUID();
+
+        TestStep step = new TestStep();
+        step.setId(stepId);
+
+        TestResult result = new TestResult.Builder()
+            .withTitle("Test")
+            .withSuiteTitle("Suite")
+            .withFile("Test.java")
+            .withStatus("passed")
+            .withSteps(Collections.singletonList(step))
+            .build();
+
+        assertDoesNotThrow(() ->
+            requestBodyBuilder.buildSingleTestReportBody(result)
+        );
     }
 }

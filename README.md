@@ -1,151 +1,196 @@
 # Testomat.io Java Reporter
 
----
+Run tests with JUnit, TestNG, Cucumber, Karate and automatically publish results, steps, artifacts and metadata to Testomat.
 
-## What is this?
-
-This is the **official Java reporter** for [Testomat.io](https://testomat.io/) - a powerful test management platform.  
-It automatically sends your test results to the platform, giving you comprehensive reports, analytics,  
-and team collaboration features.
-
-### 🔄 Current Status & Roadmap
-
-> 🚧 **Actively developed** - New features added regularly!
 ---
 
 ## Features
 
-| Feature                            | Description                                        | JUnit | TestNG | Cucumber | Karate |
-|------------------------------------|----------------------------------------------------|:-----:|:------:|:--------:|:------:|
-| **Complete framework integration** | Full framework support and compatibility           |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Autostart on tests run**         | Automatic integration with test execution          |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Shared run**                     | Collaborative test execution sharing               |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Test runs grouping**             | Organize and categorize test executions            |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Public sharable link**           | Generate public URLs for test run results          |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Test code export**               | Export test code from codebase to platform         |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Advanced error reporting**       | Detailed test failure/skip descriptions            |   ✅   |   ✅    |    ✅  |   ✅    |
-| **TestId import**                  | Import test IDs from testomat.io into the codebase |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Test filter by ID**              | Run tests filtered by IDs                          |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Parametrized tests support**     | Enhanced support for parameterized testing         |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Test artifacts support**         | Screenshots, logs, and file attachments            |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Step-by-step reporting**         | Detailed test step execution tracking              |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Custom hooks**                   | Allows user's own reporting enhancements           |   ✅   |   ✅    |    ✅  |   ✅    |
-| **Other frameworks support**       | Gauge, etc. (Priority may change)                  |   ⏳   |   ⏳    |    ⏳  |   ⏳    |
-
-## 🖥️ Supported test frameworks versions
-
-| What you need | Version | We tested with | Supported java version |
-|---------------|:-------:|:--------------:|:----------------------:|
-| **JUnit**     |   5.x   |     5.9.2      |        Java 11+        |
-| **Cucumber**  |   7.x   |     7.14.0     |        Java 11+        |
-| **Karate**    |   1.x   |     1.5.0      |        Java 17+        |
+- Automatic test result reporting
+- TestId synchronization with Testomat.io
+- Test filtering by IDs
+- Step-by-step execution reporting
+- Artifact uploads (screenshots, logs, videos)
+- Shared and public test runs
+- Allure integration (via Testomat Allure Adapter)
 
 ---
 
-## Common setup for all frameworks:
+## Supported Frameworks
 
-1. **Add the latest version** of the dependency to your POM.xml:  
-   [TestNG](https://central.sonatype.com/artifact/io.testomat/java-reporter-testng)  
-   [JUnit](https://central.sonatype.com/artifact/io.testomat/java-reporter-junit)  
-   [Cucumber](https://central.sonatype.com/artifact/io.testomat/java-reporter-cucumber)  
-   [Karate](https://central.sonatype.com/artifact/io.testomat/java-reporter-karate)
-
-2. **Get your API key** from [Testomat.io](https://app.testomat.io/) (starts with `tstmt_`)
-3. **Set your API key** as environment variable:
-   ```bash
-   export testomatio=tstmt_your_key_here
-   ```
-    - Or add to the `testomatio.properties` :
-   ```properties
-   testomatio=tstmt_your_key_here
-   ```
-   Or provide it as a JVM property on run via -D flag.
-4. Also provide run title in the `testomatio.run.title` property, otherwise runs will have the name "Default Test Run".
-5. IMPORTANT: The reporter will run automatically if the API_KEY is provided in any way! To disable, use
-   `testomatio.reporting.disable=1`.
+| Framework | Supported Version | Java Version |
+|-----------|------------------|--------------|
+| JUnit     | 5.x              | 11+ |
+| TestNG    | 7.x              | 11+ |
+| Cucumber  | 7.x              | 11+ |
+| Karate    | 1.x              | 17+ |
 
 ---
 
-## Framework specific setup
+## Quick Start
 
-### JUnit
+### 1. Install Reporter
 
-**Step 1:** Create file `src/main/resources/junit-platform.properties`
+Add the Testomat reporter dependency that matches your test framework. Detailed setup instructions for JUnit, TestNG, Cucumber, and Karate are provided below.
 
-**Step 2:** Add this single line:
+### JUnit 5
 
-   ```properties
-      junit.jupiter.extensions.autodetection.enabled=true
-   ```
+```xml
+<dependency>
+    <groupId>io.testomat</groupId>
+    <artifactId>java-reporter-junit</artifactId>
+    <version><LATEST_STABLE_VERSION></version>
+</dependency>
+```
 
 ### TestNG
 
-No additional actions needed as TestNG handles the extension implicitly.
+```xml
+<dependency>
+    <groupId>io.testomat</groupId>
+    <artifactId>java-reporter-testng</artifactId>
+    <version><LATEST_STABLE_VERSION></version>
+</dependency>
+```
 
 ### Cucumber
 
-Add `io.testomat.cucumber.listener.CucumberListener` as @ConfigurationParameter value to your TestRunner class.
-Like this:
-
-```java
-    @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, io.testomat.cucumber.listener.CucumberListener")
+```xml
+<dependency>
+    <groupId>io.testomat</groupId>
+    <artifactId>java-reporter-cucumber</artifactId>
+    <version><LATEST_STABLE_VERSION></version>
+</dependency>
 ```
 
 ### Karate
 
-Add `KarateHookFactory` as the hook factory `.hookFactory(new KarateHookFactory())` to your TestRunner class.
+```xml
+<dependency>
+    <groupId>io.testomat</groupId>
+    <artifactId>java-reporter-karate</artifactId>
+    <version><LATEST_STABLE_VERSION></version>
+</dependency>
+```
+Choose only one dependency corresponding to your test framework.
+
+After adding the dependency continue with the framework-specific setup instructions below.
+
+### 2. Configure API Key
+
+Using environment variables:
+
+```bash
+export testomatio=tstmt_your_project_api_key
+```
+
+Or using `testomatio.properties`:
+
+```properties
+testomatio=tstmt_your_project_api_key
+testomatio.run.title=Nightly Regression
+```
+
+Or pass properties via JVM arguments:
+
+```bash
+mvn test \
+  -Dtestomatio=tstmt_your_project_api_key \
+  -Dtestomatio.run.title="Nightly Regression"
+```
+
+### 3. Run Tests
+
+```bash
+mvn test
+```
+
+If a valid API key is provided reporting starts automatically.
+
+### Disable Reporting
+
+```properties
+testomatio.reporting.disable=1
+```
+
+---
+
+## Framework Setup
+
+### JUnit
+
+Create:
+
+```text
+src/main/resources/junit-platform.properties
+```
+
+Add:
+
+```properties
+junit.jupiter.extensions.autodetection.enabled=true
+```
+
+### TestNG
+
+No additional setup required.
+
+### Cucumber
+
+Register the listener:
 
 ```java
-class KarateTest {
-
-    @Test
-    void testParallel() {
-
-        Results results = Runner.path("classpath:karateTests")
-            .hookFactory(new KarateHookFactory())
-            .outputCucumberJson(true)
-            .outputJunitXml(true)
-            .parallel(4);
-
-        Assertions.assertEquals(
-            0,
-            results.getFailCount(),
-            results.getErrorMessages()
-        );
-    }
-}
+@ConfigurationParameter(
+    key = PLUGIN_PROPERTY_NAME,
+    value = "pretty, io.testomat.cucumber.listener.CucumberListener"
+)
 ```
----
 
-## Test codebase sync
+### Karate
 
-> For proper usage of this library it is **strongly recommended** to sync your test codebase with Testomat.io base.
+Register the hook factory:
 
-### JUnit, TestNG
-
-For this purpose you can use the [Java-Check-Tests CLI](https://github.com/testomatio/java-check-tests).
-What this is for:
-
-- Import your test source code to Testomat.io
-- Sync test IDs between Testomat.io project and your codebase
-- Remove test IDs and related imports if you need to
-
-Use these one-liners to **download jar and update** IDs in one move:
-
-UNIX, MACOS:  
-`export TESTOMATIO_URL=... && \export TESTOMATIO=... && curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar && java -jar java-check-tests.jar update-ids`
-
-WINDOWS cmd:  
-`set TESTOMATIO_URL=...&& set TESTOMATIO=...&& curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar&& java -jar java-check-tests.jar update-ids`
-
-**Where TESTOMATIO_URL is server URL and TESTOMATIO is your project API key.**  
-**Be careful with whitespaces in the Windows command.**
-
-> For more details please read the description of full CLI functionality here:  
-> https://github.com/testomatio/java-check-tests
+```java
+.hookFactory(KarateHookFactory.create())
+```
 
 ---
-**For most cases, the library is ready to use with this setup**
+
+## Test Code Synchronization
+
+Keeping Test IDs synchronized between your codebase and Testomat.io is strongly recommended.
+
+Use Java Check Tests CLI to:
+
+- Import tests into Testomat.io
+- Synchronize Test IDs
+- Update existing IDs
+- Remove obsolete IDs
+
+### Download and Update IDs
+
+UNIX / macOS:
+
+```bash
+export TESTOMATIO_URL=...
+export TESTOMATIO=...
+
+curl -L -O \
+https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar
+
+java -jar java-check-tests.jar update-ids
+```
+
+Windows:
+
+```cmd
+set TESTOMATIO_URL=...
+set TESTOMATIO=...
+
+curl -L -O https://github.com/testomatio/java-check-tests/releases/latest/download/java-check-tests.jar
+
+java -jar java-check-tests.jar update-ids
+```
 
 ---
 
@@ -159,7 +204,7 @@ testomatio=tstmt_your_key_here
    ```
 
 Or provide it as JVM property or ENV variable.  
-IMPORTANT: The reporter will run automatically if the API_KEY is provided in any way!
+IMPORTANT: The reporter runs automatically when the `testomatio` API key is configured.
 
 ### Customization
 
@@ -173,7 +218,7 @@ Here are the options to customize the reporting in the way you need:
 | **`testomatio.run.group`**         | Group related runs together           | _(none)_            | `"sprint-23"`                                 |
 | **`testomatio.publish`**           | Make results publicly shareable       | _(private)_         | Any not null/empty/"0" string, "0" to disable |
 
-### 🔗 Advanced Integration
+### Advanced Integration
 
 | Setting                             | What it does                             | Example                    |
 |-------------------------------------|------------------------------------------|----------------------------|
@@ -187,17 +232,17 @@ Here are the options to customize the reporting in the way you need:
 ---
 
 
-## 🏷️ Test Identification & Titles
+## Test Identification & Titles
 
 Connect your code tests directly to your Testomat.io test cases using simple annotations!
-As mentioned above, test IDs are recommended to be synced with Java-Check-Tests CLI.
+As mentioned above test IDs are recommended to be synced with Java-Check-Tests CLI.
 But @Title usage is up to you.
 
-### 📋 For JUnit & TestNG
+### For JUnit & TestNG
 
 Use `@TestId` and `@Title` annotations to make your tests perfectly trackable:
 
-> 💡 **Tip**: With `@TestId` annotations in place, you can filter and run specific tests by their IDs - see [Test Filtering by ID](#-test-filtering-by-id) below.
+> **Tip**: With `@TestId` annotations in place you can filter and run specific tests by their IDs see [Test Filtering by ID](#-test-filtering-by-id) below.
 
 ```java
 import com.testomatio.reporter.annotation.TestId;
@@ -220,28 +265,26 @@ public class LoginTests {
     }
 
     @Test
-    @Title("User sees helpful error message")  // Just title, auto-generated ID
+    @Title("User sees helpful error message")  // Just title, auto generated ID
     public void testErrorMessage() {
         // Your test code here
     }
 }
 ```
-## LinkTest
+### Linking Multiple Test Cases
 
 Links test IDs to the current test in the report. This allows you to associate multiple test cases with the current test execution.
 
 ```java
     @TestId("aba4b142")
-    @LinkTest({"aba4b144", "aba4b144"})
+    @LinkTest({"aba4b143", "aba4b144"})
     @Test
     public void test() {
         // Your test code here
     }
 ```
 
-### 🥒 For Cucumber
-
-Use tags to identify your scenarios:
+### For Cucumber
 
 ```gherkin
 Feature: User Authentication
@@ -266,7 +309,7 @@ Feature: User Authentication
 ```
 
 ### For Karate
-Test ID format: ```@T + 8 alphanumeric characters.```
+
 ```gherkin
 Feature: Posts API
 
@@ -318,11 +361,11 @@ Feature: Posts API
 
 ```
 
-## 📎 Test Artifacts Support
+## Test Artifacts Support
 
-The Java Reporter supports attaching files (screenshots, logs, videos, etc.) to your test results and uploading them to
-S3-compatible storage.  
-Artifacts handling is enabled by default, but it won't affect the run if there are no artifacts provided (see options
+The Java Reporter supports attaching files (screenshots, logs, videos etc.) to your test results and uploading them to
+S3 compatible storage.  
+Artifacts handling is enabled by default but it won't affect the run if there are no artifacts provided (see options
 below).
 
 ### Configuration
@@ -337,21 +380,23 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 
 2. Provide options as environment variables/jvm property/testomatio.properties file.
 
-> NOTE: Environment variables(env/jvm/testomatio.properties) take precedence over server-provided credentials.
+> NOTE: Environment variables(env/jvm/testomatio.properties) take precedence over server provided credentials.
 
-| Setting                             | Description                                           | Default     |
-|-------------------------------------|-------------------------------------------------------|-------------|
-| `testomatio.artifact.disable`       | Completely disable artifact uploading                 | `false`     |
-| `testomatio.artifact.private`       | Keep artifacts private (no public URLs)               | `false`     |
-| `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps            | `false`     |
-| `s3.force-path-style`               | Use path-style URLs for S3-compatible storage         | `false`     |
-| `s3.endpoint`                       | Custom endpoint to be used with force-path-style      | `false`     |
-| `s3.bucket`                         | Provides bucket name for configuration                |             |
-| `s3.access-key-id`                  | Access key for the bucket                             |             |
-| `s3.secret.access-key-id`           | Secret access key for the bucket                      |             |
-| `s3.region`                         | Bucket region                                         | `us-west-1` |
-| `s3.assume.role.arn`                | AWS IAM role ARN used for AssumeRole authentication   |             |
-| `s3.assume.role.external.id`        | External ID for AssumeRole authentication             |             |
+| Setting                             | Description                                         | Default                                   |
+|-------------------------------------|-----------------------------------------------------|-------------------------------------------|
+| `testomatio.artifact.disable`       | Completely disable artifact uploading               | `false`                                   |
+| `testomatio.artifact.private`       | Keep artifacts private (no public URLs)             | `false`                                   |
+| `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps          | `false`                                   |
+| `s3.force-path-style`               | Use path-style URLs for S3-compatible storage       | `false`                                   |
+| `s3.endpoint`                       | Custom endpoint to be used with force-path-style    | `false`                                   |
+| `s3.bucket`                         | Provides bucket name for configuration              |                                           |
+| `s3.access-key-id`                  | Access key for the bucket                           |                                           |
+| `s3.secret.access-key-id`           | Secret access key for the bucket                    |                                           |
+| `s3.region`                         | Bucket region                                       | `us-west-1`                               |
+| `s3.assume.role.arn`                | AWS IAM role ARN used for AssumeRole authentication |                                           |
+| `s3.assume.role.external.id`        | External ID for AssumeRole authentication           |                                           |
+| `testomatio.artifact.json.path`     | Custom path to the JSONL export file                | `target/testomat/testomat-artifacts.json` |
+| `testomatio.artifact.json.disable`  | Disable JSONL artifact export                       | `false`                                   |
 
 **Note**: S3 credentials can be configured either in properties file or provided automatically on Testomat.io UI.
 Environment variables take precedence over server-provided credentials.
@@ -370,7 +415,7 @@ public class MyTest {
     public void testWithScreenshot() {
         // Your test logic
 
-        // Attach artifacts (screenshots, logs, etc.)
+        // Attach artifacts (screenshots, logs etc.)
         Testomatio.artifact(
                 "/path/to/screenshot.png",
                 "/path/to/test.log"
@@ -392,19 +437,90 @@ Karate
 
 Please make sure you provide the path to the artifact file including its extension.
 
+### Using `@Artifact`
+
+This provides a declarative alternative to `Testomatio.artifact(...)`.
+
+Artifacts can also be attached automatically by annotating a method with `@Artifact`.
+
+Supported return types:
+
+- `String` – file path
+- `Path`
+- `File`
+
+Example:
+
+```java
+import io.testomat.core.annotation.Artifact;
+
+@Artifact
+public Path screenshot(Path file) {
+    return file;
+}
+```
+
+When the annotated method completes successfully the returned file is automatically collected and uploaded as an artifact.
+
+`@Artifact` can be used:
+
+- At the test level – the artifact is attached to the current test
+- Inside a `@Step` method or an active step the artifact is attached to the current step
+
+Example:
+
+```java
+@Test
+public void loginTest() {
+    Path screenshot = takeScreenshot();
+
+    attachTestomatScreenshot(screenshot);
+}
+```
+
+Step level example:
+
+```java
+@Step("Verify dashboard")
+public void verifyDashboard() {
+    Path screenshot = takeScreenshot();
+
+    attachTestomatScreenshot(screenshot);
+}
+
+@Artifact
+public Path attachTestomatScreenshot(Path screenshot) {
+    return screenshot;
+}
+```
+
+> **Note:** Methods annotated with `@Artifact` must return a valid file path (`String`, `Path` or `File`). Unsupported return types are ignored.
+
 ### How It Works
 
 1. **S3 Upload**: Files are uploaded to your S3 bucket with organized folder structure
 2. **Link Generation**: Public URLs are generated and attached to test results
 3. Artifacts are visible at the test info on UI
 
-As a result, you will see something like this in the UI after the run is completed:
+As a result you will see something like this in the UI after the run is completed:
 
 ![artifact example](./img/artifactExample.png)
 
 ---
 
-## 📝 Step-by-Step Reporting
+## Artifact Export
+
+In addition to uploading artifacts directly to Testomat.io the reporter automatically exports artifact metadata to a JSONL file.
+
+The generated file can later be uploaded using the Testomat CLI:
+
+```bash
+npx @testomatio/reporter upload-artifacts <json_path>
+```
+
+---
+
+## Step-by-Step Reporting
 
 Track detailed test execution flow using the `@Step` annotation.  
 Steps provide granular visibility into test logic and help identify exactly where tests succeed or fail.
@@ -491,7 +607,7 @@ private void login(String username, String password) {
 }
 ```
 
-To enable named placeholders, add to `pom.xml`:
+To enable named placeholders add to `pom.xml`:
 ```xml
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
@@ -509,7 +625,7 @@ To enable named placeholders, add to `pom.xml`:
     * def stepMarker = Java.type('io.testomat.karate.marker.StepMarker')
     * def step = stepMarker.mark
 ```
-After this, step() can be used as a regular Karate function.
+After this step() can be used as a regular Karate function.
 #### Usage without a title
 ```gherkin
     * step()
@@ -524,7 +640,7 @@ Log example: ```path 'posts'```
 Log example: ``` Send get request```
 
 #### Logging all steps with @LogSteps
-If a scenario is annotated with the @LogSteps tag, all Karate steps in that scenario will be logged automatically.
+If a scenario is annotated with the @LogSteps tag all Karate steps in that scenario will be logged automatically.
 
 #### Example
 ```gherkin
@@ -584,6 +700,8 @@ If executed inside another step (including methods annotated with `@Step`) a sub
 
 Artifacts can be attached to a step using the `artifacts` attribute of the `@Step` annotation.
 
+Methods annotated with `@Artifact` also support step-level attachment when executed inside a step.
+
 ```java
 @Step(value = "Login", artifacts = {"path_to_artifact1", "path_to_artifact2"})
 public void login() {
@@ -599,9 +717,9 @@ You can also attach artifacts to a step programmatically:
     Testomatio.stepArtifact("path_to_attachment1", "path_to_attachment2");
 ```
 
-If called inside a step, the artifacts will be attached to the current step.
+If called inside a step the artifacts will be attached to the current step.
 
-If called after a step finishes, it will be attached to the last completed step.
+If called after a step finishes it will be attached to the last completed step.
 
 ### What You'll See
 
@@ -614,13 +732,13 @@ This provides complete transparency into test flow and helps debug failures quic
 
 ---
 
-## 🎯 Test Filtering by ID
+## Test Filtering by ID
 
 **JUnit & TestNG only**
 
 > **Note**: 
 > <p>Cucumber tests can be filtered using native Cucumber tags functionality (`@tag` in feature files and `cucumber.filter.tags` property).
-> <p>Karate supports tagging of features and scenarios using the standard Gherkin tag syntax (@tag). Tags allow you to organize, group, and selectively run tests. 
+> <p>Karate supports tagging of features and scenarios using the standard Gherkin tag syntax (@tag). Tags allow you to organize, group and selectively run tests. 
 
 Run specific tests by their `@TestId` values using the `-Dids` parameter. This is useful for:
 - Running smoke tests or critical path tests
@@ -678,7 +796,7 @@ public class LoginTests {
 
 ---
 
-## 💡 Library Usage Examples
+## Common Usage Scenarios
 
 ### Basic Usage
 
@@ -711,40 +829,66 @@ mvn test \
 
 ---
 
-## 📊 What You'll See
+## What You'll See
 
-When your tests start running, you'll see helpful output like this:
+When your tests start running you'll see helpful output like this:
 
 ![console img](./img/console.png)
 
 **You get two types of links:**
 
-- **🔒 Private Link**: Full access on Testomat.io platform (for your team)
-- **🌐 Public Link**: Shareable read-only view (only if you set `testomatio.publish=1`)
+- **Private Link**: Full access on Testomat.io platform (for your team)
+- **Public Link**: Shareable read only view (only if you set `testomatio.publish=1`)
 
-And the dashboard - something like this:
+And the dashboard something like this:
 
 ![Description](./img/platform.png)
 
 ---
 
-## Advanced customization
+## Advanced Customization
 
-There are void hooks in the listeners that allow you to customize reporting much more.
-These hooks are located in the listeners' tests lifecycle methods according to their names.
-External API calls, logging, and any custom logic can be added to the hooks.
-The hooks are executed **after** the lifecycle method logic finishes and do not replace it.
+The TestomatHook interface allows you to customize reporting by implementing hooks for the listeners' lifecycle methods.
+Each hook corresponds to a specific test lifecycle event. Override only the methods you need—all hook methods have default empty implementations.
+External API calls, logging, artifact uploads and any other custom logic can be added to the hooks.
+Hooks with the *BeforeExecution suffix are executed before the listener's default logic, while hooks with the *AfterExecution suffix are executed after it. They extend the default behavior and do not replace it.
+
+Example:
+
+```java
+import io.testomat.testng.listener.TestomatHook;
+import org.testng.ITestResult;
+
+public class CustomHook implements TestomatHook {
+
+    @Override
+    public void onTestFailureHookBeforeExecution(ITestResult result) {
+        // Your custom logic
+    }
+}
+```
+
+Register your implementation via Java ServiceLoader by creating the following file in the resources directory:
+```
+META-INF/services/io.testomat.junit.listener.TestomatHook
+```
+
+with the fully qualified name of your implementation:
+
+   ```properties
+    com.yourcompany.yourproject.CustomListener
+   ```
 
 ### JUnit, TestNG
 
 1. Complete the Simple Setup first
-2. Create a new class that extends JunitListener or TestNgListener, based on your needs.
+2. Create a new class that extends JunitListener or TestNgListener based on your needs.
     Implement protected methods from the library listener and add custom logic to them.
 
 3. Create the `services` directory:
 
    ```
-      📁 src/main/resources/META-INF/services/
+      src/main/resources/META-INF/services/
    ```
 
 4. Create the right configuration file:
@@ -804,7 +948,7 @@ The hooks are executed **after** the lifecycle method logic finishes and do not 
 
 Testomat Allure Reporter is a Java integration library that bridges Allure reporting with Testomat.io test management system.
 
-The library automatically captures test metadata, titles, steps, and attachments from Allure and sends them to Testomat.io, providing seamless synchronization between test execution and test management.
+The library automatically captures test metadata, titles, steps and attachments from Allure and sends them to Testomat.io providing seamless synchronization between test execution and test management.
 
 Key features:
 - Automatic test title synchronization
@@ -813,7 +957,7 @@ Key features:
 - JUnit and TestNG integration
 - Minimal configuration required
 
-To enable Testomat Allure integration, add the following dependency:
+To enable Testomat Allure integration add the following dependency:
 ```xml
 <dependencies>
     <dependency>
@@ -839,7 +983,7 @@ To enable Testomat Allure integration, add the following dependency:
 </build>
 ```
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 ### Tests not appearing in Testomat.io?
 
@@ -852,7 +996,7 @@ To enable Testomat Allure integration, add the following dependency:
 1. **JUnit 5**: Make sure `junit-platform.properties` exists with autodetection enabled
 2. **Cucumber**: Verify the listener is in your `@CucumberOptions` plugins
 3. **TestNG**: Should work automatically if nothing is overridden - check your TestNG version (need 7.x)
-4. **Karate**: **Karate**: Verify that the KarateHookFactory is installed `.hookFactory(KarateHookFactory.create())`
+4. **Karate**: Verify that the KarateHookFactory is installed `.hookFactory(KarateHookFactory.create())`
 
 ---
 
@@ -860,4 +1004,13 @@ To enable Testomat Allure integration, add the following dependency:
 
 1. Create an issue. We'll fix it!
 
-> 💝 **Love this tool?** Star the repo and share with your team!
+## Support
+
+If you find this project useful:
+
+- Star the repository
+- Report issues
+- Suggest improvements
+- Share feedback
+
+We appreciate your support.

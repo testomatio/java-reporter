@@ -215,6 +215,11 @@ class StepAspectTest {
         throw new RuntimeException("Test exception");
     }
 
+    @Step("Failing step")
+    void stepThatThrowsWithoutMessage() {
+        throw new RuntimeException();
+    }
+
     @Step("Process user: {0}")
     private void stepWithComplexObject(User user) {
         log.info("Processing user: {}", user);
@@ -244,10 +249,17 @@ class StepAspectTest {
     }
 
     @Test
-    void testErrorMessageStored(){
+    void testErrorMessageStored() {
         assertThrows(RuntimeException.class, this::stepThatThrows);
-        TestStep step= StepStorage.getSteps().get(0);
-        assertEquals("Test exception", step.getError());
+        TestStep step = StepStorage.getSteps().get(0);
+        assertTrue(step.getError().contains("Test exception"));
+    }
+
+    @Test
+    void shouldStoreExceptionClassWhenMessageIsNull() {
+        assertThrows(RuntimeException.class, this::stepThatThrowsWithoutMessage);
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("RuntimeException", step.getError());
     }
 
     @Test

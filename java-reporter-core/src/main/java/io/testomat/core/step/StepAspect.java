@@ -6,7 +6,6 @@ import io.testomat.core.annotation.Step;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.annotation.Aspect;
