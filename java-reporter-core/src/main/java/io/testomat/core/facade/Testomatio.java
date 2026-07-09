@@ -79,6 +79,10 @@ public class Testomatio {
         }
     }
 
+    static void step(String stepName, String passedLog, Runnable action) {
+
+    }
+
     public static void meta(String key, String value) {
         MetaStorage.TEMP_META_STORAGE.get().put(key, value);
     }

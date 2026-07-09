@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -74,7 +75,11 @@ public class AwsService {
     public void uploadAllArtifactsForTest(String testName, String rid, String testId) {
 
         List<String> artifactDirectories = TempArtifactDirectoriesStorage.DIRECTORIES.get();
-        Map<UUID, StepData> stepArtifactDirectories = TempArtifactDirectoriesStorage.STEP_DATA.get(Thread.currentThread().getId());
+        Map<UUID, StepData> stepArtifactDirectories =
+            TempArtifactDirectoriesStorage.STEP_DATA.getOrDefault(
+                Thread.currentThread().getId(),
+                Collections.emptyMap())
+            ;
 
         if (artifactDirectories.isEmpty() && stepArtifactDirectories.isEmpty()) {
             log.debug("Artifact list is empty for test: {}", testName);
