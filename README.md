@@ -732,6 +732,54 @@ This provides complete transparency into test flow and helps debug failures quic
 
 ---
 
+## HTTP Request Reporting
+
+The Testomat HTTP filter integrates with RestAssured and automatically reports HTTP requests as test steps.
+
+Each request is displayed as a parent step with detailed substeps containing:
+
+- HTTP method
+- URL
+- Status code
+- Request duration
+- Request headers
+- Response headers
+- Request body
+- Response body
+
+### Basic usage
+
+```java
+given()
+    .filter(TestomatHttpFilter.create())
+    .when()
+    .get("/users");
+```
+
+### Custom configuration
+
+```java
+given()
+    .filter(
+        TestomatHttpFilter.builder()
+            .headers(false)
+            .requestBody(false)
+            .onlyFailures(true)
+            .build()
+    );
+```
+
+### Available options
+
+| Option         | Description                                       | Default |
+| -------------- | ------------------------------------------------- | ------- |
+| `headers`      | Include request and response headers              | `true`  |
+| `requestBody`  | Include request body                              | `true`  |
+| `responseBody` | Include response body                             | `true`  |
+| `onlyFailures` | Report only requests with HTTP status code >= 400 | `false` |
+
+---
+
 ## Test Filtering by ID
 
 **JUnit & TestNG only**

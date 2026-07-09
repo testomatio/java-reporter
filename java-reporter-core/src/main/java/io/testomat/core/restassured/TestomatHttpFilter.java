@@ -5,11 +5,20 @@ import io.restassured.filter.FilterContext;
 import io.restassured.response.Response;
 import io.restassured.specification.FilterableRequestSpecification;
 import io.restassured.specification.FilterableResponseSpecification;
+import io.testomat.core.facade.Testomatio;
 import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.TestStep;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestomatHttpFilter implements Filter {
+    private static final Logger log = LoggerFactory.getLogger(TestomatHttpFilter.class);
 
     private final boolean requestBody;
     private final boolean responseBody;
@@ -26,7 +35,7 @@ public class TestomatHttpFilter implements Filter {
     /**
      * Creates builder for custom configuration.
      */
-    public static Builder custom() {
+    public static Builder builder() {
         return new Builder();
     }
 
@@ -63,14 +72,24 @@ public class TestomatHttpFilter implements Filter {
             duration
         );
 
-        stepWrapper("HTTP method: " + request.getMethod(), "");
-        stepWrapper("URL: " + request.getURI(), "");
-        stepWrapper("Status code: " + response.statusCode(), "");
-        stepWrapper("Duration: " + duration + " ms", "");
-        stepWrapper("Request headers: ", request.getHeaders().toString());
-        stepWrapper("Response headers: ", response.getHeaders().toString());
-        stepWrapper("Request body: ", response.getBody().asPrettyString());
-        stepWrapper("Response body: ", response.getBody().asPrettyString());
+        reportHttpData("Method: " + request.getMethod(), null);
+        reportHttpData("URL: " + request.getURI(), null);
+        reportHttpData("Status: " + response.statusCode(), null);
+        reportHttpData("Duration: " + duration + " ms", null);
+
+        if (headers) {
+            reportHttpData("Request headers", request.getHeaders().toString());
+            reportHttpData("Response headers", response.getHeaders().toString());
+        }
+
+        if (requestBody) {
+            reportHttpData("Request body",
+                request.getBody() == null ? "<empty>" : request.getBody().toString());
+        }
+
+        if (responseBody) {
+            reportHttpData("Response body", response.getBody().asPrettyString());
+        }
 
         testStep.setStepTitle(summary);
         StepLifecycle.finish();
@@ -87,56 +106,6 @@ public class TestomatHttpFilter implements Filter {
             response.statusCode(),
             duration
         );
-    }
-
-    private String buildDetails(
-        FilterableRequestSpecification request,
-        Response response,
-        long duration) {
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("HTTP method: ")
-            .append(request.getMethod())
-            .append("\n");
-
-        sb.append("URL: ")
-            .append(request.getURI())
-            .append("\n");
-
-        sb.append("Status code: ")
-            .append(response.statusCode())
-            .append("\n");
-
-        sb.append("Duration: ")
-            .append(duration)
-            .append(" ms\n\n");
-
-        if (headers) {
-            sb.append("Request headers:\n")
-                .append(request.getHeaders())
-                .append("\n\n");
-
-            sb.append("Response headers:\n")
-                .append(response.getHeaders())
-                .append("\n\n");
-        }
-
-        if (requestBody) {
-            sb.append("Request body:\n")
-                .append(request.getBody() == null
-                    ? "<empty>"
-                    : request.getBody().toString())
-                .append("\n\n");
-        }
-
-        if (responseBody) {
-            sb.append("Response body:\n")
-                .append(response.getBody().asPrettyString())
-                .append("\n");
-        }
-
-        return sb.toString();
     }
 
     public static final class Builder {
@@ -174,13 +143,24 @@ public class TestomatHttpFilter implements Filter {
         }
     }
 
-    private void stepWrapper(String summary, String details) {
+    private void reportHttpData(String summary, String details) {
         TestStep testStep = new TestStep();
         testStep.setCategory("user");
         StepLifecycle.start(testStep);
-
         testStep.setStepTitle(summary);
-        testStep.setLog(details);
-        StepLifecycle.finish();
+
+        try {
+            if (details != null && !details.isBlank()) {
+                Path dir = Paths.get("target", "testomat", "http");
+                Files.createDirectories(dir);
+                Path json = Files.createTempFile(dir, "http-", ".json");
+                Files.writeString(json, details, StandardCharsets.UTF_8);
+                Testomatio.stepArtifact(json.toString());
+            }
+        } catch (IOException e) {
+            log.error("Failed to create HTTP attachment", e);
+        } finally {
+            StepLifecycle.finish();
+        }
     }
 }
