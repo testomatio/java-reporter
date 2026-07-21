@@ -5,6 +5,8 @@ import io.testomat.core.facade.methods.artifact.credential.S3Credentials;
 import java.net.URI;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -14,30 +16,20 @@ import software.amazon.awssdk.services.sts.StsClient;
 import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider;
 
 /**
- * Factory for creating configured S3Client instances with custom endpoint support. Handles AWS credentials, regions,
- * and S3-compatible storage configurations.
+ * Factory for creating configured S3Client instances.
  */
 public class S3ClientFactory {
 
     /**
-     * Creates a configured S3Client based on current credentials and settings.
-     * Priority:
-     * 1. IAM Role (if roleArn configured);
-     * 2. Static access key / secret key.
-     *
-     * @return configured S3Client instance
-     * @throws IllegalArgumentException if credentials are invalid or missing
+     * Creates configured S3 client.
      */
     public S3Client createS3Client() {
         S3Credentials s3 = CredentialsManager.getCredentials();
 
         Region region = resolveRegion(s3);
 
-        AwsCredentialsProvider provider =
-            buildCredentialsProvider(s3, region);
-
         S3ClientBuilder builder = S3Client.builder()
-            .credentialsProvider(provider)
+            .credentialsProvider(buildCredentialsProvider(s3, region))
             .region(region);
 
         configureEndpoint(builder, s3);
@@ -46,62 +38,66 @@ public class S3ClientFactory {
     }
 
     /**
-     * Builds AWS credentials provider.
+     * Creates credentials provider.
+     *
+     * Supports:
+     * - AccessKey + SecretKey
+     * - AccessKey + SecretKey + SessionToken
+     * - IAM role assumption via STS (isIam + roleArn)
      */
     private AwsCredentialsProvider buildCredentialsProvider(S3Credentials s3, Region region) {
-        boolean useIamRole = s3.isIam() && s3.getRoleArn() != null && !s3.getRoleArn().isBlank();
 
-        if (useIamRole) {
-            return buildIamRoleProvider(s3, region);
+        if (!isBlank(s3.getAccessKeyId()) && !isBlank(s3.getSecretAccessKey()) && !isBlank(s3.getSessionToken())) {
+            return StaticCredentialsProvider.create(
+                AwsSessionCredentials.create(
+                    s3.getAccessKeyId().trim(),
+                    s3.getSecretAccessKey().trim(),
+                    s3.getSessionToken().trim()
+                )
+            );
         }
 
-        return buildStaticCredentialsProvider(s3);
+        if (s3.isIam() && !isBlank(s3.getRoleArn())) {
+            AwsCredentialsProvider baseProvider = buildBaseProvider(s3);
+            StsClient stsClient = StsClient.builder()
+                .credentialsProvider(baseProvider)
+                .region(region)
+                .build();
+
+            return StsAssumeRoleCredentialsProvider.builder()
+                .stsClient(stsClient)
+                .refreshRequest(r -> {
+                    r.roleArn(s3.getRoleArn().trim());
+                    r.roleSessionName("testomat-s3-session");
+                    if (!isBlank(s3.getExternalId())) {
+                        r.externalId(s3.getExternalId().trim());
+                    }
+                })
+                .build();
+        }
+
+        return buildBaseProvider(s3);
     }
 
-    /**
-     * Creates AssumeRole credentials provider.
-     */
-    private AwsCredentialsProvider buildIamRoleProvider(S3Credentials s3Credentials, Region region) {
-        AwsCredentialsProvider baseCredentials = buildStaticCredentialsProvider(s3Credentials);
-
-        StsClient stsClient = StsClient.builder()
-            .region(region)
-            .credentialsProvider(baseCredentials)
-            .build();
-
-        return StsAssumeRoleCredentialsProvider.builder()
-            .stsClient(stsClient)
-            .refreshRequest(request -> {
-                request.roleArn(s3Credentials.getRoleArn().trim());
-                request.roleSessionName("testomat-s3-upload");
-
-                if (s3Credentials.getExternalId() != null
-                    && !s3Credentials.getExternalId().isBlank()) {
-
-                    request.externalId(s3Credentials.getExternalId().trim());
-                }
-            })
-            .build();
-    }
-
-    /**
-     * Creates static credentials provider.
-     */
-    private AwsCredentialsProvider buildStaticCredentialsProvider(S3Credentials s3Credentials) {
-        if (s3Credentials.getAccessKeyId() == null || s3Credentials.getAccessKeyId().isBlank()) {
-            throw new IllegalArgumentException("AWS access key is missing");
+    private AwsCredentialsProvider buildBaseProvider(S3Credentials s3) {
+        if (!isBlank(s3.getAccessKeyId()) && !isBlank(s3.getSecretAccessKey())) {
+            if (!isBlank(s3.getSessionToken())) {
+                return StaticCredentialsProvider.create(
+                    AwsSessionCredentials.create(
+                        s3.getAccessKeyId().trim(),
+                        s3.getSecretAccessKey().trim(),
+                        s3.getSessionToken().trim()
+                    )
+                );
+            }
+            return StaticCredentialsProvider.create(
+                AwsBasicCredentials.create(
+                    s3.getAccessKeyId().trim(),
+                    s3.getSecretAccessKey().trim()
+                )
+            );
         }
-
-        if (s3Credentials.getSecretAccessKey() == null || s3Credentials.getSecretAccessKey().isBlank()) {
-            throw new IllegalArgumentException("AWS secret key is missing");
-        }
-
-        AwsBasicCredentials credentials =
-            AwsBasicCredentials.create(
-                s3Credentials.getAccessKeyId().trim(),
-                s3Credentials.getSecretAccessKey().trim());
-
-        return StaticCredentialsProvider.create(credentials);
+        return DefaultCredentialsProvider.create();
     }
 
     /**
@@ -109,21 +105,22 @@ public class S3ClientFactory {
      */
     private Region resolveRegion(S3Credentials s3Credentials) {
         try {
-            if (s3Credentials.getRegion() == null || s3Credentials.getRegion().isBlank()) {
+            if (isBlank(s3Credentials.getRegion())) {
                 return Region.US_EAST_1;
             }
+
             return Region.of(s3Credentials.getRegion().trim());
+
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid AWS region: " + s3Credentials.getRegion(), e);
         }
     }
 
     /**
-     * Configures custom endpoint and path-style access.
+     * Configures endpoint and path style access.
      */
     private void configureEndpoint(S3ClientBuilder builder, S3Credentials s3Credentials) {
-        boolean hasCustomEndpoint =
-            s3Credentials.getCustomEndpoint() != null && !s3Credentials.getCustomEndpoint().isBlank();
+        boolean hasCustomEndpoint = !isBlank(s3Credentials.getCustomEndpoint());
 
         if (hasCustomEndpoint) {
             try {
@@ -136,11 +133,12 @@ public class S3ClientFactory {
         if (s3Credentials.isForcePath() || hasCustomEndpoint) {
             builder.serviceConfiguration(
                 S3Configuration.builder()
-                    .pathStyleAccessEnabled(
-                        s3Credentials.isForcePath()
-                    )
-                    .build()
-            );
+                    .pathStyleAccessEnabled(s3Credentials.isForcePath())
+                    .build());
         }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

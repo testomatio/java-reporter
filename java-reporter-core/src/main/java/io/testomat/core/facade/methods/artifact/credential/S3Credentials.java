@@ -16,6 +16,7 @@ public class S3Credentials {
     private String roleArn;
     private String externalId;
     private boolean forcePath = false;
+    private String sessionToken;
 
     public boolean isForcePath() {
         return forcePath;
@@ -103,5 +104,13 @@ public class S3Credentials {
 
     public void setRoleArn(String roleArn) {
         this.roleArn = roleArn;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
     }
 }

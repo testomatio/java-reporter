@@ -1,5 +1,6 @@
 package io.testomat.core.client;
 
+import static io.testomat.core.constants.ArtifactPropertyNames.ARTIFACT_DISABLE_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.JSONL_PATH_PROPERTY_NAME;
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
@@ -23,7 +24,6 @@ import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -84,7 +84,7 @@ public class TestomatioClient implements ApiInterface {
             throw new RunCreationFailedException(
                     "Invalid response: missing UID in create test run response");
         }
-        if (responseBody.containsKey("artifacts")) {
+        if (responseBody.containsKey("artifacts") && !isArtifactDisabled()) {
             Map<String, Object> creds = (Map<String, Object>) responseBody.get("artifacts");
             credentialsManager.populateCredentials(creds);
             credentialsValidationService.areCredentialsValid(CredentialsManager.getCredentials());
@@ -200,6 +200,14 @@ public class TestomatioClient implements ApiInterface {
             client.post(url, requestBody, null);
         } catch (IOException e) {
             throw new ArtifactManagementException("Failed to upload artifact links to Testomatio", e);
+        }
+    }
+
+    private boolean isArtifactDisabled() {
+        try {
+            return Boolean.parseBoolean(provider.getProperty(ARTIFACT_DISABLE_PROPERTY_NAME));
+        } catch (Exception e) {
+            return false;
         }
     }
 }
