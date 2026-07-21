@@ -9,6 +9,7 @@ import static io.testomat.core.constants.ArtifactPropertyNames.FORCE_PATH_PROPER
 import static io.testomat.core.constants.ArtifactPropertyNames.PRIVATE_ARTIFACTS_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.REGION_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.SECRET_ACCESS_KEY_PROPERTY_NAME;
+import static io.testomat.core.constants.ArtifactPropertyNames.SESSION_TOKEN_PROPERTY_NAME;
 import static io.testomat.core.constants.CredentialConstants.ACCESS_KEY_ID;
 import static io.testomat.core.constants.CredentialConstants.ARN;
 import static io.testomat.core.constants.CredentialConstants.BUCKET;
@@ -19,6 +20,7 @@ import static io.testomat.core.constants.CredentialConstants.IAM;
 import static io.testomat.core.constants.CredentialConstants.PRESIGN;
 import static io.testomat.core.constants.CredentialConstants.REGION;
 import static io.testomat.core.constants.CredentialConstants.SECRET_ACCESS_KEY;
+import static io.testomat.core.constants.CredentialConstants.SESSION_TOKEN;
 import static io.testomat.core.constants.CredentialConstants.SHARED;
 
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -75,6 +77,9 @@ public class CredentialsManager {
         populateCredentialField(ACCESS_KEY_PROPERTY_NAME, ACCESS_KEY_ID, credsFromServer, "AccessKey",
                 value -> credentials.setAccessKeyId(getStringValue(value)));
 
+        populateCredentialField(SESSION_TOKEN_PROPERTY_NAME, SESSION_TOKEN, credsFromServer, "SessionToken",
+                value -> credentials.setSessionToken(getStringValue(value)));
+
         populateCredentialField(BUCKET_PROPERTY_NAME, BUCKET, credsFromServer, "Bucket",
                 value -> credentials.setBucket(getStringValue(value)));
 
@@ -89,6 +94,12 @@ public class CredentialsManager {
 
         credentials.setIam(getBooleanValue(credsFromServer.get(IAM)));
         credentials.setShared(getBooleanValue(credsFromServer.get(SHARED)));
+
+        if (getPropertyFromEnv(ACCESS_KEY_PROPERTY_NAME) != null
+                || getPropertyFromEnv(SECRET_ACCESS_KEY_PROPERTY_NAME) != null) {
+            credentials.setSessionToken(null);
+            log.debug("SessionToken cleared because access/secret keys were overridden by env");
+        }
 
         logCredentialsInitializationResult();
     }

@@ -9,7 +9,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
@@ -27,98 +30,66 @@ class S3ClientFactoryTest {
     @Test
     void shouldReturnDefaultRegionWhenRegionIsBlank() throws Exception {
         S3Credentials s3 = mock(S3Credentials.class);
-
         when(s3.getRegion()).thenReturn(" ");
-
-        Region region = invokeResolveRegion(s3);
-
-        assertEquals(Region.US_EAST_1, region);
+        assertEquals(Region.US_EAST_1, invokeResolveRegion(s3));
     }
 
     @Test
     void shouldReturnProvidedRegion() throws Exception {
         S3Credentials s3 = mock(S3Credentials.class);
-
         when(s3.getRegion()).thenReturn("eu-central-1");
-
-        Region region = invokeResolveRegion(s3);
-
-        assertEquals(Region.EU_CENTRAL_1, region);
+        assertEquals(Region.EU_CENTRAL_1, invokeResolveRegion(s3));
     }
 
     @Test
-    void shouldCreateStaticCredentialsProvider() throws Exception {
+    void shouldCreateBasicCredentials() throws Exception {
         S3Credentials s3 = mock(S3Credentials.class);
-
         when(s3.getAccessKeyId()).thenReturn("access-key");
         when(s3.getSecretAccessKey()).thenReturn("secret-key");
 
-        AwsCredentialsProvider provider =
-            invokeBuildStaticCredentialsProvider(s3);
-
-        assertNotNull(provider);
+        AwsCredentialsProvider provider = invokeBuildBaseProvider(s3);
         assertInstanceOf(StaticCredentialsProvider.class, provider);
+        AwsBasicCredentials creds = (AwsBasicCredentials) provider.resolveCredentials();
+        assertEquals("access-key", creds.accessKeyId());
+        assertEquals("secret-key", creds.secretAccessKey());
     }
 
     @Test
-    void shouldTrimStaticCredentials() throws Exception {
+    void shouldTrimBasicCredentials() throws Exception {
         S3Credentials s3 = mock(S3Credentials.class);
-
         when(s3.getAccessKeyId()).thenReturn("  access-key  ");
         when(s3.getSecretAccessKey()).thenReturn("  secret-key  ");
 
-        StaticCredentialsProvider provider =
-            (StaticCredentialsProvider) invokeBuildStaticCredentialsProvider(s3);
-
-        assertEquals(
-            "access-key",
-            provider.resolveCredentials().accessKeyId()
-        );
-
-        assertEquals(
-            "secret-key",
-            provider.resolveCredentials().secretAccessKey()
-        );
+        StaticCredentialsProvider provider = (StaticCredentialsProvider) invokeBuildBaseProvider(s3);
+        assertEquals("access-key", provider.resolveCredentials().accessKeyId());
+        assertEquals("secret-key", provider.resolveCredentials().secretAccessKey());
     }
 
     @Test
-    void shouldThrowExceptionWhenAccessKeyMissing() {
+    void shouldCreateSessionCredentials() throws Exception {
         S3Credentials s3 = mock(S3Credentials.class);
-
-        when(s3.getAccessKeyId()).thenReturn(" ");
+        when(s3.getAccessKeyId()).thenReturn("ASIAkey");
         when(s3.getSecretAccessKey()).thenReturn("secret");
+        when(s3.getSessionToken()).thenReturn("token");
 
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> invokeBuildStaticCredentialsProvider(s3)
-        );
-
-        assertEquals("AWS access key is missing", exception.getMessage());
+        StaticCredentialsProvider provider = (StaticCredentialsProvider) invokeBuildBaseProvider(s3);
+        assertInstanceOf(AwsSessionCredentials.class, provider.resolveCredentials());
+        AwsSessionCredentials creds = (AwsSessionCredentials) provider.resolveCredentials();
+        assertEquals("ASIAkey", creds.accessKeyId());
+        assertEquals("token", creds.sessionToken());
     }
 
     @Test
-    void shouldThrowExceptionWhenSecretKeyMissing() {
+    void shouldFallbackToDefaultProviderWhenNoKeys() throws Exception {
         S3Credentials s3 = mock(S3Credentials.class);
-
-        when(s3.getAccessKeyId()).thenReturn("access");
-        when(s3.getSecretAccessKey()).thenReturn(" ");
-
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> invokeBuildStaticCredentialsProvider(s3)
-        );
-
-        assertEquals("AWS secret key is missing", exception.getMessage());
+        assertInstanceOf(DefaultCredentialsProvider.class, invokeBuildBaseProvider(s3));
     }
 
     @Test
     void shouldConfigureCustomEndpoint() throws Exception {
         S3ClientBuilder builder = mock(S3ClientBuilder.class, RETURNS_SELF);
         S3Credentials s3 = mock(S3Credentials.class);
-
-        when(s3.getCustomEndpoint())
-            .thenReturn("http://localhost:9000");
-
+        when(s3.getCustomEndpoint()).thenReturn("http://localhost:9000");
         when(s3.isForcePath()).thenReturn(false);
 
         invokeConfigureEndpoint(builder, s3);
@@ -131,7 +102,6 @@ class S3ClientFactoryTest {
     void shouldConfigurePathStyleWhenForcePathEnabled() throws Exception {
         S3ClientBuilder builder = mock(S3ClientBuilder.class, RETURNS_SELF);
         S3Credentials s3 = mock(S3Credentials.class);
-
         when(s3.getCustomEndpoint()).thenReturn(null);
         when(s3.isForcePath()).thenReturn(true);
 
@@ -144,25 +114,19 @@ class S3ClientFactoryTest {
     void shouldThrowExceptionForInvalidEndpoint() {
         S3ClientBuilder builder = mock(S3ClientBuilder.class, RETURNS_SELF);
         S3Credentials s3 = mock(S3Credentials.class);
-
         when(s3.getCustomEndpoint()).thenReturn("invalid-url%%%");
 
         IllegalArgumentException exception = assertThrows(
             IllegalArgumentException.class,
             () -> invokeConfigureEndpoint(builder, s3)
         );
-
         assertTrue(exception.getMessage().contains("Invalid endpoint URL"));
     }
 
     private Region invokeResolveRegion(S3Credentials s3) throws Exception {
         Method method = S3ClientFactory.class.getDeclaredMethod(
-            "resolveRegion",
-            S3Credentials.class
-        );
-
+            "resolveRegion", S3Credentials.class);
         method.setAccessible(true);
-
         try {
             return (Region) method.invoke(factory, s3);
         } catch (InvocationTargetException e) {
@@ -170,17 +134,10 @@ class S3ClientFactoryTest {
         }
     }
 
-    private AwsCredentialsProvider invokeBuildStaticCredentialsProvider(
-        S3Credentials s3
-    ) throws Exception {
-
+    private AwsCredentialsProvider invokeBuildBaseProvider(S3Credentials s3) throws Exception {
         Method method = S3ClientFactory.class.getDeclaredMethod(
-            "buildStaticCredentialsProvider",
-            S3Credentials.class
-        );
-
+            "buildBaseProvider", S3Credentials.class);
         method.setAccessible(true);
-
         try {
             return (AwsCredentialsProvider) method.invoke(factory, s3);
         } catch (InvocationTargetException e) {
@@ -189,18 +146,11 @@ class S3ClientFactoryTest {
     }
 
     private void invokeConfigureEndpoint(
-        S3ClientBuilder builder,
-        S3Credentials s3
+        S3ClientBuilder builder, S3Credentials s3
     ) throws Exception {
-
         Method method = S3ClientFactory.class.getDeclaredMethod(
-            "configureEndpoint",
-            S3ClientBuilder.class,
-            S3Credentials.class
-        );
-
+            "configureEndpoint", S3ClientBuilder.class, S3Credentials.class);
         method.setAccessible(true);
-
         try {
             method.invoke(factory, builder, s3);
         } catch (InvocationTargetException e) {

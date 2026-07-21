@@ -8,6 +8,7 @@ public class ArtifactPropertyNames {
     public static final String ENDPOINT_PROPERTY_NAME = "s3.endpoint";
     public static final String ASSUME_ROLE_ARN_PROPERTY_NAME = "s3.assume.role.arn";
     public static final String ASSUME_ROLE_EXTERNAL_ID_PROPERTY_NAME = "s3.assume.role.external.id";
+    public static final String SESSION_TOKEN_PROPERTY_NAME = "s3.session-token";
 
     public static final String FORCE_PATH_PROPERTY_NAME = "s3.force-path-style";
 

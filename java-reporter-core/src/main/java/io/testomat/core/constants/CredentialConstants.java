@@ -12,6 +12,7 @@ public class CredentialConstants {
     public static final String ARN = "ARN";
     public static final String ENDPOINT = "ENDPOINT";
     public static final String FORCE_PATH = "FORCE_PATH_STYLE";
+    public static final String SESSION_TOKEN = "SESSION_TOKEN";
 
     private CredentialConstants() {
     }
