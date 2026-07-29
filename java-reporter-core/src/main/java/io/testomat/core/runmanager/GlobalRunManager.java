@@ -360,12 +360,12 @@ public class GlobalRunManager {
     /**
      * Returns the delay before sending artifacts in milliseconds.
      *
-     * <p>Reads the value from the {@code artifacts.sending.delay} system property.
+     * <p>Reads the value from the {@code testomatio.artifact.sending.delay} system property.
      * If the property is missing, non-numeric, or not positive, a default value is used.</p>
      */
     private static int getDelayBeforeArtifactsSendingMs() {
         int defaultDelayMs = 10000;
-        String value = System.getProperty("artifacts.sending.delay");
+        String value = System.getProperty("testomatio.artifact.sending.delay");
         if (value == null) {
             return defaultDelayMs;
         }
@@ -373,7 +373,7 @@ public class GlobalRunManager {
             int delayMs = Integer.parseInt(value.trim());
             return delayMs > 0 ? delayMs : defaultDelayMs;
         } catch (NumberFormatException nfe) {
-            log.warn("Invalid artifacts.sending.delay value: {}, using default {}", value, defaultDelayMs);
+            log.warn("Invalid testomatio.artifact.sending.delay value: {}, using default {}", value, defaultDelayMs);
             return defaultDelayMs;
         }
     }

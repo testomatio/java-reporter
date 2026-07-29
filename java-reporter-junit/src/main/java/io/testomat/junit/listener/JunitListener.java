@@ -5,6 +5,7 @@ import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
+import io.testomat.core.agent.TestomatAgent;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
@@ -48,6 +49,7 @@ public class JunitListener
     private final FacadeFunctionsHandler functionsHandler;
 
     public JunitListener() {
+        TestomatAgent.install();
         this.functionsHandler = new FacadeFunctionsHandler();
         this.methodExportManager = new MethodExportManager();
         this.runManager = GlobalRunManager.getInstance();

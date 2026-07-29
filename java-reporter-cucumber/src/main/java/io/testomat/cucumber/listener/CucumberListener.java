@@ -6,6 +6,7 @@ import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
+import io.testomat.core.agent.TestomatAgent;
 import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.model.TestResult;
@@ -30,6 +31,7 @@ public class CucumberListener extends AbstractHooksContainer
      * Creates a new listener with default dependencies.
      */
     public CucumberListener() {
+        TestomatAgent.install();
         this.resultConstructor = new CucumberTestResultConstructor();
         this.functionsHandler = new FacadeFunctionsHandler();
         this.runManager = GlobalRunManager.getInstance();

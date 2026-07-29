@@ -5,6 +5,7 @@ import static io.testomat.core.constants.CommonConstants.PASSED;
 import static io.testomat.core.constants.CommonConstants.SKIPPED;
 import static io.testomat.core.constants.PropertyNameConstants.API_KEY_PROPERTY_NAME;
 
+import io.testomat.core.agent.TestomatAgent;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import io.testomat.core.runmanager.GlobalRunManager;
@@ -48,6 +49,7 @@ public class TestNgListener extends AbstractHooksContainer
     private final TestIdFilter testIdFilter;
 
     public TestNgListener() {
+        TestomatAgent.install();
         this.facadeFunctionsHandler = new FacadeFunctionsHandler();
         this.testNgParameterExtractor = new TestNgParameterExtractor();
         this.methodExportManager = new TestNgMethodExportManager();

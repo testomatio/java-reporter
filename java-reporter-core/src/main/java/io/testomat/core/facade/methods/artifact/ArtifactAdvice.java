@@ -1,41 +1,40 @@
 package io.testomat.core.facade.methods.artifact;
 
-import io.testomat.core.facade.Testomatio;
+import io.testomat.core.facade.ServiceRegistryUtil;
+import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
 import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.TestStep;
 import java.io.File;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
-import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.Aspect;
+import net.bytebuddy.asm.Advice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Aspect
-public class ArtifactAspect {
-    private static final Logger log = LoggerFactory.getLogger(ArtifactAspect.class);
+public class ArtifactAdvice {
 
-    @AfterReturning(
-        pointcut = "@annotation(io.testomat.core.annotation.Artifact)",
-        returning = "result"
-    )
-    public void afterArtifact(Object result) {
+    public static final Logger log = LoggerFactory.getLogger(ArtifactAdvice.class);
+
+    @Advice.OnMethodExit
+    public static void exit(@Advice.Return Object result, @Advice.Origin Method method) {
         String fileName = resolveFileName(result);
-        if (fileName == null) {
-            return;
-        }
+        if (fileName == null) return;
 
         TestStep testStep = StepLifecycle.current();
         if (testStep == null) {
             testStep = StepLifecycle.lastFinished();
         }
+        ArtifactManager artifactManager = ServiceRegistryUtil.getService(ArtifactManager.class);
         if (testStep == null || testStep.getId() == null) {
-            Testomatio.artifact(fileName);
+            artifactManager.storeDirectories(fileName);
+            log.debug("@Artifact uploaded");
         } else {
-            Testomatio.stepArtifact(fileName);
+            artifactManager.storeStepDirectories(testStep.getId(), fileName);
+            log.debug("@Artifact uploaded to step");
         }
     }
 
-    private String resolveFileName(Object result) {
+    public static String resolveFileName(Object result) {
         if (result instanceof String) {
             return (String) result;
         }
@@ -46,7 +45,7 @@ public class ArtifactAspect {
             return ((File) result).getAbsolutePath();
         }
 
-        log.warn(
+        log.debug(
             "@Artifact ignored: method returned unsupported type '{}'. "
                 + "Supported types are String, Path and File.",
             result == null ? "null" : result.getClass().getName()

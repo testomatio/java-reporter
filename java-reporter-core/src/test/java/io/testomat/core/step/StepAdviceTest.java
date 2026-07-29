@@ -3,7 +3,9 @@ package io.testomat.core.step;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.testomat.core.annotation.Step;
+import io.testomat.core.facade.Testomatio;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,12 +15,17 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * Test class for {@link io.testomat.core.step.StepAspect} functionality.
+ * Test class for {@link io.testomat.core.step.StepAdvice} functionality.
  * Tests parameter substitution in step names using both indexed and named placeholders.
  */
-@DisplayName("StepAspect Tests")
-class StepAspectTest {
-    private static final Logger log = LoggerFactory.getLogger(StepAspectTest.class);
+@DisplayName("StepAdvice Tests")
+class StepAdviceTest {
+    private static final Logger log = LoggerFactory.getLogger(StepAdviceTest.class);
+
+    @BeforeAll
+    static void init() {
+        Testomatio.artifact();
+    }
 
     @BeforeEach
     void setUp() {

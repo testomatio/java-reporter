@@ -1,5 +1,6 @@
 package io.testomat.core.facade;
 
+import io.testomat.core.agent.TestomatAgent;
 import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
@@ -18,6 +19,10 @@ import java.util.Map;
  * Provides simple static methods for test artifact management and reporting.
  */
 public class Testomatio {
+
+    static {
+        TestomatAgent.install();
+    }
     /**
      * Registers artifact files or directories to be uploaded for the current test.
      *

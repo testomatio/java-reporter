@@ -8,6 +8,7 @@ import com.intuit.karate.core.Result;
 import com.intuit.karate.core.ScenarioRuntime;
 import com.intuit.karate.core.Step;
 import com.intuit.karate.core.StepResult;
+import io.testomat.core.agent.TestomatAgent;
 import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
@@ -46,6 +47,7 @@ public class KarateHook implements RuntimeHook {
             GlobalRunManager runManager,
             KarateEngineAdapter engine
     ) {
+        TestomatAgent.install();
         this.resultConstructor = resultConstructor;
         this.functionsHandler = functionsHandler;
         this.runManager = runManager;

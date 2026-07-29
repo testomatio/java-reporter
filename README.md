@@ -386,6 +386,7 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 |-------------------------------------|-----------------------------------------------------|-------------------------------------------|
 | `testomatio.artifact.disable`       | Completely disable artifact uploading               | `false`                                   |
 | `testomatio.artifact.private`       | Keep artifacts private (no public URLs)             | `false`                                   |
+| `testomatio.artifact.sending.delay` | Wait time before uploading test artifacts           | `10000 msec`                              |
 | `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps          | `false`                                   |
 | `s3.force-path-style`               | Use path-style URLs for S3-compatible storage       | `false`                                   |
 | `s3.endpoint`                       | Custom endpoint to be used with force-path-style    | `false`                                   |
@@ -524,28 +525,6 @@ npx @testomatio/reporter upload-artifacts <json_path>
 
 Track detailed test execution flow using the `@Step` annotation.  
 Steps provide granular visibility into test logic and help identify exactly where tests succeed or fail.
-
-
-### Setup
-
-Add AspectJ weaver to your test execution via maven-surefire-plugin:
-
-```xml
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.2.2</version>
-            <configuration>
-                <argLine>
-                    -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.jar"
-                </argLine>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
-```
 
 ### Basic Usage
 
@@ -1014,21 +993,6 @@ To enable Testomat Allure integration add the following dependency:
         <version>${testomat-allure-adapter-version}</version>
     </dependency>
 </dependencies>
-
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.2.2</version>
-            <configuration>
-                <argLine>
-                    -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.jar"
-                </argLine>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
 ```
 
 ## Troubleshooting

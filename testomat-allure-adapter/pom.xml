@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>testomat-allure-adapter</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Testomat Allure adapter</name>
@@ -36,7 +36,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <allure.bom.version>2.33.0</allure.bom.version>
-        <aspect.version>1.9.24</aspect.version>
+        <bytebuddy.version>1.14.12</bytebuddy.version>
         <junit.jupiter.version>5.14.3</junit.jupiter.version>
         <mockito.core.version>5.23.0</mockito.core.version>
         <mockito.inline.version>5.2.0</mockito.inline.version>
@@ -67,7 +67,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.16.1</version>
+            <version>0.17.0-rc1</version>
         </dependency>
         <dependency>
             <groupId>io.qameta.allure</groupId>
@@ -75,14 +75,14 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjweaver</artifactId>
-            <version>${aspect.version}</version>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${bytebuddy.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjrt</artifactId>
-            <version>${aspect.version}</version>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
+            <version>${bytebuddy.version}</version>
         </dependency>
 
         <dependency>

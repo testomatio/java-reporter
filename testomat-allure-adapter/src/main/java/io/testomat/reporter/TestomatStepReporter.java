@@ -3,6 +3,7 @@ package io.testomat.reporter;
 import io.qameta.allure.listener.StepLifecycleListener;
 import io.qameta.allure.model.StatusDetails;
 import io.qameta.allure.model.StepResult;
+import io.testomat.agent.AllureAgent;
 import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.StepStatus;
 import io.testomat.core.step.TestStep;
@@ -12,6 +13,10 @@ import java.util.Objects;
  * Step lifecycle listener that reports Allure steps to Testomat.
  */
 public class TestomatStepReporter implements StepLifecycleListener {
+
+    static {
+        AllureAgent.install();
+    }
 
     /** Starts Testomat step when Allure step starts. */
     @Override
