@@ -1,16 +1,7 @@
 <aspectj>
-
-<aspects>
-    <aspect name="io.testomat.aspect.TitleAspect"/>
-    <aspect name="io.testomat.aspect.AllureAttachmentAspect"/>
-    <aspect name="io.testomat.aspect.AllureTmsLinkAspect"/>
-</aspects>
-
-<weaver>
-
-    <include within="io.testomat..*"/>
-    <include within="io.qameta..*"/>
-
-</weaver>
-
+    <aspects>
+        <aspect name="io.testomat.aspect.TitleAspect"/>
+        <aspect name="io.testomat.aspect.AllureAttachmentAspect"/>
+        <aspect name="io.testomat.aspect.AllureTmsLinkAspect"/>
+    </aspects>
 </aspectj>

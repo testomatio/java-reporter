@@ -1,12 +1,6 @@
-<!DOCTYPE aspectj PUBLIC "-//AspectJ//DTD//EN" "https://www.eclipse.org/aspectj/dtd/aspectj.dtd">
 <aspectj>
-    <aspects>
-        <aspect name="io.testomat.core.step.StepAspect"/>
-        <aspect name="io.testomat.core.facade.methods.artifact.ArtifactAspect"/>
-    </aspects>
-
     <weaver>
-        <!-- Weave all user classes -->
-        <include within="*"/>
+        <exclude within="io.testomat.core.step.StepAspect"/>
+        <exclude within="io.testomat.core.facade.methods.artifact.ArtifactAspect"/>
     </weaver>
 </aspectj>
