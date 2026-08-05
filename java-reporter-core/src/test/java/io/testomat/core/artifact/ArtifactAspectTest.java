@@ -1,12 +1,18 @@
 package io.testomat.core.artifact;
 
-import io.testomat.core.facade.Testomatio;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import io.testomat.core.facade.methods.artifact.ArtifactAspect;
+import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
+import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
 import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.TestStep;
 import java.io.File;
-import java.nio.file.Path;
+import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
@@ -14,125 +20,127 @@ import static org.mockito.Mockito.*;
 
 class ArtifactAspectTest {
 
+    private static final String FILE_NAME = "test-artifact.txt";
     private final ArtifactAspect aspect = new ArtifactAspect();
+    private File tempFile;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        tempFile = File.createTempFile("test-artifact-", ".txt");
+        tempFile.deleteOnExit();
+        TempArtifactDirectoriesStorage.DIRECTORIES.get().clear();
+    }
+
+    @AfterEach
+    void tearDown() {
+        TempArtifactDirectoriesStorage.DIRECTORIES.remove();
+    }
 
     @Test
     void shouldSendStringArtifact() {
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class);
-            MockedStatic<Testomatio> testomatio = mockStatic(Testomatio.class)) {
+        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
 
             lifecycle.when(StepLifecycle::current).thenReturn(null);
             lifecycle.when(StepLifecycle::lastFinished).thenReturn(null);
 
-            aspect.afterArtifact("file.txt");
+            aspect.afterArtifact(tempFile.getAbsolutePath());
 
-            testomatio.verify(() -> Testomatio.artifact("file.txt"));
+            List<String> dirs = TempArtifactDirectoriesStorage.DIRECTORIES.get();
+            assertTrue(dirs.contains(tempFile.getAbsolutePath()));
         }
     }
 
     @Test
     void shouldSendPathArtifact() {
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class);
-            MockedStatic<Testomatio> testomatio = mockStatic(Testomatio.class)) {
+        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
 
             lifecycle.when(StepLifecycle::current).thenReturn(null);
             lifecycle.when(StepLifecycle::lastFinished).thenReturn(null);
 
-            Path path = Path.of("file.txt");
+            aspect.afterArtifact(tempFile.toPath());
 
-            aspect.afterArtifact(path);
-
-            testomatio.verify(() -> Testomatio.artifact(path.toString()));
+            List<String> dirs = TempArtifactDirectoriesStorage.DIRECTORIES.get();
+            assertTrue(dirs.contains(tempFile.getAbsolutePath()));
         }
     }
 
     @Test
     void shouldSendFileArtifact() {
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class);
-            MockedStatic<Testomatio> testomatio = mockStatic(Testomatio.class)) {
+        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
 
             lifecycle.when(StepLifecycle::current).thenReturn(null);
             lifecycle.when(StepLifecycle::lastFinished).thenReturn(null);
 
-            File file = new File("file.txt");
+            aspect.afterArtifact(tempFile);
 
-            aspect.afterArtifact(file);
-
-            testomatio.verify(() -> Testomatio.artifact(file.getAbsolutePath()));
+            List<String> dirs = TempArtifactDirectoriesStorage.DIRECTORIES.get();
+            assertTrue(dirs.contains(tempFile.getAbsolutePath()));
         }
     }
 
     @Test
     void shouldSendStepArtifactWhenCurrentStepExists() {
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class);
-            MockedStatic<Testomatio> testomatio = mockStatic(Testomatio.class)) {
+        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
 
             TestStep step = mock(TestStep.class);
-
             when(step.getId()).thenReturn(UUID.randomUUID());
-
             lifecycle.when(StepLifecycle::current).thenReturn(step);
 
-            aspect.afterArtifact("file.txt");
+            aspect.afterArtifact(tempFile.getAbsolutePath());
 
-            testomatio.verify(() -> Testomatio.stepArtifact("file.txt"));
+            List<String> dirs = TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(step.getId())
+                .getDirectories();
+            assertTrue(dirs.contains(tempFile.getAbsolutePath()));
         }
     }
 
     @Test
     void shouldSendStepArtifactWhenLastFinishedStepExists() {
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class);
-            MockedStatic<Testomatio> testomatio = mockStatic(Testomatio.class)) {
+        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
 
             TestStep step = mock(TestStep.class);
-
             when(step.getId()).thenReturn(UUID.randomUUID());
-
             lifecycle.when(StepLifecycle::current).thenReturn(null);
             lifecycle.when(StepLifecycle::lastFinished).thenReturn(step);
 
-            aspect.afterArtifact("file.txt");
+            aspect.afterArtifact(tempFile.getAbsolutePath());
 
-            testomatio.verify(() -> Testomatio.stepArtifact("file.txt"));
+            List<String> dirs = TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(step.getId())
+                .getDirectories();
+            assertTrue(dirs.contains(tempFile.getAbsolutePath()));
         }
     }
 
     @Test
     void shouldSendArtifactWhenStepHasNullId() {
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class);
-            MockedStatic<Testomatio> testomatio = mockStatic(Testomatio.class)) {
+        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class)) {
 
             TestStep step = mock(TestStep.class);
-
             when(step.getId()).thenReturn(null);
-
             lifecycle.when(StepLifecycle::current).thenReturn(step);
 
-            aspect.afterArtifact("file.txt");
+            aspect.afterArtifact(tempFile.getAbsolutePath());
 
-            testomatio.verify(() -> Testomatio.artifact("file.txt"));
+            List<String> dirs = TempArtifactDirectoriesStorage.DIRECTORIES.get();
+            assertTrue(dirs.contains(tempFile.getAbsolutePath()));
         }
     }
 
     @Test
     void shouldIgnoreUnsupportedType() {
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class);
-            MockedStatic<Testomatio> testomatio = mockStatic(Testomatio.class)) {
+        aspect.afterArtifact(new Object());
 
-            aspect.afterArtifact(new Object());
-
-            testomatio.verifyNoInteractions();
-        }
+        assertTrue(TempArtifactDirectoriesStorage.DIRECTORIES.get().isEmpty());
     }
 
     @Test
     void shouldIgnoreNull() {
-        try (MockedStatic<StepLifecycle> lifecycle = mockStatic(StepLifecycle.class);
-            MockedStatic<Testomatio> testomatio = mockStatic(Testomatio.class)) {
+        aspect.afterArtifact(null);
 
-            aspect.afterArtifact(null);
-
-            testomatio.verifyNoInteractions();
-        }
+        assertTrue(TempArtifactDirectoriesStorage.DIRECTORIES.get().isEmpty());
     }
 }

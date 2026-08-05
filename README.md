@@ -386,6 +386,7 @@ Artifacts are stored in external S3 buckets. S3 Access can be configured in **tw
 |-------------------------------------|-----------------------------------------------------|-------------------------------------------|
 | `testomatio.artifact.disable`       | Completely disable artifact uploading               | `false`                                   |
 | `testomatio.artifact.private`       | Keep artifacts private (no public URLs)             | `false`                                   |
+| `testomatio.artifact.sending.delay` | Wait time before uploading test artifacts           | `10000 msec`                              |
 | `testomatio.step.artifacts.enabled` | Enables uploading artifacts for test steps          | `false`                                   |
 | `s3.force-path-style`               | Use path-style URLs for S3-compatible storage       | `false`                                   |
 | `s3.endpoint`                       | Custom endpoint to be used with force-path-style    | `false`                                   |
@@ -528,23 +529,64 @@ Steps provide granular visibility into test logic and help identify exactly wher
 
 ### Setup
 
-Add AspectJ weaver to your test execution via maven-surefire-plugin:
+Configure Compile-Time Weaving (CTW) with the AspectJ Maven Plugin:
 
+maven
 ```xml
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.2.2</version>
-            <configuration>
-                <argLine>
-                    -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.jar"
-                </argLine>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
+
+<dependency>
+    <groupId>org.aspectj</groupId>
+    <artifactId>aspectjrt</artifactId>
+    <version>${aspectj.version}</version>
+</dependency>
+
+<plugin>
+<groupId>dev.aspectj</groupId>
+<artifactId>aspectj-maven-plugin</artifactId>
+<version>${aspectj.maven.version}</version>
+
+<configuration>
+    <complianceLevel>${java.version}</complianceLevel>
+    <source>${java.version}</source>
+    <target>${java.version}</target>
+
+    <aspectLibraries>
+        <aspectLibrary>
+            <groupId>io.testomat</groupId>
+            <artifactId>java-reporter-core</artifactId>
+        </aspectLibrary>
+    </aspectLibraries>
+</configuration>
+
+<executions>
+    <execution>
+        <goals>
+            <goal>compile</goal>
+            <goal>test-compile</goal>
+        </goals>
+    </execution>
+</executions>
+
+<dependencies>
+    <dependency>
+        <groupId>org.aspectj</groupId>
+        <artifactId>aspectjtools</artifactId>
+        <version>${aspectj.version}</version>
+    </dependency>
+</dependencies>
+</plugin>
+```
+
+gradle
+
+```groovy
+plugins {
+    id "io.freefair.aspectj" version "9.5.0"
+}
+
+dependencies {
+    implementation "org.aspectj:aspectjrt:1.9.24"
+}
 ```
 
 ### Basic Usage

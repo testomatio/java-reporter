@@ -1,6 +1,7 @@
 package io.testomat.core.facade.methods.artifact;
 
-import io.testomat.core.facade.Testomatio;
+import io.testomat.core.facade.ServiceRegistryUtil;
+import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
 import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.TestStep;
 import java.io.File;
@@ -15,7 +16,7 @@ public class ArtifactAspect {
     private static final Logger log = LoggerFactory.getLogger(ArtifactAspect.class);
 
     @AfterReturning(
-        pointcut = "@annotation(io.testomat.core.annotation.Artifact)",
+        pointcut = "execution(* *(..)) && @annotation(io.testomat.core.annotation.Artifact)",
         returning = "result"
     )
     public void afterArtifact(Object result) {
@@ -28,10 +29,11 @@ public class ArtifactAspect {
         if (testStep == null) {
             testStep = StepLifecycle.lastFinished();
         }
+        ArtifactManager artifactManager = ServiceRegistryUtil.getService(ArtifactManager.class);
         if (testStep == null || testStep.getId() == null) {
-            Testomatio.artifact(fileName);
+            artifactManager.storeDirectories(fileName);
         } else {
-            Testomatio.stepArtifact(fileName);
+            artifactManager.storeStepDirectories(testStep.getId(), fileName);
         }
     }
 
