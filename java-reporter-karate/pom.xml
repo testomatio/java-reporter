@@ -52,7 +52,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.17.0-rc4</version>
+            <version>0.17.0</version>
         </dependency>
         <dependency>
             <groupId>io.karatelabs</groupId>
