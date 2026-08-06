@@ -1,6 +1,7 @@
 package io.testomat.testng.constructor;
 
 import io.testomat.core.model.ExceptionDetails;
+import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.StepStorage;
@@ -59,7 +60,7 @@ public class TestNgTestResultConstructor {
      * Enhanced to include parameterized test data (example and RID) and test steps.
      */
     private TestResult buildTestResult(TestResultWrapper wrapper, String message, String stack) {
-        var metadata = wrapper.getTestMetadata();
+        TestMetadata metadata = wrapper.getTestMetadata();
 
         // Collect steps from ThreadLocal storage
         List<TestStep> steps = StepStorage.getSteps();

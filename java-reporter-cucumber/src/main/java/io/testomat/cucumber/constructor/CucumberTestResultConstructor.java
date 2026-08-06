@@ -57,7 +57,7 @@ public class CucumberTestResultConstructor {
                 .withTestId(testDataExtractor.extractTestId(event))
                 .withFile(fileName)
                 .withTitle(testDataExtractor.extractTitle(event))
-                .withRid(event.getTestCase().getId().toString())
+                .withRid(testDataExtractor.generateRid(event))
                 .withMessage(exceptionDetails.getMessage())
                 .withStack(exceptionDetails.getStack());
 

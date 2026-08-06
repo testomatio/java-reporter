@@ -1,9 +1,13 @@
 package io.testomat.cucumber.listener;
 
+import static io.testomat.core.constants.CommonConstants.FAILED;
+import static io.testomat.core.constants.CommonConstants.PASSED;
+
 import io.cucumber.plugin.EventListener;
 import io.cucumber.plugin.Plugin;
 import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.TestCaseFinished;
+import io.cucumber.plugin.event.TestCaseStarted;
 import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
 import io.testomat.core.exception.ReportTestResultException;
@@ -68,6 +72,8 @@ public class CucumberListener extends AbstractHooksContainer
         eventPublisher.registerHandlerFor(
                 TestRunFinished.class, this::handleTestRunFinished);
         eventPublisher.registerHandlerFor(
+                TestCaseStarted.class, this::handleTestCaseStarted);
+        eventPublisher.registerHandlerFor(
                 TestCaseFinished.class, this::handleTestCaseFinished);
     }
 
@@ -83,6 +89,19 @@ public class CucumberListener extends AbstractHooksContainer
         onTestRunFinishedHookAfterExecution(event);
     }
 
+    void handleTestCaseStarted(TestCaseStarted event) {
+        String key = event.getTestCase().getUri()
+                + "."
+                + event.getTestCase().getName();
+
+        if (CucumberTestRegistry.isProcessed(key)
+                && !CucumberTestRegistry.containsTestId(dataExtractor.extractTestId(event))) {
+            return;
+        }
+
+        CucumberTestRegistry.add(key, dataExtractor.extractTestId(event));
+    }
+
     void handleTestCaseFinished(TestCaseFinished event) {
         if (!runManager.isActive()) {
             return;
@@ -95,6 +114,15 @@ public class CucumberListener extends AbstractHooksContainer
         try {
             onTestCaseFinishedHookBeforeExecution(event);
             TestResult result = resultConstructor.constructTestRunResult(event);
+
+            if (CucumberTestRegistry.containsTestId(result.getTestId())) {
+                result.setOverwrite(false);
+
+                if (!PASSED.equals(result.getStatus())) {
+                    result.setStatus(FAILED);
+                }
+            }
+
             runManager.reportTest(result);
             onTestCaseFinishedHookAfterExecution(event);
         } catch (Exception e) {

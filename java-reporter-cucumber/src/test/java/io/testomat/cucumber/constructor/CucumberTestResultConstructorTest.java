@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -58,12 +59,14 @@ class CucumberTestResultConstructorTest {
 
         when(testCaseFinished.getTestCase()).thenReturn(testCase);
         when(testCase.getUri()).thenReturn(testUri);
-        when(testCase.getId()).thenReturn(testCaseId);
-        
+        when(testCase.getName()).thenReturn("Test Scenario");
+        when(testCase.getTestSteps()).thenReturn(Collections.emptyList());
+
         when(testDataExtractor.extractExceptionDetails(testCaseFinished)).thenReturn(exceptionDetails);
         when(testDataExtractor.getNormalizedStatus(testCaseFinished)).thenReturn("PASSED");
         when(testDataExtractor.createExample(testCaseFinished)).thenReturn(example);
         when(testDataExtractor.extractTestId(testCaseFinished)).thenReturn("@T12345678");
+        when(testDataExtractor.generateRid(testCaseFinished)).thenReturn("file:///test/path/TestFeature.feature.Test Scenario");
         when(testDataExtractor.extractFileName(testCaseFinished)).thenReturn("file:///test/path/TestFeature.feature");
         when(testDataExtractor.extractTitle(testCaseFinished)).thenReturn("Test Title");
 
@@ -78,7 +81,7 @@ class CucumberTestResultConstructorTest {
         assertEquals("@T12345678", result.getTestId());
         assertEquals("file:///test/path/TestFeature.feature", result.getFile());
         assertEquals("Test Title", result.getTitle());
-        assertEquals(testCaseId.toString(), result.getRid());
+        assertEquals("file:///test/path/TestFeature.feature.Test Scenario", result.getRid());
         assertEquals("Test error", result.getMessage());
         assertEquals("Stack trace", result.getStack());
     }
@@ -93,12 +96,14 @@ class CucumberTestResultConstructorTest {
 
         when(testCaseFinished.getTestCase()).thenReturn(testCase);
         when(testCase.getUri()).thenReturn(testUri);
-        when(testCase.getId()).thenReturn(testCaseId);
-        
+        when(testCase.getName()).thenReturn("Test Scenario");
+        when(testCase.getTestSteps()).thenReturn(Collections.emptyList());
+
         when(testDataExtractor.extractExceptionDetails(testCaseFinished)).thenReturn(emptyExceptionDetails);
         when(testDataExtractor.getNormalizedStatus(testCaseFinished)).thenReturn("FAILED");
         when(testDataExtractor.createExample(testCaseFinished)).thenReturn(emptyExample);
         when(testDataExtractor.extractTestId(testCaseFinished)).thenReturn(null);
+        when(testDataExtractor.generateRid(testCaseFinished)).thenReturn("file:///test/path/TestFeature.feature.Test Scenario");
         when(testDataExtractor.extractFileName(testCaseFinished)).thenReturn(null);
         when(testDataExtractor.extractTitle(testCaseFinished)).thenReturn("Unknown test");
 
@@ -113,7 +118,7 @@ class CucumberTestResultConstructorTest {
         assertNull(result.getTestId());
         assertNull(result.getFile());
         assertEquals("Unknown test", result.getTitle());
-        assertEquals(testCaseId.toString(), result.getRid());
+        assertEquals("file:///test/path/TestFeature.feature.Test Scenario", result.getRid());
         assertNull(result.getMessage());
         assertNull(result.getStack());
     }
@@ -130,7 +135,7 @@ class CucumberTestResultConstructorTest {
         when(testDataExtractor.extractExceptionDetails(any())).thenReturn(ExceptionDetails.empty());
         when(testDataExtractor.getNormalizedStatus(any())).thenReturn("PASSED");
         when(testDataExtractor.createExample(any())).thenReturn(new HashMap<>());
-        when(testDataExtractor.extractTestId(any())).thenReturn(null);
+        when(testDataExtractor.extractTestId(any(TestCaseFinished.class))).thenReturn(null);
         when(testDataExtractor.extractFileName(any())).thenReturn("file:///test.feature");
         when(testDataExtractor.extractTitle(any())).thenReturn("Test");
 
@@ -142,6 +147,7 @@ class CucumberTestResultConstructorTest {
         verify(testDataExtractor).getNormalizedStatus(testCaseFinished);
         verify(testDataExtractor).createExample(testCaseFinished);
         verify(testDataExtractor).extractTestId(testCaseFinished);
+        verify(testDataExtractor).generateRid(testCaseFinished);
         verify(testDataExtractor).extractFileName(testCaseFinished);
         verify(testDataExtractor).extractTitle(testCaseFinished);
     }
