@@ -3,6 +3,7 @@ package io.testomat.cucumber.listener;
 import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.TestCase;
 import io.cucumber.plugin.event.TestCaseFinished;
+import io.cucumber.plugin.event.TestCaseStarted;
 import io.cucumber.plugin.event.TestRunFinished;
 import io.cucumber.plugin.event.TestRunStarted;
 import io.testomat.core.exception.ReportTestResultException;
@@ -58,6 +59,7 @@ class CucumberListenerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        CucumberTestRegistry.reset();
         listener = new CucumberListener(resultConstructor, runManager, null, dataExtractor, functionsHandler);
     }
     @Test
@@ -74,6 +76,7 @@ class CucumberListenerTest {
         // Then
         verify(eventPublisher).registerHandlerFor(eq(TestRunStarted.class), any());
         verify(eventPublisher).registerHandlerFor(eq(TestRunFinished.class), any());
+        verify(eventPublisher).registerHandlerFor(eq(TestCaseStarted.class), any());
         verify(eventPublisher).registerHandlerFor(eq(TestCaseFinished.class), any());
     }
 

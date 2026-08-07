@@ -97,6 +97,57 @@ class TestDataExtractorTest {
     }
 
     @Test
+    void shouldGenerateRidWithSimpleValues() {
+        // Given
+        URI uri = URI.create("classpath:features/login.feature");
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getUri()).thenReturn(uri);
+        when(testCase.getName()).thenReturn("Login");
+        when(testCase.getTestSteps()).thenReturn(Collections.singletonList(pickleStepTestStep));
+        when(pickleStepTestStep.getStepText()).thenReturn("I enter 'John' and age 25 and amount 10.5");
+
+        // When
+        String rid = extractor.generateRid(testCaseFinished);
+
+        // Then
+        assertEquals("classpath:features/login.feature.Login-step_value_0_John"
+                + "-step_value_1_25-step_value_2_10.5", rid);
+    }
+
+    @Test
+    void shouldGenerateRidWithHashForComplexValue() {
+        // Given
+        URI uri = URI.create("classpath:features/orders.feature");
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getUri()).thenReturn(uri);
+        when(testCase.getName()).thenReturn("Place order");
+        when(testCase.getTestSteps()).thenReturn(Collections.singletonList(pickleStepTestStep));
+        when(pickleStepTestStep.getStepText()).thenReturn("I place order with 'long complex order reference #123 !'");
+
+        // When
+        String rid = extractor.generateRid(testCaseFinished);
+
+        // Then
+        assertTrue(rid.startsWith("classpath:features/orders.feature.Place order-step_value_0_h"));
+    }
+
+    @Test
+    void shouldGenerateRidWithoutParameters() {
+        // Given
+        URI uri = URI.create("classpath:features/smoke.feature");
+        when(testCaseFinished.getTestCase()).thenReturn(testCase);
+        when(testCase.getUri()).thenReturn(uri);
+        when(testCase.getName()).thenReturn("Health check");
+        when(testCase.getTestSteps()).thenReturn(Collections.singletonList(testStep));
+
+        // When
+        String rid = extractor.generateRid(testCaseFinished);
+
+        // Then
+        assertEquals("classpath:features/smoke.feature.Health check", rid);
+    }
+
+    @Test
     void shouldExtractExceptionDetailsWhenErrorExists() {
         // Given
         RuntimeException testException = new RuntimeException("Test error message");

@@ -1,5 +1,6 @@
 package io.testomat.resolver;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,11 +18,11 @@ public class JUnitDisplayNameResolver implements TestMetadataResolver {
      */
     @Override
     public String resolve(Method method) {
-        for (var a : method.getAnnotations()) {
-            if (a.annotationType().getName().equals("org.junit.jupiter.api.DisplayName")) {
+        for (Annotation ann : method.getAnnotations()) {
+            if (ann.annotationType().getName().equals("org.junit.jupiter.api.DisplayName")) {
                 try {
-                    Method m = a.annotationType().getMethod("value");
-                    String value = (String) m.invoke(a);
+                    Method m = ann.annotationType().getMethod("value");
+                    String value = (String) m.invoke(ann);
                     if (value != null && !value.isBlank()) {
                         return value;
                     }
