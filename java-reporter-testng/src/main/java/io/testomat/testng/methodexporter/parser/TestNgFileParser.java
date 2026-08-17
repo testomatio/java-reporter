@@ -23,7 +23,7 @@ public class TestNgFileParser {
         log.debug("parseFile called with filepath: {}", filepath);
 
         try {
-            if (filepath == null || filepath.isEmpty()) {
+            if (filepath == null || filepath.isBlank()) {
                 log.warn("Filepath is null or empty");
                 return null;
             }
