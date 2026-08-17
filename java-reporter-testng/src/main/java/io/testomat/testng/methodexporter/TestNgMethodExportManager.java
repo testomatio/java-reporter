@@ -57,6 +57,11 @@ public class TestNgMethodExportManager {
      * Loads and exports test method bodies for the specified test class.
      */
     public void loadTestBodyForClass(Class<?> testClass) {
+        if (testClass == null) {
+            log.error("Test class is null");
+            return;
+        }
+
         log.debug("loadTestBodyForClass called for class: {}", testClass.getName());
 
         try {
