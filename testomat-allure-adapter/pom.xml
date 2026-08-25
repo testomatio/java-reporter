@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>testomat-allure-adapter</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.7</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Testomat Allure adapter</name>
@@ -67,7 +67,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.18.1</version>
+            <version>0.18.2</version>
         </dependency>
         <dependency>
             <groupId>io.qameta.allure</groupId>
