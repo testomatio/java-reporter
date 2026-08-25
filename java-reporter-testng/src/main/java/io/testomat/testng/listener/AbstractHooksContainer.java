@@ -4,11 +4,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.IInvokedMethod;
 import org.testng.ISuite;
 import org.testng.ITestResult;
 
 public abstract class AbstractHooksContainer {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractHooksContainer.class);
 
     private static final List<TestomatHook> HOOKS;
 
@@ -20,28 +25,24 @@ public abstract class AbstractHooksContainer {
         HOOKS = Collections.unmodifiableList(hooks);
     }
 
-    protected void onSuiteStartHookAfterExecution(ISuite suite) {
-        for (TestomatHook hook : HOOKS) {
-            hook.onSuiteStartHookAfterExecution(suite);
-        }
+    protected boolean onSuiteStartHookAfterExecution(ISuite suite) {
+        return runHooks("onSuiteStartHookAfterExecution",
+                hook -> hook.onSuiteStartHookAfterExecution(suite));
     }
 
-    protected void onSuiteStartHookBeforeExecution(ISuite suite) {
-        for (TestomatHook hook : HOOKS) {
-            hook.onSuiteStartHookBeforeExecution(suite);
-        }
+    protected boolean onSuiteStartHookBeforeExecution(ISuite suite) {
+        return runHooks("onSuiteStartHookBeforeExecution",
+                hook -> hook.onSuiteStartHookBeforeExecution(suite));
     }
 
     protected void onSuiteFinishHookAfterExecution(ISuite suite) {
-        for (TestomatHook hook : HOOKS) {
-            hook.onSuiteFinishHookAfterExecution(suite);
-        }
+        runHooks("onSuiteFinishHookAfterExecution",
+                hook -> hook.onSuiteFinishHookAfterExecution(suite));
     }
 
     protected void onSuiteFinishHookBeforeExecution(ISuite suite) {
-        for (TestomatHook hook : HOOKS) {
-            hook.onSuiteFinishHookBeforeExecution(suite);
-        }
+        runHooks("onSuiteFinishHookBeforeExecution",
+                hook -> hook.onSuiteFinishHookBeforeExecution(suite));
     }
 
     protected void onTestSuccessHookAfterExecution(ITestResult result) {
@@ -142,5 +143,18 @@ public abstract class AbstractHooksContainer {
         for (TestomatHook hook : HOOKS) {
             hook.onExecutionFinishHookBeforeExecution();
         }
+    }
+
+    private boolean runHooks(String hookName, Consumer<TestomatHook> action) {
+        boolean failed = false;
+        for (TestomatHook hook : HOOKS) {
+            try {
+                action.accept(hook);
+            } catch (Exception e) {
+                log.error("Hook '{}' failed: {}", hookName, e.getMessage(), e);
+                failed = true;
+            }
+        }
+        return failed;
     }
 }

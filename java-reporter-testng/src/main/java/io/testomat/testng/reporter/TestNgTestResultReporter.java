@@ -15,10 +15,11 @@ import io.testomat.testng.extractor.TestNgMetaDataExtractor;
 import io.testomat.testng.extractor.TestNgParameterExtractor;
 import io.testomat.testng.extractor.TestNgTestWrapper;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.testng.ISuite;
 import org.testng.ITestResult;
 import org.testng.annotations.Test;
@@ -35,16 +36,16 @@ public class TestNgTestResultReporter {
     private final TestNgMetaDataExtractor metaDataExtractor;
     private final TestNgParameterExtractor parameterExtractor;
     private final GlobalRunManager runManager;
-    private final List<String> processedTests;
-    private final Set<String> testIds;
+    private final Set<String> processedTests;
+    private final Map<String, TestState> testStates;
 
     public TestNgTestResultReporter() {
         this.resultConstructor = new TestNgTestResultConstructor();
         this.metaDataExtractor = new TestNgMetaDataExtractor();
         this.parameterExtractor = new TestNgParameterExtractor();
         this.runManager = GlobalRunManager.getInstance();
-        this.processedTests = new ArrayList<>();
-        this.testIds = new HashSet<>();
+        this.processedTests = new HashSet<>();
+        this.testStates = new ConcurrentHashMap<>();
     }
 
     /**
@@ -58,8 +59,8 @@ public class TestNgTestResultReporter {
         this.metaDataExtractor = metaDataExtractor;
         this.parameterExtractor = parameterExtractor;
         this.runManager = runManager;
-        this.testIds = new HashSet<>();
-        this.processedTests = new ArrayList<>();
+        this.processedTests = new HashSet<>();
+        this.testStates = new ConcurrentHashMap<>();
     }
 
     /**
@@ -71,26 +72,16 @@ public class TestNgTestResultReporter {
             return;
         }
 
-        String baseKey = result.getTestClass().getName()
-                + "."
-                + result.getMethod().getMethodName();
-
         String rid = parameterExtractor.generateRid(result);
-        String methodKey = rid != null ? baseKey + "-" + rid : baseKey;
+
+        boolean isRetry = isTestRetried(result, rid);
 
         TestNgTestWrapper wrapper = TestNgTestWrapper.forRegularTest(result);
         TestMetadata metadata = metaDataExtractor.extractTestMetadata(wrapper);
 
-        if (processedTests.contains(methodKey) && !testIds.contains(metadata.getTestId())) {
-            return;
-        }
-
-        processedTests.add(methodKey);
-        testIds.add(metadata.getTestId());
-
         Object example = parameterExtractor.extractExample(result);
 
-        reportTestResultWithParameters(metadata, status, null, result, example, rid);
+        reportTestResultWithParameters(metadata, status, null, result, example, rid, isRetry);
     }
 
     /**
@@ -120,7 +111,7 @@ public class TestNgTestResultReporter {
                     }
                 } catch (ClassNotFoundException e) {
                     throw new TestClassNotFoundException("Failed to load test class: "
-                            + xmlClass.getName(), e);
+                        + xmlClass.getName(), e);
                 }
             });
         });
@@ -132,7 +123,7 @@ public class TestNgTestResultReporter {
     private void reportTestResult(TestMetadata metadata, String status,
                                   String message, Object frameworkSpecificData) {
         reportTestResultWithParameters(metadata, status, message,
-                frameworkSpecificData, null, null);
+                frameworkSpecificData, null, null, false);
     }
 
     /**
@@ -140,7 +131,7 @@ public class TestNgTestResultReporter {
      */
     private void reportTestResultWithParameters(TestMetadata metadata, String status,
                                                 String message, Object frameworkSpecificData,
-                                                Object example, String rid) {
+                                                Object example, String rid, boolean isRetry) {
         if (!runManager.isActive()) {
             return;
         }
@@ -163,7 +154,7 @@ public class TestNgTestResultReporter {
             TestResultWrapper wrapper = builder.build();
             TestResult result = resultConstructor.constructTestRunResult(wrapper);
 
-            if (testIds.contains(result.getTestId())) {
+            if (isRetry) {
                 result.setOverwrite(false);
 
                 if (!PASSED.equals(result.getStatus())) {
@@ -176,6 +167,30 @@ public class TestNgTestResultReporter {
         } catch (Exception e) {
             String testName = metadata != null ? metadata.getTitle() : "Unknown Test";
             throw new ReportTestResultException("Failed to report test result for: " + testName, e);
+        }
+    }
+
+    /**
+     * Checks whether the test is being executed as a retry.
+     *
+     * @param result TestNG test result
+     * @param rid report identifier
+     * @return true if the test was retried, false otherwise
+     */
+    private boolean isTestRetried(ITestResult result, String rid) {
+        String methodKey = result.getTestClass().getName()
+                + "."
+                + result.getMethod().getMethodName()
+                + "-" + rid;
+        TestState state = testStates.computeIfAbsent(methodKey, k -> new TestState());
+        return state.markRetried() || result.wasRetried();
+    }
+
+    private static final class TestState {
+        private final AtomicInteger reportCount = new AtomicInteger();
+
+        boolean markRetried() {
+            return reportCount.getAndIncrement() > 0;
         }
     }
 

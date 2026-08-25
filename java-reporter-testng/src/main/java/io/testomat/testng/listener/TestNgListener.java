@@ -88,11 +88,15 @@ public class TestNgListener extends AbstractHooksContainer
         if (!isListeningRequired()) {
             return;
         }
-        onSuiteStartHookBeforeExecution(suite);
-        log.debug("Suite started: {}", suite.getName());
+
         runManager.incrementSuiteCounter();
+        boolean failed = onSuiteStartHookBeforeExecution(suite);
+        log.debug("Suite started: {}", suite.getName());
         reporter.reportTestResult(suite);
-        onSuiteStartHookAfterExecution(suite);
+        failed |= onSuiteStartHookAfterExecution(suite);
+        if (failed) {
+            suite.getSuiteState().failed();
+        }
     }
 
     @Override
@@ -100,9 +104,9 @@ public class TestNgListener extends AbstractHooksContainer
         if (!isListeningRequired()) {
             return;
         }
+        runManager.decrementSuiteCounter();
         onSuiteFinishHookBeforeExecution(suite);
         log.debug("Suite finished: {}", suite.getName());
-        runManager.decrementSuiteCounter();
         onSuiteFinishHookAfterExecution(suite);
     }
 
