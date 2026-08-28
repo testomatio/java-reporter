@@ -16,8 +16,9 @@ public class Step {
     private final List<String> artifacts;
     private final List<Step> steps;
 
-    public Step(String title, StepStatus status, String log, String error, double duration, String category,
-        List<String> artifacts, List<Step> steps) {
+    public Step(String title, StepStatus status, String log,
+            String error, double duration, String category,
+            List<String> artifacts, List<Step> steps) {
         this.title = title;
         this.status = status;
         this.log = log;

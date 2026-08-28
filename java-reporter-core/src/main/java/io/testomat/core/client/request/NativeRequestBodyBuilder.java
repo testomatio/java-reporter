@@ -27,7 +27,6 @@ import io.testomat.core.runmanager.GlobalRunManager;
 import io.testomat.core.step.StepData;
 import io.testomat.core.step.TestStep;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -152,7 +151,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
      * Converts test result to map structure for JSON serialization.
      * Includes all standard fields plus support for parameterized test data and test steps.
      */
-    private Map<String, Object> buildTestResultMap(TestResult result) throws JsonProcessingException {
+    private Map<String, Object> buildTestResultMap(TestResult result) {
         Map<String, Object> body = new HashMap<>();
         body.put(ApiRequestFields.TITLE, result.getTitle());
 
@@ -182,13 +181,13 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put("steps", stepsMap);
 
             GlobalRunManager.getInstance().updateTestSteps(
-                result.getRid(),
-                convertToJsonlSteps(result.getSteps())
+                    result.getRid(),
+                    convertToJsonlSteps(result.getSteps())
             );
 
             log.debug("Adding {} steps to request body for test: {}",
-                result.getSteps().size(),
-                result.getTitle());
+                    result.getSteps().size(),
+                    result.getTitle());
         }
 
         if (createParam) {
@@ -217,7 +216,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
     /**
      * Converts a list of TestStep objects to a list of maps for JSON serialization.
-     * Each step is converted to match the API format with category, title, duration, and nested steps.
+     * Each step is converted to match the API format with category, title, duration,
+     * and nested steps.
      */
     private List<Map<String, Object>> convertStepsToMap(List<TestStep> steps) {
         List<Map<String, Object>> stepMaps = new ArrayList<>();
@@ -285,9 +285,9 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
      */
     private String resolveBuildUrl() {
         String buildUrl = getEnv(
-            "BUILD_URL",        // Jenkins
-            "CI_JOB_URL",       // GitLab
-            "CIRCLE_BUILD_URL"  // CircleCI
+                "BUILD_URL", // Jenkins
+                "CI_JOB_URL", // GitLab
+                "CIRCLE_BUILD_URL" // CircleCI
         );
 
         // GitHub Actions
@@ -308,7 +308,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             String buildId = System.getenv("BUILD_BUILDID");
 
             if (collection != null && project != null && buildId != null) {
-                buildUrl = String.format("%s/%s/_build/results?buildId=%s", collection, project, buildId);
+                buildUrl = String.format("%s/%s/_build/results?buildId=%s",
+                    collection, project, buildId);
             }
         }
 
@@ -382,21 +383,21 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         }
 
         List<Link> links = new ArrayList<>(
-            Optional.ofNullable(result.getLinks())
-                .orElse(Collections.emptyList())
+                Optional.ofNullable(result.getLinks())
+                    .orElse(Collections.emptyList())
         );
 
         Set<String> existingLabels = links.stream()
-            .map(Link::getLabel)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
+                .map(Link::getLabel)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
 
         labels.stream()
             .map(m -> m.get("label"))
             .filter(Objects::nonNull)
             .filter(existingLabels::add)
-            .map(Link::label)
-            .forEach(links::add);
+                .map(Link::label)
+                .forEach(links::add);
 
         result.setLinks(links);
     }

@@ -4,16 +4,16 @@ import static io.testomat.core.constants.PropertyNameConstants.CUSTOM_RUN_UID_PR
 import static io.testomat.core.constants.PropertyNameConstants.DISABLE_REPORTING_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 
+import io.testomat.core.batch.BatchResultManager;
+import io.testomat.core.client.ApiInterface;
+import io.testomat.core.client.ClientFactory;
+import io.testomat.core.client.TestomatClientFactory;
 import io.testomat.core.facade.methods.artifact.ArtifactLinkDataStorage;
 import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
 import io.testomat.core.facade.methods.artifact.model.AddTestsBatchRequest;
 import io.testomat.core.facade.methods.artifact.model.Step;
 import io.testomat.core.facade.methods.artifact.model.TestItem;
 import io.testomat.core.facade.methods.artifact.util.ArtifactKeyGenerator;
-import io.testomat.core.batch.BatchResultManager;
-import io.testomat.core.client.ApiInterface;
-import io.testomat.core.client.ClientFactory;
-import io.testomat.core.client.TestomatClientFactory;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
@@ -50,7 +50,8 @@ public class GlobalRunManager {
      * Used for normal application runtime.
      */
     private GlobalRunManager() {
-        this.provider = PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+        this.provider =
+                PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
         this.clientFactory = TestomatClientFactory.getClientFactory();
     }
 
@@ -309,7 +310,8 @@ public class GlobalRunManager {
             return;
         }
 
-        ReportedTestStorage.linkArtifactsToTests(ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
+        ReportedTestStorage.linkArtifactsToTests(
+                ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
         log.info("Getting ready to send artifacts");
         Thread.sleep(DELAY_BEFORE_ARTIFACTS_SENDING_MS);
         log.info("Syncing artifacts");
@@ -373,7 +375,8 @@ public class GlobalRunManager {
             int delayMs = Integer.parseInt(value.trim());
             return delayMs > 0 ? delayMs : defaultDelayMs;
         } catch (NumberFormatException nfe) {
-            log.warn("Invalid testomatio.artifact.sending.delay value: {}, using default {}", value, defaultDelayMs);
+            log.warn("Invalid testomatio.artifact.sending.delay value: {}, using default {}",
+                    value, defaultDelayMs);
             return defaultDelayMs;
         }
     }

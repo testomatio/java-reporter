@@ -35,10 +35,10 @@ public class CredentialsValidationService {
             return false;
         }
 
-        if (creds.getAccessKeyId() == null || creds.getSecretAccessKey() == null ||
-                creds.getRegion() == null || creds.getBucket() == null) {
-            log.error("S3 credentials validation failed: missing required fields - " +
-                            "accessKey: {}, secretKey: {}, region: {}, bucket: {}",
+        if (creds.getAccessKeyId() == null || creds.getSecretAccessKey() == null
+                || creds.getRegion() == null || creds.getBucket() == null) {
+            log.error("S3 credentials validation failed: missing required fields - "
+                    + "accessKey: {}, secretKey: {}, region: {}, bucket: {}",
                     creds.getAccessKeyId() != null, creds.getSecretAccessKey() != null,
                     creds.getRegion() != null, creds.getBucket() != null);
             return false;

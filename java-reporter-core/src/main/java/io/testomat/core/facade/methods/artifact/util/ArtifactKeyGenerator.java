@@ -17,7 +17,7 @@ public class ArtifactKeyGenerator {
     public String generateKey(String dir, String rid, String testName) {
         return runId
                 + SEPARATOR
-                +testName + "::"
+                + testName + "::"
                 + rid
                 + SEPARATOR
                 + Paths.get(dir).getFileName();

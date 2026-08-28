@@ -29,8 +29,8 @@ public class S3ClientFactory {
         Region region = resolveRegion(s3);
 
         S3ClientBuilder builder = S3Client.builder()
-            .credentialsProvider(buildCredentialsProvider(s3, region))
-            .region(region);
+                .credentialsProvider(buildCredentialsProvider(s3, region))
+                .region(region);
 
         configureEndpoint(builder, s3);
 
@@ -47,7 +47,9 @@ public class S3ClientFactory {
      */
     private AwsCredentialsProvider buildCredentialsProvider(S3Credentials s3, Region region) {
 
-        if (!isBlank(s3.getAccessKeyId()) && !isBlank(s3.getSecretAccessKey()) && !isBlank(s3.getSessionToken())) {
+        if (!isBlank(s3.getAccessKeyId())
+                && !isBlank(s3.getSecretAccessKey())
+                && !isBlank(s3.getSessionToken())) {
             return StaticCredentialsProvider.create(
                 AwsSessionCredentials.create(
                     s3.getAccessKeyId().trim(),
@@ -60,9 +62,9 @@ public class S3ClientFactory {
         if (s3.isIam() && !isBlank(s3.getRoleArn())) {
             AwsCredentialsProvider baseProvider = buildBaseProvider(s3);
             StsClient stsClient = StsClient.builder()
-                .credentialsProvider(baseProvider)
-                .region(region)
-                .build();
+                    .credentialsProvider(baseProvider)
+                    .region(region)
+                    .build();
 
             return StsAssumeRoleCredentialsProvider.builder()
                 .stsClient(stsClient)
@@ -112,7 +114,8 @@ public class S3ClientFactory {
             return Region.of(s3Credentials.getRegion().trim());
 
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid AWS region: " + s3Credentials.getRegion(), e);
+            throw new IllegalArgumentException("Invalid AWS region: "
+                + s3Credentials.getRegion(), e);
         }
     }
 
@@ -126,13 +129,14 @@ public class S3ClientFactory {
             try {
                 builder.endpointOverride(URI.create(s3Credentials.getCustomEndpoint().trim()));
             } catch (Exception e) {
-                throw new IllegalArgumentException("Invalid endpoint URL: " + s3Credentials.getCustomEndpoint(), e);
+                throw new IllegalArgumentException("Invalid endpoint URL: "
+                    + s3Credentials.getCustomEndpoint(), e);
             }
         }
 
         if (s3Credentials.isForcePath() || hasCustomEndpoint) {
             builder.serviceConfiguration(
-                S3Configuration.builder()
+                    S3Configuration.builder()
                     .pathStyleAccessEnabled(s3Credentials.isForcePath())
                     .build());
         }

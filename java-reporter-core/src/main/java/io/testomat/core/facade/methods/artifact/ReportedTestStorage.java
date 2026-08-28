@@ -43,8 +43,8 @@ public class ReportedTestStorage {
         synchronized (STORAGE) {
 
             boolean exists = STORAGE.stream().anyMatch(m ->
-                Objects.equals(m.get("test_id"), testId) &&
-                    Objects.equals(m.get("rid"), rid)
+                    Objects.equals(m.get("test_id"), testId)
+                    && Objects.equals(m.get("rid"), rid)
             );
 
             if (!exists) {
@@ -75,7 +75,7 @@ public class ReportedTestStorage {
      */
     public static void linkArtifactsToTests(List<ArtifactLinkData> artifactLinkData) {
         Map<Object, Map<String, Object>> index =
-            STORAGE.stream()
+                STORAGE.stream()
                 .collect(Collectors.toMap(
                     m -> m.get("rid"),
                     m -> m
@@ -86,7 +86,7 @@ public class ReportedTestStorage {
             if (body != null) {
                 @SuppressWarnings("unchecked")
                 List<String> artifacts =
-                    (List<String>) body.computeIfAbsent("artifacts", k -> new ArrayList<>());
+                        (List<String>) body.computeIfAbsent("artifacts", k -> new ArrayList<>());
                 artifacts.addAll(data.getLinks());
             }
         }

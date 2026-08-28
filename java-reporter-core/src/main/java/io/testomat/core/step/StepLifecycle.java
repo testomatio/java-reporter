@@ -11,9 +11,9 @@ import java.util.Deque;
 public class StepLifecycle {
 
     private static final ThreadLocal<Deque<TestStep>> CURRENT_STEPS =
-        ThreadLocal.withInitial(ArrayDeque::new);
+            ThreadLocal.withInitial(ArrayDeque::new);
     private static final ThreadLocal<TestStep> LAST_FINISHED =
-        new ThreadLocal<>();
+            new ThreadLocal<>();
 
     /**
      * Starts a new test step and registers it as a child of the current step
@@ -41,7 +41,7 @@ public class StepLifecycle {
         if (!stack.isEmpty()) {
             LAST_FINISHED.set(stack.pop());
         }
-        if(stack.isEmpty()) {
+        if (stack.isEmpty()) {
             CURRENT_STEPS.remove();
         }
     }
@@ -51,7 +51,7 @@ public class StepLifecycle {
      *
      * @return current step or null if none exists
      */
-    public static TestStep current(){
+    public static TestStep current() {
         return CURRENT_STEPS.get().peek();
     }
 
@@ -71,7 +71,7 @@ public class StepLifecycle {
     /**
      * Clears lifecycle state for the current thread.
      */
-    public static void reset(){
+    public static void reset() {
         CURRENT_STEPS.remove();
         LAST_FINISHED.remove();
     }

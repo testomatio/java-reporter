@@ -16,8 +16,8 @@ public class ArtifactAspect {
     private static final Logger log = LoggerFactory.getLogger(ArtifactAspect.class);
 
     @AfterReturning(
-        pointcut = "execution(* *(..)) && @annotation(io.testomat.core.annotation.Artifact)",
-        returning = "result"
+            pointcut = "execution(* *(..)) && @annotation(io.testomat.core.annotation.Artifact)",
+            returning = "result"
     )
     public void afterArtifact(Object result) {
         String fileName = resolveFileName(result);
@@ -49,9 +49,9 @@ public class ArtifactAspect {
         }
 
         log.warn(
-            "@Artifact ignored: method returned unsupported type '{}'. "
+                "@Artifact ignored: method returned unsupported type '{}'. "
                 + "Supported types are String, Path and File.",
-            result == null ? "null" : result.getClass().getName()
+                result == null ? "null" : result.getClass().getName()
         );
 
         return null;

@@ -6,10 +6,10 @@ import java.util.List;
 
 public class StepData {
     private final List<String> directories =
-        Collections.synchronizedList(new ArrayList<>());
+            Collections.synchronizedList(new ArrayList<>());
 
     private final List<String> artifacts =
-        Collections.synchronizedList(new ArrayList<>());
+            Collections.synchronizedList(new ArrayList<>());
 
     public List<String> getDirectories() {
         return directories;

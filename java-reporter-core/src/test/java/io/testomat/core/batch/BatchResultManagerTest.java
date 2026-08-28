@@ -12,7 +12,6 @@ import static org.mockito.Mockito.doAnswer;
 import io.testomat.core.client.ApiInterface;
 import io.testomat.core.constants.PropertyValuesConstants;
 import io.testomat.core.facade.methods.artifact.model.AddTestsBatchRequest;
-import io.testomat.core.facade.methods.artifact.model.Step;
 import io.testomat.core.facade.methods.artifact.model.TestItem;
 import io.testomat.core.model.TestResult;
 import java.io.IOException;
@@ -408,7 +407,7 @@ class BatchResultManagerTest {
         AddTestsBatchRequest request = batchManager.buildRequest();
 
         assertEquals(1, request.getTests().size());
-        assertEquals("test2", request.getTests().get(0).getTest_id());
+        assertEquals("test2", request.getTests().get(0).getTestId());
     }
 
     private TestResult createTestResult(String title, String status) {

@@ -154,7 +154,9 @@ public class TestResult {
         }
 
         public TestResult build() {
-            return new TestResult(title, testId, suiteTitle, file, status, message, stack, example, rid, overwrite, steps, links);
+            return new TestResult(title, testId, suiteTitle, file, status, message,
+                stack, example, rid, overwrite, steps, links
+            );
         }
     }
 

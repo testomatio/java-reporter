@@ -21,6 +21,11 @@ public class Link {
         return new Link(label, null);
     }
 
-    public String getLabel() { return label; }
-    public String getTest() { return test; }
+    public String getLabel() {
+        return label;
+    }
+
+    public String getTest() {
+        return test;
+    }
 }

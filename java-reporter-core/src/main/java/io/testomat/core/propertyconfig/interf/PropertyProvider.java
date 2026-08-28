@@ -1,7 +1,6 @@
 package io.testomat.core.propertyconfig.interf;
 
 import io.testomat.core.exception.PropertyNotFoundException;
-import io.testomat.core.propertyconfig.util.StringUtils;
 
 /**
  * Property provider interface supporting chain of responsibility pattern.
@@ -26,7 +25,8 @@ public interface PropertyProvider {
      *
      * @param key property key to search for (e.g., "testomatio")
      * @return property value if found
-     * @throws PropertyNotFoundException if property not found in this provider or any chained providers
+     * @throws PropertyNotFoundException
+     * if property not found in this provider or any chained providers
      */
     String getProperty(String key);
 

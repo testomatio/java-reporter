@@ -42,7 +42,8 @@ public class Testomatio {
             return;
         }
 
-        ServiceRegistryUtil.getService(ArtifactManager.class).storeStepDirectories(testStep.getId(), directories);
+        ServiceRegistryUtil.getService(ArtifactManager.class)
+                .storeStepDirectories(testStep.getId(), directories);
     }
 
     /**
@@ -67,7 +68,7 @@ public class Testomatio {
             step.setStatus(StepStatus.failed);
             step.setLog(getStackTrace(t));
             step.setError(
-                t.getMessage() == null || t.getMessage().isBlank()
+                    t.getMessage() == null || t.getMessage().isBlank()
                     ? t.getClass().getSimpleName()
                     : t.getClass().getSimpleName() + ": " + t.getMessage()
             );
