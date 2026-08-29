@@ -19,6 +19,7 @@ public class TempArtifactDirectoriesStorage {
     public static void store(String dir) {
         DIRECTORIES.get().add(dir);
     }
+
     public static void stepStore(UUID stepId, String dir) {
         long threadId = Thread.currentThread().getId();
 

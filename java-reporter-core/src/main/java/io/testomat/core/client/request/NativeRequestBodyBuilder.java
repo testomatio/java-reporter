@@ -370,14 +370,14 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     }
 
     private void addMeta(Map<String, Object> body, String rid) {
-        Map<String, String> meta = MetaStorage.LINKED_META_STORAGE.get(rid);
+        Map<String, String> meta = MetaStorage.getLinkedMetaStorage().get(rid);
         if (meta != null) {
             body.put("meta", meta);
         }
     }
 
     private void addLinks(TestResult result, String rid) {
-        List<Map<String, String>> labels = LabelStorage.LINKED_LABEL_STORAGE.get(rid);
+        List<Map<String, String>> labels = LabelStorage.getLinkedLabelStorage().get(rid);
         if (labels == null || labels.isEmpty()) {
             return;
         }

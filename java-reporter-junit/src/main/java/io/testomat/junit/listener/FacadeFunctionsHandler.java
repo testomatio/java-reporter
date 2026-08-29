@@ -53,11 +53,11 @@ public class FacadeFunctionsHandler {
 
     private void handleMetaAfterEach(ExtensionContext context) {
         String rid = context.getUniqueId();
-        Map<String, String> metaData = MetaStorage.TEMP_META_STORAGE.get();
+        Map<String, String> metaData = MetaStorage.getTempMetaStorage();
 
         if (!metaData.isEmpty()) {
-            MetaStorage.LINKED_META_STORAGE.put(rid, new java.util.HashMap<>(metaData));
-            MetaStorage.TEMP_META_STORAGE.remove();
+            MetaStorage.getLinkedMetaStorage().put(rid, new java.util.HashMap<>(metaData));
+            MetaStorage.clearTempMetaStorage();
         }
     }
 
@@ -88,9 +88,9 @@ public class FacadeFunctionsHandler {
 
     private void handleLabels(ExtensionContext context) {
         String rid = context.getUniqueId();
-        List<Map<String, String>> storedLabels = LabelStorage.TEMP_LABEL_STORAGE.get();
+        List<Map<String, String>> storedLabels = LabelStorage.getTempLabelStorage();
         if (!storedLabels.isEmpty()) {
-            LabelStorage.LINKED_LABEL_STORAGE.put(rid, storedLabels);
+            LabelStorage.getLinkedLabelStorage().put(rid, storedLabels);
         }
     }
 

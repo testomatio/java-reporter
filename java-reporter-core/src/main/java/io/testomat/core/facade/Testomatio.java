@@ -85,11 +85,11 @@ public class Testomatio {
     }
 
     public static void meta(String key, String value) {
-        MetaStorage.TEMP_META_STORAGE.get().put(key, value);
+        MetaStorage.getTempMetaStorage().put(key, value);
     }
 
     public static void meta(Map<String, String> metaMap) {
-        MetaStorage.TEMP_META_STORAGE.get().putAll(metaMap);
+        MetaStorage.getTempMetaStorage().putAll(metaMap);
     }
 
     public static void log(String log) {
@@ -100,11 +100,11 @@ public class Testomatio {
     }
 
     public static void label(String label) {
-        LabelStorage.TEMP_LABEL_STORAGE.get().add(Map.of("label", label));
+        LabelStorage.getTempLabelStorage().add(Map.of("label", label));
     }
 
     public static void label(String labelName, String labelValue) {
-        LabelStorage.TEMP_LABEL_STORAGE.get().add(Map.of("label", labelName + ":" + labelValue));
+        LabelStorage.getTempLabelStorage().add(Map.of("label", labelName + ":" + labelValue));
     }
 
     public static void label(String labelName, List<String> labelValues) {

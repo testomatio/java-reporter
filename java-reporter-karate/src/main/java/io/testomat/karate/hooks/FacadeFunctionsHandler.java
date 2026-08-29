@@ -55,12 +55,12 @@ public class FacadeFunctionsHandler {
 
     private void handleMetaAfterEach(String rid) {
         Map<String, String> metaData =
-                Optional.ofNullable(MetaStorage.TEMP_META_STORAGE.get())
+                Optional.ofNullable(MetaStorage.getTempMetaStorage())
                 .orElse(Map.of());
 
         if (!metaData.isEmpty()) {
-            MetaStorage.LINKED_META_STORAGE.put(rid, new HashMap<>(metaData));
-            MetaStorage.TEMP_META_STORAGE.remove();
+            MetaStorage.getLinkedMetaStorage().put(rid, new HashMap<>(metaData));
+            MetaStorage.clearTempMetaStorage();
         }
     }
 
@@ -87,11 +87,11 @@ public class FacadeFunctionsHandler {
 
     private void handleLabels(String rid) {
         List<Map<String, String>> storedLabels =
-                Optional.ofNullable(LabelStorage.TEMP_LABEL_STORAGE.get())
+                Optional.ofNullable(LabelStorage.getTempLabelStorage())
                 .orElse(List.of());
 
         if (!storedLabels.isEmpty()) {
-            LabelStorage.LINKED_LABEL_STORAGE.put(rid, List.copyOf(storedLabels));
+            LabelStorage.getLinkedLabelStorage().put(rid, List.copyOf(storedLabels));
         }
     }
 
