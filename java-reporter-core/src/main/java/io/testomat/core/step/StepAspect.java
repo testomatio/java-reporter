@@ -7,14 +7,18 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * AspectJ aspect that intercepts methods annotated with {@link Step} to capture step execution metadata.
+ * AspectJ aspect that intercepts methods annotated with {@link Step}
+ * to capture step execution metadata.
  * This aspect records step name and execution duration for test reporting purposes.
  */
 @Aspect
@@ -23,7 +27,8 @@ public class StepAspect {
     private static final Logger log = LoggerFactory.getLogger(StepAspect.class);
 
     @Pointcut("execution(* *(..)) && @annotation(io.testomat.core.annotation.Step)")
-    public void stepAnnotation() {}
+    public void stepAnnotation() {
+    }
 
     /**
      * Initializes and starts a test step before execution of a method
@@ -72,7 +77,6 @@ public class StepAspect {
         }
 
         long duration = calculateDuration(testStep.getId().toString());
-        String stepName = resolveStepName(joinPoint, step);
         String[] artifacts = resolveAttachments(step);
 
         testStep.setStatus(StepStatus.passed);
@@ -82,6 +86,7 @@ public class StepAspect {
             stepArtifact(artifacts);
         }
 
+        String stepName = resolveStepName(joinPoint, step);
         log.debug("Step '{}' passed in {} ms", stepName, duration);
 
         StepLifecycle.finish();
@@ -100,7 +105,6 @@ public class StepAspect {
      */
     @AfterThrowing(pointcut = "stepAnnotation()", throwing = "t")
     public void afterFailure(JoinPoint joinPoint, Throwable t) {
-        Step step = resolveStepAnnotation(joinPoint);
         TestStep testStep = StepLifecycle.current();
 
         if (testStep == null) {
@@ -109,22 +113,24 @@ public class StepAspect {
         }
 
         long duration = calculateDuration(testStep.getId().toString());
-        String stepName = resolveStepName(joinPoint, step);
-        String[] artifacts = resolveAttachments(step);
 
         testStep.setStatus(StepStatus.failed);
         testStep.setDuration(duration);
         testStep.setError(
-            t.getMessage() == null || t.getMessage().isBlank()
+                t.getMessage() == null || t.getMessage().isBlank()
                 ? t.getClass().getSimpleName()
                 : t.getClass().getSimpleName() + ": " + t.getMessage()
         );
         testStep.setLog(getStackTrace(t));
 
+        Step step = resolveStepAnnotation(joinPoint);
+        String[] artifacts = resolveAttachments(step);
+
         if (artifacts != null) {
             stepArtifact(artifacts);
         }
 
+        String stepName = resolveStepName(joinPoint, step);
         log.debug("Step '{}' failed in {} ms", stepName, duration, t);
 
         StepLifecycle.finish();
@@ -146,8 +152,8 @@ public class StepAspect {
 
         try {
             Method realMethod = joinPoint.getTarget()
-                .getClass()
-                .getMethod(method.getName(), method.getParameterTypes());
+                    .getClass()
+                    .getMethod(method.getName(), method.getParameterTypes());
 
             return realMethod.getAnnotation(Step.class);
 

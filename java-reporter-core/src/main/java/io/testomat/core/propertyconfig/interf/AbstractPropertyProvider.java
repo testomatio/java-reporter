@@ -1,6 +1,5 @@
 package io.testomat.core.propertyconfig.interf;
 
-
 import io.testomat.core.propertyconfig.provider.DefaultPropertyProvider;
 import io.testomat.core.propertyconfig.provider.FilePropertyProvider;
 import io.testomat.core.propertyconfig.provider.JvmSystemPropertyProvider;

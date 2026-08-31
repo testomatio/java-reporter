@@ -13,7 +13,8 @@ public interface CustomHttpClient {
      *
      * @param url endpoint URL for the request
      * @param requestBody JSON-formatted request payload
-     * @param responseType expected response class for deserialization, or null if no response needed
+     * @param responseType expected response class for deserialization,
+     * or null if no response needed
      * @param <T> response object type
      * @return deserialized response object, or null if responseType is null
      * @throws IOException if network request fails or JSON processing fails
@@ -25,7 +26,8 @@ public interface CustomHttpClient {
      *
      * @param url endpoint URL for the request
      * @param requestBody JSON-formatted request payload
-     * @param responseType expected response class for deserialization, or null if no response needed
+     * @param responseType expected response class for deserialization,
+     * or null if no response needed
      * @param <T> response object type
      * @return deserialized response object, or null if responseType is null
      * @throws IOException if network request fails or JSON processing fails

@@ -16,7 +16,8 @@ public class ArtifactPropertyNames {
     public static final String ARTIFACT_DISABLE_PROPERTY_NAME = "testomatio.artifact.disable";
     public static final String MAX_SIZE_ARTIFACTS_PROPERTY_NAME = "testomatio.artifact.max-size";
 
-    public static final String STEP_ARTIFACT_ENABLED_PROPERTY_NAME = "testomatio.step.artifacts.enabled";
+    public static final String STEP_ARTIFACT_ENABLED_PROPERTY_NAME =
+            "testomatio.step.artifacts.enabled";
 
     public static final String JSONL_EXPORT_PROPERTY_NAME = "testomatio.artifact.json.disable";
     public static final String JSONL_PATH_PROPERTY_NAME = "testomatio.artifact.json.path";

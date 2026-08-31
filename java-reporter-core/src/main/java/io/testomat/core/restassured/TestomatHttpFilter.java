@@ -25,6 +25,13 @@ public class TestomatHttpFilter implements Filter {
     private final boolean headers;
     private final boolean onlyFailures;
 
+    private TestomatHttpFilter(Builder builder) {
+        this.requestBody = builder.requestBody;
+        this.responseBody = builder.responseBody;
+        this.headers = builder.headers;
+        this.onlyFailures = builder.onlyFailures;
+    }
+
     /**
      * Creates filter with default settings.
      */
@@ -39,24 +46,17 @@ public class TestomatHttpFilter implements Filter {
         return new Builder();
     }
 
-    private TestomatHttpFilter(Builder builder) {
-        this.requestBody = builder.requestBody;
-        this.responseBody = builder.responseBody;
-        this.headers = builder.headers;
-        this.onlyFailures = builder.onlyFailures;
-    }
-
     @Override
     public Response filter(
-        FilterableRequestSpecification request,
-        FilterableResponseSpecification responseSpec,
-        FilterContext ctx) {
+                FilterableRequestSpecification request,
+                FilterableResponseSpecification responseSpec,
+                FilterContext ctx) {
 
         long startTime = System.currentTimeMillis();
 
         Response response = ctx.next(request, responseSpec);
 
-        long duration = System.currentTimeMillis() - startTime;
+        final long duration = System.currentTimeMillis() - startTime;
 
         if (onlyFailures && response.statusCode() < 400) {
             return response;
@@ -65,12 +65,6 @@ public class TestomatHttpFilter implements Filter {
         TestStep testStep = new TestStep();
         testStep.setCategory("user");
         StepLifecycle.start(testStep);
-
-        String summary = buildSummary(
-            request,
-            response,
-            duration
-        );
 
         reportHttpData("Method: " + request.getMethod(), null);
         reportHttpData("URL: " + request.getURI(), null);
@@ -84,20 +78,26 @@ public class TestomatHttpFilter implements Filter {
 
         if (requestBody) {
             reportHttpData("Request body",
-                request.getBody() == null ? "<empty>" : request.getBody().toString());
+                    request.getBody() == null ? "<empty>" : request.getBody().toString());
         }
 
         if (responseBody) {
             reportHttpData("Response body", response.getBody().asPrettyString());
         }
 
+        String summary = buildSummary(
+                    request,
+                    response,
+                    duration
+        );
         testStep.setStepTitle(summary);
         StepLifecycle.finish();
 
         return response;
     }
 
-    private String buildSummary(FilterableRequestSpecification request, Response response, long duration) {
+    private String buildSummary(
+            FilterableRequestSpecification request, Response response, long duration) {
         String path = URI.create(request.getURI()).getPath();
 
         return String.format("%s %s → %d (%d ms)",

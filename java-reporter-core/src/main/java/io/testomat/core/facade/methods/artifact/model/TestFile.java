@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TestFile {
 
-    String path;
-    String type;
+    private String path;
+    private String type;
 
     public TestFile(String path) {
         this.path = path;

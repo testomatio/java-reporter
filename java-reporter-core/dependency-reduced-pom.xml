@@ -4,7 +4,7 @@
   <groupId>io.testomat</groupId>
   <artifactId>java-reporter-core</artifactId>
   <name>Testomat.io Reporter Core</name>
-  <version>0.13.1</version>
+  <version>0.18.2</version>
   <description>Core functionality for Testomat.io Java test reporting library</description>
   <url>https://github.com/testomatio/java-reporter</url>
   <developers>
@@ -31,12 +31,28 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven.compiler.plugin.version}</version>
+        <groupId>dev.aspectj</groupId>
+        <artifactId>aspectj-maven-plugin</artifactId>
+        <version>1.14.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>test-compile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjtools</artifactId>
+            <version>1.9.24</version>
+          </dependency>
+        </dependencies>
         <configuration>
-          <source>${maven.compiler.source}</source>
-          <target>${maven.compiler.target}</target>
-          <encoding>${project.build.sourceEncoding}</encoding>
+          <complianceLevel>11</complianceLevel>
+          <source>11</source>
+          <target>11</target>
         </configuration>
       </plugin>
       <plugin>
@@ -47,7 +63,6 @@
             <include>**/*Test.java</include>
             <include>**/*Tests.java</include>
           </includes>
-          <argLine>-javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"</argLine>
         </configuration>
       </plugin>
       <plugin>
@@ -106,9 +121,6 @@
                 </transformer>
                 <transformer />
                 <transformer />
-                <transformer>
-                  <resource>META-INF/aop.xml</resource>
-                </transformer>
               </transformers>
             </configuration>
           </execution>
@@ -164,6 +176,28 @@
       <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
         <version>3.1.1</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <inherited>false</inherited>
+        <configuration>
+          <configLocation>checkstyle.xml</configLocation>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+          <linkXRef>false</linkXRef>
+          <sourceDirectories>
+            <sourceDirectory>src/main/java</sourceDirectory>
+          </sourceDirectories>
+        </configuration>
       </plugin>
     </plugins>
   </build>

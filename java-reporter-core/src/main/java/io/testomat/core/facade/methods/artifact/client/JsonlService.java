@@ -21,7 +21,7 @@ public class JsonlService {
     public void saveTestArtifacts(String testName, String rid, String testId) {
         List<String> artifactDirectories = TempArtifactDirectoriesStorage.DIRECTORIES.get();
         Map<UUID, StepData> stepArtifactDirectories =
-            TempArtifactDirectoriesStorage.STEP_DATA.getOrDefault(
+                TempArtifactDirectoriesStorage.STEP_DATA.getOrDefault(
                 Thread.currentThread().getId(),
                 Collections.emptyMap()
             );

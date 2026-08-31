@@ -5,11 +5,6 @@ import static io.testomat.core.constants.ArtifactPropertyNames.JSONL_PATH_PROPER
 import static io.testomat.core.constants.CommonConstants.RESPONSE_UID_KEY;
 
 import io.testomat.core.InfoDisplay;
-import io.testomat.core.facade.methods.artifact.ArtifactLinkDataStorage;
-import io.testomat.core.facade.methods.artifact.LinkUploadBodyBuilder;
-import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
-import io.testomat.core.facade.methods.artifact.credential.CredentialsManager;
-import io.testomat.core.facade.methods.artifact.credential.CredentialsValidationService;
 import io.testomat.core.client.http.CustomHttpClient;
 import io.testomat.core.client.request.NativeRequestBodyBuilder;
 import io.testomat.core.client.request.RequestBodyBuilder;
@@ -19,6 +14,11 @@ import io.testomat.core.exception.ArtifactManagementException;
 import io.testomat.core.exception.FinishReportFailedException;
 import io.testomat.core.exception.ReportingFailedException;
 import io.testomat.core.exception.RunCreationFailedException;
+import io.testomat.core.facade.methods.artifact.ArtifactLinkDataStorage;
+import io.testomat.core.facade.methods.artifact.LinkUploadBodyBuilder;
+import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
+import io.testomat.core.facade.methods.artifact.credential.CredentialsManager;
+import io.testomat.core.facade.methods.artifact.credential.CredentialsValidationService;
 import io.testomat.core.facade.methods.artifact.model.AddTestsBatchRequest;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -48,7 +48,8 @@ public class TestomatioClient implements ApiInterface {
     private final RequestBodyBuilder requestBodyBuilder;
     private final CredentialsManager credentialsManager = new CredentialsManager();
     private final LinkUploadBodyBuilder linkUploadBodyBuilder = new LinkUploadBodyBuilder();
-    private final CredentialsValidationService credentialsValidationService = new CredentialsValidationService();
+    private final CredentialsValidationService credentialsValidationService =
+            new CredentialsValidationService();
     private final PropertyProvider provider;
 
     /**
@@ -147,7 +148,7 @@ public class TestomatioClient implements ApiInterface {
     @Override
     public void writeArtifactsToJsonl(String uid) {
         AddTestsBatchRequest request =
-            GlobalRunManager.getInstance().buildBatchRequest();
+                GlobalRunManager.getInstance().buildBatchRequest();
         if (request == null || request.getTests() == null || request.getTests().isEmpty()) {
             return;
         }
@@ -199,7 +200,9 @@ public class TestomatioClient implements ApiInterface {
         try {
             client.post(url, requestBody, null);
         } catch (IOException e) {
-            throw new ArtifactManagementException("Failed to upload artifact links to Testomatio", e);
+            throw new ArtifactManagementException(
+                "Failed to upload artifact links to Testomatio",
+                e);
         }
     }
 

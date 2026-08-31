@@ -20,21 +20,21 @@ class MetaStorageTest {
     @BeforeEach
     void setUp() {
         // Clean storage before each test
-        MetaStorage.TEMP_META_STORAGE.get().clear();
-        MetaStorage.LINKED_META_STORAGE.clear();
+        MetaStorage.clearTempMetaStorage();
+        MetaStorage.clearLinkedMetaStorage();
     }
 
     @AfterEach
     void tearDown() {
         // Clean storage after each test
-        MetaStorage.TEMP_META_STORAGE.remove();
-        MetaStorage.LINKED_META_STORAGE.clear();
+        MetaStorage.clearTempMetaStorage();
+        MetaStorage.clearLinkedMetaStorage();
     }
 
     @Test
     @DisplayName("Should initialize TEMP_META_STORAGE with empty map")
     void testTempMetaStorageInitialization() {
-        Map<String, String> tempStorage = MetaStorage.TEMP_META_STORAGE.get();
+        Map<String, String> tempStorage = MetaStorage.getTempMetaStorage();
 
         assertNotNull(tempStorage);
         assertTrue(tempStorage.isEmpty());
@@ -43,7 +43,7 @@ class MetaStorageTest {
     @Test
     @DisplayName("Should initialize LINKED_META_STORAGE with empty map")
     void testLinkedMetaStorageInitialization() {
-        Map<String, Map<String, String>> linkedStorage = MetaStorage.LINKED_META_STORAGE;
+        Map<String, Map<String, String>> linkedStorage = MetaStorage.getLinkedMetaStorage();
 
         assertNotNull(linkedStorage);
         assertTrue(linkedStorage.isEmpty());
@@ -52,7 +52,7 @@ class MetaStorageTest {
     @Test
     @DisplayName("Should store data in TEMP_META_STORAGE")
     void testStoreTempMetaData() {
-        Map<String, String> tempStorage = MetaStorage.TEMP_META_STORAGE.get();
+        Map<String, String> tempStorage = MetaStorage.getTempMetaStorage();
         tempStorage.put("key1", "value1");
 
         assertEquals("value1", tempStorage.get("key1"));
@@ -62,7 +62,7 @@ class MetaStorageTest {
     @Test
     @DisplayName("Should store multiple entries in TEMP_META_STORAGE")
     void testStoreMultipleTempMetaData() {
-        Map<String, String> tempStorage = MetaStorage.TEMP_META_STORAGE.get();
+        Map<String, String> tempStorage = MetaStorage.getTempMetaStorage();
         tempStorage.put("key1", "value1");
         tempStorage.put("key2", "value2");
         tempStorage.put("key3", "value3");
@@ -77,11 +77,11 @@ class MetaStorageTest {
     @DisplayName("Should store data in LINKED_META_STORAGE")
     void testStoreLinkedMetaData() {
         Map<String, String> metaData = Map.of("key1", "value1");
-        MetaStorage.LINKED_META_STORAGE.put("test-id", metaData);
+        MetaStorage.getLinkedMetaStorage().put("test-id", metaData);
 
-        assertFalse(MetaStorage.LINKED_META_STORAGE.isEmpty());
-        assertEquals(1, MetaStorage.LINKED_META_STORAGE.size());
-        assertEquals(metaData, MetaStorage.LINKED_META_STORAGE.get("test-id"));
+        assertFalse(MetaStorage.getLinkedMetaStorage().isEmpty());
+        assertEquals(1, MetaStorage.getLinkedMetaStorage().size());
+        assertEquals(metaData, MetaStorage.getLinkedMetaStorage().get("test-id"));
     }
 
     @Test
@@ -90,26 +90,26 @@ class MetaStorageTest {
         Map<String, String> meta1 = Map.of("key1", "value1");
         Map<String, String> meta2 = Map.of("key2", "value2");
 
-        MetaStorage.LINKED_META_STORAGE.put("test-1", meta1);
-        MetaStorage.LINKED_META_STORAGE.put("test-2", meta2);
+        MetaStorage.getLinkedMetaStorage().put("test-1", meta1);
+        MetaStorage.getLinkedMetaStorage().put("test-2", meta2);
 
-        assertEquals(2, MetaStorage.LINKED_META_STORAGE.size());
-        assertEquals(meta1, MetaStorage.LINKED_META_STORAGE.get("test-1"));
-        assertEquals(meta2, MetaStorage.LINKED_META_STORAGE.get("test-2"));
+        assertEquals(2, MetaStorage.getLinkedMetaStorage().size());
+        assertEquals(meta1, MetaStorage.getLinkedMetaStorage().get("test-1"));
+        assertEquals(meta2, MetaStorage.getLinkedMetaStorage().get("test-2"));
     }
 
     @Test
     @DisplayName("Should isolate TEMP_META_STORAGE between threads")
     void testTempMetaStorageThreadIsolation() throws InterruptedException {
         Thread thread1 = new Thread(() -> {
-            Map<String, String> storage = MetaStorage.TEMP_META_STORAGE.get();
+            Map<String, String> storage = MetaStorage.getTempMetaStorage();
             storage.put("thread1", "value1");
             assertEquals("value1", storage.get("thread1"));
             assertNull(storage.get("thread2"));
         });
 
         Thread thread2 = new Thread(() -> {
-            Map<String, String> storage = MetaStorage.TEMP_META_STORAGE.get();
+            Map<String, String> storage = MetaStorage.getTempMetaStorage();
             storage.put("thread2", "value2");
             assertEquals("value2", storage.get("thread2"));
             assertNull(storage.get("thread1"));
@@ -132,7 +132,7 @@ class MetaStorageTest {
             final int index = i;
             threads[i] = new Thread(() -> {
                 Map<String, String> meta = Map.of("key" + index, "value" + index);
-                MetaStorage.LINKED_META_STORAGE.put("test-" + index, meta);
+                MetaStorage.getLinkedMetaStorage().put("test-" + index, meta);
             });
         }
 
@@ -144,13 +144,13 @@ class MetaStorageTest {
             thread.join();
         }
 
-        assertEquals(threadCount, MetaStorage.LINKED_META_STORAGE.size());
+        assertEquals(threadCount, MetaStorage.getLinkedMetaStorage().size());
     }
 
     @Test
     @DisplayName("Should clear TEMP_META_STORAGE")
     void testClearTempMetaStorage() {
-        Map<String, String> tempStorage = MetaStorage.TEMP_META_STORAGE.get();
+        Map<String, String> tempStorage = MetaStorage.getTempMetaStorage();
         tempStorage.put("key1", "value1");
         tempStorage.put("key2", "value2");
 
@@ -162,18 +162,18 @@ class MetaStorageTest {
     @Test
     @DisplayName("Should clear LINKED_META_STORAGE")
     void testClearLinkedMetaStorage() {
-        MetaStorage.LINKED_META_STORAGE.put("test-1", Map.of("key1", "value1"));
-        MetaStorage.LINKED_META_STORAGE.put("test-2", Map.of("key2", "value2"));
+        MetaStorage.getLinkedMetaStorage().put("test-1", Map.of("key1", "value1"));
+        MetaStorage.getLinkedMetaStorage().put("test-2", Map.of("key2", "value2"));
 
-        MetaStorage.LINKED_META_STORAGE.clear();
+        MetaStorage.clearLinkedMetaStorage();
 
-        assertTrue(MetaStorage.LINKED_META_STORAGE.isEmpty());
+        assertTrue(MetaStorage.getLinkedMetaStorage().isEmpty());
     }
 
     @Test
     @DisplayName("Should update existing value in TEMP_META_STORAGE")
     void testUpdateTempMetaStorageValue() {
-        Map<String, String> tempStorage = MetaStorage.TEMP_META_STORAGE.get();
+        Map<String, String> tempStorage = MetaStorage.getTempMetaStorage();
         tempStorage.put("key1", "value1");
         tempStorage.put("key1", "updated-value");
 
@@ -187,17 +187,17 @@ class MetaStorageTest {
         Map<String, String> meta1 = Map.of("key1", "value1");
         Map<String, String> meta2 = Map.of("key2", "value2");
 
-        MetaStorage.LINKED_META_STORAGE.put("test-1", meta1);
-        MetaStorage.LINKED_META_STORAGE.put("test-1", meta2);
+        MetaStorage.getLinkedMetaStorage().put("test-1", meta1);
+        MetaStorage.getLinkedMetaStorage().put("test-1", meta2);
 
-        assertEquals(1, MetaStorage.LINKED_META_STORAGE.size());
-        assertEquals(meta2, MetaStorage.LINKED_META_STORAGE.get("test-1"));
+        assertEquals(1, MetaStorage.getLinkedMetaStorage().size());
+        assertEquals(meta2, MetaStorage.getLinkedMetaStorage().get("test-1"));
     }
 
     @Test
     @DisplayName("Should remove entry from TEMP_META_STORAGE")
     void testRemoveTempMetaStorageEntry() {
-        Map<String, String> tempStorage = MetaStorage.TEMP_META_STORAGE.get();
+        Map<String, String> tempStorage = MetaStorage.getTempMetaStorage();
         tempStorage.put("key1", "value1");
         tempStorage.put("key2", "value2");
 
@@ -211,14 +211,14 @@ class MetaStorageTest {
     @Test
     @DisplayName("Should remove entry from LINKED_META_STORAGE")
     void testRemoveLinkedMetaStorageEntry() {
-        MetaStorage.LINKED_META_STORAGE.put("test-1", Map.of("key1", "value1"));
-        MetaStorage.LINKED_META_STORAGE.put("test-2", Map.of("key2", "value2"));
+        MetaStorage.getLinkedMetaStorage().put("test-1", Map.of("key1", "value1"));
+        MetaStorage.getLinkedMetaStorage().put("test-2", Map.of("key2", "value2"));
 
-        MetaStorage.LINKED_META_STORAGE.remove("test-1");
+        MetaStorage.getLinkedMetaStorage().remove("test-1");
 
-        assertEquals(1, MetaStorage.LINKED_META_STORAGE.size());
-        assertNull(MetaStorage.LINKED_META_STORAGE.get("test-1"));
-        assertNotNull(MetaStorage.LINKED_META_STORAGE.get("test-2"));
+        assertEquals(1, MetaStorage.getLinkedMetaStorage().size());
+        assertNull(MetaStorage.getLinkedMetaStorage().get("test-1"));
+        assertNotNull(MetaStorage.getLinkedMetaStorage().get("test-2"));
     }
 
     @Test
@@ -231,9 +231,9 @@ class MetaStorageTest {
                 "os", "windows"
         );
 
-        MetaStorage.LINKED_META_STORAGE.put("test-complex", complexMeta);
+        MetaStorage.getLinkedMetaStorage().put("test-complex", complexMeta);
 
-        Map<String, String> retrieved = MetaStorage.LINKED_META_STORAGE.get("test-complex");
+        Map<String, String> retrieved = MetaStorage.getLinkedMetaStorage().get("test-complex");
         assertNotNull(retrieved);
         assertEquals(4, retrieved.size());
         assertEquals("production", retrieved.get("environment"));
@@ -243,12 +243,12 @@ class MetaStorageTest {
     @Test
     @DisplayName("Should handle ThreadLocal cleanup properly")
     void testThreadLocalCleanup() {
-        Map<String, String> tempStorage = MetaStorage.TEMP_META_STORAGE.get();
+        Map<String, String> tempStorage = MetaStorage.getTempMetaStorage();
         tempStorage.put("key1", "value1");
 
-        MetaStorage.TEMP_META_STORAGE.remove();
+        MetaStorage.clearTempMetaStorage();
 
-        Map<String, String> newStorage = MetaStorage.TEMP_META_STORAGE.get();
+        Map<String, String> newStorage = MetaStorage.getTempMetaStorage();
         assertTrue(newStorage.isEmpty());
     }
 }

@@ -3,7 +3,8 @@ package io.testomat.core.facade.methods.artifact;
 import java.util.List;
 
 /**
- * Data class representing the relationship between test execution and its associated artifact links.
+ * Data class representing the relationship between test execution
+ * and its associated artifact links.
  * Contains test metadata and S3 URLs for uploaded artifacts.
  */
 public class ArtifactLinkData {

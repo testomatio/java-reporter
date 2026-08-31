@@ -6,13 +6,13 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TestItem {
 
-    String rid;
-    String test_id;
-    List<TestFile> files;
-    List<Step> steps;
+    private String rid;
+    private String testId;
+    private List<TestFile> files;
+    private List<Step> steps;
 
-    public TestItem(String rid, String test_id, List<TestFile> files, List<Step> steps) {
-        this.test_id = test_id;
+    public TestItem(String rid, String testId, List<TestFile> files, List<Step> steps) {
+        this.testId = testId;
         this.rid = rid;
         this.files = files;
         this.steps = steps;
@@ -30,8 +30,8 @@ public class TestItem {
         return rid;
     }
 
-    public String getTest_id() {
-        return test_id;
+    public String getTestId() {
+        return testId;
     }
 
     public List<TestFile> getFiles() {

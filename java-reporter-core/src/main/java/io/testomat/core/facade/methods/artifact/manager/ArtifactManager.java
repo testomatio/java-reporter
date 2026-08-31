@@ -5,8 +5,8 @@ package io.testomat.core.facade.methods.artifact.manager;
  * Provides secure file path validation and artifact registration for test runs.
  */
 
-import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.exception.ArtifactManagementException;
+import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -21,14 +21,14 @@ public class ArtifactManager {
 
     public void storeDirectories(String... directories) {
         store(directories,
-            TempArtifactDirectoriesStorage::store,
-            "Invalid artifact path provided: {}");
+                TempArtifactDirectoriesStorage::store,
+                "Invalid artifact path provided: {}");
     }
 
     public void storeStepDirectories(UUID stepId, String... directories) {
         store(directories,
-            dir -> TempArtifactDirectoriesStorage.stepStore(stepId, dir),
-            "Invalid step artifact path provided: {}");
+                dir -> TempArtifactDirectoriesStorage.stepStore(stepId, dir),
+                "Invalid step artifact path provided: {}");
     }
 
     private void store(String[] directories, Consumer<String> storage, String logMessage) {
@@ -56,7 +56,8 @@ public class ArtifactManager {
             log.warn("Provided filepath is not valid: {}", filePath);
             return false;
         } catch (Exception e) {
-            throw new ArtifactManagementException("Unknown exception while file path validation", e);
+            throw new ArtifactManagementException(
+                "Unknown exception while file path validation", e);
         }
     }
 }
