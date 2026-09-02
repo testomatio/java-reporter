@@ -7,12 +7,12 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doAnswer;
 
 import io.testomat.core.client.ApiInterface;
 import io.testomat.core.constants.PropertyValuesConstants;
+import io.testomat.core.facade.methods.artifact.model.AddTestsBatchRequest;
+import io.testomat.core.facade.methods.artifact.model.TestItem;
 import io.testomat.core.model.TestResult;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -339,6 +339,75 @@ class BatchResultManagerTest {
     void addResult_NullResult_ShouldThrowException() {
         // BatchResultManager doesn't handle null results gracefully
         assertThrows(NullPointerException.class, () -> batchManager.addResult(null));
+    }
+
+    @Test
+    @DisplayName("Should build batch request from added test items")
+    void buildRequestShouldReturnAddedTestItems() {
+        TestItem item1 = new TestItem("rid1", "test1", List.of(), null);
+        TestItem item2 = new TestItem("rid2", "test2", List.of(), null);
+
+        batchManager.addTestItem(item1);
+        batchManager.addTestItem(item2);
+
+        AddTestsBatchRequest request = batchManager.buildRequest();
+
+        assertEquals("addTestsBatch", request.getAction());
+        assertEquals(testRunUid, request.getRunId());
+        assertEquals(2, request.getTests().size());
+
+        assertEquals("rid1", request.getTests().get(0).getRid());
+        assertEquals("rid2", request.getTests().get(1).getRid());
+    }
+
+//    @Test
+//    @DisplayName("Should update steps for existing test item")
+//    void updateTestStepsShouldUpdateExistingItem() {
+//        TestItem item = new TestItem("rid1", "test1", List.of(), null);
+//        batchManager.addTestItem(item);
+//
+//        List<Step> steps = List.of(
+//            new Step(List.of("artifact1"), null)
+//        );
+//
+//        batchManager.updateTestSteps("rid1", steps);
+//
+//        AddTestsBatchRequest request = batchManager.buildRequest();
+//
+//        assertEquals(steps, request.getTests().get(0).getSteps());
+//    }
+//
+//    @Test
+//    @DisplayName("Should ignore update for unknown rid")
+//    void updateTestStepsShouldIgnoreUnknownRid() {
+//        List<Step> steps = List.of(
+//            new Step(List.of("artifact1"), null)
+//        );
+//
+//        assertDoesNotThrow(() ->
+//            batchManager.updateTestSteps("unknown-rid", steps)
+//        );
+//
+//        AddTestsBatchRequest request = batchManager.buildRequest();
+//
+//        assertTrue(request.getTests().isEmpty());
+//    }
+
+    @Test
+    @DisplayName("Should replace existing test item with same rid")
+    void addTestItem_ShouldReplaceExistingItem() {
+        batchManager.addTestItem(
+            new TestItem("rid1", "test1", List.of(), null)
+        );
+
+        batchManager.addTestItem(
+            new TestItem("rid1", "test2", List.of(), null)
+        );
+
+        AddTestsBatchRequest request = batchManager.buildRequest();
+
+        assertEquals(1, request.getTests().size());
+        assertEquals("test2", request.getTests().get(0).getTestId());
     }
 
     private TestResult createTestResult(String title, String status) {

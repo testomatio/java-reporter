@@ -1,5 +1,8 @@
 package io.testomat.core.facade.methods.artifact.client;
 
+import static io.testomat.core.constants.ArtifactPropertyNames.STEP_ARTIFACT_ENABLED_PROPERTY_NAME;
+
+import io.testomat.core.exception.ArtifactManagementException;
 import io.testomat.core.facade.methods.artifact.ArtifactLinkData;
 import io.testomat.core.facade.methods.artifact.ArtifactLinkDataStorage;
 import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
@@ -7,15 +10,19 @@ import io.testomat.core.facade.methods.artifact.credential.CredentialsManager;
 import io.testomat.core.facade.methods.artifact.credential.S3Credentials;
 import io.testomat.core.facade.methods.artifact.util.ArtifactKeyGenerator;
 import io.testomat.core.facade.methods.artifact.util.ArtifactUrlGenerator;
-import io.testomat.core.exception.ArtifactManagementException;
+import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
+import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.step.StepData;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +36,8 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
  */
 public class AwsService {
     private static final Logger log = LoggerFactory.getLogger(AwsService.class);
+    private static final PropertyProvider provider =
+            PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
     private static final Map<String, Boolean> bucketAclSupport = new ConcurrentHashMap<>();
 
     private static final String ACL_PRIVATE = "private";
@@ -66,21 +75,35 @@ public class AwsService {
     public void uploadAllArtifactsForTest(String testName, String rid, String testId) {
 
         List<String> artifactDirectories = TempArtifactDirectoriesStorage.DIRECTORIES.get();
-        if (artifactDirectories.isEmpty()) {
+        Map<UUID, StepData> stepArtifactDirectories =
+                TempArtifactDirectoriesStorage.STEP_DATA.getOrDefault(
+                Thread.currentThread().getId(),
+                Collections.emptyMap())
+            ;
+
+        if (artifactDirectories.isEmpty() && stepArtifactDirectories.isEmpty()) {
             log.debug("Artifact list is empty for test: {}", testName);
             return;
         }
 
         S3Credentials credentials = CredentialsManager.getCredentials();
-        List<String> uploadedArtifactsLinks = processArtifacts(artifactDirectories, testName, rid, credentials);
 
-        storeArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks);
+        if (!stepArtifactDirectories.isEmpty()
+                && provider.getBooleanProperty(STEP_ARTIFACT_ENABLED_PROPERTY_NAME)) {
+            List<String> directories = prepareStepArtifactsForUpload(testName, rid, credentials);
+            processArtifacts(directories, testName, rid, credentials);
+        }
 
-        // Clear artifact directories after processing
-        TempArtifactDirectoriesStorage.DIRECTORIES.remove();
+        if (!artifactDirectories.isEmpty()) {
+            List<String> uploadedArtifactsLinks =
+                    processArtifacts(artifactDirectories, testName, rid, credentials);
+            storeArtifactLinkData(testName, rid, testId, uploadedArtifactsLinks);
+        }
     }
 
-    private List<String> processArtifacts(List<String> artifactDirectories, String testName, String rid, S3Credentials credentials) {
+    private List<String> processArtifacts(
+            List<String> artifactDirectories, String testName,
+            String rid, S3Credentials credentials) {
         List<String> uploadedLinks = new ArrayList<>();
 
         for (String dir : artifactDirectories) {
@@ -92,7 +115,42 @@ public class AwsService {
         return uploadedLinks;
     }
 
-    private void storeArtifactLinkData(String testName, String rid, String testId, List<String> uploadedLinks) {
+    /**
+     * Replaces local artifact paths with S3 URLs in STEP_DIRECTORIES
+     * and returns the list of directories that need to be uploaded.
+     *
+     * <p>Only non-HTTP paths are processed, since HTTP entries are already uploaded.</p>
+     *
+     * <p>Mutates underlying lists by updating entries in place.</p>
+     */
+    private List<String> prepareStepArtifactsForUpload(
+            String testName, String rid, S3Credentials credentials) {
+        List<String> artifactDirectories = new ArrayList<>();
+
+        for (StepData stepData :
+                TempArtifactDirectoriesStorage.STEP_DATA.get(
+                        Thread.currentThread().getId()).values()) {
+            stepData.getArtifacts().clear();
+
+            for (String dir : stepData.getDirectories()) {
+                if (!dir.startsWith("http")) {
+                    artifactDirectories.add(dir);
+
+                    String key = keyGenerator.generateKey(dir, rid, testName);
+                    stepData.getArtifacts().add(
+                            urlGenerator.generateUrl(credentials.getBucket(), key)
+                    );
+                } else {
+                    stepData.getArtifacts().add(dir);
+                }
+            }
+        }
+
+        return artifactDirectories;
+    }
+
+    private void storeArtifactLinkData(String testName, String rid,
+            String testId, List<String> uploadedLinks) {
         ArtifactLinkData linkData = new ArtifactLinkData(testName, rid, testId, uploadedLinks);
         ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE.add(linkData);
     }
@@ -122,7 +180,8 @@ public class AwsService {
         }
     }
 
-    private void uploadWithAclStrategy(Path path, String key, S3Credentials credentials, byte[] content) {
+    private void uploadWithAclStrategy(Path path, String key,
+            S3Credentials credentials, byte[] content) {
         String bucketName = credentials.getBucket();
         Boolean supportsAcl = bucketAclSupport.get(bucketName);
 
@@ -135,7 +194,8 @@ public class AwsService {
         }
     }
 
-    private void detectAndUpload(Path path, String key, S3Credentials credentials, byte[] content, String bucketName) {
+    private void detectAndUpload(Path path, String key,
+            S3Credentials credentials, byte[] content, String bucketName) {
         boolean uploadSuccessful = tryUploadWithAcl(path, key, credentials, content);
         if (uploadSuccessful) {
             bucketAclSupport.put(bucketName, true);
@@ -145,7 +205,8 @@ public class AwsService {
         }
     }
 
-    private boolean tryUploadWithAcl(Path path, String key, S3Credentials credentials, byte[] content) {
+    private boolean tryUploadWithAcl(Path path, String key,
+            S3Credentials credentials, byte[] content) {
         try {
             PutObjectRequest request = buildUploadRequestWithAcl(credentials, key);
             performS3Upload(request, content);
@@ -159,7 +220,8 @@ public class AwsService {
         }
     }
 
-    private void performUploadWithAcl(Path path, String key, S3Credentials credentials, byte[] content) {
+    private void performUploadWithAcl(Path path, String key,
+            S3Credentials credentials, byte[] content) {
         try {
             PutObjectRequest request = buildUploadRequestWithAcl(credentials, key);
             performS3Upload(request, content);
@@ -178,7 +240,8 @@ public class AwsService {
                 .build();
     }
 
-    private void performUploadWithoutAcl(Path path, String key, S3Credentials credentials, byte[] content) {
+    private void performUploadWithoutAcl(Path path, String key,
+            S3Credentials credentials, byte[] content) {
         try {
             PutObjectRequest request = buildUploadRequestWithoutAcl(credentials, key);
             performS3Upload(request, content);
@@ -199,9 +262,11 @@ public class AwsService {
         awsClient.getS3Client().putObject(request, RequestBody.fromBytes(content));
     }
 
-    private boolean handleS3Exception(S3Exception e, Path path, S3Credentials credentials, String key) {
+    private boolean handleS3Exception(S3Exception e, Path path,
+            S3Credentials credentials, String key) {
         if (isAclNotSupportedError(e)) {
-            log.info("Bucket '{}' does not support ACLs, will retry without ACL", credentials.getBucket());
+            log.info("Bucket '{}' does not support ACLs, will retry without ACL",
+                    credentials.getBucket());
             return false;
         } else {
             handleUploadException(e, path, credentials, key);
@@ -209,28 +274,36 @@ public class AwsService {
         }
     }
 
-    private void handleGenericException(Exception e, Path path, S3Credentials credentials, String key) {
-        log.error("S3 upload failed for file: {} to bucket: {}, key: {}", path, credentials.getBucket(), key, e);
+    private void handleGenericException(Exception e, Path path,
+            S3Credentials credentials, String key) {
+        log.error("S3 upload failed for file: {} to bucket: {}, key: {}",
+                path, credentials.getBucket(), key, e);
         throw new ArtifactManagementException("S3 upload failed: " + e.getMessage(), e);
     }
 
-    private void handleUploadException(Exception e, Path path, S3Credentials credentials, String key) {
+    private void handleUploadException(Exception e, Path path,
+            S3Credentials credentials, String key) {
         if (e instanceof S3Exception) {
             S3Exception s3e = (S3Exception) e;
             log.error("S3 upload failed for file: {} to bucket: {}, key: {} - {} (Status: {})",
-                    path, credentials.getBucket(), key, s3e.awsErrorDetails().errorMessage(), s3e.statusCode());
-            throw new ArtifactManagementException("S3 upload failed: " + s3e.awsErrorDetails().errorMessage(), e);
+                    path, credentials.getBucket(), key,
+                    s3e.awsErrorDetails().errorMessage(), s3e.statusCode());
+            throw new ArtifactManagementException("S3 upload failed: "
+                    + s3e.awsErrorDetails().errorMessage(), e);
         } else {
-            log.error("S3 upload failed for file: {} to bucket: {}, key: {}", path, credentials.getBucket(), key, e);
+            log.error("S3 upload failed for file: {} to bucket: {}, key: {}",
+                    path, credentials.getBucket(), key, e);
             throw new ArtifactManagementException("S3 upload failed: " + e.getMessage(), e);
         }
     }
 
     private boolean isAclNotSupportedError(S3Exception e) {
-        return (e.statusCode() == 400 &&
-                (ERROR_CODE_ACL_NOT_SUPPORTED.equals(e.awsErrorDetails().errorCode()) ||
-                        ERROR_CODE_BUCKET_LOCKED.equals(e.awsErrorDetails().errorCode()) ||
-                        (e.awsErrorDetails().errorMessage() != null &&
-                                e.awsErrorDetails().errorMessage().contains(ERROR_MESSAGE_NO_ACL))));
+        return (e.statusCode() == 400
+                && (ERROR_CODE_ACL_NOT_SUPPORTED.equals(e.awsErrorDetails().errorCode())
+                        || ERROR_CODE_BUCKET_LOCKED.equals(e.awsErrorDetails().errorCode())
+                        || (e.awsErrorDetails().errorMessage() != null
+                                && e.awsErrorDetails()
+                                    .errorMessage()
+                                    .contains(ERROR_MESSAGE_NO_ACL))));
     }
 }

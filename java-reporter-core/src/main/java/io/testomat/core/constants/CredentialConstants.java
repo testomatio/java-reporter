@@ -8,8 +8,11 @@ public class CredentialConstants {
     public static final String ACCESS_KEY_ID = "ACCESS_KEY_ID";
     public static final String BUCKET = "BUCKET";
     public static final String REGION = "REGION";
+    public static final String EXTERNAL_ID = "EXTERNAL_ID";
+    public static final String ARN = "ARN";
     public static final String ENDPOINT = "ENDPOINT";
     public static final String FORCE_PATH = "FORCE_PATH_STYLE";
+    public static final String SESSION_TOKEN = "SESSION_TOKEN";
 
     private CredentialConstants() {
     }

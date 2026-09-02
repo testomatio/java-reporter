@@ -3,6 +3,7 @@ package io.testomat.junit.constructor;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestMetadata;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.StepStorage;
 import io.testomat.core.step.TestStep;
 import io.testomat.junit.exception.ReporterException;
@@ -129,7 +130,8 @@ public class JUnitTestResultConstructor {
                 .withFile(metadata.getFile())
                 .withMessage(message)
                 .withStatus(status)
-                .withStack(stack);
+                .withStack(stack)
+                .withLinks(metadata.getLinks());;
 
         if (example != null) {
             builder.withExample(example);
@@ -145,6 +147,7 @@ public class JUnitTestResultConstructor {
 
         // Clear steps after collecting them
         StepStorage.clear();
+        StepLifecycle.reset();
 
         return builder.build();
     }

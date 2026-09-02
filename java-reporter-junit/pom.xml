@@ -6,7 +6,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-junit</artifactId>
-    <version>0.8.2</version>
+    <version>0.9.6</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Java Reporter JUnit</name>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>io.testomat</groupId>
             <artifactId>java-reporter-core</artifactId>
-            <version>0.9.3</version>
+            <version>0.18.2</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -99,7 +99,6 @@
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-core</artifactId>
             <version>3.27.0</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>

@@ -13,7 +13,10 @@ public class S3Credentials {
     private String bucket;
     private String region;
     private String customEndpoint;
+    private String roleArn;
+    private String externalId;
     private boolean forcePath = false;
+    private String sessionToken;
 
     public boolean isForcePath() {
         return forcePath;
@@ -85,5 +88,29 @@ public class S3Credentials {
 
     public void setCustomEndpoint(String customEndpoint) {
         this.customEndpoint = customEndpoint;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
+    public String getRoleArn() {
+        return roleArn;
+    }
+
+    public void setRoleArn(String roleArn) {
+        this.roleArn = roleArn;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
     }
 }

@@ -4,10 +4,15 @@ import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_BATCH_S
 import static io.testomat.core.constants.PropertyValuesConstants.DEFAULT_FLUSH_INTERVAL_SECONDS;
 
 import io.testomat.core.client.ApiInterface;
+import io.testomat.core.facade.methods.artifact.model.AddTestsBatchRequest;
+import io.testomat.core.facade.methods.artifact.model.Step;
+import io.testomat.core.facade.methods.artifact.model.TestItem;
 import io.testomat.core.model.TestResult;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +39,9 @@ public class BatchResultManager {
     private final String runUid;
     private final ScheduledExecutorService scheduler;
     private final AtomicBoolean isActive = new AtomicBoolean(true);
+
+    private final Map<String, TestItem> testItems = new LinkedHashMap<>();
+    private final Object testItemsLock = new Object();
 
     /**
      * Creates batch result manager with configurable settings.
@@ -80,6 +88,34 @@ public class BatchResultManager {
 
         if (pendingResults.size() >= DEFAULT_BATCH_SIZE) {
             flushPendingResults();
+        }
+    }
+
+    public void addTestItem(TestItem testItem) {
+        synchronized (testItemsLock) {
+            testItems.put(testItem.getRid(), testItem);
+        }
+    }
+
+    public AddTestsBatchRequest buildRequest() {
+        synchronized (testItemsLock) {
+            return AddTestsBatchRequest.builder(runUid, "addTestsBatch")
+                .addTests(new ArrayList<>(testItems.values()))
+                .build();
+        }
+    }
+
+    public void updateTestSteps(String rid, List<Step> steps) {
+        synchronized (testItemsLock) {
+            TestItem item = testItems.get(rid);
+
+            if (item == null) {
+                log.warn("TestItem not found for rid={}", rid);
+                return;
+            }
+
+            item.setSteps(steps);
+            log.info("Updated steps for {}", rid);
         }
     }
 

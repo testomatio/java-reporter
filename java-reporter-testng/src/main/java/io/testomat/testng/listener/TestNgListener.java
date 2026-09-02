@@ -12,10 +12,13 @@ import io.testomat.testng.extractor.TestNgParameterExtractor;
 import io.testomat.testng.filter.TestIdFilter;
 import io.testomat.testng.methodexporter.TestNgMethodExportManager;
 import io.testomat.testng.reporter.TestNgTestResultReporter;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.IClass;
 import org.testng.IExecutionListener;
 import org.testng.IInvokedMethod;
 import org.testng.IInvokedMethodListener;
@@ -23,6 +26,7 @@ import org.testng.ISuite;
 import org.testng.ISuiteListener;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
+import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 
 /**
@@ -84,11 +88,15 @@ public class TestNgListener extends AbstractHooksContainer
         if (!isListeningRequired()) {
             return;
         }
-        onSuiteStartHookBeforeExecution(suite);
-        log.debug("Suite started: {}", suite.getName());
+
         runManager.incrementSuiteCounter();
+        boolean failed = onSuiteStartHookBeforeExecution(suite);
+        log.debug("Suite started: {}", suite.getName());
         reporter.reportTestResult(suite);
-        onSuiteStartHookAfterExecution(suite);
+        failed |= onSuiteStartHookAfterExecution(suite);
+        if (failed) {
+            suite.getSuiteState().failed();
+        }
     }
 
     @Override
@@ -96,9 +104,9 @@ public class TestNgListener extends AbstractHooksContainer
         if (!isListeningRequired()) {
             return;
         }
+        runManager.decrementSuiteCounter();
         onSuiteFinishHookBeforeExecution(suite);
         log.debug("Suite finished: {}", suite.getName());
-        runManager.decrementSuiteCounter();
         onSuiteFinishHookAfterExecution(suite);
     }
 
@@ -109,16 +117,13 @@ public class TestNgListener extends AbstractHooksContainer
         }
         log.debug("Test context finished: {}", context.getName());
 
-        for (Class<?> testClass : context.getAllTestMethods()[0]
-                .getTestClass()
-                .getRealClass()
-                .getClasses()) {
-            exportTestClassIfNotProcessed(testClass);
-        }
+        Set<Class<?>> testClasses = Arrays.stream(context.getAllTestMethods())
+                .map(ITestNGMethod::getTestClass)
+                .map(IClass::getRealClass)
+                .collect(Collectors.toSet());
 
-        if (context.getAllTestMethods().length > 0) {
-            Class<?> mainTestClass = context.getAllTestMethods()[0].getTestClass().getRealClass();
-            exportTestClassIfNotProcessed(mainTestClass);
+        for (Class<?> testClass : testClasses) {
+            exportTestClassIfNotProcessed(testClass);
         }
     }
 
@@ -199,10 +204,15 @@ public class TestNgListener extends AbstractHooksContainer
             return;
         }
 
-        String className = testClass.getName();
+        Class<?> topLevelClass = testClass;
+        while (topLevelClass.getEnclosingClass() != null) {
+            topLevelClass = topLevelClass.getEnclosingClass();
+        }
+
+        String className = topLevelClass.getName();
         if (processedClasses.add(className)) {
             log.debug("Exporting test class: {}", className);
-            methodExportManager.loadTestBodyForClass(testClass);
+            methodExportManager.loadTestBodyForClass(topLevelClass);
         } else {
             log.debug("Test class {} already processed", className);
         }

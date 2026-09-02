@@ -1,170 +1,235 @@
 package io.testomat.core.step;
 
+import static io.testomat.core.facade.Testomatio.stepArtifact;
+
 import io.testomat.core.annotation.Step;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.Method;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * AspectJ aspect that intercepts methods annotated with {@link Step} to capture step execution metadata.
+ * AspectJ aspect that intercepts methods annotated with {@link Step}
+ * to capture step execution metadata.
  * This aspect records step name and execution duration for test reporting purposes.
  */
 @Aspect
 public class StepAspect {
+
     private static final Logger log = LoggerFactory.getLogger(StepAspect.class);
 
-    /**
-     * Intercepts method execution for methods annotated with {@link Step}.
-     * Captures the step name and execution duration, then creates a {@link TestStep} object
-     * and stores it in ThreadLocal storage for later inclusion in test reports.
-     *
-     * @param joinPoint the join point representing the intercepted method
-     * @param step      the Step annotation instance
-     * @return the result of the intercepted method execution
-     * @throws Throwable if the underlying method execution fails
-     */
-    @Around("execution(@io.testomat.core.annotation.Step * *(..)) && @annotation(step)")
-    public Object aroundStep(ProceedingJoinPoint joinPoint, Step step) throws Throwable {
-        String stepName = resolveStepName(joinPoint, step);
-        long startTime = System.currentTimeMillis();
+    @Pointcut("execution(* *(..)) && @annotation(io.testomat.core.annotation.Step)")
+    public void stepAnnotation() {
+    }
 
-        log.info("Step aspect triggered for: {}", stepName);
+    /**
+     * Initializes and starts a test step before execution of a method
+     * annotated with {@link Step}.
+     *
+     * <p>Creates a new {@link TestStep}, resolves the step name with
+     * substituted parameters, starts step lifecycle tracking,
+     * and records execution start time.
+     *
+     * @param joinPoint intercepted method invocation
+     */
+    @Before("stepAnnotation()")
+    public void beforeStep(JoinPoint joinPoint) {
+        Step step = resolveStepAnnotation(joinPoint);
+        String stepName = resolveStepName(joinPoint, step);
+
+        TestStep testStep = new TestStep();
+        testStep.setStepTitle(stepName);
+        testStep.setCategory("user");
+
+        String stepId = testStep.getId().toString();
+
+        StepLifecycle.start(testStep);
+        StepTimer.start(stepId);
+
+        log.debug("Step started: {}", stepName);
+    }
+
+    /**
+     * Finalizes a test step after successful execution of a method
+     * annotated with {@link Step}.
+     *
+     * <p>Marks the current step as passed, records execution duration,
+     * attaches configured artifacts, and completes the step lifecycle.
+     *
+     * @param joinPoint intercepted method invocation
+     */
+    @AfterReturning("stepAnnotation()")
+    public void afterSuccess(JoinPoint joinPoint) {
+        Step step = resolveStepAnnotation(joinPoint);
+        TestStep testStep = StepLifecycle.current();
+
+        if (testStep == null) {
+            log.warn("StepLifecycle.current() is null in afterSuccess");
+            return;
+        }
+
+        long duration = calculateDuration(testStep.getId().toString());
+        String[] artifacts = resolveAttachments(step);
+
+        testStep.setStatus(StepStatus.passed);
+        testStep.setDuration(duration);
+
+        if (artifacts != null) {
+            stepArtifact(artifacts);
+        }
+
+        String stepName = resolveStepName(joinPoint, step);
+        log.debug("Step '{}' passed in {} ms", stepName, duration);
+
+        StepLifecycle.finish();
+    }
+
+    /**
+     * Finalizes a test step after failed execution of a method
+     * annotated with {@link Step}.
+     *
+     * <p>Marks the current step as failed, records execution duration,
+     * stores error details and stack trace, attaches configured artifacts,
+     * and completes the step lifecycle.
+     *
+     * @param joinPoint intercepted method invocation
+     * @param t thrown exception
+     */
+    @AfterThrowing(pointcut = "stepAnnotation()", throwing = "t")
+    public void afterFailure(JoinPoint joinPoint, Throwable t) {
+        TestStep testStep = StepLifecycle.current();
+
+        if (testStep == null) {
+            log.warn("StepLifecycle.current() is null in afterFailure");
+            return;
+        }
+
+        long duration = calculateDuration(testStep.getId().toString());
+
+        testStep.setStatus(StepStatus.failed);
+        testStep.setDuration(duration);
+        testStep.setError(
+                t.getMessage() == null || t.getMessage().isBlank()
+                ? t.getClass().getSimpleName()
+                : t.getClass().getSimpleName() + ": " + t.getMessage()
+        );
+        testStep.setLog(getStackTrace(t));
+
+        Step step = resolveStepAnnotation(joinPoint);
+        String[] artifacts = resolveAttachments(step);
+
+        if (artifacts != null) {
+            stepArtifact(artifacts);
+        }
+
+        String stepName = resolveStepName(joinPoint, step);
+        log.debug("Step '{}' failed in {} ms", stepName, duration, t);
+
+        StepLifecycle.finish();
+    }
+
+    private long calculateDuration(String stepId) {
+        return StepTimer.stop(stepId);
+    }
+
+    private Step resolveStepAnnotation(JoinPoint joinPoint) {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+
+        Method method = signature.getMethod();
+
+        Step step = method.getAnnotation(Step.class);
+        if (step != null) {
+            return step;
+        }
 
         try {
-            return executeStepSuccessfully(joinPoint, stepName, startTime);
-        } catch (Throwable e) {
-            handleStepFailure(stepName, startTime, e);
-            throw e;
+            Method realMethod = joinPoint.getTarget()
+                    .getClass()
+                    .getMethod(method.getName(), method.getParameterTypes());
+
+            return realMethod.getAnnotation(Step.class);
+
+        } catch (NoSuchMethodException e) {
+            return null;
         }
     }
 
-    private Object executeStepSuccessfully(ProceedingJoinPoint joinPoint, String stepName, long startTime) throws Throwable {
-        Object result = joinPoint.proceed();
-        long duration = calculateDuration(startTime);
-
-        recordStep(stepName, duration);
-        log.info("Step '{}' added to storage. Total steps: {}", stepName, StepStorage.getSteps().size());
-
-        return result;
-    }
-
-    private void handleStepFailure(String stepName, long startTime, Throwable e) {
-        long duration = calculateDuration(startTime);
-        log.error("Step '{}' failed after {} ms", stepName, duration, e);
-        recordStep(stepName, duration);
-    }
-
-    private long calculateDuration(long startTime) {
-        return System.currentTimeMillis() - startTime;
-    }
-
-    private void recordStep(String stepName, long duration) {
-        TestStep testStep = createTestStep(stepName, duration);
-        StepStorage.addStep(testStep);
-    }
-
-    /**
-     * Resolves the step name from the annotation value or method name.
-     * Supports parameter substitution using {parameterName} placeholders.
-     *
-     * @param joinPoint the join point representing the intercepted method
-     * @param step      the Step annotation instance
-     * @return resolved step name with substituted parameters
-     */
-    private String resolveStepName(ProceedingJoinPoint joinPoint, Step step) {
+    private String resolveStepName(JoinPoint joinPoint, Step step) {
         String stepName = getStepNameTemplate(joinPoint, step);
         return substituteParameters(stepName, joinPoint);
     }
 
-    private String getStepNameTemplate(ProceedingJoinPoint joinPoint, Step step) {
-        if (step.value() != null && !step.value().isEmpty()) {
+    private String getStepNameTemplate(JoinPoint joinPoint, Step step) {
+        if (step != null && step.value() != null && !step.value().isEmpty()) {
             return step.value();
         }
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         return signature.getName();
     }
 
+    private String[] resolveAttachments(Step step) {
+        if (step != null && step.artifacts() != null && step.artifacts().length > 0) {
+            return step.artifacts();
+        }
+        return null;
+    }
+
     /**
-     * Substitutes parameter placeholders in the step name with actual parameter values.
-     * Supports both indexed placeholders {0}, {1}, etc. and named placeholders {parameterName}.
-     * Indexed placeholders work in all cases, while named placeholders require compilation
-     * with -parameters flag or debug information.
+     * Substitutes parameter placeholders in the step name with actual argument values.
+     * Supports both indexed placeholders ({0}, {1}, etc.) and named placeholders
+     * ({parameterName}).
      *
-     * @param stepName  the step name template with placeholders
-     * @param joinPoint the join point containing method parameters
-     * @return step name with substituted parameter values
+     * <p>Indexed placeholders always work, while named placeholders require
+     * compilation with the {@code -parameters} flag or debug information.
+     *
+     * @param stepName the step name template containing placeholders
+     * @param joinPoint the join point containing method arguments
+     * @return formatted step name with substituted argument values
      */
-    private String substituteParameters(String stepName, ProceedingJoinPoint joinPoint) {
+    private String substituteParameters(String stepName, JoinPoint joinPoint) {
         Object[] parameterValues = joinPoint.getArgs();
 
         if (parameterValues == null || parameterValues.length == 0) {
             return stepName;
         }
 
-        String result = substituteIndexedPlaceholders(stepName, parameterValues);
-        result = substituteNamedPlaceholders(result, joinPoint, parameterValues);
-
-        return result;
-    }
-
-    private String substituteIndexedPlaceholders(String stepName, Object[] parameterValues) {
         String result = stepName;
+
         for (int i = 0; i < parameterValues.length; i++) {
             String placeholder = "{" + i + "}";
-            String value = formatParameterValue(parameterValues[i]);
+            String value = format(parameterValues[i]);
             result = result.replace(placeholder, value);
         }
-        return result;
-    }
 
-    private String substituteNamedPlaceholders(String stepName, ProceedingJoinPoint joinPoint, Object[] parameterValues) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         String[] parameterNames = signature.getParameterNames();
 
-        if (parameterNames == null || parameterNames.length != parameterValues.length) {
-            return stepName;
+        if (parameterNames != null && parameterNames.length == parameterValues.length) {
+            for (int i = 0; i < parameterNames.length; i++) {
+                String placeholder = "{" + parameterNames[i] + "}";
+                String value = format(parameterValues[i]);
+                result = result.replace(placeholder, value);
+            }
         }
 
-        String result = stepName;
-        for (int i = 0; i < parameterNames.length; i++) {
-            String placeholder = "{" + parameterNames[i] + "}";
-            String value = formatParameterValue(parameterValues[i]);
-            result = result.replace(placeholder, value);
-        }
         return result;
     }
 
-    /**
-     * Formats a parameter value for display in step name.
-     *
-     * @param value the parameter value
-     * @return formatted string representation
-     */
-    private String formatParameterValue(Object value) {
-        if (value == null) {
-            return "null";
-        }
-        return value.toString();
+    private String format(Object value) {
+        return value == null ? "null" : value.toString();
     }
 
-    /**
-     * Creates a TestStep object with the provided metadata.
-     *
-     * @param stepName       the name of the step
-     * @param durationMillis the execution duration in milliseconds
-     * @return populated TestStep object
-     */
-    private TestStep createTestStep(String stepName, long durationMillis) {
-        TestStep testStep = new TestStep();
-        testStep.setCategory("user");
-        testStep.setStepTitle(stepName);
-        testStep.setDuration(durationMillis);
-
-        log.debug("Step '{}' completed in {} ms", stepName, durationMillis);
-
-        return testStep;
+    private static String getStackTrace(Throwable t) {
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
     }
 }

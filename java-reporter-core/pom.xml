@@ -7,7 +7,7 @@
 
     <groupId>io.testomat</groupId>
     <artifactId>java-reporter-core</artifactId>
-    <version>0.9.3</version>
+    <version>0.18.2</version>
     <packaging>jar</packaging>
 
     <name>Testomat.io Reporter Core</name>
@@ -72,13 +72,17 @@
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
-            <artifactId>aspectjweaver</artifactId>
-            <version>${aspectj.version}</version>
-            <scope>compile</scope>
+            <artifactId>aspectjrt</artifactId>
+            <version>1.9.24</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sts</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
@@ -99,6 +103,18 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>5.8.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.22.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>5.5.7</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -128,14 +144,32 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven.compiler.plugin.version}</version>
+                <groupId>dev.aspectj</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.14.1</version>
+
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <complianceLevel>11</complianceLevel>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjtools</artifactId>
+                        <version>1.9.24</version>
+                    </dependency>
+                </dependencies>
             </plugin>
 
             <plugin>
@@ -147,10 +181,6 @@
                         <include>**/*Test.java</include>
                         <include>**/*Tests.java</include>
                     </includes>
-<!--                    required for tests-->
-                    <argLine>
-                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
-                    </argLine>
                 </configuration>
             </plugin>
 
@@ -211,10 +241,6 @@
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer"/>
-                                <!-- Preserve AspectJ aop.xml for load-time weaving -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.XmlAppendingTransformer">
-                                    <resource>META-INF/aop.xml</resource>
-                                </transformer>
                             </transformers>
                         </configuration>
                     </execution>
@@ -278,6 +304,29 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>3.1.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <inherited>false</inherited>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <linkXRef>false</linkXRef>
+                    <sourceDirectories>
+                        <sourceDirectory>src/main/java</sourceDirectory>
+                    </sourceDirectories>
+                </configuration>
             </plugin>
         </plugins>
     </build>

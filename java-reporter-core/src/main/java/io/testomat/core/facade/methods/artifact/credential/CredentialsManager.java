@@ -1,20 +1,26 @@
 package io.testomat.core.facade.methods.artifact.credential;
 
 import static io.testomat.core.constants.ArtifactPropertyNames.ACCESS_KEY_PROPERTY_NAME;
+import static io.testomat.core.constants.ArtifactPropertyNames.ASSUME_ROLE_ARN_PROPERTY_NAME;
+import static io.testomat.core.constants.ArtifactPropertyNames.ASSUME_ROLE_EXTERNAL_ID_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.BUCKET_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.ENDPOINT_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.FORCE_PATH_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.PRIVATE_ARTIFACTS_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.REGION_PROPERTY_NAME;
 import static io.testomat.core.constants.ArtifactPropertyNames.SECRET_ACCESS_KEY_PROPERTY_NAME;
+import static io.testomat.core.constants.ArtifactPropertyNames.SESSION_TOKEN_PROPERTY_NAME;
 import static io.testomat.core.constants.CredentialConstants.ACCESS_KEY_ID;
+import static io.testomat.core.constants.CredentialConstants.ARN;
 import static io.testomat.core.constants.CredentialConstants.BUCKET;
 import static io.testomat.core.constants.CredentialConstants.ENDPOINT;
+import static io.testomat.core.constants.CredentialConstants.EXTERNAL_ID;
 import static io.testomat.core.constants.CredentialConstants.FORCE_PATH;
 import static io.testomat.core.constants.CredentialConstants.IAM;
 import static io.testomat.core.constants.CredentialConstants.PRESIGN;
 import static io.testomat.core.constants.CredentialConstants.REGION;
 import static io.testomat.core.constants.CredentialConstants.SECRET_ACCESS_KEY;
+import static io.testomat.core.constants.CredentialConstants.SESSION_TOKEN;
 import static io.testomat.core.constants.CredentialConstants.SHARED;
 
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
@@ -30,7 +36,6 @@ import org.slf4j.LoggerFactory;
 public class CredentialsManager {
     private static final Logger log = LoggerFactory.getLogger(CredentialsManager.class);
     private static final S3Credentials credentials = new S3Credentials();
-
 
     private final PropertyProvider provider =
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
@@ -62,14 +67,21 @@ public class CredentialsManager {
         populateCredentialField(ENDPOINT_PROPERTY_NAME, ENDPOINT, credsFromServer, "Endpoint",
                 value -> credentials.setCustomEndpoint(getStringValue(value)));
 
-        populateCredentialField(PRIVATE_ARTIFACTS_PROPERTY_NAME, PRESIGN, credsFromServer, "Presign",
+        populateCredentialField(PRIVATE_ARTIFACTS_PROPERTY_NAME, PRESIGN,
+                credsFromServer, "Presign",
                 value -> credentials.setPresign(getBooleanValue(value)));
 
-        populateCredentialField(SECRET_ACCESS_KEY_PROPERTY_NAME, SECRET_ACCESS_KEY, credsFromServer, "SecretAccessKey",
+        populateCredentialField(SECRET_ACCESS_KEY_PROPERTY_NAME, SECRET_ACCESS_KEY,
+                credsFromServer, "SecretAccessKey",
                 value -> credentials.setSecretAccessKey(getStringValue(value)));
 
-        populateCredentialField(ACCESS_KEY_PROPERTY_NAME, ACCESS_KEY_ID, credsFromServer, "AccessKey",
+        populateCredentialField(ACCESS_KEY_PROPERTY_NAME, ACCESS_KEY_ID,
+                credsFromServer, "AccessKey",
                 value -> credentials.setAccessKeyId(getStringValue(value)));
+
+        populateCredentialField(SESSION_TOKEN_PROPERTY_NAME, SESSION_TOKEN,
+                credsFromServer, "SessionToken",
+                value -> credentials.setSessionToken(getStringValue(value)));
 
         populateCredentialField(BUCKET_PROPERTY_NAME, BUCKET, credsFromServer, "Bucket",
                 value -> credentials.setBucket(getStringValue(value)));
@@ -77,8 +89,21 @@ public class CredentialsManager {
         populateCredentialField(REGION_PROPERTY_NAME, REGION, credsFromServer, "Region",
                 value -> credentials.setRegion(getStringValue(value)));
 
+        populateCredentialField(ASSUME_ROLE_ARN_PROPERTY_NAME, ARN, credsFromServer, "Arn",
+                value -> credentials.setRoleArn(getStringValue(value)));
+
+        populateCredentialField(ASSUME_ROLE_EXTERNAL_ID_PROPERTY_NAME, EXTERNAL_ID,
+                credsFromServer, "ExternalId",
+                value -> credentials.setExternalId(getStringValue(value)));
+
         credentials.setIam(getBooleanValue(credsFromServer.get(IAM)));
         credentials.setShared(getBooleanValue(credsFromServer.get(SHARED)));
+
+        if (getPropertyFromEnv(ACCESS_KEY_PROPERTY_NAME) != null
+                || getPropertyFromEnv(SECRET_ACCESS_KEY_PROPERTY_NAME) != null) {
+            credentials.setSessionToken(null);
+            log.debug("SessionToken cleared because access/secret keys were overridden by env");
+        }
 
         logCredentialsInitializationResult();
     }
@@ -95,7 +120,8 @@ public class CredentialsManager {
                 && regionAvailable;
 
         if (!allAvailable) {
-            log.warn("Missing S3 credentials - accessKey: {}, secretKey: {}, bucket: {}, region: {}",
+            log.warn(
+                    "Missing S3 credentials - accessKey: {}, secretKey: {}, bucket: {}, region: {}",
                     accessKeyAvailable, secretKeyAvailable, bucketAvailable, regionAvailable);
         }
 
@@ -111,7 +137,7 @@ public class CredentialsManager {
     }
 
     private void populateCredentialField(String envPropertyName, String serverKey,
-                                         Map<String, Object> credsFromServer, String fieldDisplayName,
+            Map<String, Object> credsFromServer, String fieldDisplayName,
                                          java.util.function.Consumer<Object> setter) {
         Object envValue = getPropertyFromEnv(envPropertyName);
         if (envValue != null) {

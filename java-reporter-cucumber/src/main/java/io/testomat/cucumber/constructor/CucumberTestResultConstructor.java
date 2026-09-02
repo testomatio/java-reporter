@@ -3,6 +3,7 @@ package io.testomat.cucumber.constructor;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.testomat.core.model.ExceptionDetails;
 import io.testomat.core.model.TestResult;
+import io.testomat.core.step.StepLifecycle;
 import io.testomat.core.step.StepStorage;
 import io.testomat.core.step.TestStep;
 import io.testomat.cucumber.extractor.TestDataExtractor;
@@ -56,7 +57,7 @@ public class CucumberTestResultConstructor {
                 .withTestId(testDataExtractor.extractTestId(event))
                 .withFile(fileName)
                 .withTitle(testDataExtractor.extractTitle(event))
-                .withRid(event.getTestCase().getId().toString())
+                .withRid(testDataExtractor.generateRid(event))
                 .withMessage(exceptionDetails.getMessage())
                 .withStack(exceptionDetails.getStack());
 
@@ -66,6 +67,7 @@ public class CucumberTestResultConstructor {
 
         // Clear steps after collecting them
         StepStorage.clear();
+        StepLifecycle.reset();
 
         return builder.build();
     }

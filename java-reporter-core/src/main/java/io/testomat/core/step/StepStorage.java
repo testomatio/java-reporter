@@ -8,7 +8,8 @@ import java.util.List;
  * Ensures thread safety when multiple tests run concurrently.
  */
 public class StepStorage {
-    private static final ThreadLocal<List<TestStep>> STEPS = ThreadLocal.withInitial(ArrayList::new);
+    private static final ThreadLocal<List<TestStep>> STEPS =
+            ThreadLocal.withInitial(ArrayList::new);
 
     /**
      * Adds a step to the current thread's step list.
@@ -33,6 +34,6 @@ public class StepStorage {
      * Should be called after reporting test results.
      */
     public static void clear() {
-        STEPS.get().clear();
+        STEPS.remove();
     }
 }

@@ -1,6 +1,5 @@
 package io.testomat.core.propertyconfig.provider;
 
-
 import io.testomat.core.exception.PropertyNotFoundException;
 import io.testomat.core.propertyconfig.interf.AbstractPropertyProvider;
 import io.testomat.core.propertyconfig.util.DefaultPropertiesStorage;

@@ -7,6 +7,7 @@ import static io.testomat.core.constants.CommonConstants.SKIPPED;
 import io.cucumber.plugin.event.PickleStepTestStep;
 import io.cucumber.plugin.event.Result;
 import io.cucumber.plugin.event.TestCase;
+import io.cucumber.plugin.event.TestCaseEvent;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestStep;
 import io.testomat.core.model.ExceptionDetails;
@@ -14,6 +15,7 @@ import io.testomat.cucumber.exception.StatusNormalizerException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -55,6 +57,52 @@ public class TestDataExtractor {
     }
 
     /**
+     * Generates a unique run ID for a Cucumber test case.
+     * Combines the feature URI, scenario name and parameter values extracted from step text.
+     * Simple values are appended directly, complex values are hashed.
+     *
+     * @param event the Cucumber test case finished event
+     * @return the generated run ID
+     */
+    public String generateRid(TestCaseFinished event) {
+        TestCase testCase = event.getTestCase();
+        StringBuilder ridBuilder = new StringBuilder();
+        ridBuilder.append(testCase.getUri())
+                .append(".")
+                .append(testCase.getName());
+
+        Map<String, Object> params = new LinkedHashMap<>();
+        List<TestStep> testSteps = testCase.getTestSteps();
+        if (testSteps != null) {
+            for (TestStep testStep : testSteps) {
+                if (testStep instanceof PickleStepTestStep) {
+                    String stepText = ((PickleStepTestStep) testStep).getStepText();
+                    params.putAll(extractValuesFromStepText(stepText));
+                }
+            }
+        }
+
+        if (params.isEmpty()) {
+            return ridBuilder.toString();
+        }
+
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            Object param = entry.getValue();
+            String paramString = param != null ? param.toString() : "null";
+            String paramName = entry.getKey();
+
+            if (paramString.length() <= 20 && paramString.matches("[a-zA-Z0-9._-]+")) {
+                ridBuilder.append("-").append(paramName).append("_").append(paramString);
+            } else {
+                int hash = Math.abs(paramString.hashCode());
+                ridBuilder.append("-").append(paramName).append("_h").append(hash);
+            }
+        }
+
+        return ridBuilder.toString();
+    }
+
+    /**
      * Extracts exception details from test execution result.
      *
      * @param event the Cucumber test case finished event
@@ -74,7 +122,10 @@ public class TestDataExtractor {
      * @param event the Cucumber test case finished event
      * @return test ID if found, null otherwise
      */
-    public String extractTestId(TestCaseFinished event) {
+    public String extractTestId(TestCaseEvent event) {
+        if (event == null) {
+            return null;
+        }
         TestCase testCase = event.getTestCase();
         if (testCase == null || testCase.getTags() == null) {
             return null;
@@ -138,7 +189,7 @@ public class TestDataExtractor {
     }
 
     private Map<String, Object> extractValuesFromStepText(String stepText) {
-        Map<String, Object> values = new HashMap<>();
+        Map<String, Object> values = new LinkedHashMap<>();
 
         Pattern quotedPattern = Pattern.compile(QUOTED_PATTERN);
         Matcher matcher = quotedPattern.matcher(stepText);

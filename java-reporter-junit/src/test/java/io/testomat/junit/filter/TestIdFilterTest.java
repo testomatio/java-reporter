@@ -3,235 +3,177 @@ package io.testomat.junit.filter;
 import io.testomat.core.annotation.TestId;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
 import org.junit.platform.engine.FilterResult;
 import org.junit.platform.engine.TestDescriptor;
-
+import org.junit.platform.engine.TestSource;
+import org.junit.platform.engine.support.descriptor.MethodSource;
 import java.lang.reflect.Method;
-
+import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-/**
- * Tests for TestIdFilter focusing on correct filtering behavior
- * with various system property configurations and test scenarios.
- */
 class TestIdFilterTest {
+
+    private static final String IDS = "ids";
 
     @AfterEach
     void cleanup() {
-        // Clean up system property after each test
-        System.clearProperty("ids");
+        System.clearProperty(IDS);
     }
 
     @Test
-    void apply_shouldIncludeAllWhenNoIdsPropertySet() {
+    void shouldIncludeAllWhenIdsNotSpecified() {
         TestIdFilter filter = new TestIdFilter();
-        TestDescriptor descriptor = createMockDescriptor();
-
+        TestDescriptor descriptor = mock(TestDescriptor.class);
         FilterResult result = filter.apply(descriptor);
 
         assertThat(result.included()).isTrue();
     }
 
     @Test
-    void apply_shouldIncludeTestWithMatchingId() throws Exception {
-        System.setProperty("ids", "TEST-123");
+    void shouldIncludeMatchingTestId() throws Exception {
+        System.setProperty(IDS, "TEST-123");
+
         TestIdFilter filter = new TestIdFilter();
-
-        Method testMethod = TestClass.class.getMethod("testWithId");
-        TestMethodTestDescriptor descriptor = createMethodDescriptor(testMethod);
-
+        TestDescriptor descriptor = descriptor(TestClass.class.getDeclaredMethod("test1"));
         FilterResult result = filter.apply(descriptor);
 
         assertThat(result.included()).isTrue();
     }
 
     @Test
-    void apply_shouldExcludeTestWithNonMatchingId() throws Exception {
-        System.setProperty("ids", "TEST-999");
+    void shouldExcludeNonMatchingTestId() throws Exception {
+        System.setProperty(IDS, "TEST-999");
+
         TestIdFilter filter = new TestIdFilter();
-
-        Method testMethod = TestClass.class.getMethod("testWithId");
-        TestMethodTestDescriptor descriptor = createMethodDescriptor(testMethod);
-
+        TestDescriptor descriptor = descriptor(TestClass.class.getDeclaredMethod("test1"));
         FilterResult result = filter.apply(descriptor);
 
         assertThat(result.excluded()).isTrue();
     }
 
     @Test
-    void apply_shouldIncludeTestWithoutAnnotationWhenFiltering() throws Exception {
-        System.setProperty("ids", "TEST-123");
+    void shouldExcludeTestWithoutTestIdAnnotation() throws Exception {
+        System.setProperty(IDS, "TEST-123");
+
         TestIdFilter filter = new TestIdFilter();
+        TestDescriptor descriptor = descriptor(TestClass.class.getDeclaredMethod("noId"));
+        FilterResult result = filter.apply(descriptor);
 
-        Method testMethod = TestClass.class.getMethod("testWithoutId");
-        TestMethodTestDescriptor descriptor = createMethodDescriptor(testMethod);
+        assertThat(result.excluded()).isTrue();
+    }
 
+    @Test
+    void shouldSupportMultipleIds() throws Exception {
+        System.setProperty(IDS, "TEST-123,TEST-456");
+
+        TestIdFilter filter = new TestIdFilter();
+        FilterResult r1 = filter.apply(descriptor(
+            TestClass.class.getDeclaredMethod("test1")));
+        FilterResult r2 = filter.apply(descriptor(
+            TestClass.class.getDeclaredMethod("test2")));
+
+        assertThat(r1.included()).isTrue();
+        assertThat(r2.included()).isTrue();
+    }
+
+    @Test
+    void shouldTrimWhitespace() throws Exception {
+        System.setProperty(IDS, " TEST-123 ");
+
+        TestIdFilter filter = new TestIdFilter();
+        FilterResult result = filter.apply(descriptor(
+            TestClass.class.getDeclaredMethod("test1")));
+
+        assertThat(result.included()).isTrue();
+    }
+
+    @Test
+    void shouldIncludeWhenNoSource() {
+        System.setProperty(IDS, "TEST-123");
+
+        TestIdFilter filter = new TestIdFilter();
+        TestDescriptor descriptor = mock(TestDescriptor.class);
+        when(descriptor.getSource())
+            .thenReturn(Optional.empty());
         FilterResult result = filter.apply(descriptor);
 
         assertThat(result.included()).isTrue();
     }
 
     @Test
-    void apply_shouldHandleMultipleIdsCommaSeparated() throws Exception {
-        System.setProperty("ids", "TEST-123,TEST-456,TEST-789");
+    void shouldIncludeWhenSourceNotMethodSource() {
+        System.setProperty(IDS, "TEST-123");
+
         TestIdFilter filter = new TestIdFilter();
-
-        Method testMethod1 = TestClass.class.getMethod("testWithId");
-        Method testMethod2 = TestClass.class.getMethod("anotherTestWithId");
-
-        TestMethodTestDescriptor descriptor1 = createMethodDescriptor(testMethod1);
-        TestMethodTestDescriptor descriptor2 = createMethodDescriptor(testMethod2);
-
-        FilterResult result1 = filter.apply(descriptor1);
-        FilterResult result2 = filter.apply(descriptor2);
-
-        assertThat(result1.included()).isTrue();
-        assertThat(result2.included()).isTrue();
-    }
-
-    @Test
-    void apply_shouldTrimWhitespaceInIds() throws Exception {
-        System.setProperty("ids", " TEST-123 , TEST-456 , TEST-789 ");
-        TestIdFilter filter = new TestIdFilter();
-
-        Method testMethod = TestClass.class.getMethod("testWithId");
-        TestMethodTestDescriptor descriptor = createMethodDescriptor(testMethod);
-
+        TestDescriptor descriptor = mock(TestDescriptor.class);
+        TestSource source = mock(TestSource.class);
+        when(descriptor.getSource())
+            .thenReturn(Optional.of(source));
         FilterResult result = filter.apply(descriptor);
 
         assertThat(result.included()).isTrue();
     }
 
     @Test
-    void apply_shouldHandleEmptyIdsProperty() {
-        System.setProperty("ids", "");
+    void shouldIncludeWhenMethodIsNull() {
+        System.setProperty(IDS, "TEST-123");
+
         TestIdFilter filter = new TestIdFilter();
-
-        TestDescriptor descriptor = createMockDescriptor();
-
+        MethodSource source = mock(MethodSource.class);
+        when(source.getJavaMethod())
+            .thenReturn(null);
+        TestDescriptor descriptor = mock(TestDescriptor.class);
+        when(descriptor.getSource())
+            .thenReturn(Optional.of(source));
         FilterResult result = filter.apply(descriptor);
 
         assertThat(result.included()).isTrue();
     }
 
     @Test
-    void apply_shouldIncludeNonTestMethodDescriptor() {
-        System.setProperty("ids", "TEST-123");
+    void shouldSupportSpecialCharacters() throws Exception {
+        System.setProperty(IDS, "TEST-123_v2.0");
+
         TestIdFilter filter = new TestIdFilter();
-
-        TestDescriptor nonMethodDescriptor = createMockDescriptor();
-
-        FilterResult result = filter.apply(nonMethodDescriptor);
+        FilterResult result = filter.apply(descriptor(
+            TestClass.class.getDeclaredMethod("special")));
 
         assertThat(result.included()).isTrue();
     }
 
     @Test
-    void apply_shouldHandleSingleIdFilter() throws Exception {
-        System.setProperty("ids", "TEST-123");
+    void shouldHandleEmptyProperty() {
+        System.setProperty(IDS,"");
+
         TestIdFilter filter = new TestIdFilter();
-
-        Method testMethod = TestClass.class.getMethod("testWithId");
-        TestMethodTestDescriptor descriptor = createMethodDescriptor(testMethod);
-
+        TestDescriptor descriptor = mock(TestDescriptor.class);
         FilterResult result = filter.apply(descriptor);
 
         assertThat(result.included()).isTrue();
     }
 
-    @Test
-    void apply_shouldBeConsistentAcrossMultipleCalls() throws Exception {
-        System.setProperty("ids", "TEST-123");
-        TestIdFilter filter = new TestIdFilter();
+    private TestDescriptor descriptor(Method method) {
+        MethodSource source = mock(MethodSource.class);
+        when(source.getJavaMethod())
+            .thenReturn(method);
+        TestDescriptor descriptor = mock(TestDescriptor.class);
+        when(descriptor.getSource())
+            .thenReturn(Optional.of(source));
 
-        Method testMethod = TestClass.class.getMethod("testWithId");
-        TestMethodTestDescriptor descriptor = createMethodDescriptor(testMethod);
-
-        FilterResult result1 = filter.apply(descriptor);
-        FilterResult result2 = filter.apply(descriptor);
-
-        assertThat(result1.included()).isEqualTo(result2.included());
-    }
-
-    @Test
-    void apply_shouldFilterMultipleDifferentTests() throws Exception {
-        System.setProperty("ids", "TEST-123");
-        TestIdFilter filter = new TestIdFilter();
-
-        Method includedMethod = TestClass.class.getMethod("testWithId");
-        Method excludedMethod = TestClass.class.getMethod("anotherTestWithId");
-        Method noIdMethod = TestClass.class.getMethod("testWithoutId");
-
-        TestMethodTestDescriptor includedDescriptor = createMethodDescriptor(includedMethod);
-        TestMethodTestDescriptor excludedDescriptor = createMethodDescriptor(excludedMethod);
-        TestMethodTestDescriptor noIdDescriptor = createMethodDescriptor(noIdMethod);
-
-        FilterResult includedResult = filter.apply(includedDescriptor);
-        FilterResult excludedResult = filter.apply(excludedDescriptor);
-        FilterResult noIdResult = filter.apply(noIdDescriptor);
-
-        assertThat(includedResult.included()).isTrue();
-        assertThat(excludedResult.excluded()).isTrue();
-        assertThat(noIdResult.included()).isTrue();
-    }
-
-    @Test
-    void apply_shouldHandleSpecialCharactersInTestId() throws Exception {
-        System.setProperty("ids", "TEST-123_v2.0");
-        TestIdFilter filter = new TestIdFilter();
-
-        Method testMethod = TestClass.class.getMethod("testWithSpecialId");
-        TestMethodTestDescriptor descriptor = createMethodDescriptor(testMethod);
-
-        FilterResult result = filter.apply(descriptor);
-
-        assertThat(result.included()).isTrue();
-    }
-
-    @Test
-    void constructor_shouldInitializeCorrectlyWithIds() {
-        System.setProperty("ids", "TEST-1,TEST-2");
-
-        TestIdFilter filter = new TestIdFilter();
-
-        assertThat(filter).isNotNull();
-    }
-
-    @Test
-    void constructor_shouldInitializeCorrectlyWithoutIds() {
-        TestIdFilter filter = new TestIdFilter();
-
-        assertThat(filter).isNotNull();
-    }
-
-    private TestDescriptor createMockDescriptor() {
-        return mock(TestDescriptor.class);
-    }
-
-    private TestMethodTestDescriptor createMethodDescriptor(Method method) {
-        TestMethodTestDescriptor descriptor = mock(TestMethodTestDescriptor.class);
-        when(descriptor.getTestMethod()).thenReturn(method);
         return descriptor;
     }
 
-    // Test class with various test methods
     static class TestClass {
         @TestId("TEST-123")
-        public void testWithId() {
-        }
+        void test1(){}
 
         @TestId("TEST-456")
-        public void anotherTestWithId() {
-        }
+        void test2(){}
 
-        public void testWithoutId() {
-        }
+        void noId(){}
 
         @TestId("TEST-123_v2.0")
-        public void testWithSpecialId() {
-        }
+        void special(){}
     }
 }

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.testomat.core.annotation.LinkTest;
 import io.testomat.core.annotation.TestId;
 import io.testomat.core.annotation.Title;
 import io.testomat.core.exception.NoMethodInContextException;
@@ -377,6 +378,45 @@ class JunitMetaDataExtractorTest {
         }
     }
 
+    @Test
+    @DisplayName("Should extract links from LinkTest annotation")
+    void shouldExtractLinks() throws Exception {
+        Method testMethod = TestMethodHolder.class.getMethod("methodWithLinks");
+
+        when(mockExtensionContext.getTestMethod())
+            .thenReturn(Optional.of(testMethod));
+
+        doReturn(TestMethodHolder.class)
+            .when(mockExtensionContext)
+            .getRequiredTestClass();
+
+        TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
+
+        assertNotNull(result.getLinks());
+        assertEquals(2, result.getLinks().size());
+
+        assertEquals("T-1", result.getLinks().get(0).getTest());
+        assertEquals("T-2", result.getLinks().get(1).getTest());
+    }
+
+    @Test
+    @DisplayName("Should return empty links when LinkTest annotation absent")
+    void shouldReturnEmptyLinksWhenNoAnnotation() throws Exception {
+        Method testMethod = TestMethodHolder.class.getMethod("plainTestMethod");
+
+        when(mockExtensionContext.getTestMethod())
+            .thenReturn(Optional.of(testMethod));
+
+        doReturn(TestMethodHolder.class)
+            .when(mockExtensionContext)
+            .getRequiredTestClass();
+
+        TestMetadata result = extractor.extractTestMetadata(mockExtensionContext);
+
+        assertNotNull(result.getLinks());
+        assertTrue(result.getLinks().isEmpty());
+    }
+
     // Test helper classes - separate from nested test classes to avoid Java 11 compatibility issues
     public static class TestMethodHolder {
         @Title("Custom Title")
@@ -403,6 +443,10 @@ class JunitMetaDataExtractorTest {
         @Title("   ")
         @TestId("   ")
         public void whitespaceAnnotationsMethod() {
+        }
+
+        @LinkTest({"T-1", "T-2"})
+        public void methodWithLinks() {
         }
     }
 

@@ -4,17 +4,21 @@ import static io.testomat.core.constants.PropertyNameConstants.CUSTOM_RUN_UID_PR
 import static io.testomat.core.constants.PropertyNameConstants.DISABLE_REPORTING_PROPERTY_NAME;
 import static io.testomat.core.constants.PropertyNameConstants.RUN_TITLE_PROPERTY_NAME;
 
-import io.testomat.core.facade.methods.artifact.ArtifactLinkDataStorage;
-import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
-import io.testomat.core.facade.methods.artifact.util.ArtifactKeyGenerator;
 import io.testomat.core.batch.BatchResultManager;
 import io.testomat.core.client.ApiInterface;
 import io.testomat.core.client.ClientFactory;
 import io.testomat.core.client.TestomatClientFactory;
+import io.testomat.core.facade.methods.artifact.ArtifactLinkDataStorage;
+import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
+import io.testomat.core.facade.methods.artifact.model.AddTestsBatchRequest;
+import io.testomat.core.facade.methods.artifact.model.Step;
+import io.testomat.core.facade.methods.artifact.model.TestItem;
+import io.testomat.core.facade.methods.artifact.util.ArtifactKeyGenerator;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -28,7 +32,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GlobalRunManager {
     private static final Logger log = LoggerFactory.getLogger(GlobalRunManager.class);
-    private static final int DELAY_BEFORE_ARTIFACTS_SENDING_MS = 10000;
+    private static final int DELAY_BEFORE_ARTIFACTS_SENDING_MS = getDelayBeforeArtifactsSendingMs();
     private static volatile GlobalRunManager INSTANCE;
 
     private final PropertyProvider provider;
@@ -39,13 +43,15 @@ public class GlobalRunManager {
     private final AtomicReference<ApiInterface> apiClient = new AtomicReference<>();
     private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
     private volatile long startTime;
+    private final AtomicReference<AddTestsBatchRequest> batchRequest = new AtomicReference<>();
 
     /**
      * Default constructor that initializes all dependencies internally.
      * Used for normal application runtime.
      */
     private GlobalRunManager() {
-        this.provider = PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
+        this.provider =
+                PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
         this.clientFactory = TestomatClientFactory.getClientFactory();
     }
 
@@ -250,13 +256,16 @@ public class GlobalRunManager {
      * Shuts down the batch manager if it exists.
      */
     private void shutdownBatchManager() {
-        BatchResultManager manager = batchManager.getAndSet(null);
+        BatchResultManager manager = batchManager.get();
         if (manager != null) {
             try {
                 manager.shutdown();
+                batchRequest.set(manager.buildRequest());
                 log.debug("Batch manager shutdown completed");
             } catch (Exception e) {
                 log.error("Error shutting down batch manager: {}", e.getMessage());
+            } finally {
+                batchManager.set(null);
             }
         }
     }
@@ -277,6 +286,7 @@ public class GlobalRunManager {
             client.finishTestRun(uid, duration);
             log.debug("Test run finished: {} (duration: {}s)", uid, duration);
 
+            client.writeArtifactsToJsonl(uid);
             processAndSendArtifacts(client, uid);
         } catch (IOException e) {
             log.error("Failed to finish test run {}: {}", uid, e.getMessage());
@@ -300,7 +310,8 @@ public class GlobalRunManager {
             return;
         }
 
-        ReportedTestStorage.linkArtifactsToTests(ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
+        ReportedTestStorage.linkArtifactsToTests(
+                ArtifactLinkDataStorage.ARTEFACT_LINK_DATA_STORAGE);
         log.info("Getting ready to send artifacts");
         Thread.sleep(DELAY_BEFORE_ARTIFACTS_SENDING_MS);
         log.info("Syncing artifacts");
@@ -345,6 +356,53 @@ public class GlobalRunManager {
                     && !provider.getProperty(DISABLE_REPORTING_PROPERTY_NAME).equalsIgnoreCase("0");
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    /**
+     * Returns the delay before sending artifacts in milliseconds.
+     *
+     * <p>Reads the value from the {@code testomatio.artifact.sending.delay} system property.
+     * If the property is missing, non-numeric, or not positive, a default value is used.</p>
+     */
+    private static int getDelayBeforeArtifactsSendingMs() {
+        int defaultDelayMs = 10000;
+        String value = System.getProperty("testomatio.artifact.sending.delay");
+        if (value == null) {
+            return defaultDelayMs;
+        }
+        try {
+            int delayMs = Integer.parseInt(value.trim());
+            return delayMs > 0 ? delayMs : defaultDelayMs;
+        } catch (NumberFormatException nfe) {
+            log.warn("Invalid testomatio.artifact.sending.delay value: {}, using default {}",
+                    value, defaultDelayMs);
+            return defaultDelayMs;
+        }
+    }
+
+    public void addTestItem(TestItem testItem) {
+        BatchResultManager manager = batchManager.get();
+        if (manager != null) {
+            manager.addTestItem(testItem);
+        }
+    }
+
+    public AddTestsBatchRequest buildBatchRequest() {
+        AddTestsBatchRequest request = batchRequest.get();
+        if (request != null) {
+            return request;
+        }
+
+        BatchResultManager manager = batchManager.get();
+        return manager != null ? manager.buildRequest() : null;
+    }
+
+    public void updateTestSteps(String rid, List<Step> steps) {
+        BatchResultManager manager = batchManager.get();
+
+        if (manager != null) {
+            manager.updateTestSteps(rid, steps);
         }
     }
 }

@@ -11,7 +11,6 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 public class ArtifactUrlGenerator {
     private final AwsClient awsClient;
 
-
     public ArtifactUrlGenerator() {
         this.awsClient = new AwsClient();
     }

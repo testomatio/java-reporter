@@ -14,18 +14,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
+import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
+import io.testomat.core.facade.methods.artifact.model.Step;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
+import io.testomat.core.model.Link;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.propertyconfig.impl.PropertyProviderFactoryImpl;
 import io.testomat.core.propertyconfig.interf.PropertyProvider;
+import io.testomat.core.runmanager.GlobalRunManager;
+import io.testomat.core.step.StepData;
 import io.testomat.core.step.TestStep;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of {@link RequestBodyBuilder} for Testomat.io API requests.
@@ -33,6 +45,8 @@ import java.util.Optional;
  * with support for parameterized tests, shared runs, and configurable properties.
  */
 public class NativeRequestBodyBuilder implements RequestBodyBuilder {
+    private static final Logger log = LoggerFactory.getLogger(NativeRequestBodyBuilder.class);
+
     private static final String TRUE = "true";
     private final Boolean createParam;
     private final String sharedRun;
@@ -62,6 +76,10 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             String groupTitle = getPropertySafely(RUN_GROUP_PROPERTY_NAME);
             if (groupTitle != null) {
                 body.put(ApiRequestFields.GROUP_TITLE, groupTitle);
+            }
+            String buildUrl = resolveBuildUrl();
+            if (buildUrl != null) {
+                body.put(ApiRequestFields.BUILD_URL, buildUrl);
             }
             if (this.sharedRun != null) {
                 body.put("shared_run", sharedRun);
@@ -133,7 +151,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
      * Converts test result to map structure for JSON serialization.
      * Includes all standard fields plus support for parameterized test data and test steps.
      */
-    private Map<String, Object> buildTestResultMap(TestResult result) throws JsonProcessingException {
+    private Map<String, Object> buildTestResultMap(TestResult result) {
         Map<String, Object> body = new HashMap<>();
         body.put(ApiRequestFields.TITLE, result.getTitle());
 
@@ -158,9 +176,18 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         }
 
         if (result.getSteps() != null && !result.getSteps().isEmpty()) {
+            result.getSteps().forEach(this::processStepArtifacts);
             List<Map<String, Object>> stepsMap = convertStepsToMap(result.getSteps());
             body.put("steps", stepsMap);
-            System.out.println("DEBUG: Adding " + result.getSteps().size() + " steps to request body for test: " + result.getTitle());
+
+            GlobalRunManager.getInstance().updateTestSteps(
+                    result.getRid(),
+                    convertToJsonlSteps(result.getSteps())
+            );
+
+            log.debug("Adding {} steps to request body for test: {}",
+                    result.getSteps().size(),
+                    result.getTitle());
         }
 
         if (createParam) {
@@ -173,9 +200,10 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
             body.put("rid", result.getRid());
             addMeta(body, rid);
             addLogs(body, rid);
-            addLinks(body, rid);
+            addLinks(result, rid);
         }
 
+        body.put("links", result.getLinks());
         body.put("overwrite", Optional.ofNullable(result.isOverwrite()).orElse(true));
 
         Map<String, Object> storageEntry = new HashMap<>();
@@ -188,7 +216,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
     /**
      * Converts a list of TestStep objects to a list of maps for JSON serialization.
-     * Each step is converted to match the API format with category, title, duration, and nested steps.
+     * Each step is converted to match the API format with category, title, duration,
+     * and nested steps.
      */
     private List<Map<String, Object>> convertStepsToMap(List<TestStep> steps) {
         List<Map<String, Object>> stepMaps = new ArrayList<>();
@@ -201,6 +230,22 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
             if (step.getStepTitle() != null) {
                 stepMap.put("title", step.getStepTitle());
+            }
+
+            if (step.getArtifacts() != null) {
+                stepMap.put("artifacts", step.getArtifacts());
+            }
+
+            if (step.getError() != null) {
+                stepMap.put("error", step.getError());
+            }
+
+            if (step.getLog() != null) {
+                stepMap.put("log", step.getLog());
+            }
+
+            if (step.getStatus() != null) {
+                stepMap.put("status", step.getStatus());
             }
 
             stepMap.put("duration", step.getDuration());
@@ -228,6 +273,69 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Resolves the CI/CD build URL from supported environment variables
+     * (Jenkins, GitLab CI, CircleCI, GitHub Actions, Azure DevOps).
+     *
+     * <p>Returns only valid HTTP/HTTPS URLs.
+     *
+     * @return build URL or {@code null} if unavailable or invalid
+     */
+    private String resolveBuildUrl() {
+        String buildUrl = getEnv(
+                "BUILD_URL", // Jenkins
+                "CI_JOB_URL", // GitLab
+                "CIRCLE_BUILD_URL" // CircleCI
+        );
+
+        // GitHub Actions
+        if (buildUrl == null && System.getenv("GITHUB_RUN_ID") != null) {
+            String server = System.getenv("GITHUB_SERVER_URL");
+            String repo = System.getenv("GITHUB_REPOSITORY");
+            String runId = System.getenv("GITHUB_RUN_ID");
+
+            if (server != null && repo != null && runId != null) {
+                buildUrl = String.format("%s/%s/actions/runs/%s", server, repo, runId);
+            }
+        }
+
+        // Azure DevOps
+        if (buildUrl == null && System.getenv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") != null) {
+            String collection = System.getenv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI");
+            String project = System.getenv("SYSTEM_TEAMPROJECT");
+            String buildId = System.getenv("BUILD_BUILDID");
+
+            if (collection != null && project != null && buildId != null) {
+                buildUrl = String.format("%s/%s/_build/results?buildId=%s",
+                    collection, project, buildId);
+            }
+        }
+
+        if (buildUrl != null && !(buildUrl.startsWith("http://") || buildUrl.startsWith("https://"))) {
+            return null;
+        }
+
+        try {
+            if (buildUrl != null) {
+                new java.net.URI(buildUrl);
+            }
+        } catch (Exception e) {
+            return null;
+        }
+
+        return buildUrl;
+    }
+
+    private String getEnv(String... keys) {
+        for (String key : keys) {
+            String value = System.getenv(key);
+            if (value != null && !value.isEmpty()) {
+                return value;
+            }
+        }
+        return null;
     }
 
     private boolean getCreateParam() {
@@ -262,18 +370,92 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     }
 
     private void addMeta(Map<String, Object> body, String rid) {
-        Map<String, String> meta = MetaStorage.LINKED_META_STORAGE.get(rid);
+        Map<String, String> meta = MetaStorage.getLinkedMetaStorage().get(rid);
         if (meta != null) {
             body.put("meta", meta);
         }
     }
 
-    private void addLinks(Map<String, Object> body, String rid) {
-        body.put("links", new ArrayList<>());
-        List<Object> links = (List<Object>) body.get("links");
-        List<Map<String, String>> labels = LabelStorage.LINKED_LABEL_STORAGE.get(rid);
-        if (labels != null && !labels.isEmpty()) {
-            links.addAll(labels);
+    private void addLinks(TestResult result, String rid) {
+        List<Map<String, String>> labels = LabelStorage.getLinkedLabelStorage().get(rid);
+        if (labels == null || labels.isEmpty()) {
+            return;
         }
+
+        List<Link> links = new ArrayList<>(
+                Optional.ofNullable(result.getLinks())
+                    .orElse(Collections.emptyList())
+        );
+
+        Set<String> existingLabels = links.stream()
+                .map(Link::getLabel)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        labels.stream()
+            .map(m -> m.get("label"))
+            .filter(Objects::nonNull)
+            .filter(existingLabels::add)
+                .map(Link::label)
+                .forEach(links::add);
+
+        result.setLinks(links);
+    }
+
+    /**
+     * Recursively attaches stored artifacts to a step and its substeps.
+     *
+     * @param step step to process
+     */
+    private void processStepArtifacts(TestStep step) {
+        StepData stepData = null;
+
+        for (Map<UUID, StepData> steps : TempArtifactDirectoriesStorage.STEP_DATA.values()) {
+            stepData = steps.get(step.getId());
+            if (stepData != null) {
+                break;
+            }
+        }
+
+        if (stepData != null && !stepData.getArtifacts().isEmpty()) {
+            step.setArtifacts(stepData.getArtifacts().toArray(new String[0]));
+        }
+
+        if (step.getSubsteps() != null && !step.getSubsteps().isEmpty()) {
+            step.getSubsteps().forEach(this::processStepArtifacts);
+        }
+    }
+
+    private List<Step> convertToJsonlSteps(List<TestStep> steps) {
+        return steps.stream()
+            .map(this::convertToJsonlStep)
+            .collect(Collectors.toList());
+    }
+
+    private Step convertToJsonlStep(TestStep step) {
+        StepData stepData = null;
+
+        for (Map<UUID, StepData> steps : TempArtifactDirectoriesStorage.STEP_DATA.values()) {
+            stepData = steps.remove(step.getId());
+            if (stepData != null) {
+                break;
+            }
+        }
+
+        List<Step> substeps = null;
+        if (step.getSubsteps() != null && !step.getSubsteps().isEmpty()) {
+            substeps = convertToJsonlSteps(step.getSubsteps());
+        }
+
+        return new Step(
+            step.getStepTitle(),
+            step.getStatus(),
+            step.getLog(),
+            step.getError(),
+            step.getDuration(),
+            step.getCategory(),
+            stepData != null ? stepData.getDirectories() : null,
+            substeps
+        );
     }
 }

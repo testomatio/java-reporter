@@ -1,6 +1,5 @@
 package io.testomat.core.propertyconfig.provider;
 
-
 import static io.testomat.core.constants.PropertyNameConstants.PROPERTIES_FILE_NAME;
 
 import io.testomat.core.exception.NoPropertyFileException;
@@ -16,7 +15,8 @@ import java.util.Properties;
  * Third priority in the property resolution chain, providing persistent
  * configuration that can be packaged with the application.
  * 
- * <p>Loads properties from {@value io.testomat.core.constants.PropertyNameConstants#PROPERTIES_FILE_NAME}
+ * <p>Loads properties from
+ * {@value io.testomat.core.constants.PropertyNameConstants#PROPERTIES_FILE_NAME}
  * file located on the classpath root. If the file is not found, returns empty properties
  * without throwing an exception.
  * 

@@ -3,9 +3,14 @@ package io.testomat.core.artifact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
+import io.testomat.core.step.StepData;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,12 +25,14 @@ class TempArtifactDirectoriesStorageTest {
     void setUp() {
         // Clean storage before each test
         TempArtifactDirectoriesStorage.DIRECTORIES.get().clear();
+        TempArtifactDirectoriesStorage.STEP_DATA.clear();
     }
 
     @AfterEach
     void tearDown() {
         // Clean storage after each test
         TempArtifactDirectoriesStorage.DIRECTORIES.remove();
+        TempArtifactDirectoriesStorage.STEP_DATA.clear();
     }
 
     @Test
@@ -291,5 +298,154 @@ class TempArtifactDirectoriesStorageTest {
         for (int i = 0; i < 10; i++) {
             assertEquals("dir-" + i, directories.get(i));
         }
+    }
+
+    @Test
+    @DisplayName("Should store step directory")
+    void stepStoreShouldStoreDirectory(){
+        UUID stepId = UUID.randomUUID();
+
+        TempArtifactDirectoriesStorage.stepStore(stepId,"dir1");
+
+        StepData stepData =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
+
+        assertNotNull(stepData);
+        assertEquals(1, stepData.getDirectories().size());
+        assertEquals("dir1", stepData.getDirectories().get(0));
+    }
+
+    @Test
+    @DisplayName("Should store multiple directories per step")
+    void stepStoreShouldStoreMultiple(){
+        UUID stepId = UUID.randomUUID();
+
+        TempArtifactDirectoriesStorage.stepStore(stepId,"dir1");
+        TempArtifactDirectoriesStorage.stepStore(stepId,"dir2");
+
+        StepData stepData =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
+
+        assertEquals(2, stepData.getDirectories().size());
+        assertTrue(stepData.getDirectories().contains("dir1"));
+        assertTrue(stepData.getDirectories().contains("dir2"));
+    }
+
+    @Test
+    @DisplayName("Should isolate different step ids")
+    void stepStoreShouldIsolateSteps(){
+        UUID step1 = UUID.randomUUID();
+        UUID step2 = UUID.randomUUID();
+
+        TempArtifactDirectoriesStorage.stepStore(step1,"dir1");
+        TempArtifactDirectoriesStorage.stepStore(step2,"dir2");
+
+        Map<UUID, StepData> stepData =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId());
+
+        assertEquals(1, stepData.get(step1).getDirectories().size());
+        assertEquals(1, stepData.get(step2).getDirectories().size());
+
+        assertFalse(
+            stepData.get(step1)
+                .getDirectories()
+                .contains("dir2")
+        );
+    }
+
+    @Test
+    @DisplayName("Should be thread safe for step store")
+    void stepStoreShouldBeThreadSafe() throws InterruptedException {
+        UUID stepId = UUID.randomUUID();
+
+        Thread t1=new Thread(() -> {
+            for(int i = 0; i < 100; i++){
+                TempArtifactDirectoriesStorage.stepStore(stepId,"t1-"+i);
+            }
+        });
+
+        Thread t2=new Thread(() -> {
+            for(int i = 0; i < 100; i++){
+                TempArtifactDirectoriesStorage.stepStore(stepId,"t2-"+i);
+            }
+        });
+
+        t1.start();
+        t2.start();
+
+        t1.join();
+        t2.join();
+
+        assertEquals(2, TempArtifactDirectoriesStorage.STEP_DATA.size());
+
+        for (Map<UUID, StepData> stepData :
+            TempArtifactDirectoriesStorage.STEP_DATA.values()) {
+
+            assertEquals(
+                100,
+                stepData.get(stepId).getDirectories().size()
+            );
+        }
+    }
+
+    @Test
+    @DisplayName("Should create list only once")
+    void stepStoreShouldReuseList(){
+        UUID stepId=UUID.randomUUID();
+
+        TempArtifactDirectoriesStorage
+            .stepStore(stepId,"dir1");
+
+        StepData first =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
+
+        TempArtifactDirectoriesStorage.stepStore(stepId, "dir2");
+
+        StepData second =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
+
+        assertSame(first, second);
+    }
+
+    @Test
+    void stepStoreShouldHandleNullDir(){
+        UUID stepId=UUID.randomUUID();
+
+        TempArtifactDirectoriesStorage
+            .stepStore(stepId,null);
+
+        StepData stepData =
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId);
+
+        assertEquals(1, stepData.getDirectories().size());
+        assertNull(stepData.getDirectories().get(0));
+    }
+
+    @Test
+    void stepDataShouldAllowRemoval() {
+        UUID stepId = UUID.randomUUID();
+
+        TempArtifactDirectoriesStorage.stepStore(stepId, "dir");
+
+        TempArtifactDirectoriesStorage.STEP_DATA
+            .get(Thread.currentThread().getId())
+            .remove(stepId);
+
+        assertNull(
+            TempArtifactDirectoriesStorage.STEP_DATA
+                .get(Thread.currentThread().getId())
+                .get(stepId)
+        );
     }
 }

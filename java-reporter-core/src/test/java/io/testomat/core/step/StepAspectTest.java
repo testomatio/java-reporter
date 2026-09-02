@@ -215,6 +215,11 @@ class StepAspectTest {
         throw new RuntimeException("Test exception");
     }
 
+    @Step("Failing step")
+    void stepThatThrowsWithoutMessage() {
+        throw new RuntimeException();
+    }
+
     @Step("Process user: {0}")
     private void stepWithComplexObject(User user) {
         log.info("Processing user: {}", user);
@@ -235,4 +240,142 @@ class StepAspectTest {
             return "User{name='" + name + "', age=" + age + "}";
         }
     }
+
+    @Test
+    void testFailureStatus(){
+        assertThrows(RuntimeException.class, this::stepThatThrows);
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals(StepStatus.failed, step.getStatus());
+    }
+
+    @Test
+    void testErrorMessageStored() {
+        assertThrows(RuntimeException.class, this::stepThatThrows);
+        TestStep step = StepStorage.getSteps().get(0);
+        assertTrue(step.getError().contains("Test exception"));
+    }
+
+    @Test
+    void shouldStoreExceptionClassWhenMessageIsNull() {
+        assertThrows(RuntimeException.class, this::stepThatThrowsWithoutMessage);
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("RuntimeException", step.getError());
+    }
+
+    @Test
+    void testNoParameters(){
+        simpleStep();
+
+        TestStep step= StepStorage.getSteps().get(0);
+        assertEquals("No params", step.getStepTitle());
+    }
+
+    @Test
+    void testReturnValue(){
+        String result= stepReturningValue();
+        assertEquals("ok",result);
+    }
+
+    @Test
+    void testParameterMismatch(){
+        methodWithVarArgs("a","b");
+        assertEquals(1, StepStorage.getSteps().size());
+    }
+
+    @Test
+    void testNoArtifacts(){
+        stepWithoutArtifacts();
+
+        TestStep step = StepStorage.getSteps().get(0);
+        assertNull(step.getArtifacts());
+    }
+
+    @Test
+    void testLifecycleCleanup(){
+        try {
+            stepThatThrows();
+        } catch (Exception ignored) {
+        }
+        assertNull(StepLifecycle.current());
+    }
+
+    @Test
+    @DisplayName("Should set passed status for successful step")
+    void testPassedStatus() {
+        simpleStep();
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals(StepStatus.passed, step.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should store stack trace log for failed step")
+    void testFailureLogStored() {
+        assertThrows(RuntimeException.class, this::stepThatThrows);
+        TestStep step = StepStorage.getSteps().get(0);
+        assertNotNull(step.getLog());
+        assertTrue(step.getLog().contains("stepThatThrows"));
+    }
+
+    @Test
+    @DisplayName("Should set user category by default")
+    void testDefaultCategory() {
+        simpleStep();
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("user", step.getCategory());
+    }
+
+    @Test
+    @DisplayName("Should store duration for failed step")
+    void testFailedStepDuration() {
+        assertThrows(RuntimeException.class, this::stepThatThrows);
+        TestStep step = StepStorage.getSteps().get(0);
+        assertTrue(step.getDuration() >= 0);
+    }
+
+    @Test
+    @DisplayName("Should keep unresolved placeholders")
+    void testUnresolvedPlaceholder() {
+        unresolvedPlaceholderStep("John");
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("User John {1}", step.getStepTitle());
+    }
+
+    @Test
+    @DisplayName("Should support repeated placeholders")
+    void testRepeatedPlaceholders() {
+        repeatedPlaceholderStep("Bob");
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("User Bob again Bob", step.getStepTitle());
+    }
+
+    @Test
+    @DisplayName("Should handle empty string parameter")
+    void testEmptyStringParameter() {
+        stepWithNullableParameter("");
+        TestStep step = StepStorage.getSteps().get(0);
+        assertEquals("Process value: ", step.getStepTitle());
+    }
+
+    @Step("User {0} {1}")
+    private void unresolvedPlaceholderStep(String name) {
+    }
+
+    @Step("User {0} again {0}")
+    private void repeatedPlaceholderStep(String value) {
+    }
+
+    @Step("no artifacts")
+    private void stepWithoutArtifacts(){}
+
+    @Step("test {0}")
+    private void methodWithVarArgs(String... args){}
+
+    @Step("return")
+    private String stepReturningValue(){
+        return "ok";
+    }
+
+    @Step("No params")
+    private void simpleStep(){}
+
 }

@@ -4,13 +4,15 @@ import static java.util.Objects.isNull;
 
 import com.intuit.karate.RuntimeHook;
 import com.intuit.karate.Suite;
+import com.intuit.karate.core.Result;
 import com.intuit.karate.core.ScenarioRuntime;
 import com.intuit.karate.core.Step;
 import com.intuit.karate.core.StepResult;
 import io.testomat.core.exception.ReportTestResultException;
 import io.testomat.core.model.TestResult;
 import io.testomat.core.runmanager.GlobalRunManager;
-import io.testomat.core.step.StepStorage;
+import io.testomat.core.step.StepLifecycle;
+import io.testomat.core.step.StepStatus;
 import io.testomat.core.step.StepTimer;
 import io.testomat.core.step.TestStep;
 import io.testomat.karate.adapter.CustomKarateEngineAdapter;
@@ -80,6 +82,7 @@ public class KarateHook implements RuntimeHook {
         boolean logAllSteps = isDslStep && sr.tags.getTags().contains(LOG_STEPS);
 
         if (logAllSteps || isMarked) {
+            StepLifecycle.start(new TestStep());
             engine.setVariable(LOG_NEXT_STEP, false);
             String stepId = Thread.currentThread().getId() + ":" + System.identityHashCode(step);
             StepTimer.start(stepId);
@@ -102,12 +105,28 @@ public class KarateHook implements RuntimeHook {
                 engine.setVariable(LOG_NEXT_STEP_TITLE, null);
             }
 
-            TestStep testStep = new TestStep();
+            TestStep testStep = StepLifecycle.current();
             testStep.setCategory("user");
             testStep.setStepTitle(stepName);
             testStep.setDuration(durationMillis);
 
-            StepStorage.addStep(testStep);
+            Result karateResult = result.getResult();
+
+            if (karateResult == null) {
+                testStep.setStatus(StepStatus.none);
+            } else if (karateResult.isFailed()) {
+                testStep.setStatus(StepStatus.failed);
+                Throwable error = karateResult.getError();
+                if (error != null) {
+                    testStep.setLog(error.getMessage());
+                }
+            } else if ("passed".equals(karateResult.getStatus())) {
+                testStep.setStatus(StepStatus.passed);
+            } else {
+                testStep.setStatus(StepStatus.none);
+            }
+
+            StepLifecycle.finish();
 
             log.debug("Step '{}' completed in {} ms", stepName, durationMillis);
         }
