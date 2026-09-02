@@ -62,6 +62,7 @@ public class TestNgExportSender {
         try {
             apiKey = provider.getProperty(API_KEY_PROPERTY_NAME);
         } catch (Exception e) {
+            log.error("Failed to retrieve API key: {}", e.getMessage(), e);
             return;
         }
 
@@ -87,13 +88,13 @@ public class TestNgExportSender {
             } catch (Exception e) {
                 log.error("HTTP request failed on attempt {}: {}", attempt, e.getMessage(), e);
 
-                boolean is422Error = e.getMessage().contains("422");
+                String message = e.getMessage();
+                boolean is422Error = message != null && message.contains("422");
                 boolean isLastAttempt = attempt == RETRY_MAX_ATTEMPTS;
 
                 if (!is422Error || isLastAttempt) {
                     log.error("Not retrying - is422Error: {}, isLastAttempt: {}",
                             is422Error, isLastAttempt);
-                    e.printStackTrace();
                     break;
                 } else {
                     log.debug("422 error detected, will retry");
