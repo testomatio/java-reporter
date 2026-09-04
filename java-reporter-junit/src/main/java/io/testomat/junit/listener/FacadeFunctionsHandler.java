@@ -6,6 +6,7 @@ import static io.testomat.core.constants.ArtifactPropertyNames.JSONL_EXPORT_PROP
 import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.facade.methods.artifact.client.JsonlService;
+import io.testomat.core.facade.methods.jira.JiraStorage;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
@@ -44,15 +45,16 @@ public class FacadeFunctionsHandler {
     }
 
     public void handleFacadeFunctions(ExtensionContext context) {
-        handleLogsAfterEach(context);
-        handleMetaAfterEach(context);
-        handleLabels(context);
+        String rid = context.getUniqueId();
+        handleLogsAfterEach(rid);
+        handleMetaAfterEach(rid);
+        handleLabels(rid);
+        handleLinkJira(rid);
         handleJsonlAfterEach(context);
         handleArtifactsAfterEach(context);
     }
 
-    private void handleMetaAfterEach(ExtensionContext context) {
-        String rid = context.getUniqueId();
+    private void handleMetaAfterEach(String rid) {
         Map<String, String> metaData = MetaStorage.getTempMetaStorage();
 
         if (!metaData.isEmpty()) {
@@ -61,8 +63,7 @@ public class FacadeFunctionsHandler {
         }
     }
 
-    private void handleLogsAfterEach(ExtensionContext context) {
-        String rid = context.getUniqueId();
+    private void handleLogsAfterEach(String rid) {
         List<String> storedLogs = LogStorage.TEMP_LOG_STORAGE.get();
         if (!storedLogs.isEmpty()) {
             String[] logs = new String[storedLogs.size()];
@@ -86,11 +87,17 @@ public class FacadeFunctionsHandler {
         }
     }
 
-    private void handleLabels(ExtensionContext context) {
-        String rid = context.getUniqueId();
+    private void handleLabels(String rid) {
         List<Map<String, String>> storedLabels = LabelStorage.getTempLabelStorage();
         if (!storedLabels.isEmpty()) {
             LabelStorage.getLinkedLabelStorage().put(rid, storedLabels);
+        }
+    }
+
+    private void handleLinkJira(String rid) {
+        List<String> storedLinks = JiraStorage.getTempJiraStorage();
+        if (!storedLinks.isEmpty()) {
+            JiraStorage.getLinkedJiraStorage().put(rid, storedLinks);
         }
     }
 

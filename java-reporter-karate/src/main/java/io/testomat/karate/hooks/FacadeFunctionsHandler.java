@@ -7,6 +7,7 @@ import com.intuit.karate.core.ScenarioRuntime;
 import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.facade.methods.artifact.client.JsonlService;
+import io.testomat.core.facade.methods.jira.JiraStorage;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
@@ -49,6 +50,7 @@ public class FacadeFunctionsHandler {
         handleMetaAfterEach(rid);
         handleLogFunction(rid);
         handleLabels(rid);
+        handleLinkJira(rid);
         handleJsonlAfterEach(sr, rid);
         handleArtifactsAfterEach(sr, rid);
     }
@@ -92,6 +94,13 @@ public class FacadeFunctionsHandler {
 
         if (!storedLabels.isEmpty()) {
             LabelStorage.getLinkedLabelStorage().put(rid, List.copyOf(storedLabels));
+        }
+    }
+
+    private void handleLinkJira(String rid) {
+        List<String> storedLinks = JiraStorage.getTempJiraStorage();
+        if (!storedLinks.isEmpty()) {
+            JiraStorage.getLinkedJiraStorage().put(rid, storedLinks);
         }
     }
 

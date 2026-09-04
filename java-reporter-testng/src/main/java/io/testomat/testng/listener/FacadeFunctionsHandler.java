@@ -6,6 +6,7 @@ import static io.testomat.core.constants.ArtifactPropertyNames.JSONL_EXPORT_PROP
 import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.facade.methods.artifact.client.AwsService;
 import io.testomat.core.facade.methods.artifact.client.JsonlService;
+import io.testomat.core.facade.methods.jira.JiraStorage;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
@@ -47,15 +48,16 @@ public class FacadeFunctionsHandler {
     }
 
     public void handleFacadeFunctions(IInvokedMethod method, ITestResult testResult) {
-        handleMetaAfterInvocation(testResult);
-        handleLogsAfterInvocation(testResult);
+        String rid = testNgParameterExtractor.generateRid(testResult);
+        handleMetaAfterInvocation(rid);
+        handleLogsAfterInvocation(rid);
         handleJsonlAfterInvocation(method, testResult);
         handleArtifactsAfterInvocation(method, testResult);
-        handleLabels(testResult);
+        handleLabels(rid);
+        handleLinkJira(rid);
     }
 
-    private void handleMetaAfterInvocation(ITestResult testResult) {
-        String rid = testNgParameterExtractor.generateRid(testResult);
+    private void handleMetaAfterInvocation(String rid) {
         Map<String, String> metaData = MetaStorage.getTempMetaStorage();
 
         if (!metaData.isEmpty()) {
@@ -84,8 +86,7 @@ public class FacadeFunctionsHandler {
         }
     }
 
-    private void handleLogsAfterInvocation(ITestResult testResult) {
-        String rid = testNgParameterExtractor.generateRid(testResult);
+    private void handleLogsAfterInvocation(String rid) {
         List<String> storedLogs = LogStorage.TEMP_LOG_STORAGE.get();
         if (!storedLogs.isEmpty()) {
             String[] logs = new String[storedLogs.size()];
@@ -94,11 +95,17 @@ public class FacadeFunctionsHandler {
         }
     }
 
-    private void handleLabels(ITestResult testResult) {
-        String rid = testNgParameterExtractor.generateRid(testResult);
+    private void handleLabels(String rid) {
         List<Map<String, String>> storedLabels = LabelStorage.getTempLabelStorage();
         if (!storedLabels.isEmpty()) {
             LabelStorage.getLinkedLabelStorage().put(rid, storedLabels);
+        }
+    }
+
+    private void handleLinkJira(String rid) {
+        List<String> storedLinks = JiraStorage.getTempJiraStorage();
+        if (!storedLinks.isEmpty()) {
+            JiraStorage.getLinkedJiraStorage().put(rid, storedLinks);
         }
     }
 

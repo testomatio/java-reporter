@@ -16,6 +16,7 @@ import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
 import io.testomat.core.facade.methods.artifact.TempArtifactDirectoriesStorage;
 import io.testomat.core.facade.methods.artifact.model.Step;
+import io.testomat.core.facade.methods.jira.JiraStorage;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
@@ -378,7 +379,8 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
 
     private void addLinks(TestResult result, String rid) {
         List<Map<String, String>> labels = LabelStorage.getLinkedLabelStorage().get(rid);
-        if (labels == null || labels.isEmpty()) {
+        List<String> jiraLinks = JiraStorage.getLinkedJiraStorage().get(rid);
+        if ((labels == null || labels.isEmpty()) && (jiraLinks == null || jiraLinks.isEmpty())) {
             return;
         }
 
@@ -392,12 +394,27 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        labels.stream()
-            .map(m -> m.get("label"))
-            .filter(Objects::nonNull)
-            .filter(existingLabels::add)
-                .map(Link::label)
-                .forEach(links::add);
+        Set<String> existingJiraLinks = links.stream()
+                .map(Link::getJira)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        if (labels != null) {
+            labels.stream()
+                    .map(m -> m.get("label"))
+                    .filter(Objects::nonNull)
+                    .filter(existingLabels::add)
+                    .map(Link::label)
+                    .forEach(links::add);
+        }
+
+        if (jiraLinks != null) {
+            jiraLinks.stream()
+                    .filter(Objects::nonNull)
+                    .filter(existingJiraLinks::add)
+                    .map(Link::jira)
+                    .forEach(links::add);
+        }
 
         result.setLinks(links);
     }
