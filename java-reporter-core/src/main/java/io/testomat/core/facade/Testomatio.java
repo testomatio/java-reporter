@@ -1,6 +1,7 @@
 package io.testomat.core.facade;
 
 import io.testomat.core.facade.methods.artifact.manager.ArtifactManager;
+import io.testomat.core.facade.methods.jira.JiraStorage;
 import io.testomat.core.facade.methods.label.LabelStorage;
 import io.testomat.core.facade.methods.logmethod.LogStorage;
 import io.testomat.core.facade.methods.meta.MetaStorage;
@@ -111,6 +112,14 @@ public class Testomatio {
         if (labelValues != null && !labelValues.isEmpty()) {
             for (String labelValue : labelValues) {
                 label(labelName, labelValue);
+            }
+        }
+    }
+
+    public static void linkJira(String... jiraLinks) {
+        if (jiraLinks != null && jiraLinks.length > 0) {
+            for (String jiraLink : jiraLinks) {
+                JiraStorage.getTempJiraStorage().add(jiraLink);
             }
         }
     }
