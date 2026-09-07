@@ -509,6 +509,64 @@ As a result you will see something like this in the UI after the run is complete
 
 ---
 
+## Attaching Meta, Labels and Jira Links to Tests
+
+Besides artifacts, your test results can include custom metadata, labels and Jira issue links.
+
+### Meta
+
+Attach custom key-value metadata to the current test.
+
+```java
+import io.testomat.core.facade.Testomatio;
+
+public class MyTest {
+
+    @Test
+    public void testWithMeta() {
+        // Single field
+        Testomatio.meta("environment", "staging");
+
+        // Multiple fields at once
+        Testomatio.meta(Map.of(
+                "browser", "chrome",
+                "feature", "auth"
+        ));
+    }
+}
+```
+
+### Labels
+
+Attach labels to the current test. Labels can be used for grouping/filtering on Testomat.io.
+
+```java
+    @Test
+    public void testWithLabels() {
+        // Single label
+        Testomatio.label("smoke");
+
+        // Label with value (becomes "severity:critical")
+        Testomatio.label("severity", "critical");
+
+        // One label with multiple values
+        Testomatio.label("tag", List.of("login", "api"));
+    }
+```
+
+### Jira Links
+
+Attach Jira issue links to the current test. Each link is added to the test result as a link.
+
+```java
+    @Test
+    public void testWithJiraLinks() {
+        Testomatio.linkJira("https://yourcompany.atlassian.net/browse/PROJ-123");
+        // Multiple issues can be attached too
+        Testomatio.linkJira("https://yourcompany.atlassian.net/browse/PROJ-124",
+                            "https://yourcompany.atlassian.net/browse/PROJ-125");
+    }
+
 ## Artifact Export
 
 In addition to uploading artifacts directly to Testomat.io the reporter automatically exports artifact metadata to a JSONL file.
