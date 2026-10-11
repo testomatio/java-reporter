@@ -58,6 +58,22 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      # Maven 3.10 (shipped in ubuntu-latest since Oct 2026) is incompatible with
+      # central-publishing-maven-plugin: it leaves maven-metadata-local.xml in the
+      # staging repo, which ends up in the bundle and Central rejects it with
+      # "Bundle has content that does NOT have a .pom file".
+      # Pin Maven 3.9.16 until the plugin supports Maven 3.10.
+      - name: Set up Maven 3.9.16
+        run: |
+          set -e
+          MAVEN_VERSION=3.9.16
+          curl -fsSL -o /tmp/apache-maven.tar.gz \
+            "https://repo1.maven.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+          sudo mkdir -p /opt/maven
+          sudo tar -xzf /tmp/apache-maven.tar.gz -C /opt/maven --strip-components=1
+          echo "/opt/maven/bin" >> "$GITHUB_PATH"
+          /opt/maven/bin/mvn -version
+
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
