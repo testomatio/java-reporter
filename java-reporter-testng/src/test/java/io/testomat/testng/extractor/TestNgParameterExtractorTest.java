@@ -12,6 +12,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.testng.ITestClass;
 import org.testng.ITestResult;
 import org.testng.ITestNGMethod;
 import org.testng.annotations.Parameters;
@@ -41,18 +42,20 @@ class TestNgParameterExtractorTest {
     }
 
     @Test
-    @DisplayName("Should return single parameter directly")
-    void shouldReturnSingleParameterDirectly() {
-        // Given
+    @DisplayName("Should return map for a single parameter")
+    void shouldReturnMapForSingleParameter() {
         ITestResult testResult = mock(ITestResult.class);
-        String parameter = "testValue";
-        when(testResult.getParameters()).thenReturn(new Object[]{parameter});
+        when(testResult.getParameters()).thenReturn(
+            new Object[]{"testValue"});
 
-        // When
         Object result = extractor.extractExample(testResult);
 
-        // Then
-        assertEquals(parameter, result);
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+
+        Map<String, Object> resultMap = (Map<String, Object>) result;
+        assertEquals(1, resultMap.size());
+        assertEquals("testValue", resultMap.get("param0"));
     }
 
     @Test
@@ -236,5 +239,158 @@ class TestNgParameterExtractorTest {
     @Parameters({"username", "age"})
     @SuppressWarnings("unused")
     private void dummyMethodWithAnnotation(String username, Integer age) {
+    }
+
+    @Test
+    @DisplayName("Should preserve null parameter values")
+    void shouldPreserveNullParameterValues() throws Exception {
+        ITestResult testResult = mock(ITestResult.class);
+        ITestNGMethod testNGMethod = mock(ITestNGMethod.class);
+        ConstructorOrMethod constructorOrMethod =
+            mock(ConstructorOrMethod.class);
+
+        Method method = TestNgParameterExtractorTest.class
+            .getDeclaredMethod(
+                "dummyMethodWithoutAnnotation",
+                String.class,
+                Integer.class);
+
+        when(testResult.getParameters()).thenReturn(
+            new Object[]{null, 123});
+        when(testResult.getMethod()).thenReturn(testNGMethod);
+        when(testNGMethod.getConstructorOrMethod())
+            .thenReturn(constructorOrMethod);
+        when(constructorOrMethod.getMethod()).thenReturn(method);
+
+        Object result = extractor.extractExample(testResult);
+
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+
+        Map<String, Object> resultMap = (Map<String, Object>) result;
+        assertTrue(resultMap.containsKey("param0"));
+        assertNull(resultMap.get("param0"));
+        assertEquals(123, resultMap.get("param1"));
+    }
+
+    @Test
+    @DisplayName("Should fall back when annotation has fewer names")
+    void shouldFallbackWhenAnnotationHasFewerNames() throws Exception {
+        ITestResult testResult = mock(ITestResult.class);
+        ITestNGMethod testNGMethod = mock(ITestNGMethod.class);
+        ConstructorOrMethod constructorOrMethod =
+            mock(ConstructorOrMethod.class);
+
+        Method method = TestNgParameterExtractorTest.class
+            .getDeclaredMethod(
+                "dummyMethodWithIncompleteAnnotation",
+                String.class,
+                Integer.class,
+                boolean.class);
+
+        when(testResult.getParameters()).thenReturn(
+            new Object[]{"Alice", 30, true});
+        when(testResult.getMethod()).thenReturn(testNGMethod);
+        when(testNGMethod.getConstructorOrMethod())
+            .thenReturn(constructorOrMethod);
+        when(constructorOrMethod.getMethod()).thenReturn(method);
+
+        Object result = extractor.extractExample(testResult);
+
+        assertNotNull(result);
+        assertTrue(result instanceof Map);
+
+        Map<String, Object> resultMap = (Map<String, Object>) result;
+        assertEquals(3, resultMap.size());
+        assertEquals("Alice", resultMap.get("param0"));
+        assertEquals(30, resultMap.get("param1"));
+        assertEquals(true, resultMap.get("param2"));
+    }
+
+    @Test
+    @DisplayName("Should use annotation names in RID")
+    void shouldUseAnnotationNamesInRid() throws Exception {
+        ITestResult testResult = mock(ITestResult.class);
+        ITestNGMethod testNGMethod = mock(ITestNGMethod.class);
+        ITestClass testClass = mock(ITestClass.class);
+        ConstructorOrMethod constructorOrMethod =
+            mock(ConstructorOrMethod.class);
+
+        Method method = TestNgParameterExtractorTest.class
+            .getDeclaredMethod(
+                "dummyMethodWithAnnotation",
+                String.class,
+                Integer.class);
+
+        when(testResult.getParameters()).thenReturn(
+            new Object[]{"Alice", 25});
+        when(testResult.getTestClass()).thenReturn(testClass);
+        when(testResult.getMethod()).thenReturn(testNGMethod);
+        when(testClass.getName()).thenReturn("com.example.TestClass");
+        when(testNGMethod.getMethodName()).thenReturn("testMethod");
+        when(testNGMethod.getConstructorOrMethod())
+            .thenReturn(constructorOrMethod);
+        when(constructorOrMethod.getMethod()).thenReturn(method);
+
+        String rid = extractor.generateRid(testResult);
+
+        assertEquals(
+            "com.example.TestClass.testMethod-username_Alice-age_25",
+            rid);
+    }
+
+    @Test
+    @DisplayName("Should handle empty string parameter")
+    void shouldHandleEmptyStringParameter() throws Exception {
+        ITestResult testResult = mock(ITestResult.class);
+        ITestNGMethod testNGMethod = mock(ITestNGMethod.class);
+        ITestClass testClass = mock(ITestClass.class);
+        ConstructorOrMethod constructorOrMethod =
+            mock(ConstructorOrMethod.class);
+
+        Method method = TestNgParameterExtractorTest.class
+            .getDeclaredMethod(
+                "dummyMethodWithoutAnnotation",
+                String.class,
+                Integer.class);
+
+        when(testResult.getParameters()).thenReturn(new Object[]{""});
+        when(testResult.getTestClass()).thenReturn(testClass);
+        when(testResult.getMethod()).thenReturn(testNGMethod);
+        when(testClass.getName()).thenReturn("com.example.TestClass");
+        when(testNGMethod.getMethodName()).thenReturn("testMethod");
+        when(testNGMethod.getConstructorOrMethod())
+            .thenReturn(constructorOrMethod);
+        when(constructorOrMethod.getMethod()).thenReturn(method);
+
+        assertEquals(
+            "com.example.TestClass.testMethod-param0_h0",
+            extractor.generateRid(testResult));
+    }
+
+    @Test
+    @DisplayName("Should handle null parameters array")
+    void shouldHandleNullParametersArray() {
+        ITestResult testResult = mock(ITestResult.class);
+        ITestNGMethod testNGMethod = mock(ITestNGMethod.class);
+        ITestClass testClass = mock(ITestClass.class);
+
+        when(testResult.getParameters()).thenReturn(null);
+        when(testResult.getTestClass()).thenReturn(testClass);
+        when(testResult.getMethod()).thenReturn(testNGMethod);
+        when(testClass.getName()).thenReturn("com.example.TestClass");
+        when(testNGMethod.getMethodName()).thenReturn("testMethod");
+
+        assertEquals(
+            "com.example.TestClass.testMethod",
+            extractor.generateRid(testResult));
+    }
+
+
+
+    @Parameters({"username"})
+    @SuppressWarnings("unused")
+    private void dummyMethodWithIncompleteAnnotation(String username, Integer age, boolean active) {
+
     }
 }

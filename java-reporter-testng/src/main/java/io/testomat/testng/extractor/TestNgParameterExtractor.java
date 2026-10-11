@@ -28,18 +28,20 @@ public class TestNgParameterExtractor {
      */
     public Object extractExample(ITestResult testResult) {
         Object[] parameters = testResult.getParameters();
+        Map<String, Object> exampleMap = new HashMap<>();
+
         if (parameters == null || parameters.length == 0) {
             return null;
         }
 
         if (parameters.length == 1) {
-            return parameters[0];
+            exampleMap.put("param0", parameters[0]);
+            return exampleMap;
         }
 
         Method method = testResult.getMethod().getConstructorOrMethod().getMethod();
         String[] parameterNames = extractParameterNames(method, parameters.length);
 
-        Map<String, Object> exampleMap = new HashMap<>();
         for (int i = 0; i < parameters.length; i++) {
             String paramName = i < parameterNames.length ? parameterNames[i] : "param" + i;
             exampleMap.put(paramName, parameters[i]);
