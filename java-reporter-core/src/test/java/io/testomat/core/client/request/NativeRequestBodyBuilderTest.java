@@ -26,7 +26,9 @@ import io.testomat.core.step.StepData;
 import io.testomat.core.step.TestStep;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -354,6 +356,44 @@ class NativeRequestBodyBuilderTest {
     }
 
     @Test
+    @DisplayName("Should report non-serializable test parameter as string and keep the batch")
+    void buildBatchTestReportBodyNonSerializableParameterShouldFallBackToString() throws Exception {
+
+        Map<String, Object> example = new HashMap<>();
+        example.put("param0", new SelfReferencingParameter("product-1"));
+        example.put("param1", Collections.singletonMap("currency", "EUR"));
+
+        TestResult parameterized = new TestResult.Builder()
+            .withTitle("Test 1")
+            .withTestId("test-1")
+            .withSuiteTitle("Suite 1")
+            .withFile("Test1.java")
+            .withStatus("passed")
+            .withExample(example)
+            .build();
+
+        TestResult regular = new TestResult.Builder()
+            .withTitle("Test 2")
+            .withTestId("test-2")
+            .withSuiteTitle("Suite 1")
+            .withFile("Test1.java")
+            .withStatus("passed")
+            .build();
+
+        String result = requestBodyBuilder.buildBatchTestReportBody(
+            Arrays.asList(parameterized, regular),
+            "test-api-key"
+        );
+
+        JsonNode tests = objectMapper.readTree(result).get("tests");
+        JsonNode reportedExample = tests.get(0).get("example");
+
+        assertEquals(2, tests.size());
+        assertEquals("product-1", reportedExample.get("param0").asText());
+        assertEquals("EUR", reportedExample.get("param1").get("currency").asText());
+    }
+
+    @Test
     @DisplayName("Should build finish run body with duration")
     void buildFinishRunBodyWithDurationShouldIncludeStatusAndDuration() throws Exception {
 
@@ -478,5 +518,23 @@ class NativeRequestBodyBuilderTest {
         assertDoesNotThrow(() ->
             requestBodyBuilder.buildSingleTestReportBody(result)
         );
+    }
+
+    private static class SelfReferencingParameter {
+
+        private final String name;
+
+        SelfReferencingParameter(String name) {
+            this.name = name;
+        }
+
+        public SelfReferencingParameter getSelf() {
+            return this;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 }

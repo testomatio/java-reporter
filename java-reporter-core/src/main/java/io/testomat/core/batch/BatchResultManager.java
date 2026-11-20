@@ -135,6 +135,8 @@ public class BatchResultManager {
     /**
      * Sends batch of test results with retry mechanism.
      * Uses exponential backoff for retries and moves failed results to failed list.
+     * Runtime exceptions are handled the same way as I/O errors: an exception that escapes
+     * the periodic flush task would cancel all its further executions.
      *
      * @param results list of test results to send
      * @param attempt current attempt number (1-based)
@@ -148,7 +150,7 @@ public class BatchResultManager {
                 apiClient.reportTests(runUid, results);
                 log.debug("Reported batch of {} tests", results.size());
             }
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             log.error("Failed to report batch (attempt {}/{}): {}", attempt,
                     MAX_RETRY_ATTEMPTS, e.getMessage());
 
