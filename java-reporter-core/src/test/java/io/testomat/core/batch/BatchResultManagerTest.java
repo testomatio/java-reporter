@@ -11,6 +11,7 @@ import static org.mockito.Mockito.doAnswer;
 
 import io.testomat.core.client.ApiInterface;
 import io.testomat.core.constants.PropertyValuesConstants;
+import io.testomat.core.exception.ReportingFailedException;
 import io.testomat.core.facade.methods.artifact.model.AddTestsBatchRequest;
 import io.testomat.core.facade.methods.artifact.model.TestItem;
 import io.testomat.core.model.TestResult;
@@ -174,6 +175,25 @@ class BatchResultManagerTest {
         
         // Give some time for retry attempts
         Thread.sleep(1000);
+    }
+
+    @Test
+    @DisplayName("Should keep reporting after a runtime exception from API client")
+    void sendBatch_WithRuntimeException_ShouldKeepReporting() throws IOException {
+        TestResult failingResult = createTestResult("Test 1", "passed");
+        TestResult nextResult = createTestResult("Test 2", "passed");
+        doThrow(new ReportingFailedException("Failed to report test"))
+                .when(mockApiClient).reportTest(testRunUid, failingResult);
+
+        batchManager.addResult(failingResult);
+
+        // The periodic flush task is cancelled by any exception that escapes it
+        assertDoesNotThrow(() -> batchManager.flushPendingResults());
+
+        batchManager.addResult(nextResult);
+        batchManager.flushPendingResults();
+
+        verify(mockApiClient, times(1)).reportTest(testRunUid, nextResult);
     }
 
 
