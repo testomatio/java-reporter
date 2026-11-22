@@ -11,6 +11,7 @@ import static io.testomat.core.constants.PropertyNameConstants.SHARED_TIMEOUT_PR
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.testomat.core.client.serialization.SafeObjectNormalizer;
 import io.testomat.core.constants.ApiRequestFields;
 import io.testomat.core.exception.FailedToCreateRunBodyException;
 import io.testomat.core.facade.methods.artifact.ReportedTestStorage;
@@ -55,6 +56,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     private final String publishParam;
 
     private final ObjectMapper objectMapper;
+    private final SafeObjectNormalizer safeObjectNormalizer;
     private final PropertyProvider provider =
             PropertyProviderFactoryImpl.getPropertyProviderFactory().getPropertyProvider();
 
@@ -64,6 +66,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         this.sharedRunTimeout = getPropertySafely(SHARED_TIMEOUT_PROPERTY_NAME);
         this.objectMapper = new ObjectMapper();
         this.createParam = getCreateParam();
+        this.safeObjectNormalizer = new SafeObjectNormalizer(objectMapper);
     }
 
     @Override
@@ -106,7 +109,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
     @Override
     public String buildSingleTestReportBody(TestResult result) throws JsonProcessingException {
         Map<String, Object> body = buildTestResultMap(result);
-        return objectMapper.writeValueAsString(body);
+        return objectMapper.writeValueAsString(safeObjectNormalizer.normalize(body));
     }
 
     @Override
@@ -121,7 +124,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         requestBody.put(API_KEY_STRING, apiKey);
         requestBody.put(TESTS_STRING, testsArray);
 
-        return objectMapper.writeValueAsString(requestBody);
+        return objectMapper.writeValueAsString(safeObjectNormalizer.normalize(requestBody));
     }
 
     @Override
@@ -131,7 +134,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         requestBody.put(API_KEY_STRING, apiKey);
         requestBody.put(TESTS_STRING, testsWithArtifacts);
 
-        return objectMapper.writeValueAsString(requestBody);
+        return objectMapper.writeValueAsString(safeObjectNormalizer.normalize(requestBody));
     }
 
     @Override
