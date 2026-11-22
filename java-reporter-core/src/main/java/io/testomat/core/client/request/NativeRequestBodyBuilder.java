@@ -31,6 +31,7 @@ import io.testomat.core.step.TestStep;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -176,7 +177,7 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         }
 
         if (result.getExample() != null) {
-            body.put("example", result.getExample());
+            body.put("example", toSerializableExample(result.getExample()));
         }
 
         if (result.getSteps() != null && !result.getSteps().isEmpty()) {
@@ -216,6 +217,32 @@ public class NativeRequestBodyBuilder implements RequestBodyBuilder {
         ReportedTestStorage.store(storageEntry);
 
         return body;
+    }
+
+    /**
+     * Makes parameterized test data safe for JSON serialization.
+     * Test parameters are arbitrary user objects, so a value that cannot be serialized
+     * (for example an object graph with a cycle) is reported as its string representation
+     * instead of failing the whole request.
+     */
+    private Object toSerializableExample(Object example) {
+        if (!(example instanceof Map)) {
+            return toSerializableValue(example);
+        }
+        Map<Object, Object> serializable = new LinkedHashMap<>();
+        ((Map<?, ?>) example).forEach((name, value) ->
+                serializable.put(name, toSerializableValue(value)));
+        return serializable;
+    }
+
+    private Object toSerializableValue(Object value) {
+        try {
+            return objectMapper.valueToTree(value);
+        } catch (IllegalArgumentException e) {
+            log.debug("Test parameter of type {} is not serializable, reported as a string: {}",
+                    value.getClass().getName(), e.getMessage());
+            return String.valueOf(value);
+        }
     }
 
     /**
